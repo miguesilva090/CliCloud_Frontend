@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { Eye, EyeOff } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -35,6 +36,10 @@ export function SmsConfigPage() {
   const [form, setForm] = useState<SmsConfigForm>(initialForm)
   const [numeroTeste, setNumeroTeste] = useState('')
   const [mensagemTeste, setMensagemTeste] = useState('Mensagem de teste CliCloud')
+  const [showArpooneUrl, setShowArpooneUrl] = useState(false)
+  const [showArpooneSender, setShowArpooneSender] = useState(false)
+  const [showArpooneOrganizationId, setShowArpooneOrganizationId] = useState(false)
+  const [showArpooneApiKey, setShowArpooneApiKey] = useState(false)
 
   const configQuery = useQuery({
     queryKey: ['sms-config', 'current'],
@@ -152,47 +157,106 @@ export function SmsConfigPage() {
               <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
                 <div className='space-y-1'>
                   <Label htmlFor='arpoone-url'>Arpoone URL</Label>
-                  <Input
-                    id='arpoone-url'
-                    value={form.arpooneUrl}
-                    onChange={(e) => handleChange('arpooneUrl', e.target.value)}
-                    placeholder='https://api.arpoone.com/...'
-                    disabled={isBusy}
-                  />
+                  <div className='relative'>
+                    <Input
+                      id='arpoone-url'
+                      type={showArpooneUrl ? 'text' : 'password'}
+                      value={form.arpooneUrl}
+                      onChange={(e) => handleChange('arpooneUrl', e.target.value)}
+                      placeholder='https://api.arpoone.com/...'
+                      disabled={isBusy}
+                      className='pr-10'
+                    />
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
+                      onClick={() => setShowArpooneUrl((prev) => !prev)}
+                      disabled={isBusy}
+                    >
+                      {showArpooneUrl ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
+                    </Button>
+                  </div>
                 </div>
 
                 <div className='space-y-1'>
                   <Label htmlFor='arpoone-sender'>Sender</Label>
-                  <Input
-                    id='arpoone-sender'
-                    value={form.arpooneSender}
-                    onChange={(e) => handleChange('arpooneSender', e.target.value)}
-                    placeholder='CLICLOUD'
-                    disabled={isBusy}
-                  />
+                  <div className='relative'>
+                    <Input
+                      id='arpoone-sender'
+                      type={showArpooneSender ? 'text' : 'password'}
+                      value={form.arpooneSender}
+                      onChange={(e) => handleChange('arpooneSender', e.target.value)}
+                      placeholder='CLICLOUD'
+                      disabled={isBusy}
+                      className='pr-10'
+                    />
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
+                      onClick={() => setShowArpooneSender((prev) => !prev)}
+                      disabled={isBusy}
+                    >
+                      {showArpooneSender ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
+                    </Button>
+                  </div>
                 </div>
 
                 <div className='space-y-1'>
                   <Label htmlFor='arpoone-org'>Organization ID (GUID)</Label>
-                  <Input
-                    id='arpoone-org'
-                    value={form.arpooneOrganizationID}
-                    onChange={(e) => handleChange('arpooneOrganizationID', e.target.value)}
-                    placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-                    disabled={isBusy}
-                  />
+                  <div className='relative'>
+                    <Input
+                      id='arpoone-org'
+                      type={showArpooneOrganizationId ? 'text' : 'password'}
+                      value={form.arpooneOrganizationID}
+                      onChange={(e) => handleChange('arpooneOrganizationID', e.target.value)}
+                      placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+                      disabled={isBusy}
+                      className='pr-10'
+                    />
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
+                      onClick={() => setShowArpooneOrganizationId((prev) => !prev)}
+                      disabled={isBusy}
+                    >
+                      {showArpooneOrganizationId ? (
+                        <EyeOff className='h-4 w-4' />
+                      ) : (
+                        <Eye className='h-4 w-4' />
+                      )}
+                    </Button>
+                  </div>
                 </div>
 
                 <div className='space-y-1'>
                   <Label htmlFor='arpoone-key'>API Key</Label>
-                  <Input
-                    id='arpoone-key'
-                    type='password'
-                    value={form.arpooneApiKey}
-                    onChange={(e) => handleChange('arpooneApiKey', e.target.value)}
-                    placeholder='API Key'
-                    disabled={isBusy}
-                  />
+                  <div className='relative'>
+                    <Input
+                      id='arpoone-key'
+                      type={showArpooneApiKey ? 'text' : 'password'}
+                      value={form.arpooneApiKey}
+                      onChange={(e) => handleChange('arpooneApiKey', e.target.value)}
+                      placeholder='API Key'
+                      disabled={isBusy}
+                      className='pr-10'
+                    />
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
+                      onClick={() => setShowArpooneApiKey((prev) => !prev)}
+                      disabled={isBusy}
+                    >
+                      {showArpooneApiKey ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
+                    </Button>
+                  </div>
                 </div>
               </div>
 

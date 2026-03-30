@@ -33,6 +33,7 @@ public/config.json
 dist/config.json
 
 # Build-time environment files
+.env
 .env.build
 .env.backup
 .env.dev
