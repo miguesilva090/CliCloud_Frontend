@@ -339,7 +339,7 @@ export const roleHeaderMenus = {
             description: 'Listagem, ver e editar clínicas',
           },
           {
-            label: 'Configuração SMS',
+            label: 'Configuração de SMS',
             href: '/area-comum/tabelas/configuracao/sms',
             description: 'Configurar fornecedor SMS (Arpoone)',
           },
