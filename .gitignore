@@ -36,3 +36,4 @@ dist/config.json
 .env.build
 .env.backup
 .env.dev
+.env.development

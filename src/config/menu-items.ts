@@ -338,6 +338,11 @@ export const roleHeaderMenus = {
             href: '/area-comum/tabelas/configuracao/clinicas',
             description: 'Listagem, ver e editar clínicas',
           },
+          {
+            label: 'Configuração SMS',
+            href: '/area-comum/tabelas/configuracao/sms',
+            description: 'Configurar fornecedor SMS (Arpoone)',
+          },
         ],
       },
       { label: 'Notificações', href: '/area-comum/tabelas/notificacoes' },
