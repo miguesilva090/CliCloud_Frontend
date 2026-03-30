@@ -1,0 +1,86 @@
+@layer base {
+  /* Midnight Ocean Light Theme - Active Menu Item Title and Description Styling */
+  .midnight-ocean-light .bg-accent .line-clamp-2,
+  .midnight-ocean-light .bg-accent span.line-clamp-2,
+  .midnight-ocean-light .bg-accent .text-muted-foreground,
+  .midnight-ocean-light .bg-accent h3,
+  .midnight-ocean-light .bg-accent h4,
+  .midnight-ocean-light .bg-accent h5,
+  .midnight-ocean-light .bg-accent h6,
+  .midnight-ocean-light .bg-accent .font-medium,
+  .midnight-ocean-light .bg-accent .font-semibold {
+    color: #ffffff !important; /* White color for active menu item title and description */
+  }
+
+  /* Midnight Ocean Light Theme - Navigation Bar Active Parent Item Styling */
+  .midnight-ocean-light .bg-accent,
+  .midnight-ocean-light .bg-accent *,
+  .midnight-ocean-light .bg-accent span,
+  .midnight-ocean-light .bg-accent div,
+  .midnight-ocean-light .bg-accent .text-accent-foreground {
+    color: #ffffff !important; /* White color for navigation bar active parent items */
+  }
+
+  .midnight-ocean-light {
+    --background: 220 40% 97%;
+    --foreground: 220 60% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 60% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 60% 15%;
+    --primary: 220 80% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 180 30% 88%;
+    --secondary-foreground: 180 50% 25%;
+    --muted: 220 25% 94%;
+    --muted-foreground: 220 35% 40%;
+    --accent: 160 60% 65%;
+    --accent-foreground: 200 80% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 30% 87%;
+    --input: 220 30% 87%;
+    --ring: 220 80% 45%;
+    --chart-1: 220 80% 45%;
+    --chart-2: 180 50% 55%;
+    --chart-3: 200 50% 70%;
+    --chart-4: 240 40% 75%;
+    --chart-5: 260 35% 80%;
+    --success: 160 60% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 70% 55%;
+    --warning-foreground: 45 90% 15%;
+    --emerald: 160 60% 45%;
+    --emerald-foreground: 0 0% 100%;
+    --sidebar: 220 30% 95%;
+    --sidebar-foreground: 220 60% 15%;
+    --sidebar-primary: 220 80% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 180 30% 88%;
+    --sidebar-accent-foreground: 180 50% 25%;
+    --sidebar-border: 220 30% 87%;
+    --sidebar-ring: 220 80% 45%;
+    --font-sans: 'Segoe UI', sans-serif;
+    --font-serif: 'Times New Roman', serif;
+    --font-mono: 'Cascadia Code', monospace;
+    --radius: 0.3rem;
+    --shadow-2xs: 0px 1px 3px -1px hsl(220 80% 45% / 0.1);
+    --shadow-xs: 0px 1px 3px -1px hsl(220 80% 45% / 0.1);
+    --shadow-sm:
+      0px 2px 4px -1px hsl(220 80% 45% / 0.15),
+      0px 1px 2px -1px hsl(180 30% 88% / 0.1);
+    --shadow:
+      0px 2px 4px -1px hsl(220 80% 45% / 0.15),
+      0px 1px 2px -1px hsl(180 30% 88% / 0.1);
+    --shadow-md:
+      0px 3px 6px -1px hsl(220 80% 45% / 0.15),
+      0px 2px 3px -1px hsl(180 30% 88% / 0.1);
+    --shadow-lg:
+      0px 4px 8px -1px hsl(220 80% 45% / 0.15),
+      0px 3px 4px -1px hsl(180 30% 88% / 0.1);
+    --shadow-xl:
+      0px 6px 12px -1px hsl(220 80% 45% / 0.15),
+      0px 4px 6px -1px hsl(180 30% 88% / 0.1);
+    --shadow-2xl: 0px 8px 16px -1px hsl(220 80% 45% / 0.25);
+  }
+}

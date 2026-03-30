@@ -1,0 +1,23 @@
+[
+  {
+    "id": "1f197c7d-49ac-411c-4eee-08de22a7895a",
+    "codigo": "PT",
+    "nome": "Portugal",
+    "prefixo": "351",
+    "createdOn": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "2f197c7d-49ac-411c-4eee-08de22a7895b",
+    "codigo": "ES",
+    "nome": "Espanha",
+    "prefixo": "34",
+    "createdOn": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "3f197c7d-49ac-411c-4eee-08de22a7895c",
+    "codigo": "FR",
+    "nome": "França",
+    "prefixo": "33",
+    "createdOn": "2025-01-01T00:00:00.000Z"
+  }
+]

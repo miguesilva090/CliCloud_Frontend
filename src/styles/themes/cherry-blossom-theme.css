@@ -1,0 +1,86 @@
+@layer base {
+  /* Cherry Blossom Light Theme - Active Menu Item Title and Description Styling */
+  .cherry-blossom-light .bg-accent .line-clamp-2,
+  .cherry-blossom-light .bg-accent span.line-clamp-2,
+  .cherry-blossom-light .bg-accent .text-muted-foreground,
+  .cherry-blossom-light .bg-accent h3,
+  .cherry-blossom-light .bg-accent h4,
+  .cherry-blossom-light .bg-accent h5,
+  .cherry-blossom-light .bg-accent h6,
+  .cherry-blossom-light .bg-accent .font-medium,
+  .cherry-blossom-light .bg-accent .font-semibold {
+    color: #ffffff !important; /* White color for active menu item title and description */
+  }
+
+  /* Cherry Blossom Light Theme - Navigation Bar Active Parent Item Styling */
+  .cherry-blossom-light .bg-accent,
+  .cherry-blossom-light .bg-accent *,
+  .cherry-blossom-light .bg-accent span,
+  .cherry-blossom-light .bg-accent div,
+  .cherry-blossom-light .bg-accent .text-accent-foreground {
+    color: #ffffff !important; /* White color for navigation bar active parent items */
+  }
+
+  .cherry-blossom-light {
+    --background: 320 30% 98%;
+    --foreground: 320 40% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 320 40% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 320 40% 15%;
+    --primary: 320 60% 65%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 300 25% 90%;
+    --secondary-foreground: 300 40% 25%;
+    --muted: 320 20% 95%;
+    --muted-foreground: 320 25% 40%;
+    --accent: 280 40% 75%;
+    --accent-foreground: 280 60% 20%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 320 25% 88%;
+    --input: 320 25% 88%;
+    --ring: 320 60% 65%;
+    --chart-1: 320 60% 65%;
+    --chart-2: 300 40% 70%;
+    --chart-3: 280 40% 75%;
+    --chart-4: 260 35% 80%;
+    --chart-5: 240 30% 85%;
+    --success: 140 50% 50%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 70% 55%;
+    --warning-foreground: 45 90% 15%;
+    --emerald: 140 50% 50%;
+    --emerald-foreground: 0 0% 100%;
+    --sidebar: 320 20% 96%;
+    --sidebar-foreground: 320 40% 15%;
+    --sidebar-primary: 320 60% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 300 25% 90%;
+    --sidebar-accent-foreground: 300 40% 25%;
+    --sidebar-border: 320 25% 88%;
+    --sidebar-ring: 320 60% 65%;
+    --font-sans: 'Source Sans Pro', sans-serif;
+    --font-serif: 'Libre Baskerville', serif;
+    --font-mono: 'Monaco', monospace;
+    --radius: 0.6rem;
+    --shadow-2xs: 0px 1px 4px -1px hsl(320 60% 65% / 0.08);
+    --shadow-xs: 0px 1px 4px -1px hsl(320 60% 65% / 0.08);
+    --shadow-sm:
+      0px 2px 6px -1px hsl(320 60% 65% / 0.12),
+      0px 1px 3px -1px hsl(300 25% 90% / 0.08);
+    --shadow:
+      0px 2px 6px -1px hsl(320 60% 65% / 0.12),
+      0px 1px 3px -1px hsl(300 25% 90% / 0.08);
+    --shadow-md:
+      0px 3px 8px -1px hsl(320 60% 65% / 0.12),
+      0px 2px 4px -1px hsl(300 25% 90% / 0.08);
+    --shadow-lg:
+      0px 4px 12px -1px hsl(320 60% 65% / 0.12),
+      0px 3px 6px -1px hsl(300 25% 90% / 0.08);
+    --shadow-xl:
+      0px 6px 16px -1px hsl(320 60% 65% / 0.12),
+      0px 4px 8px -1px hsl(300 25% 90% / 0.08);
+    --shadow-2xl: 0px 8px 24px -1px hsl(320 60% 65% / 0.2);
+  }
+}

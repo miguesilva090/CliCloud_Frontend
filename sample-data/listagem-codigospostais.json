@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1f197c7d-49ac-411c-4eee-08de22a7895a",
+    "codigo": "1000-001",
+    "localidade": "Lisboa",
+    "createdOn": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "2f197c7d-49ac-411c-4eee-08de22a7895b",
+    "codigo": "4000-001",
+    "localidade": "Porto",
+    "createdOn": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "3f197c7d-49ac-411c-4eee-08de22a7895c",
+    "codigo": "4700-001",
+    "localidade": "Braga",
+    "createdOn": "2025-01-01T00:00:00.000Z"
+  }
+]

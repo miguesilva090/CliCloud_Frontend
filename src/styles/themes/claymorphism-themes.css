@@ -1,0 +1,67 @@
+@layer base {
+  .claymorphism-light {
+    --background: 20 5.88% 90%;
+    --foreground: 217.24 32.58% 17.45%;
+    --card: 60 4.76% 95.88%;
+    --card-foreground: 217.24 32.58% 17.45%;
+    --popover: 60 4.76% 95.88%;
+    --popover-foreground: 217.24 32.58% 17.45%;
+    --primary: 238.73 83.53% 66.67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 24 5.75% 82.94%;
+    --secondary-foreground: 215 13.79% 34.12%;
+    --muted: 20 5.88% 90%;
+    --muted-foreground: 220 8.94% 46.08%;
+    --accent: 292.5 44.44% 92.94%;
+    --accent-foreground: 216.92 19.12% 26.67%;
+    --destructive: 0 84.24% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 24 5.75% 82.94%;
+    --input: 24 5.75% 82.94%;
+    --ring: 238.73 83.53% 66.67%;
+    --chart-1: 238.73 83.53% 66.67%;
+    --chart-2: 243.4 75.36% 58.63%;
+    --chart-3: 244.52 57.94% 50.59%;
+    --chart-4: 243.65 54.5% 41.37%;
+    --chart-5: 242.17 47.43% 34.31%;
+    --success: 142 70% 45%;
+    --success-foreground: 144 70% 10%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 38 92% 10%;
+    --emerald: 142 76% 36%;
+    --emerald-foreground: 0 0% 100%;
+  }
+
+  .claymorphism-dark {
+    --background: 30 11.11% 10.59%;
+    --foreground: 214.29 31.82% 91.37%;
+    --card: 25.71 8.64% 15.88%;
+    --card-foreground: 214.29 31.82% 91.37%;
+    --popover: 25.71 8.64% 15.88%;
+    --popover-foreground: 214.29 31.82% 91.37%;
+    --primary: 234.45 89.47% 73.92%;
+    --primary-foreground: 30 11.11% 10.59%;
+    --secondary: 25.71 6.42% 21.37%;
+    --secondary-foreground: 216 12.2% 83.92%;
+    --muted: 25.71 8.64% 15.88%;
+    --muted-foreground: 217.89 10.61% 64.9%;
+    --accent: 25.71 5.11% 26.86%;
+    --accent-foreground: 216 12.2% 83.92%;
+    --destructive: 0 84.24% 60.2%;
+    --destructive-foreground: 30 11.11% 10.59%;
+    --border: 25.71 6.42% 21.37%;
+    --input: 25.71 6.42% 21.37%;
+    --ring: 234.45 89.47% 73.92%;
+    --chart-1: 234.45 89.47% 73.92%;
+    --chart-2: 238.73 83.53% 66.67%;
+    --chart-3: 243.4 75.36% 58.63%;
+    --chart-4: 244.52 57.94% 50.59%;
+    --chart-5: 243.65 54.5% 41.37%;
+    --success: 142 70% 45%;
+    --success-foreground: 144 70% 10%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 38 92% 10%;
+    --emerald: 142 76% 36%;
+    --emerald-foreground: 0 0% 100%;
+  }
+}

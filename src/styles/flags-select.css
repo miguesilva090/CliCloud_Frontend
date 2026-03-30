@@ -1,0 +1,98 @@
+/* stylelint-disable at-rule-no-unknown */
+
+/* Main button/trigger styling - using attribute selector for better coverage */
+[class*='ReactFlagsSelect-module_selectBtn'] {
+  @apply h-[50px] w-full rounded-md border border-input bg-transparent px-4 py-6 text-sm text-foreground transition-colors;
+  background-color: hsl(var(--background)) !important;
+  border-color: hsl(var(--input)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Placeholder text */
+[class*='ReactFlagsSelect-module_placeholder'] {
+  @apply text-muted-foreground;
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Selected text */
+[class*='ReactFlagsSelect-module_selectValue'] {
+  @apply text-foreground;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Dropdown options container */
+[class*='ReactFlagsSelect-module_selectOptions'] {
+  @apply overflow-x-hidden border-input bg-background text-foreground;
+  background-color: hsl(var(--background)) !important;
+  border-color: hsl(var(--input)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Filter/search box */
+[class*='ReactFlagsSelect-module_filterBox'] {
+  @apply overflow-x-hidden border-input bg-background;
+  background-color: hsl(var(--background)) !important;
+  border-color: hsl(var(--input)) !important;
+}
+
+/* Filter input */
+[class*='ReactFlagsSelect-module_filterBox'] input {
+  @apply w-full border-input bg-background px-3 py-2 text-foreground;
+  background-color: hsl(var(--background)) !important;
+  border-color: hsl(var(--input)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+[class*='ReactFlagsSelect-module_filterBox'] input::placeholder {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Individual option items */
+[class*='ReactFlagsSelect-module_selectOption'] {
+  @apply text-foreground;
+  color: hsl(var(--foreground)) !important;
+  background-color: hsl(var(--background)) !important;
+}
+
+/* Option hover state */
+[class*='ReactFlagsSelect-module_selectOption']:hover {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Label text */
+[class*='ReactFlagsSelect-module_label'] {
+  @apply text-foreground;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Ensure all text elements use theme colors */
+[class*='ReactFlagsSelect-module'] {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Dropdown container - ensure it uses theme background */
+[class*='ReactFlagsSelect-module_selectOptions'],
+[class*='ReactFlagsSelect-module_filterBox'] {
+  background-color: hsl(var(--background)) !important;
+}
+
+/* Scrollbar styling to match theme */
+[class*='ReactFlagsSelect-module_selectOptions']::-webkit-scrollbar {
+  width: 8px;
+}
+
+[class*='ReactFlagsSelect-module_selectOptions']::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+[class*='ReactFlagsSelect-module_selectOptions']::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+[class*='ReactFlagsSelect-module_selectOptions']::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--accent));
+}
+
+/* stylelint-enable at-rule-no-unknown */

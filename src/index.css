@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import './styles/phone-input.css';
+@import '@/styles/flags-select.css';
+
+/* Import all theme files */
+@import './styles/themes/base.css';
+@import './styles/themes/blue-theme.css';
+@import './styles/themes/teal-theme.css';
+@import './styles/themes/monokai-theme.css';
+@import './styles/themes/mean-blue-cue-theme.css';
+@import './styles/themes/bold-tech-themes.css';
+@import './styles/themes/ocean-breeze-theme.css';
+@import './styles/themes/sunset-horizon-themes.css';
+@import './styles/themes/kodama-grove-theme.css';
+@import './styles/themes/claymorphism-themes.css';
+@import './styles/themes/pastel-dreams-themes.css';
+@import './styles/themes/medical-themes.css';
+@import './styles/themes/tropical-sunset-theme.css';
+@import './styles/themes/mint-fresh-theme.css';
+@import './styles/themes/forest-garden-theme.css';
+@import './styles/themes/arctic-ice-theme.css';
+@import './styles/themes/cherry-blossom-theme.css';
+@import './styles/themes/midnight-ocean-theme.css';
+@import './styles/themes/cosmic-galaxy-theme.css';
+@import './styles/themes/starlight-aurora-theme.css';
+@import './styles/themes/midnight-sapphire-theme.css';
+
+/* Import component styles */
+@import './styles/components.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer base {
+  html {
+    font-family: 'Montserrat', sans-serif;
+  }
+}

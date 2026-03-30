@@ -1,0 +1,6 @@
+export { CreatePaisModal } from './CreatePaisModal'
+export { CreateDistritoModal } from './CreateDistritoModal'
+export { CreateConcelhoModal } from './CreateConcelhoModal'
+export { CreateFreguesiaModal } from './CreateFreguesiaModal'
+export { CreateCodigoPostalModal } from './CreateCodigoPostalModal'
+export { CreateRuaModal } from './CreateRuaModal'

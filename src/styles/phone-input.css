@@ -1,0 +1,107 @@
+.react-tel-input {
+  width: 100% !important;
+}
+
+.react-tel-input .form-control {
+  width: 100% !important;
+  height: 50px !important;
+  padding-left: 48px !important;
+}
+
+.react-tel-input .flag-dropdown {
+  background-color: transparent;
+  border: 1px solid hsl(var(--input));
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+}
+
+.react-tel-input .selected-flag {
+  height: 48px;
+  border-radius: 6px 0 0 6px;
+}
+
+.react-tel-input .form-control {
+  @apply h-[50px] w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm text-foreground transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.react-tel-input .flag-dropdown {
+  @apply border-input bg-transparent hover:border-input;
+}
+
+.react-tel-input .selected-flag {
+  @apply bg-transparent hover:bg-accent;
+}
+
+.react-tel-input .country-list {
+  @apply border-input bg-background text-foreground;
+}
+
+.react-tel-input .country-list .country:hover {
+  @apply bg-accent;
+}
+
+.react-tel-input .country-list .country.highlight {
+  @apply bg-accent;
+}
+
+/* Dark mode specific styles */
+.dark .react-tel-input .form-control {
+  @apply border-input bg-transparent text-foreground;
+}
+
+.dark .react-tel-input .flag-dropdown {
+  @apply border-input bg-transparent;
+}
+
+.dark .react-tel-input .selected-flag {
+  @apply bg-transparent hover:bg-accent;
+}
+
+.dark .react-tel-input .country-list {
+  @apply border-input bg-background text-foreground;
+}
+
+.dark .react-tel-input .country-list .country {
+  @apply hover:bg-accent;
+}
+
+.dark .react-tel-input .country-list .country.highlight {
+  @apply bg-accent;
+}
+
+.dark .react-tel-input .country-list .country-name,
+.dark .react-tel-input .country-list .dial-code {
+  @apply text-foreground;
+}
+
+/* Mobile styles for phone input dropdown */
+@media (max-width: 768px) {
+  .react-tel-input .country-list {
+    @apply left-0 right-0 mx-auto max-h-[250px] w-[280px];
+    top: calc(100% + 5px);
+  }
+
+  .react-tel-input .country-list .country {
+    @apply px-4 py-2;
+  }
+
+  .react-tel-input .country-list .country-name {
+    @apply text-sm;
+  }
+
+  .react-tel-input .country-list .dial-code {
+    @apply text-sm;
+  }
+
+  .react-tel-input .flag-dropdown.open {
+    @apply z-50;
+  }
+
+  .react-tel-input .selected-flag {
+    @apply z-40;
+  }
+
+  .react-tel-input {
+    @apply relative;
+  }
+}

@@ -1,0 +1,64 @@
+@layer base {
+  .tropical-sunset-light {
+    --background: 25 100% 97%;
+    --foreground: 15 85% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 15 85% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 15 85% 20%;
+    --primary: 15 100% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 180 60% 85%;
+    --secondary-foreground: 180 80% 25%;
+    --muted: 25 30% 92%;
+    --muted-foreground: 15 40% 45%;
+    --accent: 45 100% 65%;
+    --accent-foreground: 45 100% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 15 60% 80%;
+    --input: 15 60% 80%;
+    --ring: 15 100% 55%;
+    --chart-1: 15 100% 55%;
+    --chart-2: 180 60% 50%;
+    --chart-3: 45 100% 65%;
+    --chart-4: 320 70% 60%;
+    --chart-5: 280 60% 70%;
+    --success: 120 60% 50%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 100% 65%;
+    --warning-foreground: 45 100% 15%;
+    --emerald: 120 60% 50%;
+    --emerald-foreground: 0 0% 100%;
+    --sidebar: 25 40% 95%;
+    --sidebar-foreground: 15 85% 20%;
+    --sidebar-primary: 15 100% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 180 60% 85%;
+    --sidebar-accent-foreground: 180 80% 25%;
+    --sidebar-border: 15 60% 80%;
+    --sidebar-ring: 15 100% 55%;
+    --font-sans: 'Poppins', sans-serif;
+    --font-serif: 'Merriweather', serif;
+    --font-mono: 'Source Code Pro', monospace;
+    --radius: 0.6rem;
+    --shadow-2xs: 0px 4px 8px -2px hsl(15 100% 55% / 0.1);
+    --shadow-xs: 0px 4px 8px -2px hsl(15 100% 55% / 0.1);
+    --shadow-sm:
+      0px 4px 12px -2px hsl(15 100% 55% / 0.15),
+      0px 2px 4px -2px hsl(180 60% 50% / 0.1);
+    --shadow:
+      0px 4px 12px -2px hsl(15 100% 55% / 0.15),
+      0px 2px 4px -2px hsl(180 60% 50% / 0.1);
+    --shadow-md:
+      0px 6px 16px -2px hsl(15 100% 55% / 0.15),
+      0px 4px 6px -2px hsl(180 60% 50% / 0.1);
+    --shadow-lg:
+      0px 8px 20px -2px hsl(15 100% 55% / 0.15),
+      0px 6px 8px -2px hsl(180 60% 50% / 0.1);
+    --shadow-xl:
+      0px 12px 24px -2px hsl(15 100% 55% / 0.15),
+      0px 8px 12px -2px hsl(180 60% 50% / 0.1);
+    --shadow-2xl: 0px 16px 32px -2px hsl(15 100% 55% / 0.25);
+  }
+}

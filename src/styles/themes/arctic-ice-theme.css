@@ -1,0 +1,64 @@
+@layer base {
+  .arctic-ice-light {
+    --background: 200 30% 98%;
+    --foreground: 200 60% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 200 60% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 60% 15%;
+    --primary: 200 80% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 92%;
+    --secondary-foreground: 220 40% 25%;
+    --muted: 200 15% 95%;
+    --muted-foreground: 200 30% 40%;
+    --accent: 200 30% 85%;
+    --accent-foreground: 180 80% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 200 25% 88%;
+    --input: 200 25% 88%;
+    --ring: 200 80% 50%;
+    --chart-1: 200 80% 50%;
+    --chart-2: 180 40% 60%;
+    --chart-3: 220 30% 70%;
+    --chart-4: 240 25% 75%;
+    --chart-5: 260 20% 80%;
+    --success: 160 60% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 80% 60%;
+    --warning-foreground: 45 100% 15%;
+    --emerald: 160 60% 45%;
+    --emerald-foreground: 0 0% 100%;
+    --sidebar: 200 20% 96%;
+    --sidebar-foreground: 200 60% 15%;
+    --sidebar-primary: 200 80% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 92%;
+    --sidebar-accent-foreground: 220 40% 25%;
+    --sidebar-border: 200 25% 88%;
+    --sidebar-ring: 200 80% 50%;
+    --font-sans: 'Inter', sans-serif;
+    --font-serif: 'Lora', serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius: 0.6rem;
+    --shadow-2xs: 0px 1px 3px -1px hsl(200 80% 50% / 0.1);
+    --shadow-xs: 0px 1px 3px -1px hsl(200 80% 50% / 0.1);
+    --shadow-sm:
+      0px 2px 4px -1px hsl(200 80% 50% / 0.15),
+      0px 1px 2px -1px hsl(180 40% 60% / 0.1);
+    --shadow:
+      0px 2px 4px -1px hsl(200 80% 50% / 0.15),
+      0px 1px 2px -1px hsl(180 40% 60% / 0.1);
+    --shadow-md:
+      0px 3px 6px -1px hsl(200 80% 50% / 0.15),
+      0px 2px 3px -1px hsl(180 40% 60% / 0.1);
+    --shadow-lg:
+      0px 4px 8px -1px hsl(200 80% 50% / 0.15),
+      0px 3px 4px -1px hsl(180 40% 60% / 0.1);
+    --shadow-xl:
+      0px 6px 12px -1px hsl(200 80% 50% / 0.15),
+      0px 4px 6px -1px hsl(180 40% 60% / 0.1);
+    --shadow-2xl: 0px 8px 16px -1px hsl(200 80% 50% / 0.25);
+  }
+}

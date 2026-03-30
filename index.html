@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CliCloud</title>
+    <script>
+      const theme = (() => {
+        if (
+          typeof localStorage !== 'undefined' &&
+          localStorage.getItem('theme')
+        ) {
+          return localStorage.getItem('theme')
+        }
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          return 'dark'
+        }
+        return 'light'
+      })()
+
+      if (theme === 'light') {
+        document.documentElement.classList.remove('dark')
+        document.documentElement.classList.remove(
+          'blue',
+          'teal',
+          'monokai-pro',
+          'clinic',
+          'mean-blue-cue',
+          'wickford-bay',
+          'discord',
+          'bold-tech-dark',
+          'bold-tech-light',
+          'ocean-breeze-dark',
+          'retro-arcade-dark',
+          'sunset-horizon-light',
+          'sunset-horizon-dark',
+          'kodama-grove-light',
+          'kodama-grove-dark',
+          'claymorphism-light',
+          'claymorphism-dark',
+          'vintage-paper-dark',
+          'nature-dark',
+          'perpetuity-light',
+          'perpetuity-dark',
+          'pastel-dreams-light',
+          'pastel-dreams-dark',
+          'medical-light',
+          'medical-dark'
+        )
+      } else if (theme === 'dark') {
+        document.documentElement.classList.add('dark')
+        document.documentElement.classList.remove(
+          'blue',
+          'teal',
+          'monokai-pro',
+          'clinic',
+          'mean-blue-cue',
+          'wickford-bay',
+          'discord',
+          'bold-tech-dark',
+          'bold-tech-light',
+          'ocean-breeze-dark',
+          'retro-arcade-dark',
+          'sunset-horizon-light',
+          'sunset-horizon-dark',
+          'kodama-grove-dark',
+          'claymorphism-light',
+          'claymorphism-dark',
+          'vintage-paper-dark',
+          'nature-dark',
+          'perpetuity-light',
+          'perpetuity-dark',
+          'pastel-dreams-light',
+          'pastel-dreams-dark',
+          'medical-light',
+          'medical-dark'
+        )
+      } else {
+        document.documentElement.classList.remove(
+          'dark',
+          'blue',
+          'teal',
+          'monokai-pro',
+          'clinic',
+          'mean-blue-cue',
+          'wickford-bay',
+          'discord',
+          'bold-tech-dark',
+          'bold-tech-light',
+          'ocean-breeze-dark',
+          'retro-arcade-light',
+          'retro-arcade-dark',
+          'sunset-horizon-light',
+          'sunset-horizon-dark',
+          'kodama-grove-light',
+          'kodama-grove-dark',
+          'claymorphism-light',
+          'claymorphism-dark',
+          'vintage-paper-light',
+          'vintage-paper-dark',
+          'nature-light',
+          'nature-dark',
+          'perpetuity-light',
+          'perpetuity-dark',
+          'pastel-dreams-light',
+          'pastel-dreams-dark',
+          'medical-light',
+          'medical-dark'
+        )
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "apiKey": "your-api-key-here",
+  "urlApiHttp": "http://api.example.com:8084",
+  "urlApiHttps": "https://api.example.com:8094",
+  "urlAccessControlHttp": "http://api.example.com:8084",
+  "urlAccessControlHttps": "https://api.example.com:8094",
+  "updaterApiUrlHttp": "http://updater.example.com:5275",
+  "updaterApiUrlHttps": "https://updater.example.com:7038",
+  "updaterApiKey": "your-updater-api-key",
+  "clientKey": "915220DC-CA91-4537-1763-08DE33F7F2C2",
+  "licencaId": "",
+  "encryptionKey": "placeholder-encryption-key-change-in-production"
+}
+

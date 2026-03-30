@@ -1,0 +1,34 @@
+@layer base {
+  .teal {
+    --background: 240 23.58% 24.12%;
+    --foreground: 173 24% 93%;
+    --muted: 233 10.2% 52.88%;
+    --muted-foreground: 233 12% 73%;
+    --popover: 242.73 25% 17.25%;
+    --popover-foreground: 0 0% 100%;
+    --card: 242.73 25% 17.25%;
+    --card-foreground: 173 24% 98%;
+    --border: 233 9.88% 23.8%;
+    --input: 240 27.02% 33.31%;
+    --primary: 152.14 91.3% 63.92%;
+    --primary-foreground: 172.08 100% 10%;
+    --secondary: 150.68 53.66% 32.16%;
+    --secondary-foreground: 44 30% 85%;
+    --accent: 232.26 17.92% 33.92%;
+    --accent-foreground: 233 18% 94%;
+    --destructive: 10 90% 57%;
+    --destructive-foreground: 0 0% 100%;
+    --ring: 152.14 91.3% 63.92%;
+    --chart-1: 152.14 91.3% 63.92%;
+    --chart-2: 150.68 53.66% 32.16%;
+    --chart-3: 232.26 17.92% 33.92%;
+    --chart-4: 150.68 53.66% 35.16%;
+    --chart-5: 152.14 94.3% 63.92%;
+    --success: 142 70% 45%;
+    --success-foreground: 144 70% 10%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 38 92% 10%;
+    --emerald: 142 76% 36%;
+    --emerald-foreground: 0 0% 100%;
+  }
+}

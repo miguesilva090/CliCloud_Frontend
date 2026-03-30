@@ -1,0 +1,121 @@
+{
+  // Identificação visual do projeto Client App
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#E774BB",
+    "titleBar.activeForeground": "#ffffff",
+    "titleBar.inactiveBackground": "#E774BB99",
+    "titleBar.inactiveForeground": "#ffffffcc",
+    "statusBar.background": "#E774BB",
+    "statusBar.foreground": "#ffffff",
+    "statusBar.debuggingBackground": "#E774BB",
+    "statusBar.debuggingForeground": "#ffffff",
+    "statusBar.noFolderBackground": "#E774BB",
+    "activityBar.activeBackground": "#E774BB33",
+    "activityBar.activeBorder": "#E774BB",
+    "panel.border": "#E774BB",
+    "sideBar.border": "#E774BB33"
+  },
+
+    "window.title": "LUMA Frontend - ${dirty}${activeEditorShort}${separator}${rootName}",
+
+  // Format on save configuration
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": false,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false,
+
+  // Default formatter
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // TypeScript/JavaScript formatting
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+
+  // JSON formatting
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false
+  },
+
+  // CSS formatting
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false
+  },
+
+  // Markdown formatting
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false
+  },
+
+  // Use .editorconfig for formatting
+  "prettier.requireConfig": true,
+  "prettier.useEditorConfig": true,
+
+  // ESLint configuration - only fix linting issues, not formatting
+  "eslint.format.enable": false,
+  "eslint.codeActionsOnSave.mode": "problems",
+  
+  // TypeScript configuration
+  "typescript.preferences.organizeImports": false,
+  
+  // Ensure operations complete
+  "editor.codeActionsOnSaveTimeout": 2000
+}

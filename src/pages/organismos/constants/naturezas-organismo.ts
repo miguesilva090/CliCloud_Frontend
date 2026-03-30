@@ -1,0 +1,19 @@
+/**
+ * Naturezas pré-definidas por Organismo (conforme legado Naturezas.ObterLista)
+ */
+export const NATUREZAS_ORGANISMO = [
+  'A - ANÁLISE CLÍNICA',
+  'B - ANATOMIA PATOLÓGICA',
+  'C - CARDIOLOGIA',
+  'D - MEDICINA NUCLEAR',
+  'E - ELECTROENCEFALOGRAFIA',
+  'F - ENDOSCOPIA GASTROENTEROLÓGICA',
+  'G - MEDICINA FÍSICA E DE REABILITAÇÃO',
+  'H - OTORRINOLARINGOLOGIA',
+  'I - PNEUMO E IMUNOALERGOLOGIA',
+  'J - UROLOGIA',
+  'L - NEUROFISIOLOGIA',
+  'M - RADIOLOGIA',
+  'N - CONSULTAS',
+  'O - PSICOLOGIA',
+] as const

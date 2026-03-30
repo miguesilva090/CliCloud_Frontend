@@ -1,0 +1,106 @@
+# Cursor Workspace Rules
+
+## Commit Message Generation
+When generating commit messages, only consider and analyze staged changes (files that have been added to the git staging area). Do not include unstaged changes or untracked files in the commit message generation process.
+
+## Commit Message Format
+
+All commit messages MUST follow the Conventional Commits specification with the format:
+
+```
+type(scope): description
+```
+
+### Commit Types
+
+Use one of the following types:
+
+- `feat`: A new feature
+
+- `fix`: A bug fix
+
+- `chore`: Changes to build process, dependencies, or tooling (e.g., version updates)
+
+- `refactor`: Code refactoring without changing functionality
+
+- `docs`: Documentation changes
+
+- `style`: Code style changes (formatting, missing semicolons, etc.)
+
+- `test`: Adding or updating tests
+
+- `perf`: Performance improvements
+
+### Scope
+
+The scope should be:
+
+- Lowercase
+
+- Use kebab-case for multi-word scopes (e.g., `app-update`)
+
+- Single word when possible (e.g., `initializer`, `version`, `seeder`)
+
+- Reflect the area of the codebase affected
+
+Common scopes in this project:
+
+- `initializer`: Changes to data initializers
+
+- `seeder`: Changes to seeders
+
+- `version`: Version updates
+
+- `app-update`: Application update features
+
+- `aplicacao`: Application entity changes
+
+- Component or module names (e.g., `auth`, `api`, `domain`, `infrastructure`)
+
+### Description
+
+- Use lowercase (except for proper nouns, acronyms, or quoted strings)
+
+- Be concise and descriptive
+
+- Use imperative mood ("add" not "added" or "adds")
+
+- No period at the end
+
+- Can include quoted strings for specific names (e.g., "Geral", "Movi")
+
+### Examples
+
+✅ Good:
+
+- `feat(initializer): add MoviPerfilUtilizadorInitializer for user-profile relationships`
+
+- `fix(initializer): update Movi client user ID in MoviPerfilUtilizadorInitializer`
+
+- `chore(version): update API version to 0.0.5 in version.json`
+
+- `refactor(seeder): clean up static data seeder and remove unused seeders`
+
+- `feat(app-update): enhance sorting and filtering for app updates`
+
+❌ Bad:
+
+- `Added new feature` (missing type and scope)
+
+- `fix: bug fix` (missing scope)
+
+- `FEAT(Initializer): Add new initializer` (wrong case)
+
+- `feat(initializer): Added new initializer.` (wrong mood, has period)
+
+### When Generating Commits
+
+When the user clicks the commit button or requests a commit:
+
+1. Analyze the staged changes to determine the appropriate type and scope
+
+2. Generate a commit message following the format: `type(scope): description`
+
+3. Ensure the message is concise, descriptive, and follows the examples above
+
+4. Keep the total message length under 100 characters when possible (as per user preference)

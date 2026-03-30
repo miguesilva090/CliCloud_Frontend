@@ -1,0 +1,86 @@
+@layer base {
+  /* Midnight Sapphire Dark Theme - Active Menu Item Title and Description Styling */
+  .midnight-sapphire-dark .bg-accent .line-clamp-2,
+  .midnight-sapphire-dark .bg-accent span.line-clamp-2,
+  .midnight-sapphire-dark .bg-accent .text-muted-foreground,
+  .midnight-sapphire-dark .bg-accent h3,
+  .midnight-sapphire-dark .bg-accent h4,
+  .midnight-sapphire-dark .bg-accent h5,
+  .midnight-sapphire-dark .bg-accent h6,
+  .midnight-sapphire-dark .bg-accent .font-medium,
+  .midnight-sapphire-dark .bg-accent .font-semibold {
+    color: #ffffff !important; /* White color for active menu item title and description */
+  }
+
+  /* Midnight Sapphire Dark Theme - Navigation Bar Active Parent Item Styling */
+  .midnight-sapphire-dark .bg-accent,
+  .midnight-sapphire-dark .bg-accent *,
+  .midnight-sapphire-dark .bg-accent span,
+  .midnight-sapphire-dark .bg-accent div,
+  .midnight-sapphire-dark .bg-accent .text-accent-foreground {
+    color: #ffffff !important; /* White color for navigation bar active parent items */
+  }
+
+  .midnight-sapphire-dark {
+    --background: 240 25% 6%;
+    --foreground: 240 15% 90%;
+    --card: 240 20% 9%;
+    --card-foreground: 240 15% 90%;
+    --popover: 240 20% 9%;
+    --popover-foreground: 240 15% 90%;
+    --primary: 240 60% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 30% 18%;
+    --secondary-foreground: 220 20% 80%;
+    --muted: 240 15% 12%;
+    --muted-foreground: 240 20% 85%;
+    --accent: 280 50% 65%;
+    --accent-foreground: 280 80% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 20% 22%;
+    --input: 240 20% 22%;
+    --ring: 240 60% 55%;
+    --chart-1: 240 60% 55%;
+    --chart-2: 280 50% 65%;
+    --chart-3: 260 45% 60%;
+    --chart-4: 300 40% 65%;
+    --chart-5: 320 35% 70%;
+    --success: 120 50% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 70% 55%;
+    --warning-foreground: 45 90% 15%;
+    --emerald: 120 50% 45%;
+    --emerald-foreground: 0 0% 100%;
+    --sidebar: 240 20% 4%;
+    --sidebar-foreground: 240 15% 90%;
+    --sidebar-primary: 240 60% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 30% 18%;
+    --sidebar-accent-foreground: 220 20% 80%;
+    --sidebar-border: 240 20% 22%;
+    --sidebar-ring: 240 60% 55%;
+    --font-sans: 'Inter', sans-serif;
+    --font-serif: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius: 0.4rem;
+    --shadow-2xs: 0px 2px 4px -1px hsl(240 60% 55% / 0.1);
+    --shadow-xs: 0px 2px 4px -1px hsl(240 60% 55% / 0.1);
+    --shadow-sm:
+      0px 3px 6px -1px hsl(240 60% 55% / 0.2),
+      0px 1px 3px -1px hsl(220 30% 18% / 0.1);
+    --shadow:
+      0px 3px 6px -1px hsl(240 60% 55% / 0.2),
+      0px 1px 3px -1px hsl(220 30% 18% / 0.1);
+    --shadow-md:
+      0px 4px 8px -1px hsl(240 60% 55% / 0.2),
+      0px 2px 4px -1px hsl(220 30% 18% / 0.1);
+    --shadow-lg:
+      0px 6px 12px -1px hsl(240 60% 55% / 0.2),
+      0px 3px 6px -1px hsl(220 30% 18% / 0.1);
+    --shadow-xl:
+      0px 8px 16px -1px hsl(240 60% 55% / 0.2),
+      0px 4px 8px -1px hsl(220 30% 18% / 0.1);
+    --shadow-2xl: 0px 12px 24px -1px hsl(240 60% 55% / 0.3);
+  }
+}

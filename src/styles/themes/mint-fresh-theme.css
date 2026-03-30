@@ -1,0 +1,77 @@
+@layer base {
+  /* Mint Fresh Light Theme - Active Menu Item Title and Description Styling */
+  .mint-fresh-light .bg-accent .line-clamp-2,
+  .mint-fresh-light .bg-accent span.line-clamp-2,
+  .mint-fresh-light .bg-accent .text-muted-foreground,
+  .mint-fresh-light .bg-accent h3,
+  .mint-fresh-light .bg-accent h4,
+  .mint-fresh-light .bg-accent h5,
+  .mint-fresh-light .bg-accent h6,
+  .mint-fresh-light .bg-accent .font-medium,
+  .mint-fresh-light .bg-accent .font-semibold {
+    color: #ffffff !important; /* White color for active menu item title and description */
+  }
+
+  .mint-fresh-light {
+    --background: 160 25% 98%;
+    --foreground: 160 40% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 40% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 40% 12%;
+    --primary: 160 70% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 140 30% 92%;
+    --secondary-foreground: 160 50% 20%;
+    --muted: 160 20% 94%;
+    --muted-foreground: 160 30% 40%;
+    --accent: 160 84% 39%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 160 30% 88%;
+    --input: 160 30% 88%;
+    --ring: 160 70% 45%;
+    --chart-1: 160 70% 45%;
+    --chart-2: 180 60% 55%;
+    --chart-3: 200 50% 65%;
+    --chart-4: 220 40% 75%;
+    --chart-5: 240 35% 80%;
+    --success: 160 60% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 70% 55%;
+    --warning-foreground: 45 90% 15%;
+    --emerald: 160 60% 45%;
+    --emerald-foreground: 0 0% 100%;
+    --sidebar: 160 20% 96%;
+    --sidebar-foreground: 160 40% 12%;
+    --sidebar-primary: 160 70% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 140 30% 92%;
+    --sidebar-accent-foreground: 160 50% 20%;
+    --sidebar-border: 160 30% 88%;
+    --sidebar-ring: 160 70% 45%;
+    --font-sans: 'Inter', sans-serif;
+    --font-serif: 'Playfair Display', serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius: 0.6rem;
+    --shadow-2xs: 0px 2px 6px -1px hsl(160 70% 45% / 0.08);
+    --shadow-xs: 0px 2px 6px -1px hsl(160 70% 45% / 0.08);
+    --shadow-sm:
+      0px 3px 8px -1px hsl(160 70% 45% / 0.12),
+      0px 1px 3px -1px hsl(180 60% 60% / 0.08);
+    --shadow:
+      0px 3px 8px -1px hsl(160 70% 45% / 0.12),
+      0px 1px 3px -1px hsl(180 60% 60% / 0.08);
+    --shadow-md:
+      0px 4px 12px -1px hsl(160 70% 45% / 0.12),
+      0px 2px 4px -1px hsl(180 60% 60% / 0.08);
+    --shadow-lg:
+      0px 6px 16px -1px hsl(160 70% 45% / 0.12),
+      0px 3px 6px -1px hsl(180 60% 60% / 0.08);
+    --shadow-xl:
+      0px 8px 20px -1px hsl(160 70% 45% / 0.12),
+      0px 4px 8px -1px hsl(180 60% 60% / 0.08);
+    --shadow-2xl: 0px 12px 28px -1px hsl(160 70% 45% / 0.18);
+  }
+}

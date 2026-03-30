@@ -1,0 +1,15 @@
+[
+  {
+    "id": "1f197c7d-49ac-411c-4eee-08de22a7895a",
+    "nome": "Alvalade",
+    "concelhoId": "1f197c7d-49ac-411c-4eee-08de22a7895a",
+    "concelhoNome": "Lisboa",
+    "concelhoDistritoId": "1f197c7d-49ac-411c-4eee-08de22a7895a",
+    "distritoId": "1f197c7d-49ac-411c-4eee-08de22a7895a",
+    "distritoNome": "Lisboa",
+    "distritoPaisId": "1f197c7d-49ac-411c-4eee-08de22a7895a",
+    "paisId": "1f197c7d-49ac-411c-4eee-08de22a7895a",
+    "paisNome": "Portugal",
+    "createdOn": "2025-01-01T00:00:00.000Z"
+  }
+]
