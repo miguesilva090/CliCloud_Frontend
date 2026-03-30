@@ -274,6 +274,14 @@ const ClinicaEditPage = lazy(() =>
   }))
 )
 
+const SmsConfigPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/sms/pages/sms-config-page'
+  ).then((m) => ({
+    default: m.SmsConfigPage,
+  }))
+)
+
 const FornecedorEditPage = lazy(() =>
   import('@/pages/fornecedores/pages/fornecedor-edit-page').then((m) => ({
     default: m.FornecedorEditPage,
@@ -1481,6 +1489,14 @@ export default function AppRouter() {
           element: (
             <Suspense>
               <ClinicaEditPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/sms',
+          element: (
+            <Suspense>
+              <SmsConfigPage />
             </Suspense>
           ),
         },
