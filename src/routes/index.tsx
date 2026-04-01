@@ -282,6 +282,22 @@ const SmsConfigPage = lazy(() =>
   }))
 )
 
+const SmsHistoryPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/sms/pages/sms-history-page'
+  ).then((m) => ({
+    default: m.SmsHistoryPage,
+  }))
+)
+
+const ChamadaVozConfigPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/chamada-voz/pages/chamada-voz-config-page'
+  ).then((m) => ({
+    default: m.ChamadaVozConfigPage,
+  }))
+)
+
 const FornecedorEditPage = lazy(() =>
   import('@/pages/fornecedores/pages/fornecedor-edit-page').then((m) => ({
     default: m.FornecedorEditPage,
@@ -1497,6 +1513,22 @@ export default function AppRouter() {
           element: (
             <Suspense>
               <SmsConfigPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/sms/historico',
+          element: (
+            <Suspense>
+              <SmsHistoryPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/chamada-voz',
+          element: (
+            <Suspense>
+              <ChamadaVozConfigPage />
             </Suspense>
           ),
         },

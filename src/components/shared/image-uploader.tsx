@@ -131,6 +131,14 @@ export function ImageUploader({
   placeholderIcon,
   showFileTypesHint = true,
 }: ImageUploaderProps) {
+  const supportedTypesLabel = useMemo(() => {
+    const keys = Object.keys(accept ?? {})
+    if (keys.length === 0) return 'PNG, JPG, JPEG, WEBP, GIF'
+    return keys
+      .map((k) => k.replace('image/', '').toUpperCase())
+      .join(', ')
+  }, [accept])
+
   // ⚠️ CRITICAL: Store partial URLs internally (for form state/database)
   // Convert incoming currentImageUrl (might be full) to partial for storage
   const normalizedCurrentUrl = useMemo(() => {
@@ -151,17 +159,27 @@ export function ImageUploader({
   const [retryCount, setRetryCount] = useState(0)
   const objectUrlRef = useRef<string | null>(null)
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const isSyncingFromExternalRef = useRef(false)
+  const hasUserInteractionRef = useRef(false)
 
   // Update internal state when currentImageUrl changes (e.g., when editing)
   useEffect(() => {
     const partialUrl = toPartialUrl(currentImageUrl || null)
     if (partialUrl !== uploadedPartialUrl) {
+      isSyncingFromExternalRef.current = true
       setUploadedPartialUrl(partialUrl)
     }
   }, [currentImageUrl, uploadedPartialUrl])
 
   // Notify parent of partial URL changes
   useEffect(() => {
+    if (isSyncingFromExternalRef.current) {
+      isSyncingFromExternalRef.current = false
+      return
+    }
+    if (!hasUserInteractionRef.current) {
+      return
+    }
     onPartialUrlChange?.(uploadedPartialUrl)
   }, [uploadedPartialUrl, onPartialUrlChange])
 
@@ -266,16 +284,21 @@ export function ImageUploader({
           // Try common response formats
           const imageUrl =
             responseData?.data?.url ||
+            responseData?.data?.Url ||
             responseData?.data?.imageUrl ||
             responseData?.data?.fileUrl ||
             responseData?.url ||
+            responseData?.Url ||
             responseData?.imageUrl ||
             responseData?.fileUrl
 
           if (imageUrl) {
             // ⚠️ CRITICAL: Convert to partial URL for storage
             partialUrl = toPartialUrl(imageUrl)
+            hasUserInteractionRef.current = true
             setUploadedPartialUrl(partialUrl)
+          } else {
+            throw new Error('Resposta de upload sem URL da imagem.')
           }
         }
 
@@ -340,6 +363,7 @@ export function ImageUploader({
       if (acceptedFiles.length === 0) return
 
       const file = acceptedFiles[0]
+      hasUserInteractionRef.current = true
 
       // Validate file size
       if (file.size > maxSize) {
@@ -354,7 +378,7 @@ export function ImageUploader({
 
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        const errorMsg = 'Arquivo deve ser uma imagem'
+        const errorMsg = `Formato não suportado. Use: ${supportedTypesLabel}`
         setError(errorMsg)
         toast.error(errorMsg)
         return
@@ -431,6 +455,11 @@ export function ImageUploader({
   // Dropzone configuration
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    onDropRejected: () => {
+      const errorMsg = `Tipo de ficheiro não suportado. Formatos aceites: ${supportedTypesLabel}`
+      setError(errorMsg)
+      toast.error(errorMsg)
+    },
     accept: accept as Accept,
     maxFiles: 1,
     disabled: disabled || isUploading,
@@ -519,6 +548,7 @@ export function ImageUploader({
                   }
                   setSelectedFile(null)
                   setPreviewUrl(null)
+                  hasUserInteractionRef.current = true
                   setUploadedPartialUrl(null)
                   setError(null)
                   setImageMetadata(null)
@@ -594,6 +624,7 @@ export function ImageUploader({
                           e.stopPropagation()
                           setSelectedFile(null)
                           setPreviewUrl(null)
+                          hasUserInteractionRef.current = true
                           setUploadedPartialUrl(null)
                           setError(null)
                           setImageMetadata(null)
@@ -616,6 +647,7 @@ export function ImageUploader({
                       e.stopPropagation()
                       setSelectedFile(null)
                       setPreviewUrl(null)
+                      hasUserInteractionRef.current = true
                       setUploadedPartialUrl(null)
                       setError(null)
                       setImageMetadata(null)
@@ -628,7 +660,7 @@ export function ImageUploader({
                 ) : null}
                 {showFileTypesHint ? (
                   <p className='text-[9px] text-muted-foreground text-center leading-tight mt-1'>
-                    PNG, JPG, GIF • {maxSize / (1024 * 1024)}MB
+                    {supportedTypesLabel} • {maxSize / (1024 * 1024)}MB
                   </p>
                 ) : null}
               </>

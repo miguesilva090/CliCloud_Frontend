@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Plus, X } from 'lucide-react'
+import { Building2, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import {
@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -30,9 +31,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { AtualizarConfiguracaoTratamentosRequest } from '@/types/dtos/core/configuracao-tratamentos.dtos'
 import { MoedaService } from '@/lib/services/moedas/moeda-service'
 import { MotivoIsencaoService } from '@/lib/services/taxas-iva/motivo-isencao-service'
+import { TaxaIvaService } from '@/lib/services/taxas-iva/taxa-iva-service'
 import { useGetCodigosPostaisSelect } from '@/pages/base/codigospostais/queries/codigospostais-queries'
 import { CreateCodigoPostalModal } from '@/components/shared/address-quick-create'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
+import { ImageUploader } from '@/components/shared/image-uploader'
 import { CodigosPostaisService } from '@/lib/services/base/codigospostais-service'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
 import { toastFirstValidationMessage } from '../utils/clinica-edit-validation'
@@ -124,9 +127,16 @@ export function ClinicaEditPage() {
     staleTime: 5 * 60_000,
     enabled: !!clinica,
   })
+  const taxasIvaQuery = useQuery({
+    queryKey: ['taxas-iva-light', 'clinica-form'],
+    queryFn: () => TaxaIvaService().getTaxasIvaLight(''),
+    staleTime: 5 * 60_000,
+    enabled: !!clinica,
+  })
   const codigosPostaisQuery = useGetCodigosPostaisSelect('')
   const moedas = moedasQuery.data?.info?.data ?? []
   const motivosIsencao = motivosIsencaoQuery.data?.info?.data ?? []
+  const taxasIva = taxasIvaQuery.data?.info?.data ?? []
   const codigosPostais = codigosPostaisQuery.data ?? []
 
   const [modalCodigoPostalOpen, setModalCodigoPostalOpen] = useState(false)
@@ -142,6 +152,11 @@ export function ClinicaEditPage() {
     | 'emails'
   const [mainTab, setMainTab] = useState<MainTabKey>('identificacao')
   const [subTab, setSubTab] = useState<string>('geral-identificacao')
+  const toSelectValue = (v: unknown): string | undefined => {
+    if (v === null || v === undefined) return undefined
+    const s = String(v).trim()
+    return s ? s : undefined
+  }
 
   useEffect(() => {
     if (mainTab === 'identificacao') setSubTab('geral-identificacao')
@@ -168,8 +183,54 @@ export function ClinicaEditPage() {
   const cpComboboxFiltered = useMemo(() => {
     return filterComboboxItems(cpComboboxItems, cpComboboxSearch)
   }, [cpComboboxItems, cpComboboxSearch])
+  const resolveRegimeIvaByZonaFiscal = (
+    zonFiscValue: string,
+    taxas: Array<{ descricao: string; taxa: number }>,
+  ): string => {
+    const normalize = (s: string) =>
+      s
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+    const token =
+      zonFiscValue === '1'
+        ? 'continente'
+        : zonFiscValue === '2'
+          ? 'madeira'
+          : zonFiscValue === '3'
+            ? 'acores'
+            : ''
+
+    const byZona = token
+      ? taxas.filter(
+          (t) =>
+            Number.isFinite(t.taxa) &&
+            t.taxa > 0 &&
+            normalize(t.descricao).includes(token),
+        )
+      : []
+
+    const candidatos =
+      byZona.length > 0
+        ? byZona
+        : taxas.filter((t) => Number.isFinite(t.taxa) && t.taxa > 0)
+
+    if (candidatos.length === 0) return ''
+    const taxa = candidatos.sort((a, b) => b.taxa - a.taxa)[0].taxa
+    return Number.isInteger(taxa) ? String(taxa) : String(taxa).replace('.', ',')
+  }
+  const resolveRegimeIvaIsento = (
+    taxas: Array<{ descricao: string; taxa: number }>,
+  ): string => {
+    const isento = taxas.find((t) => t.taxa === 0)
+    if (!isento) return '0'
+    return Number.isInteger(isento.taxa)
+      ? String(isento.taxa)
+      : String(isento.taxa).replace('.', ',')
+  }
 
   const cmoedaWatch = form.watch('cmoeda')
+  const tipoWatch = form.watch('tipo')
   const moedasForSelect = useMemo(() => {
     return buildMoedasForSelect(moedas, cmoedaWatch)
   }, [moedas, cmoedaWatch])
@@ -184,9 +245,28 @@ export function ClinicaEditPage() {
     form.reset(mapClinicaToClinicaEditFormValues(clinica))
   }, [clinica, form])
 
+  useEffect(() => {
+    if (!clinica) return
+    const urlFotoAtual = clinica.urlFoto ?? ''
+    if ((form.getValues('urlFoto') ?? '') !== urlFotoAtual) {
+      form.setValue('urlFoto', urlFotoAtual, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      })
+    }
+  }, [clinica?.id, clinica?.urlFoto, location.key, form, clinica])
+
   const canSave = !isReadOnly && !!clinica && !updatePending
 
   const onInvalidSubmit = toastFirstValidationMessage
+
+  const handleSubmitSafe = (e?: unknown) => {
+    const submit = form.handleSubmit(onSubmit, onInvalidSubmit)
+    void submit(e as never).catch((error: unknown) => {
+      onInvalidSubmit(error)
+    })
+  }
 
   const onSubmit = async (values: ClinicaEditFormValues) => {
     if (!clinica) return
@@ -277,7 +357,7 @@ export function ClinicaEditPage() {
           ) : (
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit(onSubmit, onInvalidSubmit)}
+                onSubmit={handleSubmitSafe}
                 className='space-y-4'
               >
                 {!isReadOnly ? (
@@ -285,7 +365,7 @@ export function ClinicaEditPage() {
                     <Button
                       type='button'
                       disabled={!canSave}
-                      onClick={form.handleSubmit(onSubmit, onInvalidSubmit)}
+                      onClick={() => handleSubmitSafe()}
                       size='sm'
                       className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
                     >
@@ -395,6 +475,8 @@ export function ClinicaEditPage() {
                   </div>
 
                   <TabsContent value='geral-identificacao'>
+                  <div className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-4 items-start'>
+                  <div className='order-2 lg:order-1'>
                   <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                     <FormField
                       control={form.control}
@@ -462,25 +544,6 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='Observações'
-                              readOnly={isReadOnly || updatePending}
-                              {...field}
-                              value={field.value ?? ''}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name='urlFoto'
-                      render={({ field }) => (
-                        <FormItem className='md:col-span-1'>
-                          <FormLabel>Foto</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder='https://...'
                               readOnly={isReadOnly || updatePending}
                               {...field}
                               value={field.value ?? ''}
@@ -692,6 +755,50 @@ export function ClinicaEditPage() {
                       )}
                     />
                   </div>
+                  </div>
+                  <div className='order-1 lg:order-2'>
+                    <FormField
+                      control={form.control}
+                      name='urlFoto'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Foto</FormLabel>
+                          <FormControl>
+                            <ImageUploader
+                              key={`${clinica?.id ?? 'clinica'}-${clinica?.urlFoto ?? 'sem-foto'}`}
+                              uploadUrl='/client/utility/ImageUpload/upload-image'
+                              fieldName='File'
+                              additionalFields={{ Subfolder: 'Clinicas' }}
+                              accept={{
+                                'image/png': [],
+                                'image/jpeg': [],
+                                'image/jpg': [],
+                                'image/webp': [],
+                                'image/gif': [],
+                              }}
+                              currentImageUrl={(field.value || clinica?.urlFoto) ?? undefined}
+                              enableCompression={false}
+                              maxRetries={0}
+                              showMetadata={false}
+                              variant='default'
+                              placeholder=''
+                              actionButtonLabel='Foto'
+                              actionButtonShowLabel={false}
+                              showFileTypesHint
+                              showRemoveButtonAlways={!isReadOnly}
+                              disabled={isReadOnly || updatePending}
+                              rootClassName='border-solid border-[#2aa89a] bg-background/0 backdrop-blur-0 w-[260px] max-w-[260px] h-[170px]'
+                              actionButtonClassName='bg-[#2aa89a] text-white hover:bg-[#239b8f]'
+                              placeholderIcon={<Building2 className='h-10 w-10 text-muted-foreground/40' />}
+                              onUploadSuccess={(partialUrl) => field.onChange(partialUrl ?? '')}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  </div>
                   </TabsContent>
 
                   <TabsContent value='fiscal-dados-fiscais'>
@@ -703,9 +810,7 @@ export function ClinicaEditPage() {
                           <FormItem>
                             <FormLabel>Moeda</FormLabel>
                             <Select
-                              value={
-                                field.value?.trim() ? field.value : undefined
-                              }
+                              value={toSelectValue(field.value)}
                               onValueChange={field.onChange}
                               disabled={
                                 moedasQuery.isLoading ||
@@ -719,11 +824,15 @@ export function ClinicaEditPage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {moedasForSelect.map((m) => (
-                                  <SelectItem key={m.id} value={m.id}>
-                                    {m.descricao ?? m.id}
-                                  </SelectItem>
-                                ))}
+                                {moedasForSelect.map((m) => {
+                                  const moedaId = (m.id ?? '').trim()
+                                  if (!moedaId) return null
+                                  return (
+                                    <SelectItem key={moedaId} value={moedaId}>
+                                      {m.descricao ?? moedaId}
+                                    </SelectItem>
+                                  )
+                                })}
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -853,15 +962,30 @@ export function ClinicaEditPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Zona Fiscal</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder='Zona Fiscal'
-                                readOnly={isReadOnly || updatePending}
-                                {...field}
-                                value={field.value ?? ''}
-                              />
-                            </FormControl>
-                            <FormMessage />
+                            <Select
+                              value={toSelectValue(field.value)}
+                              onValueChange={(value) => {
+                                field.onChange(value)
+                                const regimeIva = resolveRegimeIvaByZonaFiscal(
+                                  value,
+                                  taxasIva,
+                                )
+                                form.setValue('tipo', regimeIva, { shouldDirty: true })
+                              }}
+                              disabled={isReadOnly || updatePending}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className='data-[placeholder]:text-muted-foreground'>
+                                    <SelectValue placeholder='Zona fiscal'/>
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value='1'>Continente</SelectItem>
+                                  <SelectItem value='2'>Madeira</SelectItem>
+                                  <SelectItem value='3'>Açores</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -872,14 +996,49 @@ export function ClinicaEditPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Sistema de IVA</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder='Sistema de IVA'
-                                readOnly={isReadOnly || updatePending}
-                                {...field}
-                                value={field.value ?? ''}
-                              />
-                            </FormControl>
+                            <div className='flex items-center gap-3 min-w-0'>
+                              <FormControl>
+                                <Input
+                                  className='w-full max-w-[600px]'
+                                  placeholder='Sistema de IVA'
+                                  readOnly={isReadOnly || updatePending}
+                                  {...field}
+                                  value={field.value ?? tipoWatch ?? ''}
+                                />
+                              </FormControl>
+                              <div className='flex items-center gap-2 mr-12'>
+                                <Checkbox
+                                  id='clinica-iva-isento'
+                                  checked={toSelectValue(field.value) === resolveRegimeIvaIsento(taxasIva)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked === true) {
+                                      form.setValue(
+                                        'tipo',
+                                        resolveRegimeIvaIsento(taxasIva),
+                                        { shouldDirty: true },
+                                      )
+                                      return
+                                    }
+                                    const zonFiscAtual = form.getValues('zonFisc')
+                                    form.setValue(
+                                      'tipo',
+                                      resolveRegimeIvaByZonaFiscal(
+                                        zonFiscAtual,
+                                        taxasIva,
+                                      ),
+                                      { shouldDirty: true },
+                                    )
+                                  }}
+                                  disabled={isReadOnly || updatePending}
+                                />
+                                <label
+                                  htmlFor='clinica-iva-isento'
+                                  className='text-sm text-muted-foreground cursor-pointer'
+                                >
+                                  Isento
+                                </label>
+                              </div>
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -1296,11 +1455,7 @@ export function ClinicaEditPage() {
                               <FormItem>
                                 <FormLabel>Motivo de Isenção por Defeito</FormLabel>
                                 <Select
-                                  value={
-                                    field.value?.trim()
-                                      ? field.value
-                                      : undefined
-                                  }
+                                  value={toSelectValue(field.value)}
                                   onValueChange={field.onChange}
                                   disabled={
                                     motivosIsencaoQuery.isLoading ||

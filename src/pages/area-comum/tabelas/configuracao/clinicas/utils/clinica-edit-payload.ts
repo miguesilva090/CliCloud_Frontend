@@ -1,76 +1,87 @@
-import type { UpdateClinicaRequest } from '@/types/dtos/core/clinica.dtos'
+import { ZonaFiscal, type UpdateClinicaRequest } from '@/types/dtos/core/clinica.dtos'
+
+const toRequired = (v: unknown): string => String(v ?? '').trim()
+const toNullable = (v: unknown): string | null => {
+  const trimmed = toRequired(v)
+  return trimmed === '' ? null : trimmed
+}
+
 
 export function buildUpdateClinicaPayload(
   values: any,
-  clinica: any,
+  _clinica: any,
 ): UpdateClinicaRequest {
   return {
-    nome: values.nome.trim(),
-    nomeComercial: values.nomeComercial.trim() || clinica.nomeComercial || null,
-    abreviatura: values.abreviatura.trim() || null,
+    nome: toRequired(values.nome),
+    nomeComercial: toNullable(values.nomeComercial),
+    abreviatura: toNullable(values.abreviatura),
 
     // Identificação (tab_1_1)
-    morada: values.morada.trim() || null,
-    ccPostal: values.ccPostal.trim() || null,
-    localidade: values.localidade.trim() || null,
-    indicativoTelefone: values.indicativoTelefone.trim() || null,
-    telefone: values.telefone.trim() || null,
-    telemovel: values.telemovel.trim() || null,
-    fax: values.fax.trim() || null,
-    email: values.email.trim() || null,
-    web: values.web.trim() || null,
-    sucursal: values.sucursal.trim() || null,
-    numeroContribuinte:
-      values.numeroContribuinte.trim() || clinica.numeroContribuinte || null,
-    nib: values.nib.trim() || null,
-    observacoes: values.observacoes.trim() || null,
-    urlFoto: values.urlFoto.trim() || null,
+    morada: toNullable(values.morada),
+    ccPostal: toNullable(values.ccPostal),
+    localidade: toNullable(values.localidade),
+    indicativoTelefone: toNullable(values.indicativoTelefone),
+    telefone: toNullable(values.telefone),
+    telemovel: toNullable(values.telemovel),
+    fax: toNullable(values.fax),
+    email: toNullable(values.email),
+    web: toNullable(values.web),
+    sucursal: toNullable(values.sucursal),
+    numeroContribuinte: toNullable(values.numeroContribuinte),
+    nib: toNullable(values.nib),
+    observacoes: toNullable(values.observacoes),
+    urlFoto: toNullable(values.urlFoto),
 
     // Dados Fiscais (tab_1_2)
-    atividade: values.atividade.trim() || null,
-    regcom: values.regcom.trim() || null,
-    capsocial: values.capsocial.trim() ? Number(values.capsocial.trim()) : null,
-    cae: values.cae.trim() || null,
-    zonFisc: values.zonFisc.trim() || null,
-    tipo: values.tipo.trim() || null,
-    portaria: values.portaria.trim() || null,
-    despachoUcc: values.despachoUcc.trim() || null,
-    obsNotaCredito: values.obsNotaCredito.trim() || null,
-    cmoeda: values.cmoeda.trim() || clinica.cmoeda || null,
+    atividade: toNullable(values.atividade),
+    regcom: toNullable(values.regcom),
+    capsocial: toRequired(values.capsocial) ? Number(toRequired(values.capsocial)) : null,
+    cae: toNullable(values.cae),
+    zonFisc: toRequired(values.zonFisc)
+      ? (Number(toRequired(values.zonFisc)) as ZonaFiscal)
+      : null,
+    tipo: toNullable(values.tipo),
+    portaria: toNullable(values.portaria),
+    despachoUcc: toNullable(values.despachoUcc),
+    obsNotaCredito: toNullable(values.obsNotaCredito),
+    cmoeda: toRequired(values.cmoeda),
 
     // Faturação (tab_1_3)
-    faturaRecibo: values.faturaRecibo.trim()
-      ? parseInt(values.faturaRecibo.trim(), 10)
-      : null,
-    imprimeTicket: values.imprimeTicket ?? null,
-    temSaft: values.temSaft ?? null,
-    cab: values.cab ?? null,
-    faturacaoDocumentosImpressao:
-      values.faturacaoDocumentosImpressao.trim() || null,
-    emailLink: values.emailLink ?? null,
+    faturaRecibo: toRequired(values.faturaRecibo)
+      ? parseInt(toRequired(values.faturaRecibo), 10)
+      : 1,
 
-    linha1: values.linha1.trim() || null,
-    linha2: values.linha2.trim() || null,
-    linha3: values.linha3.trim() || null,
-    linha4: values.linha4.trim() || null,
-    linha5: values.linha5.trim() || null,
-    linha6: values.linha6.trim() || null,
+    imprimeTicket: values.imprimeTicket ?? false,
+    temSaft: values.temSaft ?? false,
+    cab: values.cab ?? false,
+    faturacaoDocumentosImpressao: toNullable(values.faturacaoDocumentosImpressao),
+    emailLink: values.emailLink ?? false,
 
-    regrafaturacao: values.regrafaturacao.trim() || null,
-    motivoIsencaoDefeito: values.motivoIsencaoDefeito.trim() || null,
-    valorMaxFaturaSimpli: values.valorMaxFaturaSimpli.trim()
-      ? parseInt(values.valorMaxFaturaSimpli.trim(), 10)
-      : null,
-    armazemHabitual: values.armazemHabitual.trim() || null,
-    atUser: values.atUser.trim() || null,
-    atPass: values.atPass.trim() || null,
+    linha1: toNullable(values.linha1),
+    linha2: toNullable(values.linha2),
+    linha3: toNullable(values.linha3),
+    linha4: toNullable(values.linha4),
+    linha5: toNullable(values.linha5),
+    linha6: toNullable(values.linha6),
+
+    regrafaturacao: toRequired(values.regrafaturacao) || '1',
+
+    motivoIsencaoDefeito: toNullable(values.motivoIsencaoDefeito),
+
+    valorMaxFaturaSimpli: toRequired(values.valorMaxFaturaSimpli)
+      ? parseInt(toRequired(values.valorMaxFaturaSimpli), 10)
+      : 0,
+      
+    armazemHabitual: toNullable(values.armazemHabitual),
+    atUser: toNullable(values.atUser),
+    atPass: toNullable(values.atPass),
 
     // ---- Horário (tab_1_5) ----
     interrupcao: values.interrupcao ?? null,
-    horaInicManha: values.horaInicManha.trim() || null,
-    horaFimManha: values.horaFimManha?.trim() || null,
-    horaInicTarde: values.horaInicTarde?.trim() || null,
-    horaFimTarde: values.horaFimTarde.trim() || null,
+    horaInicManha: toNullable(values.horaInicManha),
+    horaFimManha: toNullable(values.horaFimManha),
+    horaInicTarde: toNullable(values.horaInicTarde),
+    horaFimTarde: toNullable(values.horaFimTarde),
     folgaSeg: values.folgaSeg ?? null,
     folgaTer: values.folgaTer ?? null,
     folgaQua: values.folgaQua ?? null,
@@ -80,93 +91,93 @@ export function buildUpdateClinicaPayload(
     folgaDom: values.folgaDom ?? null,
 
     // Outros Parâmetros (tab_1_4)
-    descarga: values.descarga.trim() ? parseInt(values.descarga.trim(), 10) : null,
-    ruptura: values.ruptura.trim() ? parseInt(values.ruptura.trim(), 10) : null,
-    valorart: values.valorart.trim() ? parseInt(values.valorart.trim(), 10) : null,
+    descarga: toRequired(values.descarga) ? parseInt(toRequired(values.descarga), 10) : null,
+    ruptura: toRequired(values.ruptura) ? parseInt(toRequired(values.ruptura), 10) : null,
+    valorart: toRequired(values.valorart) ? parseInt(toRequired(values.valorart), 10) : null,
 
-    tiporecal: values.tiporecal.trim()
-      ? parseInt(values.tiporecal.trim(), 10)
+    tiporecal: toRequired(values.tiporecal)
+      ? parseInt(toRequired(values.tiporecal), 10)
       : null,
-    valorecal: values.valorecal.trim() ? Number(values.valorecal.trim()) : null,
+    valorecal: toRequired(values.valorecal) ? Number(toRequired(values.valorecal)) : null,
 
     controlarPlafond: values.controlarPlafond ?? null,
-    ctrlPlafond: values.ctrlPlafond.trim()
-      ? parseInt(values.ctrlPlafond.trim(), 10)
+    ctrlPlafond: toRequired(values.ctrlPlafond)
+      ? parseInt(toRequired(values.ctrlPlafond), 10)
       : null,
     validade: values.validade ?? null,
-    diasvalid: values.diasvalid.trim() ? parseInt(values.diasvalid.trim(), 10) : null,
+    diasvalid: toRequired(values.diasvalid) ? parseInt(toRequired(values.diasvalid), 10) : null,
     ligacb: values.ligacb ?? null,
 
-    entidadeUtilizadora: values.entidadeUtilizadora.trim() || null,
-    localPrescricao: values.localPrescricao.trim() || null,
-    nomeEtiqueta: values.nomeEtiqueta.trim() || null,
-    codSb: values.codSb.trim() || null,
-    netiquetas: values.netiquetas.trim()
-      ? parseInt(values.netiquetas.trim(), 10)
+    entidadeUtilizadora: toNullable(values.entidadeUtilizadora),
+    localPrescricao: toNullable(values.localPrescricao),
+    nomeEtiqueta: toNullable(values.nomeEtiqueta),
+    codSb: toNullable(values.codSb),
+    netiquetas: toRequired(values.netiquetas)
+      ? parseInt(toRequired(values.netiquetas), 10)
       : null,
-    cccCodLocalEmissao: values.cccCodLocalEmissao.trim()
-      ? parseInt(values.cccCodLocalEmissao.trim(), 10)
+    cccCodLocalEmissao: toRequired(values.cccCodLocalEmissao)
+      ? parseInt(toRequired(values.cccCodLocalEmissao), 10)
       : null,
-    cccDescLocalEmissao: values.cccDescLocalEmissao.trim() || null,
-    regiao: values.regiao.trim() || null,
+    cccDescLocalEmissao: toNullable(values.cccDescLocalEmissao),
+    regiao: toNullable(values.regiao),
 
-    cid: values.cid.trim() ? parseInt(values.cid.trim(), 10) : null,
+    cid: toRequired(values.cid) ? parseInt(toRequired(values.cid), 10) : null,
 
-    portaLeitorCartoes: values.portaLeitorCartoes.trim()
-      ? parseInt(values.portaLeitorCartoes.trim(), 10)
+    portaLeitorCartoes: toRequired(values.portaLeitorCartoes)
+      ? parseInt(toRequired(values.portaLeitorCartoes), 10)
       : null,
     stocksColunaStockReal: values.stocksColunaStockReal ?? null,
 
-    calendarioMarcacoesRadio: values.calendarioMarcacoesRadio.trim()
-      ? parseInt(values.calendarioMarcacoesRadio.trim(), 10)
+    calendarioMarcacoesRadio: toRequired(values.calendarioMarcacoesRadio)
+      ? parseInt(toRequired(values.calendarioMarcacoesRadio), 10)
       : null,
     novoEstadoPaginaAtendimento: values.ativoNovaPagina ?? null,
     novaPrescricao: values.novaPrescricao ?? null,
     gestaoSalas: values.gestaoSalas ?? null,
 
-    tipoAdmissPorDefeito: values.tipoAdmissPorDefeito.trim()
-      ? parseInt(values.tipoAdmissPorDefeito.trim(), 10)
+    tipoAdmissPorDefeito: toRequired(values.tipoAdmissPorDefeito)
+      ? parseInt(toRequired(values.tipoAdmissPorDefeito), 10)
       : null,
-    diretoriaDocumentos: values.diretoriaDocumentos.trim() || null,
-    caminhoSaft: values.caminhoSaft.trim() || null,
+    diretoriaDocumentos: toNullable(values.diretoriaDocumentos),
+    caminhoSaft: toNullable(values.caminhoSaft),
 
-    exportContabilidadeFa: values.exportContabilidadeFa.trim() || null,
-    exportTipoContaFa: values.exportTipoContaFa.trim() || null,
-    exportPredUtenteFa: values.exportPredUtenteFa.trim()
-      ? parseInt(values.exportPredUtenteFa.trim(), 10)
+    exportContabilidadeFa: toNullable(values.exportContabilidadeFa),
+    exportTipoContaFa: toNullable(values.exportTipoContaFa),
+    exportPredUtenteFa: toRequired(values.exportPredUtenteFa)
+      ? parseInt(toRequired(values.exportPredUtenteFa), 10)
       : null,
-    exportContabilidadeFr: values.exportContabilidadeFr.trim() || null,
-    exportTipoContaFr: values.exportTipoContaFr.trim() || null,
-    exportPredUtenteFr: values.exportPredUtenteFr.trim()
-      ? parseInt(values.exportPredUtenteFr.trim(), 10)
+    exportContabilidadeFr: toNullable(values.exportContabilidadeFr),
+    exportTipoContaFr: toNullable(values.exportTipoContaFr),
+    exportPredUtenteFr: toRequired(values.exportPredUtenteFr)
+      ? parseInt(toRequired(values.exportPredUtenteFr), 10)
       : null,
 
-    labelAuxiliares: values.labelAuxiliares.trim() || null,
-    envioEmail: values.envioEmail.trim()
-      ? parseInt(values.envioEmail.trim(), 10)
+    labelAuxiliares: toNullable(values.labelAuxiliares),
+    envioEmail: toRequired(values.envioEmail)
+      ? parseInt(toRequired(values.envioEmail), 10)
       : null,
     movimentosInternos: values.movimentosInternos ?? null,
 
-    msgFaltaPagamento: values.msgFaltaPagamento.trim() || null,
-    msgCredenciais: values.msgCredenciais.trim() || null,
+    msgFaltaPagamento: toNullable(values.msgFaltaPagamento),
+    msgCredenciais: toNullable(values.msgCredenciais),
     kqueueAvisoAtraso: values.kqueueAvisoAtraso ?? null,
-    kqueueTempoAvisoAtraso: values.kqueueTempoAvisoAtraso.trim()
-      ? parseInt(values.kqueueTempoAvisoAtraso.trim(), 10)
+    kqueueTempoAvisoAtraso: toRequired(values.kqueueTempoAvisoAtraso)
+      ? parseInt(toRequired(values.kqueueTempoAvisoAtraso), 10)
       : null,
-    kqueueMensagemAvisoAtraso: values.kqueueMensagemAvisoAtraso.trim() || null,
+    kqueueMensagemAvisoAtraso: toNullable(values.kqueueMensagemAvisoAtraso),
 
-    rgpdDescritivo: values.rgpdDescritivo.trim() || null,
-    rgpdConsentimento: values.rgpdConsentimento.trim() || null,
-    rgpdMarketing: values.rgpdMarketing.trim() || null,
+    rgpdDescritivo: toNullable(values.rgpdDescritivo),
+    rgpdConsentimento: toNullable(values.rgpdConsentimento),
+    rgpdMarketing: toNullable(values.rgpdMarketing),
 
-    emailAssuntoConsultas: values.emailAssuntoConsultas.trim() || null,
-    emailConteudoConsultas: values.emailConteudoConsultas.trim() || null,
-    emailAssuntoTratamentos: values.emailAssuntoTratamentos.trim() || null,
-    emailConteudoTratamentos: values.emailConteudoTratamentos.trim() || null,
-    emailAssuntoExames: values.emailAssuntoExames.trim() || null,
-    emailConteudoExames: values.emailConteudoExames.trim() || null,
-    emailAssuntoRelatorios: values.emailAssuntoRelatorios.trim() || null,
-    emailConteudoRelatorios: values.emailConteudoRelatorios.trim() || null,
+    emailAssuntoConsultas: toNullable(values.emailAssuntoConsultas),
+    emailConteudoConsultas: toNullable(values.emailConteudoConsultas),
+    emailAssuntoTratamentos: toNullable(values.emailAssuntoTratamentos),
+    emailConteudoTratamentos: toNullable(values.emailConteudoTratamentos),
+    emailAssuntoExames: toNullable(values.emailAssuntoExames),
+    emailConteudoExames: toNullable(values.emailConteudoExames),
+    emailAssuntoRelatorios: toNullable(values.emailAssuntoRelatorios),
+    emailConteudoRelatorios: toNullable(values.emailConteudoRelatorios),
   }
 }
 

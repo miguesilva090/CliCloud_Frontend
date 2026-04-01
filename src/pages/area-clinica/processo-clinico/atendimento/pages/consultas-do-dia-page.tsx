@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { pt } from 'date-fns/locale'
-import { Eye, Pencil, PlayCircle, RefreshCw, Trash2 } from 'lucide-react'
+import { Eye, Megaphone, Pencil, PlayCircle, RefreshCw, Trash2 } from 'lucide-react'
 import type { CellContext, ColumnDef } from '@tanstack/react-table'
 import {
   AlertDialog,
@@ -18,6 +18,8 @@ import { PageHead } from '@/components/shared/page-head'
 import { DataTable } from '@/components/shared/data-table'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
@@ -31,6 +33,7 @@ import type { ConsultaMarcadaRow } from '@/pages/area-clinica/processo-clinico/a
 import { useConsultasDoDiaMarcacoes } from '@/pages/area-clinica/processo-clinico/agenda/queries/consultas-do-dia-queries'
 import { ConsultaService } from '@/lib/services/consultas/consulta-service'
 import { MarcacaoConsultaService } from '@/lib/services/consultas/marcacao-consulta-service'
+import { ChamadaUtentesService } from '@/lib/services/core/chamada-utentes-service'
 
 export type ConsultaDoDiaRow = ConsultaMarcadaRow
 
@@ -80,6 +83,7 @@ const baseColumns: Array<ColumnDef<ConsultaDoDiaRow> & DataTableColumnDef<Consul
 ]
 
 function getColumnsWithActions(
+  onChamarUtente: (row: ConsultaDoDiaRow) => void,
   onIniciarConsulta: (row: ConsultaDoDiaRow) => void,
   onOpenView: (row: ConsultaDoDiaRow) => void,
   onOpenEdit: (row: ConsultaDoDiaRow) => void,
@@ -96,6 +100,19 @@ function getColumnsWithActions(
         const title = jaTemConsulta ? 'Abrir Ficha Clínica' : 'Iniciar Consulta'
         return (
           <div className='flex items-center justify-end gap-1'>
+            <Button
+              type='button'
+              variant='outline'
+              size='icon'
+              className='h-8 w-8'
+              title='Chamar Utente'
+              onClick={(e) => {
+                e.stopPropagation()
+                onChamarUtente(r)
+              }}
+            >
+              <Megaphone className='h-4 w-4' />
+            </Button>
             <Button
               type='button'
               variant='default'
@@ -181,6 +198,11 @@ export function ConsultasDoDiaPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<ConsultaDoDiaRow | null>(null)
   const [iniciarLoading, setIniciarLoading] = useState(false)
+  const [chamadaLoading, setChamadaLoading] = useState(false)
+  const [chamarDialogOpen, setChamarDialogOpen] = useState(false)
+  const [chamarOutraVezDialogOpen, setChamarOutraVezDialogOpen] = useState(false)
+  const [rowToCall, setRowToCall] = useState<ConsultaDoDiaRow | null>(null)
+  const [salaToCall, setSalaToCall] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [sorting, setSorting] = useState<Array<{ id: string; desc: boolean }>>([])
@@ -219,6 +241,69 @@ export function ConsultasDoDiaPage() {
       toast.error(e instanceof Error ? e.message : 'Erro ao iniciar consulta.')
     } finally {
       setIniciarLoading(false)
+    }
+  }
+
+  const chamarConsulta = async (row: ConsultaDoDiaRow, chamarOutraVez: boolean) => {
+    setChamadaLoading(true)
+    try {
+      const dadosRes = await ChamadaUtentesService().getDadosChamadaConsulta(row.id, chamarOutraVez)
+      const dados = dadosRes?.info?.data
+      if (!dados) {
+        toast.error('Não foi possível obter dados da chamada.')
+        return
+      }
+
+      if (dados.existeChamadaAtiva) {
+        toast.error('Já existe uma chamada ativa para esta consulta.')
+        return
+      }
+
+      if (dados.existeChamadaFeita && !chamarOutraVez) {
+        setRowToCall(row)
+        setSalaToCall(dados.sala ?? '')
+        setChamarOutraVezDialogOpen(true)
+        return
+      }
+
+      setRowToCall(row)
+      setSalaToCall(dados.sala ?? '')
+      setChamarDialogOpen(true)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao preparar chamada do utente.')
+    } finally {
+      setChamadaLoading(false)
+    }
+  }
+
+  const handleChamarUtente = async (row: ConsultaDoDiaRow) => {
+    if (!row?.id) return
+    await chamarConsulta(row, false)
+  }
+
+  const confirmarChamada = async () => {
+    if (!rowToCall?.id) return
+    setChamadaLoading(true)
+    try {
+      const res = await ChamadaUtentesService().chamarUtenteConsulta(rowToCall.id, {
+        sala: salaToCall.trim() || null,
+      })
+      const status = res?.info?.status
+      if (status !== 0 && status !== undefined) {
+        const msgs = res?.info?.messages as Record<string, string[] | undefined> | undefined
+        const firstMsg = msgs?.$?.[0] ?? (msgs && Object.values(msgs).flat()[0])
+        toast.error(firstMsg ?? 'Erro ao chamar utente.')
+        return
+      }
+
+      toast.success('Utente chamado com sucesso.')
+      setChamarDialogOpen(false)
+      setRowToCall(null)
+      setSalaToCall('')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao chamar utente.')
+    } finally {
+      setChamadaLoading(false)
     }
   }
 
@@ -269,6 +354,7 @@ export function ConsultasDoDiaPage() {
   const columns = useMemo(
     () =>
       getColumnsWithActions(
+        handleChamarUtente,
         handleIniciarConsulta,
         handleOpenView,
         handleOpenEdit,
@@ -360,6 +446,76 @@ export function ConsultasDoDiaPage() {
                 className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
               >
                 Remover
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog
+          open={chamarOutraVezDialogOpen}
+          onOpenChange={(open) => {
+            setChamarOutraVezDialogOpen(open)
+            if (!open) setRowToCall(null)
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Chamada já efetuada</AlertDialogTitle>
+              <AlertDialogDescription>
+                Este utente já foi chamado anteriormente. Pretende chamar outra vez?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async (e) => {
+                  e.preventDefault()
+                  setChamarOutraVezDialogOpen(false)
+                  if (rowToCall) await chamarConsulta(rowToCall, true)
+                }}
+              >
+                Chamar Outra Vez
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog
+          open={chamarDialogOpen}
+          onOpenChange={(open) => {
+            setChamarDialogOpen(open)
+            if (!open) {
+              setRowToCall(null)
+              setSalaToCall('')
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Chamar Utente</AlertDialogTitle>
+              <AlertDialogDescription>
+                Defina a sala para a chamada. Se deixar vazio, fica sem sala.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className='space-y-2'>
+              <Label htmlFor='salaChamada'>Sala</Label>
+              <Input
+                id='salaChamada'
+                value={salaToCall}
+                onChange={(e) => setSalaToCall(e.target.value)}
+                placeholder='Ex.: Sala 1'
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={chamadaLoading}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={chamadaLoading}
+                onClick={(e) => {
+                  e.preventDefault()
+                  confirmarChamada()
+                }}
+              >
+                {chamadaLoading ? 'A chamar...' : 'Confirmar Chamada'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

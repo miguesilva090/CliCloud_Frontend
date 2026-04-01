@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Pencil, Users } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,13 +8,27 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { toast } from '@/utils/toast-utils'
 import { SmsService } from '@/lib/services/core/sms-service'
+import { MedicosService } from '@/lib/services/saude/medicos-service'
 import type {
   AtualizarConfiguracaoSmsRequest,
+  AtualizarConfiguracaoAutomaticaRequest,
   ConfiguracaoSmsDTO,
+  ConfiguracaoSmsAutomaticaDTO,
 } from '@/types/dtos/core/sms.dtos'
+import type { MedicoLightDTO } from '@/types/dtos/saude/medicos.dtos'
 
 type SmsConfigForm = {
   ativo: boolean
@@ -34,12 +48,17 @@ const initialForm: SmsConfigForm = {
 
 export function SmsConfigPage() {
   const [form, setForm] = useState<SmsConfigForm>(initialForm)
-  const [numeroTeste, setNumeroTeste] = useState('')
-  const [mensagemTeste, setMensagemTeste] = useState('Mensagem de teste CliCloud')
   const [showArpooneUrl, setShowArpooneUrl] = useState(false)
   const [showArpooneSender, setShowArpooneSender] = useState(false)
   const [showArpooneOrganizationId, setShowArpooneOrganizationId] = useState(false)
   const [showArpooneApiKey, setShowArpooneApiKey] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [selectedConfig, setSelectedConfig] = useState<ConfiguracaoSmsAutomaticaDTO | null>(null)
+  const [editAtivo, setEditAtivo] = useState(true)
+  const [editDias, setEditDias] = useState('0')
+  const [editMensagem, setEditMensagem] = useState('')
+  const [medicosSelecionados, setMedicosSelecionados] = useState<string[]>([])
+  const [medicosPickerOpen, setMedicosPickerOpen] = useState(false)
 
   const configQuery = useQuery({
     queryKey: ['sms-config', 'current'],
@@ -58,20 +77,63 @@ export function SmsConfigPage() {
     },
   })
 
-  const testMutation = useMutation({
-    mutationFn: (payload: { numeroDestinatario: string; textoMensagem: string }) =>
-      SmsService().enviarTeste({
-        numeroDestinatario: payload.numeroDestinatario,
-        textoMensagem: payload.textoMensagem,
-        modulo: 'TesteSMS',
-      }),
-    onSuccess: () => {
-      toast.success('SMS de teste enviado.')
+  const automaticasQuery = useQuery({
+    queryKey: ['sms-config', 'automaticas'],
+    queryFn: () => SmsService().getConfiguracoesAutomaticas(),
+  })
+
+  const medicosQuery = useQuery({
+    queryKey: ['sms-config', 'medicos-light'],
+    queryFn: () => MedicosService('sms-config').getMedicosLight(''),
+    enabled: (editOpen || medicosPickerOpen) && selectedConfig?.codigo === '1',
+  })
+
+  const medicosSelecionadosQuery = useQuery({
+    queryKey: ['sms-config', 'medicos-selecionados', selectedConfig?.codigo],
+    queryFn: () => SmsService().getMedicosSelecionados(selectedConfig?.codigo ?? '1'),
+    enabled: (editOpen || medicosPickerOpen) && selectedConfig?.codigo === '1',
+  })
+
+  const guardarMedicosMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedConfig || selectedConfig.codigo !== '1') return
+      await SmsService().updateTodosMedicos(selectedConfig.codigo, { todosMedicos: false })
+      await SmsService().updateMedicosSelecionados(selectedConfig.codigo, {
+        codigosMedicos: medicosSelecionados,
+      })
+    },
+    onSuccess: async () => {
+      toast.success('Médicos atribuídos com sucesso.')
+      setMedicosPickerOpen(false)
+      await automaticasQuery.refetch()
     },
     onError: () => {
-      toast.error('Falha ao enviar SMS de teste.')
+      toast.error('Falha ao atribuir médicos.')
     },
   })
+
+  const saveAutomaticaMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedConfig) return
+      const payload: AtualizarConfiguracaoAutomaticaRequest = {
+        codigo: selectedConfig.codigo,
+        ativo: editAtivo ? 1 : 0,
+        descricao: selectedConfig.descricao,
+        diasantecedencia: Number(editDias) || 0,
+        textomensagem: editMensagem.trim(),
+      }
+      await SmsService().updateConfiguracaoAutomatica(selectedConfig.codigo, payload)
+    },
+    onSuccess: async () => {
+      toast.success('Configuração automática atualizada com sucesso.')
+      setEditOpen(false)
+      await automaticasQuery.refetch()
+    },
+    onError: () => {
+      toast.error('Falha ao atualizar configuração automática.')
+    },
+  })
+
 
   useEffect(() => {
     const response = configQuery.data as any
@@ -104,23 +166,89 @@ export function SmsConfigPage() {
     saveMutation.mutate(payload)
   }
 
-  const handleEnviarTeste = () => {
-    if (!numeroTeste.trim()) {
-      toast.warning('Indica o número de destino.')
-      return
-    }
-    if (!mensagemTeste.trim()) {
-      toast.warning('Indica a mensagem de teste.')
-      return
-    }
+  const automaticas = useMemo(() => {
+    const response = automaticasQuery.data as any
+    const lista = (response?.info?.data ?? []) as ConfiguracaoSmsAutomaticaDTO[]
+    return [...lista].sort((a, b) =>
+      a.codigo.localeCompare(b.codigo, undefined, { numeric: true, sensitivity: 'base' }),
+    )
+  }, [automaticasQuery.data])
 
-    testMutation.mutate({
-      numeroDestinatario: numeroTeste.trim(),
-      textoMensagem: mensagemTeste.trim(),
+  const medicos = useMemo(() => {
+    const response = medicosQuery.data as any
+    return (response?.info?.data ?? []) as MedicoLightDTO[]
+  }, [medicosQuery.data])
+
+  const codigosMedicosDisponiveis = useMemo(
+    () => medicos.map((m) => m.letra ?? '').filter(Boolean) as string[],
+    [medicos],
+  )
+
+  useEffect(() => {
+    if (!medicosSelecionadosQuery.data) return
+    const response = medicosSelecionadosQuery.data as any
+    const lista = (response?.info?.data ?? []) as string[]
+    setMedicosSelecionados(lista)
+  }, [medicosSelecionadosQuery.data])
+
+  const handleOpenEdit = (cfg: ConfiguracaoSmsAutomaticaDTO) => {
+    setSelectedConfig(cfg)
+    setEditAtivo(cfg.ativo === 1)
+    setEditDias(String(cfg.diasantecedencia))
+    setEditMensagem(cfg.textomensagem ?? '')
+    setEditOpen(true)
+  }
+
+  const handleGuardarAutomatica = async () => {
+    if (!selectedConfig) return
+    if (!editMensagem.trim()) {
+      toast.warning('O texto da mensagem é obrigatório.')
+      return
+    }
+    await saveAutomaticaMutation.mutateAsync()
+  }
+
+  const alternarMedico = (codigoMedico: string, checked: boolean) => {
+    setMedicosSelecionados((prev) =>
+      checked ? Array.from(new Set([...prev, codigoMedico])) : prev.filter((x) => x !== codigoMedico),
+    )
+  }
+
+  const inserirPlaceholder = (placeholder: string) => {
+    setEditMensagem((prev) => {
+      const token = `@${placeholder}`
+      if (!prev.trim()) return token
+      return `${prev} ${token}`.replace(/\s+/g, ' ').trim()
     })
   }
 
-  const isBusy = saveMutation.isPending || testMutation.isPending
+
+  const isBusy = saveMutation.isPending
+  const isAutomaticaBusy = saveAutomaticaMutation.isPending
+  const isMedicosBusy = guardarMedicosMutation.isPending
+
+  const handleTodosMedicosTabela = async (cfg: ConfiguracaoSmsAutomaticaDTO, checked: boolean) => {
+    if (cfg.codigo !== '1') return
+    try {
+      await SmsService().updateTodosMedicos(cfg.codigo, { todosMedicos: checked })
+      await automaticasQuery.refetch()
+      toast.success('Opção de médicos atualizada.')
+    } catch {
+      toast.error('Falha ao atualizar opção de médicos.')
+    }
+  }
+
+  const handleEscolherMedicosTabela = (cfg: ConfiguracaoSmsAutomaticaDTO) => {
+    if (cfg.codigo !== '1') return
+    setSelectedConfig(cfg)
+    setMedicosPickerOpen(true)
+  }
+
+  const handleGuardarMedicosSelecionados = async () => {
+    if (!selectedConfig || selectedConfig.codigo !== '1') return
+    await guardarMedicosMutation.mutateAsync()
+  }
+
 
   return (
     <>
@@ -270,44 +398,826 @@ export function SmsConfigPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Enviar SMS de teste</CardTitle>
+              <CardTitle>Configuração de SMS Automáticos</CardTitle>
             </CardHeader>
-            <CardContent className='space-y-3'>
-              <div className='space-y-1'>
-                <Label htmlFor='numero-teste'>Número destino</Label>
-                <Input
-                  id='numero-teste'
-                  value={numeroTeste}
-                  onChange={(e) => setNumeroTeste(e.target.value)}
-                  placeholder='9XXXXXXXX'
-                  disabled={isBusy}
-                />
-              </div>
+            <CardContent>
+              {automaticasQuery.isLoading ? (
+                <p className='text-sm text-muted-foreground'>A carregar configurações automáticas...</p>
+              ) : null}
+              {automaticasQuery.isError ? (
+                <p className='text-sm text-destructive'>
+                  Falha ao carregar configurações automáticas.
+                </p>
+              ) : null}
 
-              <div className='space-y-1'>
-                <Label htmlFor='mensagem-teste'>Mensagem</Label>
-                <Textarea
-                  id='mensagem-teste'
-                  value={mensagemTeste}
-                  onChange={(e) => setMensagemTeste(e.target.value)}
-                  rows={4}
-                  disabled={isBusy}
-                />
-              </div>
+              {!automaticasQuery.isLoading && !automaticas.length ? (
+                <p className='text-sm text-muted-foreground'>Sem configurações automáticas para apresentar.</p>
+              ) : null}
 
-              <div className='flex justify-end'>
-                <Button
-                  variant='secondary'
-                  onClick={handleEnviarTeste}
-                  disabled={isBusy}
-                >
-                  {testMutation.isPending ? 'A enviar...' : 'Enviar teste'}
-                </Button>
-              </div>
+              {!!automaticas.length ? (
+                <div className='rounded-md border'>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className='w-[80px] text-center'>Cód.</TableHead>
+                        <TableHead className='text-center'>Título</TableHead>
+                        <TableHead className='w-[90px] text-center'>Ativo?</TableHead>
+                        <TableHead className='w-[170px] text-center'>Dias de Antecedência</TableHead>
+                        <TableHead className='w-[170px] text-center'>Todos os médicos</TableHead>
+                        <TableHead className='w-[80px] text-right'>Editar</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {automaticas.map((cfg) => (
+                        <TableRow key={cfg.id}>
+                          <TableCell className='text-center'>{cfg.codigo}</TableCell>
+                          <TableCell className='text-center'>{cfg.descricao}</TableCell>
+                          <TableCell className='text-center'>{cfg.ativo === 1 ? 'Sim' : 'Não'}</TableCell>
+                          <TableCell className='text-center'>{cfg.diasantecedencia}</TableCell>
+                          <TableCell className='text-center'>
+                            {cfg.codigo === '1' ? (
+                              <div className='flex items-center justify-center gap-2'>
+                                <Checkbox
+                                  checked={cfg.todosMedicos}
+                                  onCheckedChange={(checked) =>
+                                    void handleTodosMedicosTabela(cfg, !!checked)
+                                  }
+                                />
+                                <Button
+                                  type='button'
+                                  size='icon'
+                                  variant='ghost'
+                                  title='Escolher médicos'
+                                  onClick={() => handleEscolherMedicosTabela(cfg)}
+                                >
+                                  <Users className='h-4 w-4' />
+                                </Button>
+                              </div>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                          <TableCell className='text-right'>
+                            <Button
+                              type='button'
+                              size='icon'
+                              variant='ghost'
+                              onClick={() => handleOpenEdit(cfg)}
+                              title='Editar configuração'
+                            >
+                              <Pencil className='h-4 w-4' />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </div>
       </DashboardPageContainer>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className='sm:max-w-2xl'>
+          <DialogHeader>
+            <DialogTitle>Configuração de SMS Automático</DialogTitle>
+            <DialogDescription className='sr-only'>
+              Editar configuração automática de SMS.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='space-y-4'>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+              <div className='space-y-1'>
+                <Label>Código</Label>
+                <Input value={selectedConfig?.codigo ?? ''} readOnly />
+              </div>
+              <div className='space-y-1'>
+                <Label>Descrição</Label>
+                <Input value={selectedConfig?.descricao ?? ''} readOnly />
+              </div>
+            </div>
+
+            <div className='flex items-center justify-between rounded border p-3'>
+              <Label htmlFor='edit-ativo'>Ativo</Label>
+              <Switch
+                id='edit-ativo'
+                checked={editAtivo}
+                onCheckedChange={setEditAtivo}
+                disabled={isAutomaticaBusy}
+              />
+            </div>
+
+            <div className='space-y-1'>
+              <Label htmlFor='edit-dias'>Dias de Antecedência</Label>
+              <Input
+                id='edit-dias'
+                type='number'
+                value={editDias}
+                onChange={(e) => setEditDias(e.target.value)}
+                disabled={isAutomaticaBusy}
+              />
+            </div>
+
+            <div className='space-y-1'>
+              <Label htmlFor='edit-mensagem'>Texto da Mensagem</Label>
+              <Textarea
+                id='edit-mensagem'
+                rows={6}
+                value={editMensagem}
+                onChange={(e) => setEditMensagem(e.target.value)}
+                disabled={isAutomaticaBusy}
+              />
+            </div>
+
+            {selectedConfig?.codigo === '3' ? (
+              <div className='flex justify-start'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+              </div>
+            ) : null}
+
+            {selectedConfig?.codigo === '1' ? (
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Hora')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Hora
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Data')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Data
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Medico')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Médico
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Especialidade')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Especialidade
+                </Button>
+              </div>
+            ) : null}
+
+            {selectedConfig?.codigo === '2.1' ? (
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Hora')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Hora
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Data')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Data
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Fisioterapeuta')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Fisioterapeuta
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Nsessao')}
+                  disabled={isAutomaticaBusy}
+                >
+                  N.º Sessão
+                </Button>
+              </div>
+            ) : null}
+
+            {selectedConfig?.codigo === '2.2' ? (
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Hora')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Hora
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Data')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Data
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Fisioterapeuta')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Fisioterapeuta
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Nsessao')}
+                  disabled={isAutomaticaBusy}
+                >
+                  N.º Sessão
+                </Button>
+              </div>
+            ) : null}
+
+            {selectedConfig?.codigo === '2.3' ? (
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Hora')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Hora
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Data')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Data
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Fisioterapeuta')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Fisioterapeuta
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Nsessao')}
+                  disabled={isAutomaticaBusy}
+                >
+                  N.º Sessão
+                </Button>
+              </div>
+            ) : null}
+
+            {selectedConfig?.codigo === '4' ? (
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Medico')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Médico
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('HoraAntiga')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Hora Antiga
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('DataAntiga')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Data Antiga
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('HoraNova')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Hora Nova
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('DataNova')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Data Nova
+                </Button>
+              </div>
+            ) : null}
+
+            {selectedConfig?.codigo === '5' ? (
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Medico')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Médico
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Hora')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Hora
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Data')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Data
+                </Button>
+              </div>
+            ) : null}
+
+            {selectedConfig?.codigo === '6.1' ? (
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Hora')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Hora
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Data')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Data
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Medico')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Médico
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Especialidade')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Especialidade
+                </Button>
+              </div>
+            ) : null}
+
+            {selectedConfig?.codigo === '6.2' ? (
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Hora')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Hora
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Data')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Data
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Medico')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Médico
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Especialidade')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Especialidade
+                </Button>
+              </div>
+            ) : null}
+
+            {selectedConfig?.codigo === '7.1' ? (
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Hora')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Hora
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Data')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Data
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Profissional')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Profissional
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Modalidade')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Modalidade
+                </Button>
+              </div>
+            ) : null}
+
+            {selectedConfig?.codigo === '8' ? (
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+              </div>
+            ) : null}
+
+            {selectedConfig?.codigo === '9' ? (
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Hora')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Hora
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Data')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Data
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Medico')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Médico
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Especialidade')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Especialidade
+                </Button>
+              </div>
+            ) : null}
+
+            {selectedConfig?.codigo === '10' ? (
+              <div className='flex flex-wrap gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Utente')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Utente
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Hora')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Hora
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Data')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Data
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Fisioterapeuta')}
+                  disabled={isAutomaticaBusy}
+                >
+                  Fisioterapeuta
+                </Button>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => inserirPlaceholder('Nsessao')}
+                  disabled={isAutomaticaBusy}
+                >
+                  N.º Sessão
+                </Button>
+              </div>
+            ) : null}
+
+          </div>
+
+          <DialogFooter>
+            <Button variant='outline' onClick={() => setEditOpen(false)} disabled={isAutomaticaBusy}>
+              Cancelar
+            </Button>
+            <Button onClick={handleGuardarAutomatica} disabled={isAutomaticaBusy}>
+              {isAutomaticaBusy ? 'A guardar...' : 'Guardar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={medicosPickerOpen} onOpenChange={setMedicosPickerOpen}>
+        <DialogContent className='sm:max-w-3xl'>
+          <DialogHeader>
+            <DialogTitle>Configuração de SMS Automático</DialogTitle>
+            <DialogDescription className='sr-only'>
+              Seleção de médicos para envio de SMS.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='space-y-3'>
+            <div className='flex justify-end'>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() =>
+                  setMedicosSelecionados((prev) =>
+                    prev.length === codigosMedicosDisponiveis.length ? [] : codigosMedicosDisponiveis,
+                  )
+                }
+                disabled={isMedicosBusy}
+              >
+                {medicosSelecionados.length === codigosMedicosDisponiveis.length
+                  ? 'Limpar seleção'
+                  : 'Selecionar Todos'}
+              </Button>
+            </div>
+
+            <div className='rounded border max-h-72 overflow-y-auto'>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className='w-[140px] text-center'>Código</TableHead>
+                    <TableHead className='text-left'>Médico</TableHead>
+                    <TableHead className='w-[140px] text-center'>Enviar SMS</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {medicosQuery.isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className='text-center text-sm text-muted-foreground'>
+                        A carregar médicos...
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+
+                  {medicosQuery.isError ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className='text-center text-sm text-destructive'>
+                        Falha ao carregar médicos.
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+
+                  {!medicosQuery.isLoading && !medicos.length ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className='text-center text-sm text-muted-foreground'>
+                        Sem médicos para apresentar.
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+
+                  {medicos.map((m) => {
+                    const codigoMedico = m.letra?.trim() ?? ''
+                    const chaveSelecao = codigoMedico || m.nome?.trim() || m.id
+
+                    return (
+                      <TableRow key={`${m.id}-${chaveSelecao}`}>
+                        <TableCell className='text-center'>{codigoMedico || '-'}</TableCell>
+                        <TableCell className='text-left'>{m.nome}</TableCell>
+                        <TableCell className='text-center'>
+                          <Checkbox
+                            checked={medicosSelecionados.includes(chaveSelecao)}
+                            onCheckedChange={(checked) => alternarMedico(chaveSelecao, !!checked)}
+                            disabled={isMedicosBusy}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant='outline' onClick={() => setMedicosPickerOpen(false)} disabled={isMedicosBusy}>
+              Cancelar
+            </Button>
+            <Button onClick={handleGuardarMedicosSelecionados} disabled={isMedicosBusy}>
+              {isMedicosBusy ? 'A guardar...' : 'OK'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

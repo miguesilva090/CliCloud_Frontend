@@ -24,12 +24,17 @@ export function mapClinicaToClinicaEditFormValues(clinica: any) {
     regcom: clinica.regcom ?? '',
     capsocial: clinica.capsocial != null ? String(clinica.capsocial) : '',
     cae: clinica.cae ?? '',
-    zonFisc: clinica.zonFisc ?? '',
+    zonFisc: clinica.zonFisc != null ? String(clinica.zonFisc) : '',
     tipo: clinica.tipo ?? '',
     portaria: clinica.portaria ?? '',
     despachoUcc: clinica.despachoUcc ?? '',
     obsNotaCredito: clinica.obsNotaCredito ?? '',
-    cmoeda: clinica.cmoeda ?? '',
+    cmoeda:
+      clinica.cmoeda != null
+        ? String(clinica.cmoeda).trim()
+        : clinica.cMoeda != null
+          ? String(clinica.cMoeda).trim()
+          : '',
 
     // Faturação (tab_1_3)
     faturaRecibo: clinica.faturaRecibo != null ? String(clinica.faturaRecibo) : '1',

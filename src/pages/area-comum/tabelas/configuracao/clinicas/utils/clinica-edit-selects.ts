@@ -31,7 +31,7 @@ export function buildMoedasForSelect<T extends { id: string; descricao?: string 
   currentId: string | undefined | null,
 ): Array<T | { id: string; descricao: string }> {
   const cmoedaWatch = (currentId ?? '').trim()
-  if (cmoedaWatch && !moedas.some((m) => m.id === cmoedaWatch)) {
+  if (cmoedaWatch && !moedas.some((m) => (m.id ?? '').trim().toLowerCase() === cmoedaWatch.toLowerCase())) {
     return [{ id: cmoedaWatch, descricao: `${cmoedaWatch} (valor atual)` }, ...moedas]
   }
   return moedas

@@ -76,6 +76,7 @@ export interface MedicoDTO {
 export interface MedicoLightDTO {
   id: string
   nome: string
+  letra?: string | null
   numeroContribuinte?: string | null
   ruaId?: string | null
   ruaNome?: string | null

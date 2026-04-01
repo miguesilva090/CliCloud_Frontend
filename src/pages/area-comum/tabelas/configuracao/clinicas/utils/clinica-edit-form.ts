@@ -143,6 +143,16 @@ export const clinicaEditSchema = z
     abreviatura: z.string().max(30).optional(),
     numeroContribuinte: z.string().max(20).optional(),
 
+    //Dados Outros Parametros
+
+    ctrlPlafond: z.string().optional().refine((v) => !v || ['1','2','3'].includes(v.trim()), "Controlar Adiantamentos inválido"),
+    cid: z.string().optional().refine((v) => !v || ['1','2'].includes(v.trim()), "CID inválido"),
+    calendarioMarcacoesRadio: z.string().optional().refine((v) => !v || ['1','2'].includes(v.trim()), "Configuração de calendário inválida"),
+    tipoAdmissPorDefeito: z.string().optional().refine((v) => !v || ['1', '2'].includes(v.trim()), "Tipo de admissão inválido"),
+    exportPredUtenteFa: z.string().optional().refine((v) => !v || ['0','1', '2'].includes(v.trim()), "Predefinição de fatura inválida"),
+    exportPredUtenteFr: z.string().optional().refine((v) => !v || ['0','1', '2'].includes(v.trim()), "Predefinição de fatura-recibo inválida"),
+    envioEmail: z.string().optional().refine((v) => !v || ['0','1','2'].includes(v.trim()), "Envio automático de email inválido"),
+
     // Identificação (tab_1_1) - opcionais
     morada: z.string().max(50).optional(),
     ccPostal: z.string().max(20).optional(),
@@ -151,15 +161,25 @@ export const clinicaEditSchema = z
     telefone: z.string().max(20).optional(),
     telemovel: z.string().max(15).optional(),
     fax: z.string().max(20).optional(),
-    email: z.string().max(255).optional(),
-    web: z.string().max(255).optional(),
+    email: z.string().max(255).optional().refine( (v) => 
+      !v || v.trim() === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
+     'Email inválido'),
+    web: z.string().max(255).optional().refine( (v) => {
+      if (!v || v.trim () === '') return true
+      const raw = v.trim()
+      try {
+        const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
+        new URL (candidate)
+        return true
+      } catch {
+        return false
+      }
+    }, 'URL inválido'),
     sucursal: z.string().max(10).optional(),
     nib: z.string().max(21).optional(),
     observacoes: z.string().max(2000).optional(),
     urlFoto: z.string().max(500).optional(),
-
-    // Dados Fiscais (tab_1_2)
-    cmoeda: z.string().max(50).optional(),
+    cmoeda: z.string().trim().min(1, 'Moeda é obrigatória').max(50),
     atividade: z.string().max(50).optional(),
     regcom: z.string().max(50).optional(),
     capsocial: z
@@ -170,7 +190,7 @@ export const clinicaEditSchema = z
         'Capitalsocial inválido',
       ),
     cae: z.string().max(5).optional(),
-    zonFisc: z.string().max(50).optional(),
+    zonFisc: z.string().trim().min(1, 'Zona fiscal é obrigatória').refine( (v) => ['1', '2', '3'].includes(v), 'Zona fiscal inválida'),
     tipo: z.string().max(200).optional(),
     portaria: z.string().max(254).optional(),
     despachoUcc: z.string().max(250).optional(),
@@ -191,7 +211,8 @@ export const clinicaEditSchema = z
     linha5: z.string().max(120).optional(),
     linha6: z.string().max(120).optional(),
 
-    regrafaturacao: z.string().max(10).optional(),
+    regrafaturacao: z.string().optional().refine( (v) => !v || ['1', '2'].includes(v.trim()), 'Regra de faturação inválida'),
+
     motivoIsencaoDefeito: z.string().max(50).optional(),
     valorMaxFaturaSimpli: z
       .string()
@@ -214,16 +235,27 @@ export const clinicaEditSchema = z
       // Para não bloquear gravações em outras abas, só validamos quando o utilizador preencher.
       .refine((v) => v.trim() === '' || /^\d+$/.test(v.trim()), 'Porta inválida'),
 
-    msgFaltaPagamento: z.string().max(5000).optional(),
-    msgCredenciais: z.string().max(5000).optional(),
+    msgFaltaPagamento: z.string().max(2000).optional(),
+    msgCredenciais: z.string().max(2000).optional(),
 
     // Kqueue (tab_1_4)
     kqueueAvisoAtraso: z.boolean().optional(),
     kqueueTempoAvisoAtraso: z.string().optional(),
-    kqueueMensagemAvisoAtraso: z.string().optional(),
+    kqueueMensagemAvisoAtraso: z.string().max(2000).optional(),
   })
   .passthrough()
   .superRefine((vals, ctx) => {
+    const telefone = vals.telefone?.trim() ?? ''
+    const indicativo = vals.indicativoTelefone?.trim() ?? ''
+
+    if ( telefone && !indicativo) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['indicativoTelefone'],
+        message: 'Indique o indicativo do telefone',
+      })
+    }
+    
     const kqueueAviso = !!vals.kqueueAvisoAtraso
     if (!kqueueAviso) return
 
@@ -333,7 +365,7 @@ export const clinicaEditDefaultValues: ClinicaEditFormValues = {
   netiquetas: '',
   cccCodLocalEmissao: '',
   cccDescLocalEmissao: '',
-  regiao: ' ',
+  regiao: '',
   cid: '',
   portaLeitorCartoes: '',
   stocksColunaStockReal: false,

@@ -343,6 +343,16 @@ export const roleHeaderMenus = {
             href: '/area-comum/tabelas/configuracao/sms',
             description: 'Configurar fornecedor SMS (Arpoone)',
           },
+          {
+            label: 'Histórico de SMS',
+            href: '/area-comum/tabelas/configuracao/sms/historico',
+            description: 'Consultar SMS enviadas e recebidas',
+          },
+          {
+            label: 'Configuração de Chamada de Voz',
+            href: '/area-comum/tabelas/configuracao/chamada-voz',
+            description: 'Configurar URL, idioma e variação da chamada de voz',
+          },
         ],
       },
       { label: 'Notificações', href: '/area-comum/tabelas/notificacoes' },

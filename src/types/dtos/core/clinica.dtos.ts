@@ -32,7 +32,7 @@ export interface ClinicaDTO {
   regcom?: string | null
   capsocial?: number | null
   cae?: string | null
-  zonFisc?: string | null
+  zonFisc?: ZonaFiscal | null
   tipo?: string | null
   portaria?: string | null
   despachoUcc?: string | null
@@ -179,7 +179,7 @@ export interface UpdateClinicaRequest {
   regcom?: string | null
   capsocial?: number | null
   cae?: string | null
-  zonFisc?: string | null
+  zonFisc?: ZonaFiscal | null
   tipo?: string | null
   portaria?: string | null
   despachoUcc?: string | null
@@ -303,9 +303,11 @@ export interface UpdateClinicaRequest {
   avisoInqueritoSessoesDiarias?: boolean | null
 }
 
-// =========================
-// Listagem / Paginação ("Clinicas")
-// =========================
+export enum ZonaFiscal {
+  Continente = 1, 
+  Madeira = 2,
+  Acores = 3,
+}
 
 export interface ClinicaTableDTO {
   id: string
