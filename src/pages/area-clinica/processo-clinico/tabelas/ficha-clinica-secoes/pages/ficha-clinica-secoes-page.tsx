@@ -25,6 +25,7 @@ import { Switch } from '@/components/ui/switch'
 import { toast } from '@/utils/toast-utils'
 import { getCurrentWindowId } from '@/utils/window-utils'
 import { useWindowsStore } from '@/stores/use-windows-store'
+import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
 
 interface TemplateFormState {
   id?: string
@@ -36,6 +37,7 @@ interface TemplateFormState {
 }
 
 interface CampoFormState {
+  tempId?: string
   id?: string
   nome: string
   tipoCampo: string
@@ -44,14 +46,44 @@ interface CampoFormState {
   ativo: boolean
 }
 
+const GUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+const tryExtractGuid = (response: unknown): string | null => {
+  const root = response as
+    | { info?: { data?: unknown; Data?: unknown } }
+    | undefined
+  const info = root?.info as
+    | { data?: unknown; Data?: unknown }
+    | undefined
+
+  const candidates: unknown[] = [
+    info?.data,
+    info?.Data,
+    (info?.data as { data?: unknown } | undefined)?.data,
+    (info?.data as { Data?: unknown } | undefined)?.Data,
+    (info?.Data as { data?: unknown } | undefined)?.data,
+    (info?.Data as { Data?: unknown } | undefined)?.Data,
+  ]
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && GUID_REGEX.test(candidate.trim())) {
+      return candidate.trim()
+    }
+  }
+
+  return null
+}
+
 export function FichaClinicaSecoesPage() {
   const queryClient = useQueryClient()
   const updateWindowState = useWindowsStore((s) => s.updateWindowState)
-  const [keyword, setKeyword] = useState('')
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit' | 'view'>('create')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [dialogOpen, setDialogOpen] = useState(false)
   const [camposDialogOpen, setCamposDialogOpen] = useState(false)
   const [campoDialogOpen, setCampoDialogOpen] = useState(false)
+  const [pendingCampos, setPendingCampos] = useState<CampoFormState[]>([])
   const [templateSelecionado, setTemplateSelecionado] = useState<FichaClinicaSecaoTemplateDTO | null>(
     null,
   )
@@ -73,15 +105,15 @@ export function FichaClinicaSecoesPage() {
   useEffect(() => {
     const windowId = getCurrentWindowId()
     if (windowId) {
-      updateWindowState(windowId, { title: 'Separadores Personalizados' })
+      updateWindowState(windowId, { title: 'Formulários Personalizados' })
     }
   }, [updateWindowState])
 
   const { data, isLoading } = useQuery({
-    queryKey: ['ficha-clinica-secao-templates', keyword],
+    queryKey: ['ficha-clinica-secao-templates'],
     queryFn: async () => {
       const client = FichaClinicaSecoesService()
-      const res = await client.getTemplates(keyword)
+      const res = await client.getTemplates('')
       const api = res as unknown as { info?: { data?: FichaClinicaSecaoTemplateDTO[] } }
       return (api.info?.data ?? []) as FichaClinicaSecaoTemplateDTO[]
     },
@@ -92,36 +124,6 @@ export function FichaClinicaSecoesPage() {
     const base = (data ?? []) as FichaClinicaSecaoTemplateDTO[]
     return base.slice().sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome))
   }, [data])
-
-  const defaultCodigoSuggestions = useMemo(
-    () => ['MEDICINA_DESPORTIVA', 'NUTRICAO', 'PSICOLOGIA', 'FISIOTERAPEUTA', 'FISIOLOGIA_BIOMECANICA', 'TERAPIA_FALA'],
-    [],
-  )
-
-  const codigosExistentes = useMemo(
-    () => {
-      const all = [...defaultCodigoSuggestions, ...templates.map((t) => t.codigo)]
-      return Array.from(new Set(all))
-        .filter(Boolean)
-        .sort((a, b) => a.localeCompare(b))
-    },
-    [templates, defaultCodigoSuggestions],
-  )
-
-  const generateCodigoFromNome = (nome: string): string => {
-    if (!nome) return ''
-
-    // Remover acentos
-    const withoutDiacritics = nome
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-
-    // Substituir tudo o que não for letra ou número por underscore
-    const base = withoutDiacritics.replace(/[^a-zA-Z0-9]+/g, '_').toUpperCase()
-
-    // Evitar underscores duplicados e trims
-    return base.replace(/_+/g, '_').replace(/^_+|_+$/g, '')
-  }
 
   const resetForm = () => {
     setFormState({
@@ -135,11 +137,16 @@ export function FichaClinicaSecoesPage() {
   }
 
   const openCreateDialog = () => {
+    setDialogMode('create')
     resetForm()
+    setTemplateSelecionado(null)
+    setPendingCampos([])
+    setCamposDialogOpen(true)
     setDialogOpen(true)
   }
 
   const openEditDialog = (template: FichaClinicaSecaoTemplateDTO) => {
+    setDialogMode('edit')
     setFormState({
       id: template.id,
       codigo: template.codigo,
@@ -148,6 +155,25 @@ export function FichaClinicaSecoesPage() {
       ordem: template.ordem,
       ativo: template.ativo,
     })
+    setTemplateSelecionado(template)
+    setPendingCampos([])
+    setCamposDialogOpen(true)
+    setDialogOpen(true)
+  }
+
+  const openViewDialog = (template: FichaClinicaSecaoTemplateDTO) => {
+    setDialogMode('view')
+    setFormState({
+      id: template.id,
+      codigo: template.codigo,
+      nome: template.nome,
+      descricao: template.descricao ?? '',
+      ordem: template.ordem,
+      ativo: template.ativo,
+    })
+    setTemplateSelecionado(template)
+    setPendingCampos([])
+    setCamposDialogOpen(true)
     setDialogOpen(true)
   }
 
@@ -175,6 +201,7 @@ export function FichaClinicaSecoesPage() {
 
   const resetCampoForm = (ordem = 1) => {
     setCampoFormState({
+      tempId: undefined,
       id: undefined,
       nome: '',
       tipoCampo: 'Texto',
@@ -184,14 +211,9 @@ export function FichaClinicaSecoesPage() {
     })
   }
 
-  const openCamposDialog = (template: FichaClinicaSecaoTemplateDTO) => {
-    setTemplateSelecionado(template)
-    resetCampoForm(camposOrdenados.length + 1)
-    setCamposDialogOpen(true)
-  }
-
-  const openEditCampoDialog = (campo: FichaClinicaSecaoCampoDTO) => {
+  const openEditCampoDialog = (campo: CampoFormState) => {
     setCampoFormState({
+      tempId: campo.tempId,
       id: campo.id,
       nome: campo.nome,
       tipoCampo: campo.tipoCampo,
@@ -202,33 +224,10 @@ export function FichaClinicaSecoesPage() {
     setCampoDialogOpen(true)
   }
 
-  const handleNomeChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const nome = e.target.value
-    setFormState((prev) => {
-      const next: TemplateFormState = { ...prev, nome }
-
-      // Ao criar novo registo, se o código ainda estiver vazio, gerar automaticamente a partir do nome
-      if (!prev.id && !prev.codigo) {
-        next.codigo = generateCodigoFromNome(nome)
-      }
-
-      return next
-    })
-  }
-
   const saveMutation = useMutation({
     mutationFn: async (input: TemplateFormState) => {
       const client = FichaClinicaSecoesService()
-      if (input.id) {
-        return client.updateTemplate(input.id, {
-          nome: input.nome,
-          descricao: input.descricao ?? '',
-          ordem: input.ordem,
-          ativo: input.ativo,
-        })
-      }
-      return client.createTemplate({
-        codigo: input.codigo,
+      return client.updateTemplate(input.id!, {
         nome: input.nome,
         descricao: input.descricao ?? '',
         ordem: input.ordem,
@@ -236,14 +235,14 @@ export function FichaClinicaSecoesPage() {
       })
     },
     onSuccess: async () => {
-      toast.success('Template de secção de ficha clínica guardado com sucesso.')
+      toast.success('Formulário personalizado atualizado com sucesso.')
       setDialogOpen(false)
       await queryClient.invalidateQueries({ queryKey: ['ficha-clinica-secao-templates'] })
     },
     onError: (error: unknown) => {
-      console.error('Erro ao guardar template de secção:', error)
+      console.error('Erro ao guardar formulário personalizado:', error)
       const message =
-        error instanceof Error ? error.message : 'Falha ao guardar o template de secção.'
+        error instanceof Error ? error.message : 'Falha ao guardar o formulário personalizado.'
       toast.error(message)
     },
   })
@@ -257,14 +256,14 @@ export function FichaClinicaSecoesPage() {
       return client.deleteMultipleTemplates(ids)
     },
     onSuccess: async () => {
-      toast.success('Template(s) eliminado(s) com sucesso.')
+      toast.success('Formulário(s) eliminado(s) com sucesso.')
       setSelectedIds(new Set())
       await queryClient.invalidateQueries({ queryKey: ['ficha-clinica-secao-templates'] })
     },
     onError: (error: unknown) => {
-      console.error('Erro ao eliminar templates de secção:', error)
+      console.error('Erro ao eliminar formulários personalizados:', error)
       const message =
-        error instanceof Error ? error.message : 'Falha ao eliminar os templates selecionados.'
+        error instanceof Error ? error.message : 'Falha ao eliminar os formulários selecionados.'
       toast.error(message)
     },
   })
@@ -284,13 +283,8 @@ export function FichaClinicaSecoesPage() {
   const handleSave = () => {
     let { codigo, nome, descricao, ordem, ativo, id } = formState
 
-    // Se o utilizador só preencheu o Nome, gerar Código automaticamente
-    if (!codigo.trim() && nome.trim()) {
-      codigo = generateCodigoFromNome(nome)
-    }
-
-    if (!nome.trim() || !codigo.trim()) {
-      toast.error('Código e Nome são obrigatórios.')
+    if (!nome.trim()) {
+      toast.error('Nome é obrigatório.')
       return
     }
 
@@ -303,7 +297,63 @@ export function FichaClinicaSecoesPage() {
       ativo,
     }
 
-    saveMutation.mutate(payload)
+    if (payload.id) {
+      saveMutation.mutate(payload)
+      return
+    }
+
+    ;(async () => {
+      try {
+        const client = FichaClinicaSecoesService()
+        const beforeRes = await client.getTemplates('')
+        const beforeApi = beforeRes as unknown as { info?: { data?: FichaClinicaSecaoTemplateDTO[] } }
+        const existingIds = new Set((beforeApi.info?.data ?? []).map((t) => t.id))
+
+        const createRes = await client.createTemplate({
+          codigo: '',
+          nome: payload.nome,
+          descricao: payload.descricao ?? '',
+          ordem: payload.ordem,
+          ativo: payload.ativo,
+        })
+
+        let newTemplateId = tryExtractGuid(createRes)
+        if (!newTemplateId) {
+          const afterRes = await client.getTemplates('')
+          const afterApi = afterRes as unknown as { info?: { data?: FichaClinicaSecaoTemplateDTO[] } }
+          const created = (afterApi.info?.data ?? []).find((t) => !existingIds.has(t.id))
+          newTemplateId = created?.id ?? null
+        }
+
+        if (!newTemplateId) {
+          throw new Error('Não foi possível obter o ID do novo formulário.')
+        }
+
+        if (pendingCampos.length > 0) {
+          await Promise.all(
+            pendingCampos.map((c, idx) =>
+              client.createCampo({
+                separadorId: newTemplateId!,
+                nome: c.nome.trim(),
+                tipoCampo: c.tipoCampo,
+                numeroLinhas: c.numeroLinhas,
+                ordem: c.ordem || idx + 1,
+                ativo: c.ativo,
+              }),
+            ),
+          )
+        }
+
+        toast.success('Formulário personalizado guardado com sucesso.')
+        setDialogOpen(false)
+        setPendingCampos([])
+        await queryClient.invalidateQueries({ queryKey: ['ficha-clinica-secao-templates'] })
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : 'Falha ao guardar o formulário personalizado.'
+        toast.error(message)
+      }
+    })()
   }
 
   const handleDeleteSelected = () => {
@@ -379,16 +429,12 @@ export function FichaClinicaSecoesPage() {
   })
 
   const handleOpenNovoCampo = () => {
-    resetCampoForm(camposOrdenados.length + 1)
+    const currentCount = !templateSelecionado && !formState.id ? pendingCampos.length : camposOrdenados.length
+    resetCampoForm(currentCount + 1)
     setCampoDialogOpen(true)
   }
 
   const handleSaveCampo = () => {
-    if (!templateSelecionado) {
-      toast.error('Nenhum separador selecionado.')
-      return
-    }
-
     const { nome, tipoCampo, ordem } = campoFormState
     if (!nome.trim()) {
       toast.error('O título do campo é obrigatório.')
@@ -410,6 +456,33 @@ export function FichaClinicaSecoesPage() {
       numeroLinhas,
     }
 
+    if (!templateSelecionado && !formState.id) {
+      const resolvedTempId = dataToSave.tempId ?? crypto.randomUUID()
+      const pendingItem: CampoFormState = {
+        ...dataToSave,
+        tempId: resolvedTempId,
+      }
+
+      setPendingCampos((prev) => {
+        const existingIndex = prev.findIndex((p) => p.tempId === resolvedTempId)
+        if (existingIndex >= 0) {
+          const next = [...prev]
+          next[existingIndex] = pendingItem
+          return next
+        }
+        return [...prev, pendingItem]
+      })
+
+      setCampoDialogOpen(false)
+      toast.success('Campo adicionado ao formulário (pendente).')
+      return
+    }
+
+    if (!templateSelecionado) {
+      toast.error('Nenhum formulário selecionado.')
+      return
+    }
+
     saveCampoMutation.mutate({ templateId: templateSelecionado.id, data: dataToSave })
   }
 
@@ -424,14 +497,14 @@ export function FichaClinicaSecoesPage() {
       })
     },
     onSuccess: async (_, tpl) => {
-      toast.success(tpl.ativo ? 'Separador ativado.' : 'Separador desativado.')
+      toast.success(tpl.ativo ? 'Formulário ativado.' : 'Formulário desativado.')
       setTemplateSelecionado(tpl)
       await queryClient.invalidateQueries({ queryKey: ['ficha-clinica-secao-templates'] })
     },
     onError: (error: unknown) => {
-      console.error('Erro ao alterar estado do separador:', error)
+      console.error('Erro ao alterar estado do formulário:', error)
       const message =
-        error instanceof Error ? error.message : 'Falha ao alterar o estado do separador.'
+        error instanceof Error ? error.message : 'Falha ao alterar o estado do formulário.'
       toast.error(message)
     },
   })
@@ -442,52 +515,64 @@ export function FichaClinicaSecoesPage() {
     toggleTemplateAtivoMutation.mutate(novo)
   }
 
+  const camposGridData: CampoFormState[] = useMemo(() => {
+    if (!templateSelecionado && !formState.id) {
+      return pendingCampos
+        .slice()
+        .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome))
+    }
+
+    return camposOrdenados.map((c) => ({
+      id: c.id,
+      nome: c.nome,
+      tipoCampo: c.tipoCampo,
+      numeroLinhas: c.numeroLinhas,
+      ordem: c.ordem,
+      ativo: c.ativo,
+    }))
+  }, [templateSelecionado, formState.id, pendingCampos, camposOrdenados])
+
   return (
     <>
-      <PageHead title='Separadores Personalizados | CliCloud' />
+      <PageHead title='Formulários Personalizados | CliCloud' />
       <DashboardPageContainer>
-        <div className='flex flex-col gap-4'>
-          <div className='flex flex-wrap items-center justify-between gap-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-            <h1 className='text-lg font-semibold'>Separadores Personalizados</h1>
+        <div className='flex flex-col gap-3'>
+          <div className='flex flex-wrap items-center justify-between gap-3'>
+            <h1 className='text-lg font-semibold'>Formulários Personalizados</h1>
             <div className='flex items-center gap-2'>
-              <Input
-                placeholder='Procurar por código ou nome...'
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                className='h-8 w-[220px]'
-              />
               <Button size='sm' onClick={openCreateDialog}>
-                Novo template
+                <Plus className='mr-1 h-3.5 w-3.5' />
+                Adicionar
               </Button>
               <Button size='sm' variant='destructive' onClick={handleDeleteSelected}>
-                Eliminar selecionados
+                <Trash2 className='mr-1 h-3.5 w-3.5' />
+                Excluir
               </Button>
             </div>
           </div>
 
-          <div className='rounded-b-lg border border-t-0 bg-card'>
+          <div className='rounded-md border bg-card'>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className='w-[40px]'></TableHead>
-                  <TableHead className='w-[80px] text-center'>Ordem</TableHead>
-                  <TableHead className='text-left'>Código</TableHead>
+                  <TableHead className='w-[80px] text-center'>ID</TableHead>
                   <TableHead className='text-left'>Nome</TableHead>
-                  <TableHead className='text-left'>Descrição</TableHead>
-                  <TableHead className='w-[160px] text-center'>Ações</TableHead>
+                  <TableHead className='w-[80px] text-center'>Ativo</TableHead>
+                  <TableHead className='w-[160px] text-center'>Opções</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className='py-6 text-center text-muted-foreground'>
-                      A carregar templates...
+                    <TableCell colSpan={5} className='py-6 text-center text-muted-foreground'>
+                      A carregar formulários...
                     </TableCell>
                   </TableRow>
                 ) : templates.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className='py-6 text-center text-muted-foreground'>
-                      Nenhum template encontrado.
+                    <TableCell colSpan={5} className='py-6 text-center text-muted-foreground'>
+                      Nenhum formulário encontrado.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -502,28 +587,36 @@ export function FichaClinicaSecoesPage() {
                         />
                       </TableCell>
                       <TableCell className='text-center'>{t.ordem}</TableCell>
-                      <TableCell className='font-mono text-xs text-left'>{t.codigo}</TableCell>
                       <TableCell className='text-left'>{t.nome}</TableCell>
-                      <TableCell className='text-xs text-muted-foreground text-left'>
-                        {t.descricao ?? ''}
-                      </TableCell>
+                      <TableCell className='text-center'>{t.ativo ? 'Sim' : 'Não'}</TableCell>
                       <TableCell className='text-right'>
                         <div className='flex justify-end gap-2'>
                         <Button
-                          size='sm'
-                          variant='outline'
-                          className='w-24 justify-center'
-                          onClick={() => openEditDialog(t)}
+                          size='icon'
+                          variant='ghost'
+                          className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
+                          onClick={() => openViewDialog(t)}
+                          title='Campos'
                         >
-                          Editar
+                          <Search className='h-3.5 w-3.5' />
                         </Button>
                         <Button
-                          size='sm'
-                          variant='outline'
-                            className='w-24 justify-center'
-                          onClick={() => openCamposDialog(t)}
+                          size='icon'
+                          variant='ghost'
+                          className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
+                          onClick={() => openEditDialog(t)}
+                          title='Editar'
                         >
-                          Formulário
+                          <Pencil className='h-3.5 w-3.5' />
+                        </Button>
+                        <Button
+                          size='icon'
+                          variant='ghost'
+                          className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
+                          onClick={() => deleteMutation.mutate([t.id])}
+                          title='Eliminar'
+                        >
+                          <Trash2 className='h-3.5 w-3.5' />
                         </Button>
                         </div>
                       </TableCell>
@@ -536,202 +629,144 @@ export function FichaClinicaSecoesPage() {
         </div>
       </DashboardPageContainer>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open)
+          if (!open) {
+            setCamposDialogOpen(false)
+            setDialogMode('create')
+          }
+        }}
+      >
+        <DialogContent className='max-w-4xl'>
           <DialogHeader>
             <DialogTitle>
-              {formState.id ? 'Editar template de separador' : 'Novo template de separador'}
+              {formState.id ? 'Editar formulário personalizado' : 'Novo formulário personalizado'}
             </DialogTitle>
           </DialogHeader>
           <div className='space-y-3'>
-            {!formState.id && (
-              <div className='space-y-2'>
-                <div className='space-y-1'>
-                  <label className='block text-xs font-medium text-muted-foreground'>Código</label>
-                  <Input
-                    value={formState.codigo}
-                    onChange={(e) =>
-                      setFormState((prev) => ({ ...prev, codigo: e.target.value }))
-                    }
-                    placeholder='Ex.: MEDICINA_DESPORTIVA, NUTRICAO, PSICOLOGIA'
-                  />
-                </div>
-                {codigosExistentes.length > 0 && (
-                  <div className='space-y-1'>
-                    <label className='block text-xs font-medium text-muted-foreground'>
-                      Códigos existentes
-                    </label>
-                    <Select
-                      onValueChange={(value) =>
-                        setFormState((prev) => ({
-                          ...prev,
-                          codigo: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder='Escolha um código para reutilizar (opcional)' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {codigosExistentes.map((codigo) => (
-                          <SelectItem key={codigo} value={codigo}>
-                            {codigo}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+            <div className='grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end'>
+              <div className='space-y-1'>
+                <label className='block text-xs font-medium text-muted-foreground'>Nome de Formulário</label>
+                <Input
+                  value={formState.nome}
+                  onChange={(e) =>
+                    setFormState((prev) => ({ ...prev, nome: e.target.value }))
+                  }
+                  disabled={dialogMode === 'view'}
+                />
               </div>
-            )}
-            <div className='space-y-1'>
-              <label className='block text-xs font-medium text-muted-foreground'>Nome</label>
-              <Input value={formState.nome} onChange={handleNomeChange} />
+              <div className='flex items-center gap-2'>
+                <span className='text-xs text-muted-foreground'>Ativo?</span>
+                <Switch
+                  checked={formState.ativo}
+                  onCheckedChange={(checked) =>
+                    setFormState((prev) => ({ ...prev, ativo: Boolean(checked) }))
+                  }
+                  disabled={dialogMode === 'view'}
+                />
+                <span className='text-xs font-medium'>{formState.ativo ? 'Sim' : 'Não'}</span>
+              </div>
             </div>
-            <div className='space-y-1'>
-              <label className='block text-xs font-medium text-muted-foreground'>Descrição</label>
-              <Input
-                value={formState.descricao ?? ''}
-                onChange={(e) =>
-                  setFormState((prev) => ({ ...prev, descricao: e.target.value }))
-                }
-              />
-            </div>
-            <div className='space-y-1'>
-              <label className='block text-xs font-medium text-muted-foreground'>Ordem</label>
-              <Input
-                type='number'
-                min={1}
-                value={formState.ordem}
-                onChange={(e) =>
-                  setFormState((prev) => ({
-                    ...prev,
-                    ordem: Number(e.target.value) || 1,
-                  }))
-                }
-                className='w-24'
-              />
-            </div>
+
+            {camposDialogOpen ? (
+              <>
+                <div className='mb-1 flex items-center justify-between gap-4'>
+                  <div />
+                  <Button
+                    size='sm'
+                    onClick={handleOpenNovoCampo}
+                    disabled={dialogMode === 'view' || (!templateSelecionado && !formState.id)}
+                  >
+                    <Plus className='mr-1 h-3.5 w-3.5' />
+                    Inserir
+                  </Button>
+                </div>
+
+                <div className='max-h-[320px] overflow-auto rounded-md border'>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className='text-left'>Título</TableHead>
+                        <TableHead className='text-left'>Tipo de Campo</TableHead>
+                        <TableHead className='w-[80px] text-center'>Tamanho</TableHead>
+                        <TableHead className='w-[80px] text-center'>Ativo?</TableHead>
+                        <TableHead className='w-[120px] text-center'>Opções</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoadingCampos ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className='py-4 text-center text-muted-foreground'>
+                            A carregar campos...
+                          </TableCell>
+                        </TableRow>
+                      ) : camposGridData.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className='py-4 text-center text-muted-foreground'>
+                            Não existem dados a apresentar.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        camposGridData.map((c) => (
+                          <TableRow key={c.id ?? c.tempId}>
+                            <TableCell className='text-left'>{c.nome}</TableCell>
+                            <TableCell className='text-left'>
+                              {c.tipoCampo === 'TextoMultilinha' ? 'Texto Longo' : 'Texto'}
+                            </TableCell>
+                            <TableCell className='text-center'>{c.numeroLinhas}</TableCell>
+                            <TableCell className='text-center'>{c.ativo ? 'Sim' : 'Não'}</TableCell>
+                            <TableCell className='text-right'>
+                              <div className='flex justify-end gap-2'>
+                                <Button
+                                  size='icon'
+                                  variant='ghost'
+                                  className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
+                                  onClick={() => openEditCampoDialog(c)}
+                                  title='Editar'
+                                  disabled={dialogMode === 'view'}
+                                >
+                                  <Pencil className='h-3.5 w-3.5' />
+                                </Button>
+                                <Button
+                                  size='icon'
+                                  variant='ghost'
+                                  className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
+                                  onClick={() => {
+                                    if (c.id) {
+                                      deleteCampoMutation.mutate(c.id)
+                                      return
+                                    }
+                                    if (c.tempId) {
+                                      setPendingCampos((prev) => prev.filter((p) => p.tempId !== c.tempId))
+                                    }
+                                  }}
+                                  title='Eliminar'
+                                  disabled={dialogMode === 'view'}
+                                >
+                                  <Trash2 className='h-3.5 w-3.5' />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            ) : null}
           </div>
           <DialogFooter>
             <Button variant='outline' type='button' onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button type='button' onClick={handleSave}>
-              Guardar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Formulário / Campos do separador */}
-      <Dialog open={camposDialogOpen} onOpenChange={setCamposDialogOpen}>
-        <DialogContent className='max-w-3xl'>
-          <DialogHeader>
-            <DialogTitle>
-              Formulário personalizado
-            </DialogTitle>
-          </DialogHeader>
-          <div className='mb-3 flex items-center justify-between gap-4'>
-            <div className='space-y-1'>
-              <div className='text-xs font-medium text-muted-foreground'>Nome do formulário:</div>
-              <div className='text-sm font-semibold'>
-                {templateSelecionado?.nome ?? 'Selecione um separador'}
-              </div>
-            </div>
-            <div className='flex items-center gap-2'>
-              <span className='text-xs text-muted-foreground'>Ativo?</span>
-              <button
-                type='button'
-                onClick={handleToggleTemplateAtivo}
-                disabled={!templateSelecionado || toggleTemplateAtivoMutation.isPending}
-                className='flex items-center gap-2 rounded-full border px-2 py-1 text-xs hover:bg-muted disabled:cursor-not-allowed disabled:opacity-70'
-              >
-                <span
-                  className={
-                    templateSelecionado?.ativo
-                      ? 'inline-flex h-2 w-2 rounded-full bg-emerald-500'
-                      : 'inline-flex h-2 w-2 rounded-full bg-slate-400'
-                  }
-                />
-                <span>{templateSelecionado?.ativo ? 'Ativo' : 'Inativo'}</span>
-              </button>
-            </div>
-          </div>
-
-          <div className='flex items-center justify-between mb-2'>
-            <div className='text-xs font-medium text-muted-foreground'>
-              Campos do formulário
-            </div>
-            <Button size='sm' onClick={handleOpenNovoCampo} disabled={!templateSelecionado}>
-              + Inserir
-            </Button>
-          </div>
-
-          <div className='max-h-[320px] overflow-auto rounded-md border'>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className='w-[40px] text-center'>#</TableHead>
-                  <TableHead className='text-left'>Título</TableHead>
-                  <TableHead className='text-left'>Tipo de campo</TableHead>
-                  <TableHead className='w-[80px] text-center'>Ativo?</TableHead>
-                  <TableHead className='w-[130px] text-center'>Opções</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoadingCampos ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className='py-4 text-center text-muted-foreground'>
-                      A carregar campos...
-                    </TableCell>
-                  </TableRow>
-                ) : camposOrdenados.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className='py-4 text-center text-muted-foreground'>
-                      Não existem dados a apresentar.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  camposOrdenados.map((c, index) => (
-                    <TableRow key={c.id}>
-                      <TableCell className='text-center'>{c.ordem ?? index + 1}</TableCell>
-                      <TableCell className='text-left'>{c.nome}</TableCell>
-                      <TableCell className='text-left'>
-                        {c.tipoCampo === 'TextoMultilinha' ? 'Texto longo' : 'Texto curto'}
-                      </TableCell>
-                      <TableCell className='text-center'>{c.ativo ? 'Sim' : 'Não'}</TableCell>
-                      <TableCell className='text-right'>
-                        <div className='flex justify-end gap-2'>
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            className='w-24 justify-center'
-                            onClick={() => openEditCampoDialog(c)}
-                          >
-                            Editar
-                          </Button>
-                          <Button
-                            size='sm'
-                            variant='destructive'
-                            className='w-24 justify-center'
-                            onClick={() => deleteCampoMutation.mutate(c.id)}
-                          >
-                            Eliminar
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <DialogFooter>
-            <Button variant='outline' type='button' onClick={() => setCamposDialogOpen(false)}>
-              Fechar
-            </Button>
+            {dialogMode !== 'view' ? (
+              <Button type='button' onClick={handleSave}>
+                OK
+              </Button>
+            ) : null}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -757,10 +792,10 @@ export function FichaClinicaSecoesPage() {
               />
             </div>
 
-            <div className='grid grid-cols-1 gap-3'>
+            <div className='grid grid-cols-[minmax(0,1fr)_80px_80px] gap-3'>
               <div className='space-y-1'>
                 <label className='block text-xs font-medium text-muted-foreground'>
-                  Tipo de campo
+                  Tipo de Campo
                 </label>
                 <Select
                   value={campoFormState.tipoCampo}
@@ -772,37 +807,35 @@ export function FichaClinicaSecoesPage() {
                     <SelectValue placeholder='Selecione o tipo' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='Texto'>Texto curto</SelectItem>
-                    <SelectItem value='TextoMultilinha'>Texto longo</SelectItem>
+                    <SelectItem value='Texto'>Texto</SelectItem>
+                    <SelectItem value='TextoMultilinha'>Texto Longo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className='grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3'>
               <div className='space-y-1'>
-                <label className='block text-xs font-medium text-muted-foreground'>Ordem</label>
+                <label className='block text-xs font-medium text-muted-foreground'>Tamanho</label>
                 <Input
                   type='number'
                   min={1}
-                  value={campoFormState.ordem}
+                  value={campoFormState.numeroLinhas}
                   onChange={(e) =>
                     setCampoFormState((prev) => ({
                       ...prev,
-                      ordem: Number(e.target.value) || 1,
+                      numeroLinhas: Number(e.target.value) || 1,
                     }))
                   }
-                  className='w-24'
                 />
               </div>
-              <div className='flex items-center gap-2 pt-6'>
-                <span className='text-xs text-muted-foreground'>Ativo?</span>
-                <Switch
-                  checked={campoFormState.ativo}
-                  onCheckedChange={(checked) =>
-                    setCampoFormState((prev) => ({ ...prev, ativo: Boolean(checked) }))
-                  }
-                />
+              <div className='space-y-1'>
+                <label className='block text-xs font-medium text-muted-foreground'>Ativo</label>
+                <div className='h-10 flex items-center -translate-y-1'>
+                  <Switch
+                    checked={campoFormState.ativo}
+                    onCheckedChange={(checked) =>
+                      setCampoFormState((prev) => ({ ...prev, ativo: Boolean(checked) }))
+                    }
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -816,7 +849,7 @@ export function FichaClinicaSecoesPage() {
               Cancelar
             </Button>
             <Button type='button' onClick={handleSaveCampo}>
-              OK
+              Guardar
             </Button>
           </DialogFooter>
         </DialogContent>

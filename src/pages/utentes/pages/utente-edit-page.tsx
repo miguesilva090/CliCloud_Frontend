@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { toast } from '@/utils/toast-utils'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -11,25 +11,26 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RefreshCw, X, Search, Save } from 'lucide-react'
-import type { CreateUtenteRequest, UpdateUtenteRequest, UtenteDTO } from '@/types/dtos/saude/utentes.dtos'
-import type { UtenteEditFormValues } from './utente-edit-form-types'
-import { ENTIDADE_TIPO } from '@/lib/entidade-tipo'
+import type { UtenteDTO } from '@/types/dtos/saude/utentes.dtos'
+import type { UtenteEditFormValues } from '../types/utente-edit-form-types'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
-import { useCreateUtente, useGetUtente, useUpdateUtente } from './queries/utentes-queries'
+import { useCreateUtente, useGetUtente, useUpdateUtente } from '../queries/utentes-queries'
 import { useFormValidationFeedback } from '@/hooks/use-form-validation-feedback'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { useCurrentWindowId, handleWindowClose } from '@/utils/window-utils'
 import { useTabManager } from '@/hooks/use-tab-manager'
-import { utenteEditDefaultValues, utenteEditSchema } from './utils/utente-edit-form'
-import { buildCreatePayload, buildUpdatePayload } from './utils/utente-edit-payload'
-import { UTENTE_FIELD_LABELS, UTENTE_FIELD_TO_TAB, UTENTE_FORM_FIELD_ORDER } from './utils/utente-edit-validation'
-import { TabDadosPessoais } from './components/utente-edit-tabs/tab-dados-pessoais'
-import { TabContactos } from './components/utente-edit-tabs/tab-contactos'
-import { TabSubsistemaSaude } from './components/utente-edit-tabs/tab-subsistema-saude'
-import { TabInformacaoSNS } from './components/utente-edit-tabs/tab-informacao-sns'
-import { TabOutrasInformacoes } from './components/utente-edit-tabs/tab-outras-informacoes'
-import { TabAvisos } from './components/utente-edit-tabs/tab-avisos'
-import { TabDocumentos } from './components/utente-edit-tabs/tab-documentos'
+import { utenteEditDefaultValues, utenteEditSchema } from '../utils/utente-edit-form'
+import { buildCreatePayload, buildUpdatePayload } from '../utils/utente-edit-payload'
+import { UTENTE_FIELD_LABELS, UTENTE_FIELD_TO_TAB, UTENTE_FORM_FIELD_ORDER } from '../utils/utente-edit-validation'
+import { TabDadosPessoais } from '../components/utente-edit-tabs/tab-dados-pessoais'
+import { TabContactos } from '../components/utente-edit-tabs/tab-contactos'
+import { TabSubsistemaSaude } from '../components/utente-edit-tabs/tab-subsistema-saude'
+import { TabInformacaoSNS } from '../components/utente-edit-tabs/tab-informacao-sns'
+import { TabOutrasInformacoes } from '../components/utente-edit-tabs/tab-outras-informacoes'
+import { TabAvisos } from '../components/utente-edit-tabs/tab-avisos'
+import { TabDocumentos } from '../components/utente-edit-tabs/tab-documentos'
+
+type FormFieldKey = Extract<keyof UtenteEditFormValues, string>
 
 const formatDate = (value?: string | null) => {
   if (!value) return '—'
@@ -60,11 +61,13 @@ export function UtenteEditPage() {
 
   const { data, isLoading } = useGetUtente(id)
   const utente = data?.info?.data
+  const requiredFieldOrder = UTENTE_FORM_FIELD_ORDER as FormFieldKey[]
   const updateUtente = useUpdateUtente(id, {
     onServerValidationError: (fieldKey) => {
-      const keyToFocus = fieldKey && UTENTE_FIELD_TO_TAB[fieldKey]
-        ? fieldKey
-        : UTENTE_FORM_FIELD_ORDER.find((key) => {
+      const serverFieldKey = typeof fieldKey === 'string' ? fieldKey : null
+      const keyToFocus = serverFieldKey && UTENTE_FIELD_TO_TAB[serverFieldKey]
+        ? serverFieldKey
+        : requiredFieldOrder.find((key) => {
             const v = form.getValues(key)
             return v === '' || v == null || (typeof v === 'string' && !v.trim())
           })

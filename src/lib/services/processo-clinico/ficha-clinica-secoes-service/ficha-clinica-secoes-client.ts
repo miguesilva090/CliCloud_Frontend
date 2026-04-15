@@ -36,6 +36,27 @@ export class FichaClinicaSecoesClient extends BaseApiClient {
     )
   }
 
+  async getConteudosByUtenteAndSeparador(
+    utenteId: string,
+    separadorId: string,
+  ): Promise<ResponseApi<FichaClinicaSecaoConteudoDTO[]>> {
+    return this.httpClient.getRequest<FichaClinicaSecaoConteudoDTO[]>(
+      state.URL,
+      `${CONTEUDO_BASE}/utente/${utenteId}/separador/${separadorId}`,
+    )
+  }
+
+  async upsertConteudosLote(body: {
+    utenteId: string
+    separadorId: string
+    itens: Array<{ campoId: string; texto: string }>
+  }): Promise<ResponseApi<{ data?: string }>> {
+    return this.httpClient.postRequest<
+      { utenteId: string; separadorId: string; itens: Array<{ campoId: string; texto: string }> },
+      { data?: string }
+    >(state.URL, `${CONTEUDO_BASE}/upsert-lote`, body)
+  }
+
   async createConteudo(
     body: CreateFichaClinicaSecaoConteudoRequest,
   ): Promise<ResponseApi<{ data?: string }>> {

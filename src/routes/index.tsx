@@ -290,11 +290,51 @@ const SmsHistoryPage = lazy(() =>
   }))
 )
 
-const ChamadaVozConfigPage = lazy(() =>
+const VozConfigPage = lazy(() =>
   import(
-    '@/pages/area-comum/tabelas/configuracao/chamada-voz/pages/chamada-voz-config-page'
+    '@/pages/area-comum/tabelas/configuracao/voz/pages/voz-config-page'
   ).then((m) => ({
-    default: m.ChamadaVozConfigPage,
+    default: m.VozConfigPage,
+  }))
+)
+
+const TeleconsultaConfigPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/teleconsulta/pages/teleconsulta-config-page'
+  ).then((m) => ({
+    default: m.TeleconsultaConfigPage,
+  }))
+)
+
+const ConfigCartaConducaoPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/carta-conducao/pages/config-carta-conducao-page'
+  ).then((m) => ({
+    default: m.ConfigCartaConducaoPage,
+  }))
+)
+
+const EmailConfigPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/email/pages/email-config-page'
+  ).then((m) => ({
+    default: m.EmailConfigPage,
+  }))
+)
+
+const EmailHistoryPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/email/pages/email-history-page'
+  ).then((m) => ({
+    default: m.EmailHistoryPage,
+  }))
+)
+
+const WebserviceConfigPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/webservices/pages/webservice-config-page'
+  ).then((m) => ({
+    default: m.WebserviceConfigPage,
   }))
 )
 
@@ -687,6 +727,50 @@ const UtenteEditPage = lazy(() =>
   }))
 )
 
+const ConfigExamesSemPapelPage = lazy(() => 
+  import('@/pages/area-comum/tabelas/configuracao/exames-sem-papel/pages/config-exames-sem-papel-page')
+    .then((m) => ({
+      default: m.ConfigExamesSemPapelPage,
+    }))
+)
+
+const SeparadoresPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/configuracao/separadores/pages/separadores-page').then((m) => ({
+    default: m.SeparadoresPage,
+  }))
+)
+
+const SeparadoresPersonalizadosPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/separadores-personalizados/pages/separadores-personalizados-page'
+  ).then((m) => ({
+    default: m.SeparadoresPersonalizadosPage,
+  }))
+)
+
+const ListagemFeriadosPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/tabelas/feriados/pages/listagem-feriados-page').then((m) => ({
+    default: m.ListagemFeriadosPage,
+  }))
+)
+
+const DocumentosPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/configuracao/documentos/pages/documentos-page').then((m) => ({
+    default: m.DocumentosPage,
+  }))
+)
+
+const DocumentoEditorPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/configuracao/documentos/pages/documento-editor-page').then((m) => ({
+    default: m.DocumentoEditorPage,
+  }))
+)
+
+const DocumentosGeradosPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/configuracao/documentos/pages/documentos-gerados-page').then((m) => ({
+    default: m.DocumentosGeradosPage,
+  }))
+)
 
 
 
@@ -844,6 +928,10 @@ export default function AppRouter() {
           ),
         },
         {
+          path: 'area-clinica/processo-clinico/atendimento/pedidos-assinatura',
+          element: <Navigate to='/area-comum/posto-assinaturas' replace />,
+        },
+        {
           path: 'area-clinica/processo-clinico/agenda/consultas-marcadas',
           element: (
             <Suspense>
@@ -981,11 +1069,7 @@ export default function AppRouter() {
         },
         {
           path: 'area-clinica/processo-clinico/tabelas/ficha-clinica-secoes',
-          element: (
-            <Suspense>
-              <FichaClinicaSecoesPage />
-            </Suspense>
-          ),
+          element: <Navigate to='/area-comum/tabelas/configuracao/ficha-clinica-secoes' replace />,
         },
         {
           path: 'area-comum',
@@ -1177,6 +1261,42 @@ export default function AppRouter() {
           element: (
             <Suspense>
               <ListagemProvenienciasUtentesPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/tabelas/feriados',
+          element: (
+            <Suspense>
+              <ListagemFeriadosPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/documentos',
+          element: (
+            <Suspense>
+              <DocumentosPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/documentos/editor/:modeloId',
+          element: (
+            <Suspense>
+              <DocumentoEditorPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/documentos/gerados',
+          element: <Navigate to='/area-comum/posto-assinaturas' replace />,
+        },
+        {
+          path: 'area-comum/posto-assinaturas',
+          element: (
+            <Suspense>
+              <DocumentosGeradosPage />
             </Suspense>
           ),
         },
@@ -1525,10 +1645,82 @@ export default function AppRouter() {
           ),
         },
         {
-          path: 'area-comum/tabelas/configuracao/chamada-voz',
+          path: 'area-comum/tabelas/configuracao/voz',
           element: (
             <Suspense>
-              <ChamadaVozConfigPage />
+              <VozConfigPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/teleconsulta',
+          element: (
+            <Suspense>
+              <TeleconsultaConfigPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/carta-conducao',
+          element: (
+            <Suspense>
+              <ConfigCartaConducaoPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/email',
+          element: (
+            <Suspense>
+              <EmailConfigPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/email/historico',
+          element: (
+            <Suspense>
+              <EmailHistoryPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/webservices',
+          element: (
+            <Suspense>
+              <WebserviceConfigPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/exames-sem-papel',
+          element: (
+            <Suspense>
+              <ConfigExamesSemPapelPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/ficha-clinica-secoes',
+          element: (
+            <Suspense>
+              <FichaClinicaSecoesPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/separadores',
+          element: (
+            <Suspense>
+              <SeparadoresPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/separadores-personalizados',
+          element: (
+            <Suspense>
+              <SeparadoresPersonalizadosPage />
             </Suspense>
           ),
         },

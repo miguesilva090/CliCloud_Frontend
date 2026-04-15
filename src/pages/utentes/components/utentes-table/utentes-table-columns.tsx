@@ -7,7 +7,7 @@ import type { CellContext, ColumnDef } from '@tanstack/react-table'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import type { UtenteTableDTO } from '@/types/dtos/saude/utentes.dtos'
 import { useNavigate } from 'react-router-dom'
-import { Eye, Pencil, Trash2 } from 'lucide-react'
+import { Eye, FileText, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useDeleteUtente } from '../../queries/utentes-queries'
 import { useWindowsStore } from '@/stores/use-windows-store'
@@ -72,6 +72,23 @@ Esta ação não pode ser desfeita.`
         title='Editar'
       >
         <Pencil className='h-4 w-4' />
+      </Button>
+      <Button
+        type='button'
+        variant='ghost'
+        size='icon'
+        className='h-8 w-8 text-primary hover:text-primary'
+        onClick={() =>
+          openPathInApp(
+            navigate,
+            addWindow,
+            `/area-comum/posto-assinaturas?utenteId=${encodeURIComponent(id)}`,
+            nome ? `Assinaturas: ${nome}` : 'Assinaturas'
+          )
+        }
+        title='Pedir assinatura'
+      >
+        <FileText className='h-4 w-4' />
       </Button>
       <Button
         type='button'

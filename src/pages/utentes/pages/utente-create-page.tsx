@@ -54,9 +54,9 @@ import { Plus } from 'lucide-react'
 import { ENTIDADE_TIPO } from '@/lib/entidade-tipo'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
 import type { CreateUtenteRequest } from '@/types/dtos/saude/utentes.dtos'
-import { useCreateUtente } from './queries/utentes-queries'
+import { useCreateUtente } from '../queries/utentes-queries'
 import { useFormValidationFeedback } from '@/hooks/use-form-validation-feedback'
-import { TabSubsistemaSaude } from './components/utente-edit-tabs/tab-subsistema-saude'
+import { TabSubsistemaSaude } from '../components/utente-edit-tabs/tab-subsistema-saude'
 import {
   isZodError,
   applyZodErrorToForm,

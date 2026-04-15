@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Eye, EyeOff, Pencil, Users } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -47,6 +48,7 @@ const initialForm: SmsConfigForm = {
 }
 
 export function SmsConfigPage() {
+  const navigate = useNavigate()
   const [form, setForm] = useState<SmsConfigForm>(initialForm)
   const [showArpooneUrl, setShowArpooneUrl] = useState(false)
   const [showArpooneSender, setShowArpooneSender] = useState(false)
@@ -256,8 +258,15 @@ export function SmsConfigPage() {
       <DashboardPageContainer>
         <div className='space-y-4'>
           <Card>
-            <CardHeader>
+            <CardHeader className='flex flex-row items-center justify-between gap-3'>
               <CardTitle>Configuração SMS (Arpoone)</CardTitle>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => navigate('/area-comum/tabelas/configuracao/sms/historico?tipo=enviadas')}
+              >
+                Histórico SMS
+              </Button>
             </CardHeader>
             <CardContent className='space-y-4'>
               {configQuery.isLoading ? (

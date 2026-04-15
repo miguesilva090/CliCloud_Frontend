@@ -23,8 +23,8 @@ import {
   useGetUtentesPaginated,
   usePrefetchAdjacentUtentes,
   useDeleteUtente,
-} from './queries/utentes-queries'
-import { UtentesTable } from './components/utentes-table/utentes-table'
+} from '../queries/utentes-queries'
+import { UtentesTable } from '../components/utentes-table/utentes-table'
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { UtenteTableDTO } from '@/types/dtos/saude/utentes.dtos'
 import { toast } from '@/utils/toast-utils'

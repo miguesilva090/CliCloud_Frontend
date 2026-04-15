@@ -102,6 +102,13 @@ export const roleMenuItems = {
           funcionalidadeId: modules.areaComum.permissions.tabelas.id,
         },
         {
+          title: 'posto-assinaturas',
+          href: '/area-comum/posto-assinaturas',
+          icon: 'edit',
+          label: 'Posto de Assinaturas',
+          funcionalidadeId: modules.areaComum.permissions.tabelas.id,
+        },
+        {
           title: 'utilitarios',
           href: '/area-comum/utilitarios',
           icon: 'settings',
@@ -190,12 +197,7 @@ export const roleHeaderMenus = {
           { label: 'Mapas de Body Chart', href: '/area-clinica/processo-clinico/tabelas/mapas-body-chart', description: 'Mapas body chart', icon: 'tablerMap' },
           { label: 'Alergias', href: '/area-clinica/processo-clinico/tabelas/alergias', description: 'Alergias', icon: 'warning' },
           { label: 'Estados Dentários', href: '/area-clinica/processo-clinico/tabelas/estados-dentarios', description: 'Estados dentários', icon: 'list' },
-          {
-            label: 'Separadores Personalizados',
-            href: '/area-clinica/processo-clinico/tabelas/ficha-clinica-secoes',
-            description: 'Configuração de separadores personalizados da Ficha Clínica',
-            icon: 'settings',
-          },
+          { label: 'Feriados', href: '/area-clinica/processo-clinico/tabelas/feriados', description: 'Feriados', icon: 'calendar' },
         ],
       },
     ],
@@ -237,6 +239,7 @@ export const roleHeaderMenus = {
           { label: 'Categorias das Especialidades', href : '/area-comum/tabelas/tabelas/categorias-das-especialidades'},
           { label: 'Especialidades', href: '/area-comum/tabelas/tabelas/especialidades' },
           { label: 'Estados Civis', href: '/area-comum/tabelas/tabelas/estados-civis'},
+          { label: 'Feriados', href: '/area-comum/tabelas/tabelas/feriados'},
           { label: 'Grupos Sanguineos', href: '/area-comum/tabelas/tabelas/grupos-sanguineos'},
           { label: 'Habilitações', href: '/area-comum/tabelas/tabelas/habilitacoes'},
           { label: 'Moedas', href: '/area-comum/tabelas/tabelas/moedas'},
@@ -333,6 +336,7 @@ export const roleHeaderMenus = {
         label: 'Configuração',
         href: '/area-comum/tabelas/configuracao/clinicas',
         items: [
+          
           {
             label: 'Configuração da Clínica',
             href: '/area-comum/tabelas/configuracao/clinicas',
@@ -344,14 +348,63 @@ export const roleHeaderMenus = {
             description: 'Configurar fornecedor SMS (Arpoone)',
           },
           {
-            label: 'Histórico de SMS',
-            href: '/area-comum/tabelas/configuracao/sms/historico',
-            description: 'Consultar SMS enviadas e recebidas',
+            label: 'Configuração de Voz',
+            href: '/area-comum/tabelas/configuracao/voz',
+            description: 'Configurar STT/TTS, idioma, voz e parâmetros de execução',
           },
           {
-            label: 'Configuração de Chamada de Voz',
-            href: '/area-comum/tabelas/configuracao/chamada-voz',
-            description: 'Configurar URL, idioma e variação da chamada de voz',
+            label: 'Configuração de Teleconsulta',
+            href: '/area-comum/tabelas/configuracao/teleconsulta',
+            description: 'Configurar provider Jitsi, URL base, janela de entrada e parâmetros JWT',
+          },
+          {
+            label: 'Configuração Atestados Carta Condução',
+            href: '/area-comum/tabelas/configuracao/carta-conducao',
+            description: 'Configurar URL online/offline, credenciais e autoridade de saúde pública',
+          },
+          {
+            label: 'Configuração de Email',
+            href: '/area-comum/tabelas/configuracao/email',
+            description: 'Configurar servidor de email e templates automáticos',
+          },
+          {
+            label: 'Configuração WebServices',
+            href: '/area-comum/tabelas/configuracao/webservices',
+            description: 'Configurar endpoints e credenciais SPMS (materializadas e desmaterializadas)',
+          },
+          {
+            label: 'Configuração Exames Sem Papel',
+            href: '/area-comum/tabelas/configuracao/exames-sem-papel',
+            description: 'Configurar endpoints e credenciais para integração de Exames Sem Papel',
+          },
+          {
+            label: 'Gestão de Separadores',
+            href: '/area-comum/tabelas/configuracao/ficha-clinica-secoes',
+            description: 'Gestão de separadores e formulários personalizados',
+            items: [
+              {
+                label: 'Separadores',
+                href: '/area-comum/tabelas/configuracao/separadores',
+              },
+              {
+                label: 'Separadores Personalizados',
+                href: '/area-comum/tabelas/configuracao/separadores-personalizados',
+              },
+              {
+                label: 'Formulários Personalizados',
+                href: '/area-comum/tabelas/configuracao/ficha-clinica-secoes',
+              },
+            ],
+          },
+          {
+            label: 'Feriados',
+            href: '/area-comum/tabelas/tabelas/feriados',
+            description: 'Gestão de feriados',
+          },
+          {
+            label: 'Documentos',
+            href: '/area-comum/tabelas/configuracao/documentos',
+            description: 'Modelos documentais e editor',
           },
         ],
       },

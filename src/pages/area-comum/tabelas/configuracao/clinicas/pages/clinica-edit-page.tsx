@@ -62,8 +62,6 @@ import {
 } from '../queries/clinica-queries'
 import { TabOutrosParametrosClinica } from '../components/tabs/tab-outros-parametros-clinica'
 import { TabHorarioClinica } from '../components/tabs/tab-horario-clinica'
-import { TabRgpdClinica } from '../components/tabs/tab-rgpd-clinica'
-import { TabEmailsClinica } from '../components/tabs/tab-emails-clinica'
 
 const LISTAGEM_PATH = '/area-comum/tabelas/configuracao/clinicas'
 
@@ -148,7 +146,6 @@ export function ClinicaEditPage() {
     | 'faturacao'
     | 'outros-parametros'
     | 'horario'
-    | 'rgpd'
     | 'emails'
   const [mainTab, setMainTab] = useState<MainTabKey>('identificacao')
   const [subTab, setSubTab] = useState<string>('geral-identificacao')
@@ -165,7 +162,6 @@ export function ClinicaEditPage() {
     else if (mainTab === 'outros-parametros')
       setSubTab('outros-parametros-geral')
     else if (mainTab === 'horario') setSubTab('geral-horario')
-    else if (mainTab === 'rgpd') setSubTab('comunicacao-rgpd')
     else setSubTab('comunicacao-emails')
   }, [mainTab])
 
@@ -445,22 +441,6 @@ export function ClinicaEditPage() {
                       >
                         Horário de Funcionamento
                       </Button>
-                      <Button
-                        type='button'
-                        size='sm'
-                        variant={mainTab === 'rgpd' ? 'default' : 'outline'}
-                        onClick={() => setMainTab('rgpd')}
-                      >
-                        Consentimento RGPD
-                      </Button>
-                      <Button
-                        type='button'
-                        size='sm'
-                        variant={mainTab === 'emails' ? 'default' : 'outline'}
-                        onClick={() => setMainTab('emails')}
-                      >
-                        Emails
-                      </Button>
                     </div>
 
                     <TabsList>
@@ -469,8 +449,6 @@ export function ClinicaEditPage() {
                       <TabsTrigger value='fiscal-faturacao'>Faturação</TabsTrigger>
                       <TabsTrigger value='outros-parametros-geral'>Outros Parâmetros</TabsTrigger>
                       <TabsTrigger value='geral-horario'>Horário de Funcionamento</TabsTrigger>
-                      <TabsTrigger value='comunicacao-rgpd'>Consentimento RGPD</TabsTrigger>
-                      <TabsTrigger value='comunicacao-emails'>Emails</TabsTrigger>
                     </TabsList>
                   </div>
 
@@ -1618,13 +1596,6 @@ export function ClinicaEditPage() {
                     <TabHorarioClinica form={form} disabled={isReadOnly || updatePending} />
                   </TabsContent>
 
-                  <TabsContent value='comunicacao-rgpd'>
-                    <TabRgpdClinica form={form} disabled={updatePending || isReadOnly} />
-                  </TabsContent>
-
-                  <TabsContent value='comunicacao-emails'>
-                    <TabEmailsClinica form={form} disabled={updatePending || isReadOnly} />
-                  </TabsContent>
                 </Tabs>
               </form>
             </Form>

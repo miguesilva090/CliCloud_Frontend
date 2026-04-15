@@ -278,7 +278,7 @@ export function HeaderNav() {
                           className='min-w-0 p-0 relative overflow-visible'
                         >
                           <div className='relative'>
-                            <div className='flex flex-col py-1 w-[220px] shrink-0'>
+                            <div className='flex flex-col py-1 w-[270px] shrink-0 px-1'>
                               {(item.items ?? []).map((subItem, subIndex) => {
                                 const nestedItems = subItem.items ?? subItem.dropdown ?? []
                                 const hasNestedItems = nestedItems.length > 0
@@ -316,7 +316,7 @@ export function HeaderNav() {
                                           className='absolute left-full top-0 ml-0 z-10 min-w-0 w-max'
                                           style={{ height: 'fit-content' }}
                                         >
-                                          <div className='border-l border-border py-1.5 px-2 rounded-r-md bg-popover shadow-sm'>
+                                          <div className='border border-border py-1.5 px-1 rounded-md bg-popover shadow-md'>
                                             {nested.map((nestedItem, nestedIndex) => (
                                               <NavButton
                                                 key={nestedIndex}

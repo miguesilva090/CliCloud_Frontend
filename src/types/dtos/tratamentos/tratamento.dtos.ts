@@ -52,6 +52,7 @@ export interface CreateTratamentoRequest {
 
   obs?: string | null
   nomePatologia?: string | null
+  sendEmail?: boolean
 }
 
 export interface TratamentoDTO {

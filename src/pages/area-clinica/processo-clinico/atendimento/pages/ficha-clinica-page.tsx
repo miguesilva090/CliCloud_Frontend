@@ -41,9 +41,10 @@ import { AlergiasUtenteObsService } from '@/lib/services/alergias/alergias-utent
 import { ConsultaService } from '@/lib/services/consultas/consulta-service'
 import { ConsultaServicosModal } from '../ficha-clinica/modals/ConsultaServicosModal'
 import { UtenteModal } from '../ficha-clinica/modals/UtenteModal'
-import { FichaClinicaSecoesService } from '@/lib/services/processo-clinico/ficha-clinica-secoes-service'
-import type { FichaClinicaSecaoTemplateDTO } from '@/types/dtos/processo-clinico/ficha-clinica-secoes.dtos'
 import { SeparadorDinamicoTab } from '../ficha-clinica/tabs/SeparadorDinamicoTab'
+import { MedicosService } from '@/lib/services/saude/medicos-service'
+import { SeparadoresGestaoService } from '@/lib/services/processo-clinico/separadores-gestao-service'
+import type { SeparadorFichaClinicaDTO } from '@/types/dtos/processo-clinico/separadores-gestao.dtos'
 
 type FichaClinicaLocationState = { utenteId?: string; consultaId?: string } | null
 
@@ -93,84 +94,50 @@ export function FichaClinicaPage() {
   const [openHistoricoConsultas, setOpenHistoricoConsultas] = useState<boolean>(abrirConsultasDefault)
   const [abrirConsultasAoCarregar, setAbrirConsultasAoCarregar] = useState<boolean>(abrirConsultasDefault)
 
-  const { data: secaoTemplatesData } = useQuery({
-    queryKey: ['ficha-clinica-secao-templates', 'ficha-clinica'],
+  const { data: medicoAtualData } = useQuery({
+    queryKey: ['medico-atual', 'ficha-clinica'],
     queryFn: async () => {
-      const client = FichaClinicaSecoesService()
-      const res = await client.getTemplates('')
+      const client = MedicosService('processo-clinico')
+      const res = await client.getCurrentMedico()
       return res
     },
     staleTime: 5 * 60 * 1000,
   })
 
-  const secaoTemplates =
-    ((secaoTemplatesData as { info?: { data?: FichaClinicaSecaoTemplateDTO[] } } | undefined)
-      ?.info?.data ?? []) as FichaClinicaSecaoTemplateDTO[]
+  const medicoAtual = (medicoAtualData?.info?.data ?? null) as { id?: string | null; especialidadeId?: string | null } | null
+  const medicoAtualId = medicoAtual?.id ?? null
+  const especialidadeAtualId = medicoAtual?.especialidadeId ?? null
 
-  const separadoresConfiguraveis = [
-    {
-      codigo: 'MEDICINA_DESPORTIVA',
-      tabValue: 'medicina-desportiva',
-      componente: MedicinaDesportivaTab,
+  const { data: separadoresFichaData } = useQuery({
+    queryKey: ['separadores-ficha-clinica-visiveis', medicoAtualId, especialidadeAtualId],
+    queryFn: async () => {
+      const client = SeparadoresGestaoService()
+      const res = await client.getSeparadoresFichaClinicaVisiveis(medicoAtualId, especialidadeAtualId)
+      const api = res as unknown as { info?: { data?: SeparadorFichaClinicaDTO[] } }
+      return (api.info?.data ?? []) as SeparadorFichaClinicaDTO[]
     },
-    {
-      codigo: 'NUTRICAO',
-      tabValue: 'nutricao',
-      componente: NutricaoTab,
-    },
-    {
-      codigo: 'PSICOLOGIA',
-      tabValue: 'psicologia',
-      componente: PsicologiaTab,
-    },
-    {
-      codigo: 'FISIOTERAPEUTA',
-      tabValue: 'fisioterapeuta',
-      componente: FisioterapeutaTab,
-    },
-    {
-      codigo: 'FISIOLOGIA_BIOMECANICA',
-      tabValue: 'fisiologia-biomecanica',
-      componente: FisiologiaBiomecanicaTab,
-    },
-    {
-      codigo: 'TERAPIA_FALA',
-      tabValue: 'terapia-fala',
-      componente: TerapiaFalaTab,
-    },
-  ] as const
+    staleTime: 60_000,
+  })
 
-  const separadoresVisiveis = useMemo(
+  const visibleBaseList = useMemo(
     () =>
-      separadoresConfiguraveis
-        .map((sep) => {
-          const tpl = secaoTemplates.find((t) => t.codigo === sep.codigo && t.ativo)
-          if (!tpl) return null
-          return { ...sep, template: tpl }
-        })
-        .filter((x): x is (typeof separadoresConfiguraveis)[number] & { template: FichaClinicaSecaoTemplateDTO } => !!x)
-        .sort(
-          (a, b) =>
-            a.template.ordem - b.template.ordem ||
-            a.template.nome.localeCompare(b.template.nome),
-        ),
-    [secaoTemplates],
+      (separadoresFichaData ?? [])
+        .filter((s) => s.origem === 'Base' && !!s.codigo)
+        .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome)),
+    [separadoresFichaData],
   )
 
-  const separadoresGenericosVisiveis = useMemo(
+  const visibleBaseCodigos = useMemo(
+    () => new Set(visibleBaseList.map((s) => s.codigo)),
+    [visibleBaseList],
+  )
+
+  const visiblePersonalizadoList = useMemo(
     () =>
-      secaoTemplates
-        .filter(
-          (t) =>
-            t.ativo && !separadoresConfiguraveis.some((sep) => sep.codigo === t.codigo),
-        )
-        .slice()
-        .sort(
-          (a, b) =>
-            a.ordem - b.ordem ||
-            a.nome.localeCompare(b.nome),
-        ),
-    [secaoTemplates],
+      (separadoresFichaData ?? [])
+        .filter((s) => s.origem === 'Personalizado' && !!s.formularioId)
+        .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome)),
+    [separadoresFichaData],
   )
 
   const [utenteSearchD] = useDebounce(utenteSearch, 250)
@@ -347,6 +314,88 @@ export function FichaClinicaPage() {
 
   const [activeMainTab, setActiveMainTab] = useState<string>('antecedentes')
 
+  const baseTabRenderers: Record<string, { render: () => JSX.Element }> = {
+    antecedentes: {
+      render: () => <AntecedentesTab utenteId={utenteId} />,
+    },
+    sinaisvitais: {
+      render: () => <SinaisVitaisTab utenteId={utenteId} utenteNome={utente?.nome} />,
+    },
+    historiaclinica: {
+      render: () => (
+        <HistoriaClinicaTab
+          utenteId={utenteId}
+          historias={historias}
+          isLoading={isLoadingHistoria}
+          isError={isErrorHistoria}
+          errorMessage={errorHistoriaMessage}
+          page={pageHistoria}
+          pageCount={pageCountHistoria}
+          pageSize={pageSizeHistoria}
+          totalRows={totalRowsHistoria}
+          onPaginationChange={handleHistoriaPaginationChange}
+          isActive={activeMainTab === 'historiaclinica'}
+        />
+      ),
+    },
+    tratamentos: {
+      render: () => (
+        <TratamentosTab utenteId={utenteId} isActive={activeMainTab === 'tratamentos'} />
+      ),
+    },
+    exames: {
+      render: () => <PrescricaoExamesTab utenteId={utenteId} />,
+    },
+    dentaria: {
+      render: () => <DentariaTab utenteId={utenteId} />,
+    },
+    relatorioatestado: {
+      render: () => <RelatorioAtestadoTab utenteId={utenteId} />,
+    },
+    medicacao: {
+      render: () => <MedicacaoTab />,
+    },
+    documentos: {
+      render: () => <DocumentosTab utenteId={utenteId} />,
+    },
+    medicinadesp: {
+      render: () => <MedicinaDesportivaTab utenteId={utenteId} />,
+    },
+    nutricao: {
+      render: () => <NutricaoTab utenteId={utenteId} />,
+    },
+    psicologia: {
+      render: () => <PsicologiaTab utenteId={utenteId} />,
+    },
+    fisioterapia: {
+      render: () => <FisioterapeutaTab utenteId={utenteId} />,
+    },
+    fisiologiabiomecanica: {
+      render: () => <FisiologiaBiomecanicaTab utenteId={utenteId} />,
+    },
+    terapiadafala: {
+      render: () => <TerapiaFalaTab utenteId={utenteId} />,
+    },
+  }
+
+  const allVisibleTabValues = useMemo(() => {
+    const vals: string[] = []
+    for (const sep of visibleBaseList) {
+      if (baseTabRenderers[sep.codigo]) vals.push(sep.codigo)
+    }
+    for (const sep of visiblePersonalizadoList) {
+      vals.push(`sep-${sep.separadorId}`)
+    }
+    return vals
+  }, [visibleBaseList, visiblePersonalizadoList])
+
+  useEffect(() => {
+    if (allVisibleTabValues.length === 0) return
+    if (!allVisibleTabValues.includes(activeMainTab)) {
+      setActiveMainTab(allVisibleTabValues[0])
+    }
+  }, [allVisibleTabValues, activeMainTab])
+
   return (
     <>
       <PageHead title='CliCloud' />
@@ -366,73 +415,22 @@ export function FichaClinicaPage() {
             <Tabs value={activeMainTab} onValueChange={setActiveMainTab}>
               <div className='grid grid-cols-[180px_minmax(0,1fr)] gap-3'>
                 <TabsList className='flex flex-col w-[150px] gap-px bg-transparent border-none p-0 shadow-none'>
-                  <TabsTrigger
-                    value='antecedentes'
-                    className='tabs-pill justify-start w-full px-1.5 py-0'
-                  >
-                    Antecedentes
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value='sinais-vitais'
-                    className='tabs-pill justify-start w-full px-1.5 py-0'
-                  >
-                    Sinais Vitais
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value='historia'
-                    className='tabs-pill justify-start w-full px-1.5 py-0'
-                  >
-                    História Clínica
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value='tratamentos'
-                    className='tabs-pill justify-start w-full px-1.5 py-0'
-                  >
-                    Tratamentos
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value='prescricao-exames'
-                    className='tabs-pill justify-start w-full px-1.5 py-0'
-                  >
-                    Prescrição de Exames
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value='medicacao'
-                    className='tabs-pill justify-start w-full px-1.5 py-0'
-                  >
-                    Medicação
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value='relatorio-atestado'
-                    className='tabs-pill justify-start w-full px-1.5 py-0'
-                  >
-                    Relatório/Atestado
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value='dentaria'
-                    className='tabs-pill justify-start w-full px-1.5 py-0'
-                  >
-                    Dentária
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value='documentos'
-                    className='tabs-pill justify-start w-full px-1.5 py-0'
-                  >
-                    Documentos
-                  </TabsTrigger>
-                  {separadoresVisiveis.map((sep) => (
+                  {visibleBaseList.map((sep) => {
+                    if (!baseTabRenderers[sep.codigo]) return null
+                    return (
+                      <TabsTrigger
+                        key={sep.codigo}
+                        value={sep.codigo}
+                        className='tabs-pill justify-start w-full px-1.5 py-0'
+                      >
+                        {sep.nome}
+                      </TabsTrigger>
+                    )
+                  })}
+                  {visiblePersonalizadoList.map((tpl) => (
                     <TabsTrigger
-                      key={sep.tabValue}
-                      value={sep.tabValue}
-                      className='tabs-pill justify-start w-full px-1.5 py-0'
-                    >
-                      {sep.template.nome}
-                    </TabsTrigger>
-                  ))}
-                  {separadoresGenericosVisiveis.map((tpl) => (
-                    <TabsTrigger
-                      key={`sep-${tpl.id}`}
-                      value={`sep-${tpl.id}`}
+                      key={`sep-${tpl.separadorId}`}
+                      value={`sep-${tpl.separadorId}`}
                       className='tabs-pill justify-start w-full px-1.5 py-0'
                     >
                       {tpl.nome}
@@ -468,72 +466,18 @@ export function FichaClinicaPage() {
                     onAbrirAoCarregarChange={handleAbrirConsultasAoCarregarChange}
                   />
 
-                  <TabsContent value='antecedentes' className='mt-0'>
-                    <AntecedentesTab utenteId={utenteId} />
-                  </TabsContent>
-
-                  <TabsContent value='sinais-vitais' className='mt-0'>
-                    <SinaisVitaisTab utenteId={utenteId} utenteNome={utente?.nome} />
-                  </TabsContent>
-
-                  <TabsContent value='historia' className='mt-0'>
-                    <HistoriaClinicaTab
-                      utenteId={utenteId}
-                      historias={historias}
-                      isLoading={isLoadingHistoria}
-                      isError={isErrorHistoria}
-                      errorMessage={errorHistoriaMessage}
-                      page={pageHistoria}
-                      pageCount={pageCountHistoria}
-                      pageSize={pageSizeHistoria}
-                      totalRows={totalRowsHistoria}
-                      onPaginationChange={handleHistoriaPaginationChange}
-                      isActive={activeMainTab === 'historia'}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value='tratamentos' className='mt-0'>
-                    <TratamentosTab utenteId={utenteId} isActive={activeMainTab === 'tratamentos'} />
-                  </TabsContent>
-
-                  <TabsContent value='prescricao-exames' className='mt-0'>
-                    <PrescricaoExamesTab utenteId={utenteId} />
-                  </TabsContent>
-
-                  <TabsContent value='medicacao' className='mt-0'>
-                    <MedicacaoTab />
-                  </TabsContent>
-
-                  <TabsContent value='relatorio-atestado' className='mt-0'>
-                    <RelatorioAtestadoTab utenteId={utenteId} />
-                  </TabsContent>
-
-                  <TabsContent value='dentaria' className='mt-0'>
-                    <DentariaTab utenteId={utenteId} />
-                  </TabsContent>
-
-                  <TabsContent value='documentos' className='mt-0'>
-                    <DocumentosTab utenteId={utenteId} />
-                  </TabsContent>
-                  {separadoresVisiveis.map((sep) => (
-                    <TabsContent key={sep.tabValue} value={sep.tabValue} className='mt-0'>
-                      {sep.tabValue === 'medicina-desportiva' && (
-                        <MedicinaDesportivaTab utenteId={utenteId} />
-                      )}
-                      {sep.tabValue === 'nutricao' && <NutricaoTab utenteId={utenteId} />}
-                      {sep.tabValue === 'psicologia' && <PsicologiaTab utenteId={utenteId} />}
-                      {sep.tabValue === 'fisioterapeuta' && (
-                        <FisioterapeutaTab utenteId={utenteId} />
-                      )}
-                      {sep.tabValue === 'fisiologia-biomecanica' && (
-                        <FisiologiaBiomecanicaTab utenteId={utenteId} />
-                      )}
-                      {sep.tabValue === 'terapia-fala' && <TerapiaFalaTab utenteId={utenteId} />}
-                    </TabsContent>
-                  ))}
-                  {separadoresGenericosVisiveis.map((tpl) => (
-                    <TabsContent key={`sep-${tpl.id}`} value={`sep-${tpl.id}`} className='mt-0'>
-                      <SeparadorDinamicoTab separadorId={tpl.id} utenteId={utenteId} />
+                  {visibleBaseList.map((sep) => {
+                    const entry = baseTabRenderers[sep.codigo]
+                    if (!entry) return null
+                    return (
+                      <TabsContent key={sep.codigo} value={sep.codigo} className='mt-0'>
+                        {entry.render()}
+                      </TabsContent>
+                    )
+                  })}
+                  {visiblePersonalizadoList.map((tpl) => (
+                    <TabsContent key={`sep-${tpl.separadorId}`} value={`sep-${tpl.separadorId}`} className='mt-0'>
+                      <SeparadorDinamicoTab separadorId={tpl.formularioId!} utenteId={utenteId} />
                     </TabsContent>
                   ))}
                 </div>

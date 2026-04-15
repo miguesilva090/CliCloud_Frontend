@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
@@ -20,7 +22,9 @@ import type { HistoricoSmsTabelaDTO } from '@/types/dtos/core/sms.dtos'
 type TipoHistorico = 'enviadas' | 'recebidas'
 
 export function SmsHistoryPage() {
-  const [tipo, setTipo] = useState<TipoHistorico>('recebidas')
+  const [searchParams] = useSearchParams()
+  const tipoInicial = searchParams.get('tipo') === 'enviadas' ? 'enviadas' : 'recebidas'
+  const [tipo, setTipo] = useState<TipoHistorico>(tipoInicial)
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize] = useState(10)
   const [selected, setSelected] = useState<HistoricoSmsTabelaDTO | null>(null)
@@ -46,6 +50,7 @@ export function SmsHistoryPage() {
   const info = historicoQuery.data?.info
   const rows = (info?.data ?? []) as HistoricoSmsTabelaDTO[]
   const totalPages = info?.totalPages ?? 1
+  const tipoLabel = tipo === 'enviadas' ? 'Enviadas' : 'Recebidas'
 
   return (
     <>
@@ -58,13 +63,27 @@ export function SmsHistoryPage() {
               <div className='flex items-center gap-2'>
                 <Button
                   size='sm'
-                  variant='default'
+                  variant={tipo === 'enviadas' ? 'default' : 'outline'}
                   onClick={() => {
-                    setTipo((current) => (current === 'recebidas' ? 'enviadas' : 'recebidas'))
-                    setPageNumber(1)
+                    if (tipo !== 'enviadas') {
+                      setTipo('enviadas')
+                      setPageNumber(1)
+                    }
                   }}
                 >
-                  {tipo === 'recebidas' ? 'Enviadas' : 'Recebidas'}
+                  Enviadas
+                </Button>
+                <Button
+                  size='sm'
+                  variant={tipo === 'recebidas' ? 'default' : 'outline'}
+                  onClick={() => {
+                    if (tipo !== 'recebidas') {
+                      setTipo('recebidas')
+                      setPageNumber(1)
+                    }
+                  }}
+                >
+                  Recebidas
                 </Button>
               </div>
             </div>

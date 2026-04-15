@@ -41,5 +41,6 @@ export interface UpdateMarcacaoConsultaBody {
   motivoConsultaId?: string | null
   tipoAdmissaoId?: string | null
   tipoConsultaId?: string | null
+  sendEmail?: boolean
 }
 

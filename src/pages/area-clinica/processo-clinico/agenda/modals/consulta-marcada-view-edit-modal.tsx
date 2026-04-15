@@ -40,12 +40,14 @@ export function ConsultaMarcadaViewEditModal({
   const [editData, setEditData] = useState('')
   const [editHora, setEditHora] = useState('')
   const [editObs, setEditObs] = useState('')
+  const [sendEmail, setSendEmail] = useState(false)
 
   useEffect(() => {
     if (open && rowData) {
       setEditData(rowData.data?.slice(0, 10) ?? '')
       setEditHora(rowData.horaMarcacao?.slice(0, 5) ?? rowData.horaMarcacaoLabel ?? '')
       setEditObs('')
+      setSendEmail(false)
       if (rowData.id && mode === 'edit') {
         MarcacaoConsultaService().getMarcacaoConsulta(rowData.id).then((res) => {
           const full = res?.info?.data
@@ -89,6 +91,7 @@ export function ConsultaMarcadaViewEditModal({
       organismoId: null,
       motivoConsultaId: rowData.motivoConsultaId ?? undefined,
       tipoAdmissaoId: rowData.tipoAdmissaoId ?? undefined,
+      sendEmail,
     }
     updateMutation.mutate({ id: rowData.id, body })
   }
@@ -110,6 +113,18 @@ export function ConsultaMarcadaViewEditModal({
           <div className='grid gap-2'><Label>Organismo</Label><Input value={rowData?.organismoNome ?? rowData?.organismoCodigo ?? '—'} disabled readOnly /></div>
           <div className='grid gap-2'><Label>Estado</Label><Input value={rowData?.statusConsultaLabel ?? '—'} disabled readOnly /></div>
           {!isView && <div className='grid gap-2'><Label>Observações</Label><Textarea className='min-h-[80px]' placeholder='Observações (opcional)' value={editObs} onChange={(e) => setEditObs(e.target.value)} /></div>}
+          {!isView && (
+            <div className='flex items-center gap-2'>
+              <input
+                id='consulta-send-email'
+                type='checkbox'
+                className='h-4 w-4'
+                checked={sendEmail}
+                onChange={(e) => setSendEmail(e.target.checked)}
+              />
+              <Label htmlFor='consulta-send-email'>Enviar email</Label>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant='outline' onClick={() => onOpenChange(false)}>{isView ? 'Fechar' : 'Cancelar'}</Button>

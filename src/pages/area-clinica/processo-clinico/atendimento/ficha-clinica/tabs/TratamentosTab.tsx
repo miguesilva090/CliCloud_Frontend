@@ -29,6 +29,7 @@ import type { SubsistemaServicoDTO } from '@/types/dtos/servicos/subsistema-serv
 import { SubsistemaServicoService } from '@/lib/services/servicos/subsistema-servico-service'
 import { ServicoViewCreateModal } from '@/pages/area-comum/tabelas/consultas/servicos/servicos/modals/servico-view-create-modal'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import state from '@/states/state'
 import { useGetEvolucaoTratamentoPaginated } from '../queries/evolucao-tratamento-queries'
 import type {
@@ -73,6 +74,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
   const [localTratamento, setLocalTratamento] = useState<string>('')
   const [medico, setMedico] = useState<string>('')
   const [especificacaoTecnica, setEspecificacaoTecnica] = useState<string>('')
+  const [sendEmail, setSendEmail] = useState<boolean>(false)
 
   const { data: tratamentos = [], isLoading, isError } = useGetTratamentosByUtente(utenteId)
   const createMutation = useCreateTratamento(utenteId)
@@ -498,6 +500,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
     setLocalTratamento('')
     setMedico('')
     setEspecificacaoTecnica('')
+    setSendEmail(false)
     setNovoOpen(true)
   }
 
@@ -524,6 +527,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
         // é o que volta quando abrimos o tratamento em modo ver/editar.
         // Por isso aqui gravamos a especificação técnica em Obs.
         obs: especificacaoTecnica || null,
+        sendEmail,
       },
       {
         onSuccess: () => {
@@ -1193,6 +1197,19 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                   placeholder='Notas adicionais sobre o tratamento.'
                 />
               </div>
+
+              {!isViewMode && (
+                <div className='flex items-center gap-2'>
+                  <input
+                    id='tratamento-send-email'
+                    type='checkbox'
+                    className='h-4 w-4'
+                    checked={sendEmail}
+                    onChange={(e) => setSendEmail(e.target.checked)}
+                  />
+                  <Label htmlFor='tratamento-send-email'>Enviar email</Label>
+                </div>
+              )}
             </div>
 
             <DialogFooter>

@@ -25,7 +25,7 @@ import { Plus } from 'lucide-react'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { useOrganismosLight } from '@/lib/services/utility/entity-quick-create/entity-quick-create-queries'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { fieldGap, labelClass, inputClass, buttonIconClass } from './utente-edit-tabs-constants'
+import { fieldGap, labelClass, inputClass, buttonIconClass } from '../utente-edit-tabs-constants'
 import { openPathInApp } from '@/utils/window-utils'
 
 const schema = z.object({
