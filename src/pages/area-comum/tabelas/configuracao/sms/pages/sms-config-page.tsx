@@ -218,7 +218,7 @@ export function SmsConfigPage() {
 
   const inserirPlaceholder = (placeholder: string) => {
     setEditMensagem((prev) => {
-      const token = `@${placeholder}`
+      const token = `@${placeholder}@`
       if (!prev.trim()) return token
       return `${prev} ${token}`.replace(/\s+/g, ' ').trim()
     })

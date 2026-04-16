@@ -1,4 +1,6 @@
+import { format } from 'date-fns'
 import { useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { CellContext, ColumnDef } from '@tanstack/react-table'
 import {
   Check,
@@ -23,23 +25,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { ExamesSemPapelService } from '@/lib/services/consultas/exames-sem-papel-service'
+import type {
+  ExameSemPapelTabelaDTO,
+  ExamesSemPapelContextoDTO,
+} from '@/types/dtos/consultas/exames-sem-papel.dtos'
+import { toast } from '@/utils/toast-utils'
+import { ResponseStatus } from '@/types/api/responses'
 
-export type ExameSemPapelRow = {
-  id: string
-  requisicaoNum: string
-  utente: string
-  area: string
-  estado: 'Agendado' | 'Efetivado' | 'Realizado'
-  lotes: boolean
-  medico: string
-  isencaoTaxa: boolean
-  comTaxa: boolean
-  pnp: boolean
-  assinado: boolean
-  dataRequisicao: string
-}
-
-const columns: Array<ColumnDef<ExameSemPapelRow> & DataTableColumnDef<ExameSemPapelRow>> = [
+const columns: Array<ColumnDef<ExameSemPapelTabelaDTO> & DataTableColumnDef<ExameSemPapelTabelaDTO>> = [
   {
     id: 'select',
     header: ({ table }: { table: any }) => (
@@ -49,7 +43,7 @@ const columns: Array<ColumnDef<ExameSemPapelRow> & DataTableColumnDef<ExameSemPa
         aria-label='Selecionar todos'
       />
     ),
-    cell: ({ row }: CellContext<ExameSemPapelRow, unknown>) => (
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(checked) => row.toggleSelected(!!checked)}
@@ -63,35 +57,35 @@ const columns: Array<ColumnDef<ExameSemPapelRow> & DataTableColumnDef<ExameSemPa
   {
     accessorKey: 'requisicaoNum',
     header: 'Requisição Nº',
-    cell: ({ row }: CellContext<ExameSemPapelRow, unknown>) =>
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) =>
       row.original.requisicaoNum || '-',
     meta: { align: 'left', width: 'w-[100px]' },
   },
   {
     accessorKey: 'utente',
     header: 'Utente',
-    cell: ({ row }: CellContext<ExameSemPapelRow, unknown>) =>
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) =>
       row.original.utente || '-',
     meta: { align: 'left', width: 'w-[220px]' },
   },
   {
     accessorKey: 'area',
     header: 'Área',
-    cell: ({ row }: CellContext<ExameSemPapelRow, unknown>) =>
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) =>
       row.original.area || '-',
     meta: { align: 'left', width: 'w-[50px]' },
   },
   {
     accessorKey: 'estado',
     header: 'Estado',
-    cell: ({ row }: CellContext<ExameSemPapelRow, unknown>) =>
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) =>
       row.original.estado || '-',
     meta: { align: 'left', width: 'w-[95px]' },
   },
   {
     accessorKey: 'lotes',
     header: 'Lotes',
-    cell: ({ row }: CellContext<ExameSemPapelRow, unknown>) => (
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
       <Checkbox checked={row.original.lotes} disabled aria-label='Lotes' />
     ),
     enableSorting: false,
@@ -100,14 +94,14 @@ const columns: Array<ColumnDef<ExameSemPapelRow> & DataTableColumnDef<ExameSemPa
   {
     accessorKey: 'medico',
     header: 'Médico',
-    cell: ({ row }: CellContext<ExameSemPapelRow, unknown>) =>
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) =>
       row.original.medico || '-',
     meta: { align: 'left', width: 'w-[120px]' },
   },
   {
     accessorKey: 'isencaoTaxa',
     header: 'Isenção Taxa',
-    cell: ({ row }: CellContext<ExameSemPapelRow, unknown>) => (
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
       <Checkbox
         checked={row.original.isencaoTaxa}
         disabled
@@ -120,7 +114,7 @@ const columns: Array<ColumnDef<ExameSemPapelRow> & DataTableColumnDef<ExameSemPa
   {
     accessorKey: 'comTaxa',
     header: 'Com. Taxa',
-    cell: ({ row }: CellContext<ExameSemPapelRow, unknown>) => (
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
       <Checkbox
         checked={row.original.comTaxa}
         disabled
@@ -133,7 +127,7 @@ const columns: Array<ColumnDef<ExameSemPapelRow> & DataTableColumnDef<ExameSemPa
   {
     accessorKey: 'pnp',
     header: 'P.N.P.',
-    cell: ({ row }: CellContext<ExameSemPapelRow, unknown>) => (
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
       <Checkbox checked={row.original.pnp} disabled aria-label='P.N.P.' />
     ),
     enableSorting: false,
@@ -142,7 +136,7 @@ const columns: Array<ColumnDef<ExameSemPapelRow> & DataTableColumnDef<ExameSemPa
   {
     accessorKey: 'assinado',
     header: 'Assinado',
-    cell: ({ row }: CellContext<ExameSemPapelRow, unknown>) => (
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
       <Checkbox checked={row.original.assinado} disabled aria-label='Assinado' />
     ),
     enableSorting: false,
@@ -151,7 +145,7 @@ const columns: Array<ColumnDef<ExameSemPapelRow> & DataTableColumnDef<ExameSemPa
   {
     accessorKey: 'dataRequisicao',
     header: 'Data',
-    cell: ({ row }: CellContext<ExameSemPapelRow, unknown>) =>
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) =>
       row.original.dataRequisicao || '-',
     meta: { align: 'left', width: 'w-[90px]' },
   },
@@ -192,8 +186,7 @@ function ExamesSemPapelFilterControls(_: {
 }
 
 export function ExamesSemPapelPage() {
-  const [examesData] = useState<ExameSemPapelRow[]>([])
-  const [refreshKey, setRefreshKey] = useState(0)
+  const queryClient = useQueryClient()
   const [searchUtente, setSearchUtente] = useState('')
   const [dataInicio, setDataInicio] = useState<Date | undefined>(undefined)
   const [dataFim, setDataFim] = useState<Date | undefined>(undefined)
@@ -205,36 +198,116 @@ export function ExamesSemPapelPage() {
   const [sorting, setSorting] = useState<Array<{ id: string; desc: boolean }>>([])
   const [selectedRows, setSelectedRows] = useState<string[]>([])
 
-  const examesFiltrados = useMemo(() => {
-    let list = examesData
-    if (searchUtente.trim()) {
-      const q = searchUtente.trim().toLowerCase()
-      list = list.filter((row) => row.utente.toLowerCase().includes(q))
-    }
-    if (porAssinarActive) {
-      list = list.filter((row) => !row.assinado)
-    }
-    if (todosFilter === 'efetuados_nao_prescritos') {
-      list = list.filter((row) => row.estado === 'Efetivado')
-    }
-    return list
-  }, [examesData, searchUtente, porAssinarActive, todosFilter, refreshKey])
+  const contextoQuery = useQuery({
+    queryKey: ['exames-sem-papel', 'contexto'],
+    queryFn: () => ExamesSemPapelService().getContexto(),
+  })
 
-  const totalRegistos = examesFiltrados.length
-  const totalPages = Math.max(1, Math.ceil(totalRegistos / pageSize))
-  const paginatedRows = useMemo(() => {
-    const start = (page - 1) * pageSize
-    return examesFiltrados.slice(start, start + pageSize)
-  }, [examesFiltrados, page, pageSize])
+  const tabelaQuery = useQuery({
+    queryKey: [
+      'exames-sem-papel',
+      'tabela',
+      page,
+      pageSize,
+      searchUtente,
+      porAssinarActive,
+      todosFilter,
+      dataInicio?.toISOString() ?? null,
+      dataFim?.toISOString() ?? null,
+    ],
+    queryFn: () =>
+      ExamesSemPapelService().getTabela({
+        searchUtente: searchUtente.trim() || null,
+        dataInicio: dataInicio ? format(dataInicio, 'yyyy-MM-dd') : null,
+        dataFim: dataFim ? format(dataFim, 'yyyy-MM-dd') : null,
+        porAssinar: porAssinarActive,
+        apenasEfetuadosNaoPrescritos: todosFilter === 'efetuados_nao_prescritos',
+        pageNumber: page,
+        pageSize,
+      }),
+  })
+
+  const contexto = contextoQuery.data?.info?.data as ExamesSemPapelContextoDTO | undefined
+  const rows = useMemo(
+    () => (tabelaQuery.data?.info?.data ?? []) as ExameSemPapelTabelaDTO[],
+    [tabelaQuery.data]
+  )
+  const totalRegistos = tabelaQuery.data?.info?.totalCount ?? 0
+  const totalPages = tabelaQuery.data?.info?.totalPages ?? 1
+
+  const assinarMutation = useMutation({
+    mutationFn: () =>
+      ExamesSemPapelService().assinarLote({
+        requisicoes: selectedRows,
+        areaPrestacao: contexto?.areaPrestacaoAssinarESPDefeito ?? null,
+      }),
+    onSuccess: (response) => {
+      if (response.info?.status === ResponseStatus.Success) {
+        toast.success('Operação executada com sucesso.')
+        setSelectedRows([])
+        queryClient.invalidateQueries({ queryKey: ['exames-sem-papel'] })
+        return
+      }
+
+      const msg = response.info?.messages?.$?.[0] ?? 'Falha ao assinar em lote.'
+      toast.error(msg)
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Falha ao assinar em lote.')
+    },
+  })
+
+  const comunicarMutation = useMutation({
+    mutationFn: () =>
+      ExamesSemPapelService().comunicarLote({
+        requisicoes: selectedRows,
+        areaPrestacao: contexto?.areaPrestacaoAssinarESPDefeito ?? null,
+      }),
+    onSuccess: (response) => {
+      if (response.info?.status === ResponseStatus.Success) {
+        toast.success('Operação executada com sucesso.')
+        setSelectedRows([])
+        queryClient.invalidateQueries({ queryKey: ['exames-sem-papel'] })
+        return
+      }
+
+      const msg = response.info?.messages?.$?.[0] ?? 'Falha ao comunicar em lote.'
+      toast.error(msg)
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Falha ao comunicar em lote.')
+    },
+  })
 
   const handleRefresh = () => {
     setSelectedRows([])
-    setRefreshKey((k) => k + 1)
-    setPage(1)
+    void contextoQuery.refetch()
+    void tabelaQuery.refetch()
   }
 
-  const handleExecutarAssinarLote = () => {}
-  const handleExecutarComunicarLote = () => {}
+  const handleExecutarAssinarLote = () => {
+    if (!selectedRows.length) {
+      return toast.warning('Selecione pelo menos uma requisição.')
+    }
+
+    if (!contexto?.temAssinaturaCarregada) {
+      return toast.warning('Não existe assinatura digital carregada na sessão atual.')
+    }
+
+    assinarMutation.mutate()
+  }
+
+  const handleExecutarComunicarLote = () => {
+    if (!selectedRows.length) {
+      return toast.warning('Selecione pelo menos uma requisição.')
+    }
+
+    if (!contexto?.temAssinaturaCarregada) {
+      return toast.warning('Não existe assinatura digital carregada na sessão atual.')
+    }
+
+    comunicarMutation.mutate()
+  }
 
   return (
     <>
@@ -242,6 +315,17 @@ export function ExamesSemPapelPage() {
       <DashboardPageContainer>
         <div className='mb-6'>
           <h1 className='text-2xl font-bold text-foreground'>Exames Sem Papel</h1>
+          <div className='mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground'>
+            <span>
+              Porta leitor: {contexto?.portaLeitorCartoes != null ? contexto.portaLeitorCartoes : 'Não definida'}
+            </span>
+            <span>
+              Assinatura: {contexto?.temAssinaturaCarregada ? 'Carregada' : 'Não carregada'}
+            </span>
+            <span>
+              Área defeito: {contexto?.areaPrestacaoAssinarESPDefeito || 'Não definida'}
+            </span>
+          </div>
         </div>
 
         <div className='mb-4 flex flex-wrap items-center justify-between gap-3'>
@@ -258,7 +342,7 @@ export function ExamesSemPapelPage() {
               <DropdownMenuTrigger asChild>
                 <Button size='sm' className='h-8 gap-2 bg-primary text-primary-foreground hover:bg-primary/90'>
                   <Check className='h-4 w-4' />
-                  Executar
+                  {assinarMutation.isPending || comunicarMutation.isPending ? 'A executar' : 'Executar'}
                   <ChevronDown className='h-4 w-4' />
                 </Button>
               </DropdownMenuTrigger>
@@ -315,7 +399,7 @@ export function ExamesSemPapelPage() {
 
         <DataTable
           columns={columns}
-          data={paginatedRows}
+          data={rows}
           pageCount={totalPages}
           totalRows={totalRegistos}
           initialPage={page}

@@ -100,6 +100,7 @@ export interface ClinicaDTO {
   regiao?: string | null
   cid?: number | null
   portaLeitorCartoes?: number | null
+  areaPrestacaoAssinarESPDefeito?: string | null
   stocksColunaStockReal?: boolean | null
 
   calendarioMarcacoesRadio?: number | null
@@ -247,6 +248,7 @@ export interface UpdateClinicaRequest {
   regiao?: string | null
   cid?: number | null
   portaLeitorCartoes?: number | null
+  areaPrestacaoAssinarESPDefeito?: string | null
   stocksColunaStockReal?: boolean | null
 
   calendarioMarcacoesRadio?: number | null

@@ -1,3 +1,4 @@
+import { createTabsScope } from '@radix-ui/react-tabs'
 import { z } from 'zod'
 
 export type ClinicaEditFormValues = {
@@ -247,6 +248,65 @@ export const clinicaEditSchema = z
   .superRefine((vals, ctx) => {
     const telefone = vals.telefone?.trim() ?? ''
     const indicativo = vals.indicativoTelefone?.trim() ?? ''
+    const codSb = (vals.codSb as string)?.trim() ?? ''
+    const hiM = (vals.horaInicManha as string)?.trim() ?? ''
+    const hfM = (vals.horaFimManha as string)?.trim() ?? ''
+    const hiT = (vals.horaInicTarde as string)?.trim() ?? ''
+    const hfT = (vals.horaFimTarde as string)?.trim() ?? ''
+    const comInterrupcao = !!vals.interrupcao
+
+    if(!hiM)
+    {
+      ctx.addIssue({code: 'custom', path: ['horaInicManha'], message: 'Obrigatório'})
+    }
+
+    if(!hfT)
+    {
+      ctx.addIssue({code: 'custom', path: ['horaFimTarde'], message: 'Obrigatório'})
+    }
+    
+    const toMin = (hhmm : string) => {
+      const m = /^(\d{2}):(\d{2})$/.exec(hhmm)
+      if(!m) return null
+      return Number(m[1]) * 60 + Number(m[2])
+    }
+
+    const a = toMin(hiM), d = toMin(hfT)
+
+    if(a !== null && d !== null )
+    {
+      if(!comInterrupcao && a > d)
+      {
+        ctx.addIssue({code: 'custom', path: ['horaInicManha'], message: 'Intervalo inválido'})
+        ctx.addIssue({code: 'custom', path: ['horaFimTarde'], message: 'Intervalo inválido'})
+      }
+
+      if(comInterrupcao)
+      {
+        const b = toMin(hfM), c = toMin(hiT)
+        {
+          if(!hfM) ctx.addIssue({code: 'custom', path: ['horaFimManha'], message: 'Obrigatório'})
+          if(!hiT) ctx.addIssue({code: 'custom', path: ['horaInicTarde'], message: 'Obrigatório'})
+
+          if(b !== null && c !== null && !(a <= b && b <= c && c <= d))
+          {
+            ctx.addIssue({code: 'custom', path: ['horaInicManha'], message: 'Intervalo inválido'})
+            ctx.addIssue({code: 'custom', path: ['horaFimManha'], message: 'Intervalo inválido'})
+            ctx.addIssue({code: 'custom', path: ['horaInicTarde'], message: 'Intervalo inválido'})
+            ctx.addIssue({code: 'custom', path: ['horaFimTarde'], message: 'Intervalo inválido'})
+          }
+        }
+      }
+    }
+
+    if(codSb && !/^\d{4}$/.test(codSb))
+    {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['codSb'],
+        message: 'O código SB deve ter 4 dígitos numéricos (ex: 0002)',
+      })
+    }
 
     if ( telefone && !indicativo) {
       ctx.addIssue({

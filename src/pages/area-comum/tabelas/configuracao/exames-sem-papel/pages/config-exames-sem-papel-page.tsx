@@ -133,6 +133,22 @@ export function ConfigExamesSemPapelPage() {
             return toast.warning('Código Entidade inválido ')
         }
 
+        if(!form.pesquisaPrestacao.trim()) {
+            return toast.warning('Endpoint Pesquisa Prestação é obrigatório')
+        }
+
+        if(!form.agendamento.trim()) {
+            return toast.warning('Endpoint Agendamento é obrigatório')
+        }
+
+        if(!form.efetivacao.trim()) {
+            return toast.warning('Endpoint Efetivação é obrigatório')
+        }
+
+        if(!form.anulacao.trim()) {
+            return toast.warning('Endpoint Anulação é obrigatório')
+        }
+
         const payload: AtualizarConfigExamesSemPapelRequest = {
             codigoEntidade: codigoEntidadeNumber,
             username: form.username.trim() || null,
