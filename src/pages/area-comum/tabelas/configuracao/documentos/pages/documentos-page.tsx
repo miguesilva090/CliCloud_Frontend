@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { FileText, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { FileText, Pencil, Plus, Trash2 } from 'lucide-react'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
@@ -18,7 +18,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ClinicaService } from '@/lib/services/core/clinica-service'
 import { ConsentimentoService } from '@/lib/services/documentos/consentimento-service'
 import { MotorDocumentalService } from '@/lib/services/documentos/motor-documental-service'
 import { UtentesService } from '@/lib/services/saude/utentes-service'
@@ -41,33 +40,6 @@ function getApiMessage(messages?: Record<string, string[]>): string | undefined 
   if (!messages) return undefined
   const first = Object.values(messages).find((x) => x?.length)?.[0]
   return first
-}
-
-const DEFAULT_POLITICA_PRIVACIDADE_DESCRITIVO = `POLÍTICA DE PRIVACIDADE
-Os dados pessoais recolhidos pelos colaboradores da <<ClinicaNome>>, incluindo os direta ou indiretamente relacionados com a saúde do titular, serão processados e armazenados pela <<ClinicaNome>> ou pelas entidades por esta subcontratadas para prestação de serviços da <<ClinicaNome>>, designadamente para realização dos tratamentos médicos mais indicados às necessidades do titular.
-Os dados relacionados com a saúde do titular apenas serão tratados por profissionais obrigados a sigilo e na medida do necessário à prestação de cuidados de saúde, podendo ser comunicados aos seus familiares, quando esteja em causa o exercício de um direito em sede de processo judicial ou para efeitos de diagnósticos de doenças hereditárias ou genéticas, se estiver física ou legalmente incapaz de dar o seu consentimento.
-Caso pretenda que os serviços prestados pela <<ClinicaNome>> sejam abrangidos por um seguro ou subsistema de saúde, os dados de saúde relacionados com tais serviços poderão ser comunicados a um profissional de saúde da companhia de seguros ou do subsistema de saúde que seja beneficiário, sendo que estes estão obrigados a sigilo.
-Sempre que haja lugar à emissão de documentos de faturação de serviços ou artigos, os dados referentes à fatura serão comunicados a uma entidade subcontratada para os serviços de contabilidade da <<ClinicaNome>>.
-É garantido ao titular dos dados o direito à retirada do consentimento, ao acesso, atualização e retificação dos seus dados pessoais, mediante contacto direto com a <<ClinicaNome>> ou, no caso de dados relativos à sua saúde, através de um médico por si indicado mediante pedido escrito dirigido à <<ClinicaNome>>.
-O titular tem o direito de apresentar reclamação à autoridade de controlo, a Comissão Nacional de Proteção de Dados.
-Os dados de saúde serão conservados pelo prazo definido na Portaria nº 247/2000, de 8 de Maio, ou por legislação que a revogue.
-Os dados de faturação serão conservados pelo prazo legal em vigor.`
-
-const DEFAULT_POLITICA_PRIVACIDADE_CONSENTIMENTO = `Declaração de consentimento
-Eu, <<UtenteNome>>, titular dos dados / responsável legal pelo titular, consinto a recolha, processamento e utilização dos dados pessoais do titular no contexto da prestação de cuidados de saúde conforme descrito acima.
-Esta autorização poderá ser retirada a qualquer momento.
-Consentimento: <<UtenteConsentimento>>
-Assinatura: <<UtenteAssinatura>>
-Data: <<DataPorExtenso>>`
-
-const DEFAULT_POLITICA_PRIVACIDADE_MARKETING =
-  'Os dados recolhidos poderão ser usados para futuras comunicações entre a clínica e o utente.'
-
-function textBlockToHtml(text: string): string {
-  return text
-    .split(/\r?\n\s*\r?\n/g)
-    .map((block) => `<p>${block.trim().replace(/\r?\n/g, '<br />')}</p>`)
-    .join('\n')
 }
 
 export function DocumentosPage() {
@@ -140,54 +112,6 @@ export function DocumentosPage() {
     },
     onError: (err: unknown) => {
       toast.error(err instanceof Error ? err.message : 'Falha ao criar o modelo.')
-    },
-  })
-
-  const gerarModeloPoliticaMutation = useMutation({
-    mutationFn: async () => {
-      const clinicaResponse = await ClinicaService('tabelas').getClinicaCurrent()
-      const clinica = clinicaResponse.info.data
-      const clinicaNome = clinica?.nome?.trim() || 'EMPRESA'
-
-      const descritivoBase = (clinica?.rgpdDescritivo || DEFAULT_POLITICA_PRIVACIDADE_DESCRITIVO)
-        .replaceAll('EMPRESA', '<<ClinicaNome>>')
-        .replaceAll('<<ClinicaNome>>', clinicaNome)
-      const consentimentoBase = clinica?.rgpdConsentimento || DEFAULT_POLITICA_PRIVACIDADE_CONSENTIMENTO
-      const marketingBase = clinica?.rgpdMarketing || DEFAULT_POLITICA_PRIVACIDADE_MARKETING
-
-      const documentoCompleto = `${descritivoBase}\n\n${consentimentoBase}\n\n${marketingBase}`
-      const conteudoHtml = textBlockToHtml(documentoCompleto)
-
-      const codigoModelo = 'POLITICA_PRIVACIDADE'
-      const modelosResponse = await MotorDocumentalService().getModelos(codigoModelo)
-      const existentes = modelosResponse.info.data ?? []
-      const existente = existentes.find((m) => m.codigo === codigoModelo)
-
-      if (existente) {
-        return MotorDocumentalService().updateModelo(existente.id, {
-          nome: 'Política de Privacidade e Consentimento',
-          conteudoHtml,
-          ativo: true,
-        })
-      }
-
-      return MotorDocumentalService().createModelo({
-        codigo: codigoModelo,
-        nome: 'Política de Privacidade e Consentimento',
-        tipo: 1,
-        conteudoHtml,
-      })
-    },
-    onSuccess: async (response) => {
-      if (response.info.status === ResponseStatus.Success) {
-        toast.success('Modelo de política de privacidade gerado com sucesso.')
-        await queryClient.invalidateQueries({ queryKey: ['motor-documental-modelos'] })
-        return
-      }
-      toast.error(getApiMessage(response.info.messages) ?? 'Não foi possível gerar o modelo de política de privacidade.')
-    },
-    onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : 'Falha ao gerar modelo de política de privacidade.')
     },
   })
 
@@ -338,25 +262,9 @@ export function DocumentosPage() {
             className='w-[250px]'
           />
           <div className='flex-1' />
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => queryClient.invalidateQueries({ queryKey: ['motor-documental-modelos'] })}
-          >
-            <RefreshCw className='mr-2 h-3.5 w-3.5' />
-            Atualizar
-          </Button>
           <Button size='sm' onClick={openCreate}>
             <Plus className='mr-2 h-3.5 w-3.5' />
             Novo
-          </Button>
-          <Button
-            size='sm'
-            variant='outline'
-            onClick={() => gerarModeloPoliticaMutation.mutate()}
-            disabled={gerarModeloPoliticaMutation.isPending}
-          >
-            {gerarModeloPoliticaMutation.isPending ? 'A gerar...' : 'Gerar Política de Privacidade'}
           </Button>
         </div>
 
@@ -398,7 +306,7 @@ export function DocumentosPage() {
                 </TableRow>
               ) : null}
               {paginatedModelos.map((item) => (
-                <TableRow key={item.id} className='cursor-pointer hover:bg-muted/50' onClick={() => openEditor(item)}>
+                <TableRow key={item.id} className='hover:bg-muted/50'>
                   <TableCell className='font-mono text-sm text-center truncate' title={item.codigo}>
                     {item.codigo}
                   </TableCell>

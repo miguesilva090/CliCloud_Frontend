@@ -87,14 +87,19 @@ const COMMON_MARKERS = [
   { key: 'DataNormal', label: 'Data (dd/MM/yyyy)' },
   { key: 'DataPorExtenso', label: 'Data por extenso' },
   { key: 'UtenteNome', label: 'Nome do utente' },
-  { key: 'NomeUtente', label: 'Nome do utente (alias legado)' },
   { key: 'UtenteNumero', label: 'Nº de utente' },
   { key: 'UtenteContribuinte', label: 'NIF do utente' },
   { key: 'UtenteNumeroCC', label: 'Nº de identificação (CC/BI)' },
   { key: 'UtenteDataNascimento', label: 'Data de nascimento do utente' },
   { key: 'UtenteEmail', label: 'Email do utente' },
-  { key: 'UtenteConsentimento', label: 'Consentimento do utente (preenchido ao assinar)' },
-  { key: 'UtenteAssinatura', label: 'Assinatura do utente (preenchido ao assinar)' },
+  { key: 'UtenteRua', label: 'Rua do utente' },
+  { key: 'UtenteLocalidade', label: 'Localidade do utente' },
+  { key: 'UtenteTelemovel', label: 'Telemóvel do utente' },
+  { key: 'UtenteConsentimento', label: 'Consentimento do utente' },
+  { key: 'UtenteAssinatura', label: 'Assinatura do utente' },
+  { key: 'UtenteTratamentoDados', label: 'Consentimento de tratamento de dados do utente' },
+  { key: 'NumeroRequisicao', label: 'Número de requisição' },
+  { key: 'NumeroRequisicaoCodBarras', label: 'Código de barras da requisição' },
 ]
 
 function TBtn({

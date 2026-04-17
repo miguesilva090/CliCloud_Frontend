@@ -406,6 +406,11 @@ export const roleHeaderMenus = {
             href: '/area-comum/tabelas/configuracao/documentos',
             description: 'Modelos documentais e editor',
           },
+          {
+            label: 'Configuração Referências MB',
+            href: '/area-comum/tabelas/configuracao/referencias-mb',
+            description: 'Configurar integração IfThenPay e callback de liquidação',
+          },
         ],
       },
       { label: 'Notificações', href: '/area-comum/tabelas/notificacoes' },

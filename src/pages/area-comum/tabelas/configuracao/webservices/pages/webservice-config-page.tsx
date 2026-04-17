@@ -16,6 +16,7 @@ import type {
 } from '@/types/dtos/core/config-webservice.dtos'
 
 type ConfigWebServiceForm = {
+  versaoPrescricao: number
   urlRnu: string
   urlAcss: string
   loginAcss: string
@@ -38,6 +39,7 @@ type ConfigWebServiceForm = {
 }
 
 const initialForm: ConfigWebServiceForm = {
+  versaoPrescricao: 2,
   urlRnu: '',
   urlAcss: '',
   loginAcss: '',
@@ -62,10 +64,15 @@ const initialForm: ConfigWebServiceForm = {
 export function WebserviceConfigPage() {
   const [form, setForm] = useState<ConfigWebServiceForm>(initialForm)
   const [showPasswords, setShowPasswords] = useState(false)
+  const [showAdvancedAuth, setShowAdvancedAuth] = useState(false)
 
   const configQuery = useQuery({
     queryKey: ['config-webservice', 'current'],
     queryFn: () => ConfigWebServiceService().getConfiguracaoAtual(),
+  })
+  const versaoQuery = useQuery({
+    queryKey: ['config-webservice', 'versao-prescricao'],
+    queryFn: () => ConfigWebServiceService().getVersaoPrescricao(),
   })
 
   const saveMutation = useMutation({
@@ -74,6 +81,7 @@ export function WebserviceConfigPage() {
     onSuccess: () => {
       toast.success('Configuração de WebServices guardada com sucesso.')
       void configQuery.refetch()
+      void versaoQuery.refetch()
     },
     onError: () => {
       toast.error('Falha ao guardar configuração de WebServices.')
@@ -86,6 +94,7 @@ export function WebserviceConfigPage() {
     if (!dto) return
 
     setForm({
+      versaoPrescricao: dto.versaoPrescricao ?? 2,
       urlRnu: dto.urlRnu ?? '',
       urlAcss: dto.urlAcss ?? '',
       loginAcss: dto.loginAcss ?? '',
@@ -108,6 +117,13 @@ export function WebserviceConfigPage() {
     })
   }, [configQuery.data])
 
+  useEffect(() => {
+    const response = versaoQuery.data as any
+    const versao = response?.info?.data
+    if (typeof versao !== 'number') return
+    setForm((prev) => ({ ...prev, versaoPrescricao: versao }))
+  }, [versaoQuery.data])
+
   const handleChange = <K extends keyof ConfigWebServiceForm>(key: K, value: ConfigWebServiceForm[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
@@ -120,8 +136,15 @@ export function WebserviceConfigPage() {
     if (!form.urlAcssRsp.trim()) return toast.warning('Endereço Prescrição (Desmaterializadas) é obrigatório.')
     if (!form.loginAcssRsp.trim()) return toast.warning('Utilizador ACSS RSP é obrigatório.')
     if (!form.passwordAcssRsp.trim()) return toast.warning('Palavra-passe ACSS RSP é obrigatória.')
+    if (form.usarProxy && (!form.dominioProxy.trim() || !form.userProxy.trim() || !form.passwordProxy.trim())) {
+      return toast.warning('Quando "Usar Proxy" está ativo, domínio, utilizador e password são obrigatórios.')
+    }
+    if (form.usarProxyRsp && (!form.dominioProxyRsp.trim() || !form.userProxyRsp.trim() || !form.passwordProxyRsp.trim())) {
+      return toast.warning('Quando "Usar Proxy" RSP está ativo, domínio, utilizador e password são obrigatórios.')
+    }
 
     const payload: AtualizarConfigWebServiceRequest = {
+      versaoPrescricao: form.versaoPrescricao,
       urlRnu: form.urlRnu.trim(),
       urlAcss: form.urlAcss.trim(),
       loginAcss: form.loginAcss.trim(),
@@ -141,7 +164,6 @@ export function WebserviceConfigPage() {
       tokenAutenticacao: form.tokenAutenticacao.trim() || null,
       loginAutenticacao: form.loginAutenticacao.trim() || null,
       passwordAutenticacao: form.passwordAutenticacao || null,
-      versaoPrescricao: 2,
     }
 
     saveMutation.mutate(payload)
@@ -178,7 +200,7 @@ export function WebserviceConfigPage() {
 
               <section className='space-y-3 rounded-md border p-4'>
                 <h3 className='text-sm font-semibold text-primary'>Configuração</h3>
-                <div className='grid grid-cols-1 gap-3'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
                   <div className='space-y-1'>
                     <Label htmlFor='url-rnu'>Endereço RNU</Label>
                     <Input
@@ -187,6 +209,19 @@ export function WebserviceConfigPage() {
                       onChange={(e) => handleChange('urlRnu', e.target.value)}
                       disabled={saveMutation.isPending}
                     />
+                  </div>
+                  <div className='space-y-1'>
+                    <Label htmlFor='versao-prescricao'>Versão Prescrição</Label>
+                    <select
+                      id='versao-prescricao'
+                      value={String(form.versaoPrescricao)}
+                      onChange={(e) => handleChange('versaoPrescricao', Number(e.target.value))}
+                      className='flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm'
+                      disabled={saveMutation.isPending}
+                    >
+                      <option value='1'>V1</option>
+                      <option value='2'>V2</option>
+                    </select>
                   </div>
                 </div>
               </section>
@@ -264,38 +299,53 @@ export function WebserviceConfigPage() {
               </section>
 
               <section className='space-y-3 rounded-md border p-4'>
-                <h3 className='text-sm font-semibold text-primary'>Autenticação</h3>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-                  <div className='space-y-1'>
-                    <Label>Proxy de Autenticação</Label>
-                    <Input
-                      value={form.proxyAutenticacao}
-                      onChange={(e) => handleChange('proxyAutenticacao', e.target.value)}
-                    />
-                  </div>
-                  <div className='space-y-1'>
-                    <Label>Token de Autenticação</Label>
-                    <Input
-                      value={form.tokenAutenticacao}
-                      onChange={(e) => handleChange('tokenAutenticacao', e.target.value)}
-                    />
-                  </div>
-                  <div className='space-y-1'>
-                    <Label>Utilizador</Label>
-                    <Input
-                      value={form.loginAutenticacao}
-                      onChange={(e) => handleChange('loginAutenticacao', e.target.value)}
-                    />
-                  </div>
-                  <div className='space-y-1'>
-                    <Label>Palavra-passe</Label>
-                    <Input
-                      type={passwordType}
-                      value={form.passwordAutenticacao}
-                      onChange={(e) => handleChange('passwordAutenticacao', e.target.value)}
-                    />
-                  </div>
+                <div className='flex items-center justify-between'>
+                  <h3 className='text-sm font-semibold text-primary'>Definições Avançadas</h3>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setShowAdvancedAuth((v) => !v)}
+                  >
+                    {showAdvancedAuth ? 'Ocultar' : 'Mostrar'}
+                  </Button>
                 </div>
+                {showAdvancedAuth ? (
+                  <div className='space-y-3'>
+                    <h4 className='text-xs font-medium text-muted-foreground'>Autenticação</h4>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                      <div className='space-y-1'>
+                        <Label>Proxy de Autenticação</Label>
+                        <Input
+                          value={form.proxyAutenticacao}
+                          onChange={(e) => handleChange('proxyAutenticacao', e.target.value)}
+                        />
+                      </div>
+                      <div className='space-y-1'>
+                        <Label>Token de Autenticação</Label>
+                        <Input
+                          value={form.tokenAutenticacao}
+                          onChange={(e) => handleChange('tokenAutenticacao', e.target.value)}
+                        />
+                      </div>
+                      <div className='space-y-1'>
+                        <Label>Utilizador</Label>
+                        <Input
+                          value={form.loginAutenticacao}
+                          onChange={(e) => handleChange('loginAutenticacao', e.target.value)}
+                        />
+                      </div>
+                      <div className='space-y-1'>
+                        <Label>Palavra-passe</Label>
+                        <Input
+                          type={passwordType}
+                          value={form.passwordAutenticacao}
+                          onChange={(e) => handleChange('passwordAutenticacao', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
               </section>
 
             </CardContent>

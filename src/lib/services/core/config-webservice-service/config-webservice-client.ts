@@ -21,6 +21,10 @@ export class ConfigWebServiceClient extends BaseApiClient {
     return this.httpClient.getRequest(state.URL, `${BASE}/configuracao`)
   }
 
+  async getVersaoPrescricao(): Promise<ResponseApi<GSResponse<number>>> {
+    return this.httpClient.getRequest(state.URL, `${BASE}/versao-prescricao`)
+  }
+
   async updateConfiguracao(
     payload: AtualizarConfigWebServiceRequest,
   ): Promise<ResponseApi<GSResponse<string>>> {

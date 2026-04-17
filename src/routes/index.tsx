@@ -338,6 +338,22 @@ const WebserviceConfigPage = lazy(() =>
   }))
 )
 
+const ReferenciasMbConfigPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/referencias-mb/pages/referencias-mb-config-page'
+  ).then((m) => ({
+    default: m.ReferenciasMbConfigPage,
+  }))
+)
+
+const ReferenciasMbHistoryPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/referencias-mb/pages/referencias-mb-history-page'
+  ).then((m) => ({
+    default: m.ReferenciasMbHistoryPage,
+  }))
+)
+
 const FornecedorEditPage = lazy(() =>
   import('@/pages/fornecedores/pages/fornecedor-edit-page').then((m) => ({
     default: m.FornecedorEditPage,
@@ -1689,6 +1705,22 @@ export default function AppRouter() {
           element: (
             <Suspense>
               <WebserviceConfigPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/referencias-mb',
+          element: (
+            <Suspense>
+              <ReferenciasMbConfigPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'area-comum/tabelas/configuracao/referencias-mb/historico',
+          element: (
+            <Suspense>
+              <ReferenciasMbHistoryPage />
             </Suspense>
           ),
         },

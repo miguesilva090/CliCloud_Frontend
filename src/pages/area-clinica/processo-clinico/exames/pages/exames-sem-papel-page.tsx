@@ -315,17 +315,6 @@ export function ExamesSemPapelPage() {
       <DashboardPageContainer>
         <div className='mb-6'>
           <h1 className='text-2xl font-bold text-foreground'>Exames Sem Papel</h1>
-          <div className='mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground'>
-            <span>
-              Porta leitor: {contexto?.portaLeitorCartoes != null ? contexto.portaLeitorCartoes : 'Não definida'}
-            </span>
-            <span>
-              Assinatura: {contexto?.temAssinaturaCarregada ? 'Carregada' : 'Não carregada'}
-            </span>
-            <span>
-              Área defeito: {contexto?.areaPrestacaoAssinarESPDefeito || 'Não definida'}
-            </span>
-          </div>
         </div>
 
         <div className='mb-4 flex flex-wrap items-center justify-between gap-3'>
