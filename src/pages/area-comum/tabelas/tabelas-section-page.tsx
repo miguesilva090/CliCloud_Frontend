@@ -25,6 +25,14 @@ export function TabelasSectionPage() {
     )
   }
 
+  if (section === 'notificacoes') {
+    return <Navigate to='/area-comum/tabelas/notificacoes' replace />
+  }
+
+  if (section === 'notificacao-tipos') {
+    return <Navigate to='/area-comum/tabelas/notificacao-tipos' replace />
+  }
+
   return (
     <>
       <PageHead title={`CliCloud`} />

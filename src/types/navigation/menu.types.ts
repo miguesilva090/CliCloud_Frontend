@@ -11,6 +11,8 @@ export interface MenuItem {
   dropdown?: MenuItem[]
   secondaryMenu?: MenuItem[]
   funcionalidadeId?: string
+  /** Se definido, basta uma destas permissões (ex.: processo clínico legado). */
+  funcionalidadeFallbackIds?: string[]
   moduloId?: string
   openInNewTab?: boolean
   underDevelopment?: boolean

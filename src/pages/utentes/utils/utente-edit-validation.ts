@@ -1,4 +1,4 @@
-import type { UtenteEditFormValues } from '../utente-edit-form-types'
+import type { UtenteEditFormValues } from '../types/utente-edit-form-types'
 
 /** Ordem dos campos OBRIGATÓRIOS (alinhado ao backend UpdateUtenteValidator). Aviso, NISS e Data Nascimento são opcionais. */
 export const UTENTE_FORM_FIELD_ORDER: (keyof UtenteEditFormValues)[] = [

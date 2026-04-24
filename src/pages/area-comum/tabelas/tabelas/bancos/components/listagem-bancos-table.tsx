@@ -30,6 +30,10 @@ export function ListagemBancosTable({
   hiddenColumns,
   onOpenView,
   onOpenEdit,
+  onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: BancoTableDTO[]
   isLoading: boolean
@@ -50,9 +54,17 @@ export function ListagemBancosTable({
   hiddenColumns?: string[]
   onOpenView?: (data: BancoTableDTO) => void
   onOpenEdit?: (data: BancoTableDTO) => void
+  onOpenDelete?: (data: BancoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

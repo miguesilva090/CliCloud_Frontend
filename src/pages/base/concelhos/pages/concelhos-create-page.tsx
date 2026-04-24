@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHead } from '@/components/shared/page-head'
-import { ConcelhoCreateForm } from '../concelhos-forms/concelho-create-form'
+import { ConcelhoCreateForm } from '../components/concelhos-forms/concelho-create-form'
 
 export function ConcelhosCreatePage() {
   const navigate = useNavigate()

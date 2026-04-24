@@ -28,10 +28,15 @@ import { UtentesTable } from '../components/utentes-table/utentes-table'
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { UtenteTableDTO } from '@/types/dtos/saude/utentes.dtos'
 import { toast } from '@/utils/toast-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const utentesPermId = modules.areaComum.permissions.utentes.id
 
 export function UtentesPage() {
   const navigate = useNavigate()
   const addWindow = useWindowsStore((s) => s.addWindow)
+  const { canAdd } = useAreaComumEntityListPermissions(utentesPermId)
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<UtenteTableDTO | null>(null)
@@ -92,13 +97,18 @@ export function UtentesPage() {
       onClick: () => {},
       variant: 'outline',
     },
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => openUtenteCreationInApp(navigate, addWindow),
-      variant: 'destructive',
-      className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    },
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => openUtenteCreationInApp(navigate, addWindow),
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,

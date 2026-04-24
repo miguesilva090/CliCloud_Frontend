@@ -25,10 +25,16 @@ import { ModelosAparelhoViewCreateModal } from '../modals/modelos-aparelho-view-
 import { ModeloAparelhoService } from '@/lib/services/modelo-aparelho'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const modelosAparelhoPermId = modules.areaComum.permissions.modelosAparelho.id
 
 type ModeloAparelhoModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemModelosAparelhoPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(modelosAparelhoPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -48,7 +54,22 @@ export function ListagemModelosAparelhoPage() {
   const errorMessage = error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    { label: 'Adicionar', icon: <Plus className='h-4 w-4' />, onClick: () => { setViewData(null); setModalMode('create'); setModalOpen(true); }, variant: 'destructive', className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90' },
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => {
+              setViewData(null)
+              setModalMode('create')
+              setModalOpen(true)
+            },
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     { label: 'Listagens', icon: <List className='h-4 w-4' />, onClick: () => {}, variant: 'outline' },
     { label: 'Atualizar', icon: <RotateCw className='h-4 w-4' />, onClick: () => { handleFiltersChange([]); handlePaginationChange(1, pageSize); queryClient.invalidateQueries({ queryKey: ['modelos-aparelho-paginated'] }); }, variant: 'outline' },
   ]
@@ -119,9 +140,25 @@ export function ListagemModelosAparelhoPage() {
           globalSearchPlaceholder='Procurar por designação ou marca...'
           FilterControls={ListagemModelosAparelhoFilterControls}
           hiddenColumns={[]}
-          onOpenView={(row) => { setViewData(row); setModalMode('view'); setModalOpen(true); }}
-          onOpenEdit={(row) => { setViewData(row); setModalMode('edit'); setModalOpen(true); }}
-          onOpenDelete={handleOpenDelete}
+          onOpenView={(row) => {
+            if (!canView) return
+            setViewData(row)
+            setModalMode('view')
+            setModalOpen(true)
+          }}
+          onOpenEdit={
+            canChange
+              ? (row) => {
+                  setViewData(row)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <ModelosAparelhoViewCreateModal open={modalOpen} onOpenChange={setModalOpen} mode={modalMode} viewData={viewData} onSuccess={() => queryClient.invalidateQueries({ queryKey: ['modelos-aparelho-paginated'] })} />
         <AlertDialog open={deleteDialogOpen} onOpenChange={() => { if (!isDeleting) { setDeleteDialogOpen(false); setItemToDelete(null); } }}>

@@ -31,6 +31,7 @@ export function FreguesiasListagemTable({
   hiddenColumns,
   onOpenView,
   onOpenEdit,
+  rowActionsFuncionalidadeId,
 }: {
   data: FreguesiaTableDTO[]
   isLoading: boolean
@@ -53,9 +54,14 @@ export function FreguesiasListagemTable({
   onOpenView?: (data: FreguesiaTableDTO) => void
   /** Quando definido (ex.: listagem área-comum), "Editar" abre o mesmo modal em modo edição */
   onOpenEdit?: (data: FreguesiaTableDTO) => void
+  rowActionsFuncionalidadeId?: string
 }) {
   const tableColumns = onOpenView
-    ? getListagemColumnsWithViewCallback(onOpenView, onOpenEdit)
+    ? getListagemColumnsWithViewCallback(
+        onOpenView,
+        onOpenEdit,
+        rowActionsFuncionalidadeId
+      )
     : listagemColumns
   return (
     <DataTable

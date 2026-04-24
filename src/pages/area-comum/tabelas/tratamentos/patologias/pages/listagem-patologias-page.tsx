@@ -31,8 +31,14 @@ import {
 import { PatologiaService } from '@/lib/services/patologias/patologia-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar, openPatologiaCreationInApp, openPatologiaEditInApp } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const patologiasPermId = modules.areaComum.permissions.patologias.id
 
 export function ListagemPatologiasPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(patologiasPermId)
   const navigate = useNavigate()
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
@@ -65,16 +71,20 @@ export function ListagemPatologiasPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => {
-        openPatologiaCreationInApp(navigate, addWindow)
-      },
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    },
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => {
+              openPatologiaCreationInApp(navigate, addWindow)
+            },
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -198,6 +208,7 @@ export function ListagemPatologiasPage() {
           FilterControls={ListagemPatologiasFilterControls}
           hiddenColumns={[]}
           onOpenView={(rowData) => {
+            if (!canView) return
             openPatologiaEditInApp(
               navigate,
               addWindow,
@@ -206,16 +217,23 @@ export function ListagemPatologiasPage() {
               'view'
             )
           }}
-          onOpenEdit={(rowData) => {
-            openPatologiaEditInApp(
-              navigate,
-              addWindow,
-              rowData.id,
-              rowData.designacao,
-              'edit'
-            )
-          }}
-          onOpenDelete={handleOpenDelete}
+          onOpenEdit={
+            canChange
+              ? (rowData) => {
+                  openPatologiaEditInApp(
+                    navigate,
+                    addWindow,
+                    rowData.id,
+                    rowData.designacao,
+                    'edit'
+                  )
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <AlertDialog open={deleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>
           <AlertDialogContent>

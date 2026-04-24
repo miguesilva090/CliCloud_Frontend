@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHead } from '@/components/shared/page-head'
-import { DistritoCreateForm } from '../distritos-forms/distrito-create-form'
+import { DistritoCreateForm } from '../components/distritos-forms/distrito-create-form'
 
 export function DistritosCreatePage() {
   const navigate = useNavigate()

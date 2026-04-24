@@ -7,11 +7,15 @@ import type { CellContext, ColumnDef } from '@tanstack/react-table'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import type { UtenteTableDTO } from '@/types/dtos/saude/utentes.dtos'
 import { useNavigate } from 'react-router-dom'
-import { Eye, FileText, Pencil, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useDeleteUtente } from '../../queries/utentes-queries'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { openPathInApp, openUtenteEditInApp } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const utentesPermId = modules.areaComum.permissions.utentes.id
 
 function UtenteRowActions({
   row,
@@ -26,6 +30,8 @@ function UtenteRowActions({
   const nome = row.nome
   const navigate = useNavigate()
   const addWindow = useWindowsStore((s) => s.addWindow)
+  const { canView, canChange, canDelete } =
+    useAreaComumEntityListPermissions(utentesPermId)
   const del = useDeleteUtente({
     onSuccessNavigateTo: onOpenDelete ? undefined : deleteReturnPath,
   })
@@ -46,61 +52,50 @@ Esta ação não pode ser desfeita.`
 
   return (
     <div className='flex items-center justify-end gap-1'>
-      <Button
-        type='button'
-        variant='ghost'
-        size='icon'
-        className='h-8 w-8'
-        onClick={() =>
-          openPathInApp(
-            navigate,
-            addWindow,
-            `/utentes/${id}`,
-            nome ? `Utente: ${nome}` : 'Utente'
-          )
-        }
-        title='Ver'
-      >
-        <Eye className='h-4 w-4' />
-      </Button>
-      <Button
-        type='button'
-        variant='ghost'
-        size='icon'
-        className='h-8 w-8'
-        onClick={() => openUtenteEditInApp(navigate, addWindow, id, nome)}
-        title='Editar'
-      >
-        <Pencil className='h-4 w-4' />
-      </Button>
-      <Button
-        type='button'
-        variant='ghost'
-        size='icon'
-        className='h-8 w-8 text-primary hover:text-primary'
-        onClick={() =>
-          openPathInApp(
-            navigate,
-            addWindow,
-            `/area-comum/posto-assinaturas?utenteId=${encodeURIComponent(id)}`,
-            nome ? `Assinaturas: ${nome}` : 'Assinaturas'
-          )
-        }
-        title='Pedir assinatura'
-      >
-        <FileText className='h-4 w-4' />
-      </Button>
-      <Button
-        type='button'
-        variant='ghost'
-        size='icon'
-        className='h-8 w-8 text-destructive hover:text-destructive'
-        disabled={del.isPending}
-        onClick={handleDeleteClick}
-        title='Apagar'
-      >
-        <Trash2 className='h-4 w-4' />
-      </Button>
+      {canView ? (
+        <Button
+          type='button'
+          variant='ghost'
+          size='icon'
+          className='h-8 w-8'
+          onClick={() =>
+            openPathInApp(
+              navigate,
+              addWindow,
+              `/utentes/${id}?from=utentes`,
+              nome ? `Utente: ${nome}` : 'Utente'
+            )
+          }
+          title='Ver'
+        >
+          <Eye className='h-4 w-4' />
+        </Button>
+      ) : null}
+      {canChange ? (
+        <Button
+          type='button'
+          variant='ghost'
+          size='icon'
+          className='h-8 w-8'
+          onClick={() => openUtenteEditInApp(navigate, addWindow, id, nome)}
+          title='Editar'
+        >
+          <Pencil className='h-4 w-4' />
+        </Button>
+      ) : null}
+      {canDelete ? (
+        <Button
+          type='button'
+          variant='ghost'
+          size='icon'
+          className='h-8 w-8 text-destructive hover:text-destructive'
+          disabled={del.isPending}
+          onClick={handleDeleteClick}
+          title='Apagar'
+        >
+          <Trash2 className='h-4 w-4' />
+        </Button>
+      ) : null}
     </div>
   )
 }

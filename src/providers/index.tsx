@@ -13,7 +13,21 @@ import { SidebarProvider } from '@/hooks/use-sidebar'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/toaster'
 
-export const queryClient = new QueryClient()
+/**
+ * Defaults alinhados ao Luma (ex. listagens em cemitérios: staleTime ~5 min, gcTime ~30 min).
+ * O cache do React Query continua em memória (não é localStorage); evita refetch à BD
+ * cada vez que se fecha/reabre uma tab enquanto os dados ainda são considerados "frescos".
+ * Queries que precisem de dados sempre imediatos podem definir `staleTime: 0` ou `refetchOnMount: 'always'`.
+ */
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 
 const ErrorFallback = ({ error }: FallbackProps) => {
   const router = useRouter()

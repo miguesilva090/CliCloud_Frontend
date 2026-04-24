@@ -103,7 +103,6 @@ export function ConfiguracaoTratamentosEmbedded({
   const tiposServicoQuery = useQuery({
     queryKey: ['tipo-servico', 'light'],
     queryFn: () => TipoServicoService().getTipoServicoLight(),
-    staleTime: 5 * 60_000,
   })
   const tiposServico = tiposServicoQuery.data?.info?.data ?? []
 

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth-store'
-import { generateInstanceId } from '@/utils/window-utils'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { useIconThemeColor } from '@/hooks/use-icon-theme'
 import { Icons } from '@/components/ui/icons'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -107,12 +107,7 @@ export function UtilitariosDashboardPage() {
                 key={index}
                 className='group relative overflow-hidden rounded-2xl border border-border/50 bg-muted/30 transition-all duration-200 hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/60 hover:scale-[1.02] hover:bg-card/80 cursor-pointer'
                 onClick={() => {
-                  if (action.openInNewWindow) {
-                    const instanceId = generateInstanceId()
-                    navigate(`${action.path}?instanceId=${instanceId}`)
-                  } else {
-                    navigate(action.path)
-                  }
+                  navigateManagedWindow(navigate, action.path)
                 }}
               >
                 {/* Modern glassmorphism background */}

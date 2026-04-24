@@ -34,6 +34,9 @@ export function ListagemPatologiasTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: PatologiaTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemPatologiasTable({
   onOpenView?: (data: PatologiaTableDTO) => void
   onOpenEdit?: (data: PatologiaTableDTO) => void
   onOpenDelete?: (data: PatologiaTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

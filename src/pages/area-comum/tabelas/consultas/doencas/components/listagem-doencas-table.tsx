@@ -35,6 +35,9 @@ export function ListagemDoencasTable({
   onOpenEdit,
   onOpenDelete,
   onDrillDown,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: DoencaTableDTO[]
   isLoading: boolean
@@ -57,9 +60,22 @@ export function ListagemDoencasTable({
   onOpenEdit?: (data: DoencaTableDTO) => void
   onOpenDelete?: (data: DoencaTableDTO) => void
   onDrillDown?: (data: DoencaTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, onDrillDown)
+    ? getColumnsWithViewCallback(
+        onOpenView,
+        onOpenEdit,
+        onOpenDelete,
+        {
+          canView,
+          canChange,
+          canDelete,
+        },
+        onDrillDown,
+      )
     : columns
 
   return (

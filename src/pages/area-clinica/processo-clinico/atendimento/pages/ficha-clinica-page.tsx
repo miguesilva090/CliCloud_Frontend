@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactElement } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useDebounce } from 'use-debounce'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -125,11 +125,6 @@ export function FichaClinicaPage() {
         .filter((s) => s.origem === 'Base' && !!s.codigo)
         .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome)),
     [separadoresFichaData],
-  )
-
-  const visibleBaseCodigos = useMemo(
-    () => new Set(visibleBaseList.map((s) => s.codigo)),
-    [visibleBaseList],
   )
 
   const visiblePersonalizadoList = useMemo(
@@ -314,7 +309,7 @@ export function FichaClinicaPage() {
 
   const [activeMainTab, setActiveMainTab] = useState<string>('antecedentes')
 
-  const baseTabRenderers: Record<string, { render: () => JSX.Element }> = {
+  const baseTabRenderers: Record<string, { render: () => ReactElement }> = {
     antecedentes: {
       render: () => <AntecedentesTab utenteId={utenteId} />,
     },

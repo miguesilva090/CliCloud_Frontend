@@ -34,6 +34,9 @@ export function ListagemAnalisesTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: AnaliseTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemAnalisesTable({
   onOpenView?: (data: AnaliseTableDTO) => void
   onOpenEdit?: (data: AnaliseTableDTO) => void
   onOpenDelete?: (data: AnaliseTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

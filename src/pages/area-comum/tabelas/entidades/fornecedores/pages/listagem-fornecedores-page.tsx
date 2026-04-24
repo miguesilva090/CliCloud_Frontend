@@ -30,12 +30,18 @@ import { FornecedorService } from '@/lib/services/saude/fornecedor-service'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { useCloseCurrentWindowLikeTabBar, openEntityEditInApp, openPathInApp } from '@/utils/window-utils'
 import { ResponseStatus } from '@/types/api/responses'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const fornecedoresPermId = modules.areaComum.permissions.fornecedores.id
 
 export function ListagemFornecedoresPage() {
   const navigate = useNavigate()
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(fornecedoresPermId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<FornecedorTableDTO | null>(
     null
@@ -66,20 +72,24 @@ export function ListagemFornecedoresPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () =>
-        openPathInApp(
-          navigate,
-          addWindow,
-          '/fornecedores/novo',
-          'Novo Fornecedor'
-        ),
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    },
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () =>
+              openPathInApp(
+                navigate,
+                addWindow,
+                '/fornecedores/novo',
+                'Novo Fornecedor'
+              ),
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -204,6 +214,7 @@ export function ListagemFornecedoresPage() {
           FilterControls={ListagemFornecedoresFilterControls}
           hiddenColumns={[]}
           onOpenView={(item) => {
+            if (!canView) return
             const id = item.id ?? (item as { Id?: string }).Id
             const nome = item.nome ?? (item as { Nome?: string }).Nome
             if (id)
@@ -214,12 +225,26 @@ export function ListagemFornecedoresPage() {
                 nome ? `Fornecedor: ${nome}` : 'Fornecedor'
               )
           }}
-          onOpenEdit={(item) => {
-            const id = item.id ?? (item as { Id?: string }).Id
-            const nome = item.nome ?? (item as { Nome?: string }).Nome
-            if (id) openEntityEditInApp(navigate, addWindow, `/fornecedores/${id}/editar`, String(id), nome ? `Fornecedor: ${nome}` : null)
-          }}
-          onOpenDelete={handleOpenDelete}
+          onOpenEdit={
+            canChange
+              ? (item) => {
+                  const id = item.id ?? (item as { Id?: string }).Id
+                  const nome = item.nome ?? (item as { Nome?: string }).Nome
+                  if (id)
+                    openEntityEditInApp(
+                      navigate,
+                      addWindow,
+                      `/fornecedores/${id}/editar`,
+                      String(id),
+                      nome ? `Fornecedor: ${nome}` : null
+                    )
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <AlertDialog
           open={deleteDialogOpen}

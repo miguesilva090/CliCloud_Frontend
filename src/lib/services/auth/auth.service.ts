@@ -12,11 +12,11 @@ const httpClient = createHttpClient()
 
 export const authService = {
   async login(credentials: LoginCredentials) {
-    // Backend (CliCloud saúde) espera apenas email/password.
+    // O Access Control devolve token + licença (permissions/modules).
     const response = await httpClient.postRequestWithoutAuth<
       LoginCredentials,
       LoginResponse
-    >(state.URL, '/api/client-token', credentials)
+    >(state.URL_ACCESS_CONTROL, '/api/client-token', credentials)
 
     return response.info
   },
@@ -33,7 +33,7 @@ export const authService = {
 
     try {
       const response = await httpClient.getRequest<LoginResponse>(
-        state.URL,
+        state.URL_ACCESS_CONTROL,
         `/api/client-token/refresh/${refreshToken}`
       )
 

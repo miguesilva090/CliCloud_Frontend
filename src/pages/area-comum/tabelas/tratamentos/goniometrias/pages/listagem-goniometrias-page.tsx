@@ -27,10 +27,16 @@ import { GoniometriaViewCreateModal } from '../modals/goniometria-view-create-mo
 import { GoniometriasService } from '@/lib/services/goniometrias/goniometrias-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const goniometriasPermId = modules.areaComum.permissions.goniometrias.id
 
 type GoniometriaModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemGoniometriasPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(goniometriasPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
     const queryClient = useQueryClient()
     const[modalOpen, setModalOpen] = useState(false)
@@ -61,16 +67,22 @@ export function ListagemGoniometriasPage() {
     const errorMessage = error instanceof Error ? error.message : error ? String(error) : ''
 
     const toolbarActions: DataTableAction[] = [
-        {
-            label: 'Adicionar',
-            icon: <Plus className='h-4 w-4' />,
-            onClick: () => {
-                setViewData(null)
-                setModalMode('create')
-                setModalOpen(true)
-            },
-            variant: 'destructive',
-            className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90'},
+        ...(canAdd
+            ? [
+                  {
+                      label: 'Adicionar',
+                      icon: <Plus className='h-4 w-4' />,
+                      onClick: () => {
+                          setViewData(null)
+                          setModalMode('create')
+                          setModalOpen(true)
+                      },
+                      variant: 'destructive' as const,
+                      className:
+                          'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+                  },
+              ]
+            : []),
         {
             label: 'Listagens',
             icon: <List className='h-4 w-4' />,
@@ -180,16 +192,24 @@ export function ListagemGoniometriasPage() {
                 FilterControls={ListagemGoniometriasFilterControls}
                 hiddenColumns={[]}
                 onOpenView={(rowData) => {
+                    if (!canView) return
                     setViewData(rowData)
                     setModalMode('view')
                     setModalOpen(true)
                 }}
-                onOpenEdit={(rowData) => {
-                    setViewData(rowData)
-                    setModalMode('edit')
-                    setModalOpen(true)
-                }}
-                onOpenDelete={handleOpenDelete}
+                onOpenEdit={
+                    canChange
+                        ? (rowData) => {
+                              setViewData(rowData)
+                              setModalMode('edit')
+                              setModalOpen(true)
+                          }
+                        : undefined
+                }
+                onOpenDelete={canDelete ? handleOpenDelete : undefined}
+                canView={canView}
+                canChange={canChange}
+                canDelete={canDelete}
             />
             <GoniometriaViewCreateModal
                 open={modalOpen}

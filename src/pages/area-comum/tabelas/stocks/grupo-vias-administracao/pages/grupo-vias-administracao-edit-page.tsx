@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from '@/utils/toast-utils'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { useGetGrupoViasAdministracao } from '../queries/listagem-grupo-vias-administracao-queries'
 import { GrupoViasAdministracaoService } from '@/lib/services/artigos/grupo-vias-administracao-service'
 import { ViaAdministracaoService } from '@/lib/services/artigos/via-administracao-service'
@@ -87,7 +88,7 @@ export function GrupoViasAdministracaoEditPage() {
   }, [])
 
   const handleVoltar = () => {
-    navigate(LISTAGEM_PATH)
+    navigateManagedWindow(navigate, LISTAGEM_PATH)
   }
 
   const handleInserir = () => {
@@ -164,7 +165,10 @@ export function GrupoViasAdministracaoEditPage() {
         })
         if (res.info.status === ResponseStatus.Success && res.info.data) {
           toast.success('Grupo de Vias de Administração criado com sucesso.')
-          navigate(`${LISTAGEM_PATH}/${res.info.data}/editar`)
+          navigateManagedWindow(
+            navigate,
+            `${LISTAGEM_PATH}/${res.info.data}/editar`
+          )
         } else {
           const msg =
             res.info.messages?.['$']?.[0] ??

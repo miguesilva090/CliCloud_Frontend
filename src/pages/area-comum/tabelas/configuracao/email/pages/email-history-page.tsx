@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Search } from 'lucide-react'
+import { ArrowLeft, Search } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,6 +20,7 @@ import { EmailService } from '@/lib/services/core/email-service'
 import type { HistoricoEmailTabelaDTO } from '@/types/dtos/core/email.dtos'
 
 export function EmailHistoryPage() {
+  const navigate = useNavigate()
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize] = useState(10)
   const [selected, setSelected] = useState<HistoricoEmailTabelaDTO | null>(null)
@@ -41,8 +44,22 @@ export function EmailHistoryPage() {
       <PageHead title='Histórico de Emails | CliCloud' />
       <DashboardPageContainer>
         <Card>
-          <CardHeader className='pb-3'>
+          <CardHeader className='pb-3 flex flex-row items-center justify-between'>
             <CardTitle>Histórico de Emails</CardTitle>
+            <Button
+              variant='outline'
+              size='sm'
+              title='Voltar'
+              onClick={() =>
+                navigateManagedWindow(
+                  navigate,
+                  '/area-comum/tabelas/configuracao/email'
+                )
+              }
+            >
+              <ArrowLeft className='mr-2 h-4 w-4' />
+              Voltar
+            </Button>
           </CardHeader>
 
           <CardContent className='space-y-3'>

@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { navigateManagedWindow } from '@/utils/window-utils'
+import { ConfigPageCardTitleRow } from '@/components/shared/config-page-card-title-row'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ReferenciasMbService } from '@/lib/services/faturacao/referencias-mb-service'
 import type { AtualizarConfigReferenciaMbRequest } from '@/types/dtos/faturacao/referencias-mb.dtos'
+import { modules } from '@/config/modules'
+import { useConfigPageEditMode } from '@/hooks/use-config-page-edit-mode'
 import { toast } from '@/utils/toast-utils'
 
 type FormState = {
@@ -21,6 +25,8 @@ type FormState = {
   chaveBackOffice: string
   ifThenKey: string
 }
+
+const refMbPermId = modules.areaComum.permissions.referenciasMb.id
 
 const initialForm: FormState = {
   servicoUrl: '',
@@ -34,6 +40,16 @@ const initialForm: FormState = {
 
 export function ReferenciasMbConfigPage() {
   const navigate = useNavigate()
+  const {
+    canChange,
+    isEditing,
+    formEditable,
+    startEditing,
+    cancelEditing,
+    exitEditAfterSave,
+  } = useConfigPageEditMode(refMbPermId)
+  const formLocked = !formEditable
+
   const [form, setForm] = useState<FormState>(initialForm)
   const [callbackUrl, setCallbackUrl] = useState('')
   const [callbackModalOpen, setCallbackModalOpen] = useState(false)
@@ -84,6 +100,7 @@ export function ReferenciasMbConfigPage() {
     mutationFn: (payload: AtualizarConfigReferenciaMbRequest) => ReferenciasMbService().updateConfiguracao(payload),
     onSuccess: () => {
       toast.success('Configuração de Referências MB guardada com sucesso.')
+      exitEditAfterSave()
       void configQuery.refetch()
       void callbackQuery.refetch()
     },
@@ -94,6 +111,8 @@ export function ReferenciasMbConfigPage() {
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
+
+  const fieldDisabled = formLocked || saveMutation.isPending
 
   const handleGuardar = () => {
     if (!form.codigoEntidade.trim()) return toast.warning('Código da entidade é obrigatório.')
@@ -119,31 +138,53 @@ export function ReferenciasMbConfigPage() {
       <PageHead title='Configuração Referências MB | CliCloud' />
       <DashboardPageContainer>
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between'>
-            <CardTitle>Configurações de Referências MB (IfThenPay)</CardTitle>
-            <div className='flex flex-wrap gap-2'>
-              <Button variant='outline' onClick={() => navigate('/area-comum/tabelas/configuracao/referencias-mb/historico')}>
-                Referencias MB geradas
-              </Button>
-              <Button
-                variant='outline'
-                onClick={() => {
-                  void callbackQuery.refetch()
-                  setCallbackModalOpen(true)
-                }}
-              >
-                URL do callback
-              </Button>
-              <Button onClick={handleGuardar} disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
-              </Button>
-            </div>
+          <CardHeader className='space-y-0 pb-2'>
+            <ConfigPageCardTitleRow
+              title='Configurações de Referências MB (IfThenPay)'
+              canChange={canChange}
+              isEditing={isEditing}
+              onStartEdit={startEditing}
+              onCancelEdit={() => {
+                cancelEditing()
+                void configQuery.refetch()
+              }}
+              trailing={
+                <>
+                  <Button
+                    variant='outline'
+                    onClick={() =>
+                      navigateManagedWindow(
+                        navigate,
+                        '/area-comum/tabelas/configuracao/referencias-mb/historico'
+                      )
+                    }
+                  >
+                    Referencias MB geradas
+                  </Button>
+                  <Button
+                    variant='outline'
+                    onClick={() => {
+                      void callbackQuery.refetch()
+                      setCallbackModalOpen(true)
+                    }}
+                  >
+                    URL do callback
+                  </Button>
+                </>
+              }
+            />
           </CardHeader>
           <CardContent className='space-y-4'>
             <div className='grid grid-cols-1 gap-3 md:grid-cols-2'>
               <div className='space-y-1 md:col-span-2'>
                 <Label htmlFor='servico-url'>URL do Serviço</Label>
-                <Input id='servico-url' value={form.servicoUrl} onChange={(e) => setField('servicoUrl', e.target.value)} />
+                <Input
+                  id='servico-url'
+                  value={form.servicoUrl}
+                  readOnly={formLocked}
+                  disabled={fieldDisabled}
+                  onChange={(e) => setField('servicoUrl', e.target.value)}
+                />
               </div>
               <div className='space-y-1'>
                 <Label htmlFor='valor-minimo'>Valor mínimo</Label>
@@ -152,6 +193,8 @@ export function ReferenciasMbConfigPage() {
                   type='number'
                   step='0.01'
                   value={form.valorMinimo}
+                  readOnly={formLocked}
+                  disabled={fieldDisabled}
                   onChange={(e) => setField('valorMinimo', Number(e.target.value))}
                 />
               </div>
@@ -161,6 +204,8 @@ export function ReferenciasMbConfigPage() {
                   id='prazo-pagamento'
                   type='number'
                   value={form.prazoPagamento}
+                  readOnly={formLocked}
+                  disabled={fieldDisabled}
                   onChange={(e) => setField('prazoPagamento', Number(e.target.value))}
                 />
               </div>
@@ -169,6 +214,8 @@ export function ReferenciasMbConfigPage() {
                 <Input
                   id='sub-entidade'
                   value={form.subEntidade}
+                  readOnly={formLocked}
+                  disabled={fieldDisabled}
                   onChange={(e) => setField('subEntidade', e.target.value)}
                 />
               </div>
@@ -177,6 +224,8 @@ export function ReferenciasMbConfigPage() {
                 <Input
                   id='codigo-entidade'
                   value={form.codigoEntidade}
+                  readOnly={formLocked}
+                  disabled={fieldDisabled}
                   onChange={(e) => setField('codigoEntidade', e.target.value)}
                 />
               </div>
@@ -185,13 +234,27 @@ export function ReferenciasMbConfigPage() {
                 <Input
                   id='chave-backoffice'
                   value={form.chaveBackOffice}
+                  readOnly={formLocked}
+                  disabled={fieldDisabled}
                   onChange={(e) => setField('chaveBackOffice', e.target.value)}
                 />
               </div>
               <div className='space-y-1'>
                 <Label htmlFor='ifthen-key'>IfThen Key anti-phishing</Label>
-                <Input id='ifthen-key' value={form.ifThenKey} onChange={(e) => setField('ifThenKey', e.target.value)} />
+                <Input
+                  id='ifthen-key'
+                  value={form.ifThenKey}
+                  readOnly={formLocked}
+                  disabled={fieldDisabled}
+                  onChange={(e) => setField('ifThenKey', e.target.value)}
+                />
               </div>
+            </div>
+
+            <div className='flex justify-end pt-2'>
+              <Button onClick={handleGuardar} disabled={!formEditable || saveMutation.isPending}>
+                {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
+              </Button>
             </div>
           </CardContent>
         </Card>

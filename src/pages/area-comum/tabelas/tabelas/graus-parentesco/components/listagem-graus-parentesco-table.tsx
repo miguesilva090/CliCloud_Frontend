@@ -31,6 +31,9 @@ export function ListagemGrausParentescoTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: GrauParentescoTableDTO[]
   isLoading: boolean
@@ -52,9 +55,16 @@ export function ListagemGrausParentescoTable({
   onOpenView?: (data: GrauParentescoTableDTO) => void
   onOpenEdit?: (data: GrauParentescoTableDTO) => void
   onOpenDelete?: (data: GrauParentescoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

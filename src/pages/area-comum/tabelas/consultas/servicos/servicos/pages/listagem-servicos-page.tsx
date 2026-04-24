@@ -25,8 +25,14 @@ import { ServicoViewCreateModal } from '../modals/servico-view-create-modal'
 import { ServicoService } from '@/lib/services/servicos/servico-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const servicosPermId = modules.areaComum.permissions.servicos.id
 
 export function ListagemServicosPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(servicosPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -65,13 +71,18 @@ export function ListagemServicosPage() {
   }
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: abrirModalNovo,
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90'},
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: abrirModalNovo,
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -203,9 +214,15 @@ export function ListagemServicosPage() {
           globalSearchColumnId='designacao'
           globalSearchPlaceholder='Procurar...'
           FilterControls={EmptyFilterControls}
-          onOpenView={handleOpenView}
-          onOpenEdit={handleOpenEdit}
-          onOpenDelete={handleOpenDelete}
+          onOpenView={(row) => {
+            if (!canView) return
+            handleOpenView(row)
+          }}
+          onOpenEdit={canChange ? handleOpenEdit : undefined}
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
 
         <ServicoViewCreateModal

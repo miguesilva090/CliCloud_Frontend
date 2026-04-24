@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useDebounce } from 'use-debounce'
@@ -473,7 +474,7 @@ export function UtenteCreatePage() {
             description='Preenche os dados do utente (estrutura alinhada com o sistema legado)'
           />
           <div className='flex items-center gap-2'>
-            <Button variant='outline' onClick={() => navigate('/utentes')}>
+            <Button variant='outline' onClick={() => navigateManagedWindow(navigate, '/utentes')}>
               Voltar
             </Button>
             <Button
@@ -1595,7 +1596,7 @@ export function UtenteCreatePage() {
               <Button
                 type='button'
                 variant='outline'
-                onClick={() => navigate('/utentes')}
+                onClick={() => navigateManagedWindow(navigate, '/utentes')}
               >
                 Cancelar
               </Button>

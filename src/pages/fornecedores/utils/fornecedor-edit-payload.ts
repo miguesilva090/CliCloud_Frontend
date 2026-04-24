@@ -6,7 +6,7 @@ import type {
 
 import { ENTIDADE_TIPO, getTipoEntidadeIdForPayload } from '@/lib/entidade-tipo'
 
-import type { FornecedorEditFormValues } from '../fornecedor-edit-form-types'
+import type { FornecedorEditFormValues } from '../types/fornecedor-edit-form-types'
 
 export function buildEntidadeContactos(values: FornecedorEditFormValues) {
   const contactos: Array<{
@@ -73,12 +73,12 @@ export function buildCreatePayload(
     plafond: parseFloatSafe(values.plafond) ?? null,
     desconto: parseFloatSafe(values.desconto) ?? null,
     condicaoPagamento: parseNum(values.condicaoPagamento) ?? null,
-    moeda: values.moeda?.trim() || null,
+    moeda: parseNum(values.moeda) ?? null,
     numeroNib: values.numeroNib?.trim() || null,
     enderecoWeb: values.enderecoWeb?.trim() || null,
     diasPrevEntrega: parseNum(values.diasPrevEntrega) ?? null,
     diasEfectiEntrega: parseNum(values.diasEfectiEntrega) ?? null,
-    origem: values.origem?.trim() || null,
+    origem: parseNum(values.origem) ?? null,
   }
 }
 

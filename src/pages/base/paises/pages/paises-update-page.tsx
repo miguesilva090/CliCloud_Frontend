@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useFormsStore } from '@/stores/use-forms-store'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { handleWindowClose } from '@/utils/window-utils'
+import { handleWindowClose, navigateManagedWindow } from '@/utils/window-utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
@@ -48,7 +48,10 @@ export function PaisesUpdatePage() {
 
   // If no paisId is provided, redirect to paises page
   if (!paisId) {
-    navigate('/utilitarios/tabelas/geograficas/paises')
+    navigateManagedWindow(
+      navigate,
+      isAreaComum ? PAISES_BASE_PATH_AREACOMUM : PAISES_BASE_PATH_UTILITARIOS
+    )
     return null
   }
 

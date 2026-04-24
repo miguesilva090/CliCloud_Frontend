@@ -4,13 +4,13 @@ import { useNavigate } from 'react-router-dom'
 import { useLocation } from 'react-router-dom'
 import { useFormsStore } from '@/stores/use-forms-store'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { handleWindowClose } from '@/utils/window-utils'
+import { handleWindowClose, navigateManagedWindow } from '@/utils/window-utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHead } from '@/components/shared/page-head'
-import { ConcelhoUpdateForm } from '../concelhos-forms/concelho-update-form'
+import { ConcelhoUpdateForm } from '../components/concelhos-forms/concelho-update-form'
 
 export function ConcelhosUpdatePage() {
   const navigate = useNavigate()
@@ -41,7 +41,7 @@ export function ConcelhosUpdatePage() {
 
   // If no concelhoId is provided, redirect to concelhos page
   if (!concelhoId) {
-    navigate('/utilitarios/tabelas/geograficas/concelhos')
+    navigateManagedWindow(navigate, '/utilitarios/tabelas/geograficas/concelhos')
     return null
   }
 

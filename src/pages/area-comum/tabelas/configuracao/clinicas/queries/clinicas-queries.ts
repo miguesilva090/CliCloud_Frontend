@@ -44,8 +44,6 @@ export const useGetClinicasPaginated = (
     queryKey: ['clinicas-paginated', params],
     queryFn: () => ClinicaService('tabelas').getClinicasPaginated(params),
     placeholderData: (previousData) => previousData,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 }
 
@@ -94,8 +92,6 @@ export const useGetClinica = (id: string, options?: { enabled?: boolean }) =>
     queryKey: ['clinica', id],
     queryFn: () => ClinicaService('tabelas').getClinicaById(id),
     enabled: (options?.enabled ?? true) && !!id,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 
 export const useUpdateClinica = (id: string) => {

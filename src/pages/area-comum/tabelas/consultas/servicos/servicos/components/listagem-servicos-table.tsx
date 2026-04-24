@@ -32,6 +32,9 @@ export function ListagemServicosTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: ServicoTableDTO[]
   isLoading: boolean
@@ -51,9 +54,16 @@ export function ListagemServicosTable({
   onOpenView?: (data: ServicoTableDTO) => void
   onOpenEdit?: (data: ServicoTableDTO) => void
   onOpenDelete?: (data: ServicoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getServicoColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getServicoColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : servicoColumns
 
   return (

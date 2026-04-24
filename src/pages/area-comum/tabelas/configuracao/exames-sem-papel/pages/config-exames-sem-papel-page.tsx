@@ -3,10 +3,13 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Eye, EyeOff } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { ConfigPageCardTitleRow } from '@/components/shared/config-page-card-title-row'
+import { modules } from '@/config/modules'
+import { useConfigPageEditMode } from '@/hooks/use-config-page-edit-mode'
 import { toast } from '@/utils/toast-utils'
 import { ConfigExamesSemPapelService } from '@/lib/services/core/config-exames-sem-papel-service'
 import type {
@@ -38,6 +41,8 @@ type ConfigExamesSemPapelForm = {
     areaPrestacao: string
 }
 
+const examesSemPapelPermId = modules.areaComum.permissions.configuracoesExamesSemPapel.id
+
 const initialForm: ConfigExamesSemPapelForm = {
     codigoEntidade: '',
     username: '',
@@ -63,6 +68,16 @@ const initialForm: ConfigExamesSemPapelForm = {
 }
 
 export function ConfigExamesSemPapelPage() {
+    const {
+        canChange,
+        isEditing,
+        formEditable,
+        startEditing,
+        cancelEditing,
+        exitEditAfterSave,
+    } = useConfigPageEditMode(examesSemPapelPermId)
+    const formLocked = !formEditable
+
     const [form, setForm] = useState<ConfigExamesSemPapelForm>(initialForm)
     const [showPasswords, setShowPasswords] = useState(false)
 
@@ -76,6 +91,7 @@ export function ConfigExamesSemPapelPage() {
             ConfigExamesSemPapelService().updateConfiguracao(payload),
     onSuccess: () => {
         toast.success('Configuração de Exames Sem Papel guardada com sucesso.')
+        exitEditAfterSave()
         void configQuery.refetch()
     },
     onError: () => {
@@ -178,6 +194,7 @@ export function ConfigExamesSemPapelPage() {
     }
 
     const passwordType = showPasswords ? 'text' : 'password'
+    const fieldDisabled = formLocked || saveMutation.isPending
 
     return (
         <>
@@ -185,25 +202,27 @@ export function ConfigExamesSemPapelPage() {
         <DashboardPageContainer>
             <div className='space-y-4'>
                 <Card>
-                    <CardHeader className='flex flex-row items-center justify-between'>
-                        <CardTitle>Configuração Exames Sem Papel</CardTitle>
-                        <div className='flex gap-2'>
-                            <Button 
-                                type = 'button'
-                                variant = 'outline'
-                                onClick = {() => setShowPasswords((v) => !v)}
-                            >
-                                {showPasswords ? (
-                                    <EyeOff className='mr-2 h-4 w-4' /> 
-                                ): (
-                                    <Eye className='mr-2 h-4 w-4 ' />
-                                )}
-                                {showPasswords ? 'Ocultar passwords' : 'Mostrar passwords'}
-                            </Button>
-                            <Button onClick={handleGuardar} disabled={saveMutation.isPending}>
-                                {saveMutation.isPending ? 'A guardar...': 'Guardar'}
-                            </Button>
-                        </div>
+                    <CardHeader className='space-y-0 pb-2'>
+                        <ConfigPageCardTitleRow
+                            title='Configuração Exames Sem Papel'
+                            canChange={canChange}
+                            isEditing={isEditing}
+                            onStartEdit={startEditing}
+                            onCancelEdit={() => {
+                                cancelEditing()
+                                void configQuery.refetch()
+                            }}
+                            trailing={
+                                <Button type='button' variant='outline' onClick={() => setShowPasswords((v) => !v)}>
+                                    {showPasswords ? (
+                                        <EyeOff className='mr-2 h-4 w-4' />
+                                    ) : (
+                                        <Eye className='mr-2 h-4 w-4' />
+                                    )}
+                                    {showPasswords ? 'Ocultar passwords' : 'Mostrar passwords'}
+                                </Button>
+                            }
+                        />
                     </CardHeader>
 
                     <CardContent className='space-y-6'>
@@ -229,7 +248,8 @@ export function ConfigExamesSemPapelPage() {
                                         type='number'
                                         value={form.codigoEntidade}
                                         onChange={(e) => handleChange('codigoEntidade', e.target.value)}
-                                        disabled={saveMutation.isPending}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                     />
                                 </div>
                             </div>
@@ -240,29 +260,37 @@ export function ConfigExamesSemPapelPage() {
                             <div className='grid grid-cols-1 gap-3'>
                                 <div className='space-y-1'>
                                     <Label>Pesquisa Prestação</Label>
-                                    <Input 
+                                    <Input
                                         value={form.pesquisaPrestacao}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('pesquisaPrestacao', e.target.value)}
-                                        />
+                                    />
                                 </div>
                                 <div className='space-y-1'>
                                     <Label>Agendamento</Label>
                                     <Input
                                         value={form.agendamento}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('agendamento', e.target.value)}
                                     />
                                 </div>
                                 <div className='space-y-1'>
                                     <Label>Efetivação</Label>
-                                    <Input 
+                                    <Input
                                         value={form.efetivacao}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('efetivacao', e.target.value)}
                                     />
                                 </div>
                                 <div className='space-y-1'>
                                     <Label>Anulação</Label>
-                                    <Input 
+                                    <Input
                                         value={form.anulacao}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('anulacao', e.target.value)}
                                     />
                                 </div>
@@ -275,15 +303,19 @@ export function ConfigExamesSemPapelPage() {
                                 </div>
                                 <div className='space-y-1'>
                                     <Label>Efetuados Não Prescritos</Label>
-                                    <Input 
+                                    <Input
                                         value={form.efetuadosNaoPrescritos}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('efetuadosNaoPrescritos', e.target.value)}
                                     />
                                 </div>
                                 <div className='space-y-1'>
                                     <Label>Taxas Moderadoras</Label>
-                                    <Input 
+                                    <Input
                                         value={form.taxasModeradoras}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('taxasModeradoras', e.target.value)}
                                     />
                                 </div>
@@ -295,7 +327,8 @@ export function ConfigExamesSemPapelPage() {
                                         id='username-principal'
                                         value={form.username}
                                         onChange={(e) => handleChange('username', e.target.value)}
-                                        disabled={saveMutation.isPending}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                     />
                                 </div>
                                 <div className='space-y-1'>
@@ -305,7 +338,8 @@ export function ConfigExamesSemPapelPage() {
                                         type={passwordType}
                                         value={form.password}
                                         onChange={(e) => handleChange('password', e.target.value)}
-                                        disabled={saveMutation.isPending}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                     />
                                 </div>
                             </div>
@@ -320,6 +354,8 @@ export function ConfigExamesSemPapelPage() {
                                     <Label>Envio Resultados</Label>
                                     <Input
                                         value={form.relatorioResultados}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('relatorioResultados', e.target.value)}
                                     />
                                 </div>
@@ -329,6 +365,8 @@ export function ConfigExamesSemPapelPage() {
                                     <Label>Utilizador</Label>
                                     <Input
                                         value={form.usernamePartilhaResultados}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('usernamePartilhaResultados', e.target.value)}
                                     />
                                 </div>
@@ -337,6 +375,8 @@ export function ConfigExamesSemPapelPage() {
                                     <Input
                                         type={passwordType}
                                         value={form.passwordPartilhaResultados}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('passwordPartilhaResultados', e.target.value)}
                                     />
                                 </div>
@@ -352,6 +392,8 @@ export function ConfigExamesSemPapelPage() {
                                     <Label>Envio Resultados Sem Requisição</Label>
                                     <Input
                                         value={form.relatorioResultadosSemRequisicao}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('relatorioResultadosSemRequisicao', e.target.value)}
                                     />
                                 </div>
@@ -359,6 +401,8 @@ export function ConfigExamesSemPapelPage() {
                                     <Label>Área de Prestação</Label>
                                     <Input
                                         value={form.areaPrestacao}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('areaPrestacao', e.target.value)}
                                     />
                                 </div>
@@ -368,6 +412,8 @@ export function ConfigExamesSemPapelPage() {
                                     <Label>Utilizador</Label>
                                     <Input
                                         value={form.usernamePartilhaResultadosSemRequisicao}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('usernamePartilhaResultadosSemRequisicao', e.target.value)}
                                     />
                                 </div>
@@ -376,11 +422,19 @@ export function ConfigExamesSemPapelPage() {
                                     <Input
                                         type={passwordType}
                                         value={form.passwordPartilhaResultadosSemRequisicao}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('passwordPartilhaResultadosSemRequisicao', e.target.value)}
                                     />
                                 </div>
                             </div>
                         </section>
+
+                        <div className='flex justify-end'>
+                            <Button onClick={handleGuardar} disabled={!formEditable || saveMutation.isPending}>
+                                {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

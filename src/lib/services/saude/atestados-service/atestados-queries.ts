@@ -24,8 +24,6 @@ export function useGetAtestadosPaginated(
     queryKey: ['atestados-paginated', params],
     queryFn: () => AtestadosService('saude').getAtestadosPaginated(params),
     placeholderData: (previousData) => previousData,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 }
 

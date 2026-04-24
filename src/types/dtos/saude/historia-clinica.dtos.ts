@@ -14,7 +14,9 @@ export interface HistoriaClinicaTableDTO
   data: string 
   hora?: string | null
   obs: string
-  createdOn: string 
+  createdOn: string
+  /** Presente quando o backend expõe estado inativo na listagem. */
+  inativo?: boolean
 }
 
 export interface HistoriaClinicaDTO 

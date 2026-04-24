@@ -1,7 +1,10 @@
 import React from 'react'
 import { DataTable } from '@/components/shared/data-table'
 import type { MargemMedicoTableDTO } from '@/types/dtos/saude/margem-medico.dtos'
-import { margemMedicosColumns , getMargemMedicosColumnsWithViewCallback} from './listagem-margem-medicos-table-columns'
+import {
+    margemMedicosColumns,
+    getMargemMedicosColumnsWithViewCallback,
+} from './listagem-margem-medicos-table-columns'
 
 export function ListagemMargemMedicosTable({
     data, 
@@ -21,6 +24,9 @@ export function ListagemMargemMedicosTable({
     onOpenView,
     onOpenEdit,
     onOpenDelete,
+    canView,
+    canChange,
+    canDelete,
 }: {
     data: MargemMedicoTableDTO[]
     isLoading: boolean
@@ -39,6 +45,9 @@ export function ListagemMargemMedicosTable({
     onOpenView?: (data: MargemMedicoTableDTO) => void
     onOpenEdit?: (data: MargemMedicoTableDTO) => void
     onOpenDelete?: (data: MargemMedicoTableDTO) => void
+    canView?: boolean
+    canChange?: boolean
+    canDelete?: boolean
 }) {
     const EmptyFilterControls: React.ComponentType<{
         table: unknown
@@ -48,7 +57,11 @@ export function ListagemMargemMedicosTable({
     }> = () => null
 
     const tableColumns = onOpenView
-        ? getMargemMedicosColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+        ? getMargemMedicosColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+              canView,
+              canChange,
+              canDelete,
+          })
         : margemMedicosColumns
 
     return (

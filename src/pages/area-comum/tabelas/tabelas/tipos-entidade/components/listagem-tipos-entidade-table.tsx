@@ -30,6 +30,10 @@ export function ListagemTiposEntidadeTable({
   hiddenColumns,
   onOpenView,
   onOpenEdit,
+  onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: TipoEntidadeFinanceiraTableDTO[]
   isLoading: boolean
@@ -50,9 +54,17 @@ export function ListagemTiposEntidadeTable({
   hiddenColumns?: string[]
   onOpenView?: (data: TipoEntidadeFinanceiraTableDTO) => void
   onOpenEdit?: (data: TipoEntidadeFinanceiraTableDTO) => void
+  onOpenDelete?: (data: TipoEntidadeFinanceiraTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

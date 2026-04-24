@@ -12,6 +12,7 @@ import Heading from '@/components/shared/heading'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { PaisesTable } from '../components/paises-table/paises-table'
 import type { DataTableAction } from '@/components/shared/data-table'
+import { navigateManagedWindow } from '@/utils/window-utils'
 
 export function PaisesPage() {
   const navigate = useNavigate()
@@ -43,7 +44,11 @@ export function PaisesPage() {
     {
       label: 'Adicionar',
       icon: <Plus className='h-4 w-4' />,
-      onClick: () => navigate('/utilitarios/tabelas/geograficas/paises/create'),
+      onClick: () =>
+        navigateManagedWindow(
+          navigate,
+          '/utilitarios/tabelas/geograficas/paises/create'
+        ),
       variant: 'destructive',
       className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
     },

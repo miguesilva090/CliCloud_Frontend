@@ -34,6 +34,9 @@ export function ListagemTiposExameTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
   selectedRows,
   onRowSelectionChange,
 }: {
@@ -57,11 +60,18 @@ export function ListagemTiposExameTable({
   onOpenView?: (data: TipoExameTableDTO) => void
   onOpenEdit?: (data: TipoExameTableDTO) => void
   onOpenDelete?: (data: TipoExameTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
   selectedRows?: string[]
   onRowSelectionChange?: (selectedRows: string[]) => void
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

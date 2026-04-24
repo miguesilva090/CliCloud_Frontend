@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Plus, List, RotateCw, RefreshCw, X } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
@@ -24,11 +25,21 @@ import { useGetAparelhoPaginated, usePrefetchAdjacentAparelho } from '../queries
 import { AparelhosViewCreateModal } from '../modals/aparelhos-view-create-modal'
 import { AparelhoService } from '@/lib/services/aparelho'
 import { ResponseStatus } from '@/types/api/responses'
-import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import {
+  useCloseCurrentWindowLikeTabBar,
+  navigateManagedWindow,
+} from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const aparelhosPermId = modules.areaComum.permissions.aparelhos.id
 
 type AparelhoModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemAparelhosPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(aparelhosPermId)
+  const navigate = useNavigate()
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -48,7 +59,22 @@ export function ListagemAparelhosPage() {
   const errorMessage = error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    { label: 'Adicionar', icon: <Plus className='h-4 w-4' />, onClick: () => { window.location.href = window.location.origin + '/area-comum/tabelas/tratamentos/aparelhos/novo'; }, variant: 'destructive', className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90' },
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () =>
+              navigateManagedWindow(
+                navigate,
+                '/area-comum/tabelas/tratamentos/aparelhos/novo',
+              ),
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     { label: 'Listagens', icon: <List className='h-4 w-4' />, onClick: () => {}, variant: 'outline' },
     { label: 'Atualizar', icon: <RotateCw className='h-4 w-4' />, onClick: () => { handleFiltersChange([]); handlePaginationChange(1, pageSize); queryClient.invalidateQueries({ queryKey: ['aparelhos-paginated'] }); }, variant: 'outline' },
   ]
@@ -119,9 +145,25 @@ export function ListagemAparelhosPage() {
           globalSearchPlaceholder='Procurar por código série, local ou tipo...'
           FilterControls={ListagemAparelhosFilterControls}
           hiddenColumns={[]}
-          onOpenView={(row) => { setViewData(row); setModalMode('view'); setModalOpen(true); }}
-          onOpenEdit={(row) => { setViewData(row); setModalMode('edit'); setModalOpen(true); }}
-          onOpenDelete={handleOpenDelete}
+          onOpenView={(row) => {
+            if (!canView) return
+            setViewData(row)
+            setModalMode('view')
+            setModalOpen(true)
+          }}
+          onOpenEdit={
+            canChange
+              ? (row) => {
+                  setViewData(row)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <AparelhosViewCreateModal open={modalOpen} onOpenChange={setModalOpen} mode={modalMode} viewData={viewData} onSuccess={() => queryClient.invalidateQueries({ queryKey: ['aparelhos-paginated'] })} />
         <AlertDialog open={deleteDialogOpen} onOpenChange={() => { if (!isDeleting) { setDeleteDialogOpen(false); setItemToDelete(null); } }}>

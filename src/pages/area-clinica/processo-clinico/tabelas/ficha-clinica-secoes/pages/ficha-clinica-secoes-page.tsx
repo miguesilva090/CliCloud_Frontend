@@ -486,35 +486,6 @@ export function FichaClinicaSecoesPage() {
     saveCampoMutation.mutate({ templateId: templateSelecionado.id, data: dataToSave })
   }
 
-  const toggleTemplateAtivoMutation = useMutation({
-    mutationFn: async (tpl: FichaClinicaSecaoTemplateDTO) => {
-      const client = FichaClinicaSecoesService()
-      return client.updateTemplate(tpl.id, {
-        nome: tpl.nome,
-        descricao: tpl.descricao ?? '',
-        ordem: tpl.ordem,
-        ativo: tpl.ativo,
-      })
-    },
-    onSuccess: async (_, tpl) => {
-      toast.success(tpl.ativo ? 'Formulário ativado.' : 'Formulário desativado.')
-      setTemplateSelecionado(tpl)
-      await queryClient.invalidateQueries({ queryKey: ['ficha-clinica-secao-templates'] })
-    },
-    onError: (error: unknown) => {
-      console.error('Erro ao alterar estado do formulário:', error)
-      const message =
-        error instanceof Error ? error.message : 'Falha ao alterar o estado do formulário.'
-      toast.error(message)
-    },
-  })
-
-  const handleToggleTemplateAtivo = () => {
-    if (!templateSelecionado) return
-    const novo = { ...templateSelecionado, ativo: !templateSelecionado.ativo }
-    toggleTemplateAtivoMutation.mutate(novo)
-  }
-
   const camposGridData: CampoFormState[] = useMemo(() => {
     if (!templateSelecionado && !formState.id) {
       return pendingCampos

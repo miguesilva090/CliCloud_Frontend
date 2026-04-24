@@ -2,6 +2,10 @@ import type { FornecedorTableDTO } from '@/types/dtos/saude/fornecedores.dtos'
 import { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { Button } from '@/components/ui/button'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
+import {
+  mergeRowActionPermissions,
+  type AreaComumListRowActionPermissions,
+} from '@/hooks/use-area-comum-entity-list-permissions'
 
 function getLocalidade(row: FornecedorTableDTO): string {
   const cp = row.codigoPostal
@@ -112,8 +116,12 @@ export const columns: DataTableColumnDef<FornecedorTableDTO>[] = [
 export function getColumnsWithViewCallback(
   onOpenView: (data: FornecedorTableDTO) => void,
   onOpenEdit?: (data: FornecedorTableDTO) => void,
-  onOpenDelete?: (data: FornecedorTableDTO) => void
+  onOpenDelete?: (data: FornecedorTableDTO) => void,
+  rowActionPermissions?: AreaComumListRowActionPermissions
 ): DataTableColumnDef<FornecedorTableDTO>[] {
+  const { canView, canChange, canDelete } =
+    mergeRowActionPermissions(rowActionPermissions)
+
   return [
     ...columns.filter((c) => c.id !== 'actions'),
     {
@@ -121,36 +129,42 @@ export function getColumnsWithViewCallback(
       header: () => <div className='text-right w-full pr-5'>Opções</div>,
       cell: ({ row }) => (
         <div className='flex items-center justify-end gap-1'>
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            className='h-8 w-8'
-            onClick={() => onOpenView(row.original)}
-            title='Ver'
-          >
-            <Eye className='h-4 w-4' />
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            className='h-8 w-8'
-            onClick={() => onOpenEdit?.(row.original)}
-            title='Editar'
-          >
-            <Pencil className='h-4 w-4' />
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            className='h-8 w-8 text-destructive hover:text-destructive'
-            onClick={() => onOpenDelete?.(row.original)}
-            title='Apagar'
-          >
-            <Trash2 className='h-4 w-4' />
-          </Button>
+          {canView ? (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8'
+              onClick={() => onOpenView(row.original)}
+              title='Ver'
+            >
+              <Eye className='h-4 w-4' />
+            </Button>
+          ) : null}
+          {canChange ? (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8'
+              onClick={() => onOpenEdit?.(row.original)}
+              title='Editar'
+            >
+              <Pencil className='h-4 w-4' />
+            </Button>
+          ) : null}
+          {canDelete ? (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8 text-destructive hover:text-destructive'
+              onClick={() => onOpenDelete?.(row.original)}
+              title='Apagar'
+            >
+              <Trash2 className='h-4 w-4' />
+            </Button>
+          ) : null}
         </div>
       ),
       enableSorting: false,

@@ -33,8 +33,6 @@ export const useGetTecnico = (id: string) =>
     queryKey: ['tecnico', id],
     queryFn: () => TecnicoService('tecnicos').getTecnico(id),
     enabled: !!id,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 
 export const useCreateTecnico = () => {

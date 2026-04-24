@@ -1319,7 +1319,6 @@ export function TabOutrosParametrosClinica({
                       type='text'
                       inputMode='numeric'
                       className='h-7 w-24'
-                      readOnly={disabled || !kqueueAvisoAtraso}
                       {...field}
                       value={asValue(field.value)}
                       onChange={(e) => {

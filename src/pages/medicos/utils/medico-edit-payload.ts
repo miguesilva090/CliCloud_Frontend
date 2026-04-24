@@ -6,7 +6,13 @@ import type {
 
 import { ENTIDADE_TIPO, getTipoEntidadeIdForPayload } from '@/lib/entidade-tipo'
 
-import type { MedicoEditFormValues } from '../medico-edit-form-types'
+import type { MedicoEditFormValues } from '../types/medico-edit-form-types'
+
+/** Campos de imagem alterados no form (react-hook-form dirtyFields). Sem isto, `urlFoto: null` dos defaults apagava a foto em cada gravar. */
+export type MedicoImageDirtyFlags = {
+  urlFoto?: boolean
+  urlFotoAssinatura?: boolean
+}
 
 /** Converte string de data para formato YYYY-MM-DD (DateOnly) ou undefined se vazia/inválida. Evita JsonException no backend. */
 export function toDateOnly(value?: string | null): string | undefined {
@@ -21,6 +27,7 @@ export function toDateOnly(value?: string | null): string | undefined {
 export function buildUpdatePayload(
   medico: MedicoDTO,
   values: MedicoEditFormValues,
+  imageDirty?: MedicoImageDirtyFlags,
 ): UpdateMedicoRequest {
   const emailVal = values.email?.trim() ?? ''
   const telefoneVal = values.telefone?.trim() ?? values.telemovel?.trim() ?? ''
@@ -87,8 +94,12 @@ export function buildUpdatePayload(
     observacoes: values.observacoes ?? medico.observacoes ?? undefined,
     status:
       values.status === 0 ? undefined : values.status ?? medico.status ?? undefined,
-    urlFoto:
-      values.urlFoto !== undefined ? values.urlFoto : medico.urlFoto ?? undefined,
+    urlFoto: (() => {
+      const v = values.urlFoto
+      if (typeof v === 'string' && v.trim() !== '') return v.trim()
+      if (imageDirty?.urlFoto) return v ?? null
+      return medico.urlFoto ?? undefined
+    })(),
     entidadeContactos: safeContactos,
     dataNascimento:
       toDateOnly(values.dataNascimento) ??
@@ -111,10 +122,12 @@ export function buildUpdatePayload(
     arquivo: values.arquivo ?? medico.arquivo ?? undefined,
     carteira: values.carteira ?? medico.carteira ?? undefined,
     nomeUtilizador: values.nomeUtilizador ?? medico.nomeUtilizador ?? undefined,
-    urlFotoAssinatura:
-      values.urlFotoAssinatura !== undefined
-        ? values.urlFotoAssinatura
-        : medico.urlFotoAssinatura ?? undefined,
+    urlFotoAssinatura: (() => {
+      const v = values.urlFotoAssinatura
+      if (typeof v === 'string' && v.trim() !== '') return v.trim()
+      if (imageDirty?.urlFotoAssinatura) return v ?? null
+      return medico.urlFotoAssinatura ?? undefined
+    })(),
     numeroIdentificacaoBancaria:
       values.numeroIdentificacaoBancaria ??
       medico.numeroIdentificacaoBancaria ??

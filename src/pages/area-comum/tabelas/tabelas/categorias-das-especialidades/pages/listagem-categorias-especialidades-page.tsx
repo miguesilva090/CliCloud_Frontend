@@ -16,10 +16,17 @@ import {
   usePrefetchAdjacentCategoriasEspecialidades} from '../queries/listagem-categorias-especialidades-queries'
 import { CategoriaEspecialidadeViewCreateModal } from '../modals/categoria-especialidade-view-create-modal'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const categoriasEspecialidadesPermId =
+  modules.areaComum.permissions.categoriasEspecialidades.id
 
 type CategoriaModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemCategoriasEspecialidadesPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(categoriasEspecialidadesPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -50,17 +57,22 @@ export function ListagemCategoriasEspecialidadesPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => {
-        setViewData(null)
-        setModalMode('create')
-        setModalOpen(true)
-      },
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90'},
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => {
+              setViewData(null)
+              setModalMode('create')
+              setModalOpen(true)
+            },
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -141,15 +153,23 @@ export function ListagemCategoriasEspecialidadesPage() {
           FilterControls={ListagemCategoriasEspecialidadesFilterControls}
           hiddenColumns={[]}
           onOpenView={(data) => {
+            if (!canView) return
             setViewData(data)
             setModalMode('view')
             setModalOpen(true)
           }}
-          onOpenEdit={(data) => {
-            setViewData(data)
-            setModalMode('edit')
-            setModalOpen(true)
-          }}
+          onOpenEdit={
+            canChange
+              ? (data) => {
+                  setViewData(data)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <CategoriaEspecialidadeViewCreateModal
           open={modalOpen}

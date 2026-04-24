@@ -34,6 +34,9 @@ export function ListagemCategoriaProcedimentoTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: CategoriaProcedimentoTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemCategoriaProcedimentoTable({
   onOpenView?: (data: CategoriaProcedimentoTableDTO) => void
   onOpenEdit?: (data: CategoriaProcedimentoTableDTO) => void
   onOpenDelete?: (data: CategoriaProcedimentoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

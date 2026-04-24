@@ -101,7 +101,7 @@ export const listagemColumns: DataTableColumnDef<CodigoPostalTableDTO>[] = [
   },
   {
     id: 'actions',
-    header: () => <div className='text-right w-full pr-5'>Opções</div>,
+    header: () => <div className='w-full pr-5 text-right'>Ações</div>,
     cell: ({ row }) => (
       <div className='flex items-center justify-end'>
         <CellAction data={row.original} />
@@ -119,19 +119,21 @@ export const listagemColumns: DataTableColumnDef<CodigoPostalTableDTO>[] = [
  */
 export function getListagemColumnsWithViewCallback(
   onOpenView: (data: CodigoPostalTableDTO) => void,
-  onOpenEdit?: (data: CodigoPostalTableDTO) => void
+  onOpenEdit?: (data: CodigoPostalTableDTO) => void,
+  funcionalidadeId?: string
 ): DataTableColumnDef<CodigoPostalTableDTO>[] {
   return [
     ...listagemColumns.filter((c) => c.id !== 'actions'),
     {
       id: 'actions',
-      header: () => <div className='text-right w-full pr-5'>Opções</div>,
+      header: () => <div className='w-full pr-5 text-right'>Ações</div>,
       cell: ({ row }) => (
         <div className='flex items-center justify-end'>
           <CellAction
             data={row.original}
             onOpenView={onOpenView}
             onOpenEdit={onOpenEdit}
+            funcionalidadeId={funcionalidadeId}
           />
         </div>
       ),

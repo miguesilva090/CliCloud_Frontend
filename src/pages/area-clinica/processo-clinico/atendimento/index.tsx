@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { Icons } from '@/components/ui/icons'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
@@ -46,7 +47,7 @@ export function AtendimentoUtentePage() {
             <div
               key={card.path}
               className='group relative overflow-hidden rounded-2xl border border-border/50 bg-muted/30 transition-all duration-200 hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/60 hover:scale-[1.02] hover:bg-card/80 cursor-pointer'
-              onClick={() => navigate(card.path)}
+              onClick={() => navigateManagedWindow(navigate, card.path)}
             >
               <div className='absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200' />
               <div className='relative p-6'>

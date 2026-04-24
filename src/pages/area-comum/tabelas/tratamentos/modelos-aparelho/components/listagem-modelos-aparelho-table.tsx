@@ -26,6 +26,9 @@ export function ListagemModelosAparelhoTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: ModeloAparelhoTableDTO[]
   isLoading: boolean
@@ -47,8 +50,17 @@ export function ListagemModelosAparelhoTable({
   onOpenView?: (data: ModeloAparelhoTableDTO) => void
   onOpenEdit?: (data: ModeloAparelhoTableDTO) => void
   onOpenDelete?: (data: ModeloAparelhoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
-  const tableColumns = onOpenView ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete) : columns
+  const tableColumns = onOpenView
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
+    : columns
   return (
     <DataTable
       columns={tableColumns}

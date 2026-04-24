@@ -297,7 +297,6 @@ ${data}` : data))
       utenteData?.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 2)?.valor ?? ''
 
     const medicoNome = r.medicoNome ?? auth.name ?? ''
-    const _medicoNumeroProfissional = r.medicoNumeroProfissional ?? ''
     const especialidadeMedico = medicoEspecialidadeFromApi ?? ''
 
     const hoje = new Date()

@@ -20,7 +20,6 @@ export const useGetHorarioTecnicoByTecnicoId = (tecnicoId: string) =>
     queryKey: ['horario-tecnico', tecnicoId],
     queryFn: () => svc().getHorarioTecnicoByTecnicoId(tecnicoId),
     enabled: !!tecnicoId,
-    staleTime: 30_000,
     refetchOnMount: 'always',
   })
 
@@ -32,7 +31,6 @@ export const useGetHorarioTecnicoDiaByHorarioTecnicoId = (
     queryFn: () =>
       svc().getHorarioTecnicoDiaByHorarioTecnicoId(horarioTecnicoId),
     enabled: !!horarioTecnicoId,
-    staleTime: 30_000,
     refetchOnMount: 'always',
   })
 
@@ -126,7 +124,6 @@ export const useGetHorarioTecnicoVariavelByTecnicoId = (tecnicoId: string) =>
     queryKey: ['horario-tecnico-variavel', tecnicoId],
     queryFn: () => svc().getHorarioTecnicoVariavelByTecnicoId(tecnicoId),
     enabled: !!tecnicoId,
-    staleTime: 30_000,
   })
 
 export const useCreateHorarioTecnicoVariavel = (tecnicoId: string) => {
@@ -206,7 +203,6 @@ export const useGetFolgasTecnicoByTecnicoId = (tecnicoId: string) =>
     queryKey: ['folgas-tecnico', tecnicoId],
     queryFn: () => svc().getFolgasTecnicoByTecnicoId(tecnicoId),
     enabled: !!tecnicoId,
-    staleTime: 30_000,
   })
 
 export const useCreateFolgasTecnico = (tecnicoId: string) => {

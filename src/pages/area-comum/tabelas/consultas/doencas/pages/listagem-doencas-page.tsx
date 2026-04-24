@@ -28,12 +28,18 @@ import { DoencaViewEditModal } from '../modals/doenca-view-edit-modal'
 import { DoencaService } from '@/lib/services/doencas/doenca-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const doencasPermId = modules.areaComum.permissions.doencas.id
 
 type DoencaModalMode = 'view' | 'edit'
 
 type BreadcrumbItem = { id: string; code: string; title: string }
 
 export function ListagemDoencasPage() {
+  const { canView, canChange, canDelete } =
+    useAreaComumEntityListPermissions(doencasPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [path, setPath] = useState<BreadcrumbItem[]>([])
@@ -246,17 +252,25 @@ export function ListagemDoencasPage() {
           FilterControls={ListagemDoencasFilterControls}
           hiddenColumns={[]}
           onOpenView={(rowData) => {
+            if (!canView) return
             setViewData(rowData)
             setModalMode('view')
             setModalOpen(true)
           }}
-          onOpenEdit={(rowData) => {
-            setViewData(rowData)
-            setModalMode('edit')
-            setModalOpen(true)
-          }}
-          onOpenDelete={handleOpenDelete}
+          onOpenEdit={
+            canChange
+              ? (rowData) => {
+                  setViewData(rowData)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
           onDrillDown={handleDrillDown}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <DoencaViewEditModal
           open={modalOpen}

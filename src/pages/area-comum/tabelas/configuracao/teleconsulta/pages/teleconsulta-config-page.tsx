@@ -3,12 +3,15 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Eye, EyeOff } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { ConfigPageCardTitleRow } from '@/components/shared/config-page-card-title-row'
+import { modules } from '@/config/modules'
+import { useConfigPageEditMode } from '@/hooks/use-config-page-edit-mode'
 import { toast } from '@/utils/toast-utils'
 import { TeleconsultaConfigService } from '@/lib/services/core/teleconsulta-config-service'
 import { TeleconsultaService } from '@/lib/services/consultas/teleconsulta-service'
@@ -16,8 +19,6 @@ import type {
   AtualizarConfiguracaoTeleconsultaRequest,
   ConfiguracaoTeleconsultaDTO,
 } from '@/types/dtos/core/teleconsulta-config.dtos'
-import type { TeleconsultaJoinDTO } from '@/types/dtos/consultas/teleconsulta.dtos'
-
 type TeleconsultaConfigForm = {
   ativo: boolean
   provider: string
@@ -32,6 +33,8 @@ type TeleconsultaConfigForm = {
   permitirEntradaAntesDoInicio: boolean
   lobbyAtivo: boolean
 }
+
+const teleconsultaPermId = modules.areaComum.permissions.configuracoesTeleconsulta.id
 
 const initialForm: TeleconsultaConfigForm = {
   ativo: false,
@@ -49,6 +52,16 @@ const initialForm: TeleconsultaConfigForm = {
 }
 
 export function TeleconsultaConfigPage() {
+  const {
+    canChange,
+    isEditing,
+    formEditable,
+    startEditing,
+    cancelEditing,
+    exitEditAfterSave,
+  } = useConfigPageEditMode(teleconsultaPermId)
+  const formLocked = !formEditable
+
   const [form, setForm] = useState<TeleconsultaConfigForm>(initialForm)
   const [mostrarJwt, setMostrarJwt] = useState(false)
   const [mostrarSegredos, setMostrarSegredos] = useState(false)
@@ -70,6 +83,7 @@ export function TeleconsultaConfigPage() {
       TeleconsultaConfigService().updateConfiguracao(payload),
     onSuccess: () => {
       toast.success('Configuração de teleconsulta guardada com sucesso.')
+      exitEditAfterSave()
       void configQuery.refetch()
     },
     onError: () => {
@@ -241,17 +255,23 @@ export function TeleconsultaConfigPage() {
       <PageHead title='Configuração Teleconsulta | CliCloud' />
       <DashboardPageContainer>
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between'>
-            <CardTitle>Configuração de Teleconsulta</CardTitle>
-            <div className='flex gap-2'>
-              <Button type='button' variant='outline' onClick={() => setMostrarSegredos((v) => !v)}>
-                {mostrarSegredos ? <EyeOff className='mr-2 h-4 w-4' /> : <Eye className='mr-2 h-4 w-4' />}
-                {mostrarSegredos ? 'Ocultar segredos' : 'Mostrar segredos'}
-              </Button>
-              <Button onClick={handleGuardar} disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
-              </Button>
-            </div>
+          <CardHeader className='space-y-0 pb-2'>
+            <ConfigPageCardTitleRow
+              title='Configuração de Teleconsulta'
+              canChange={canChange}
+              isEditing={isEditing}
+              onStartEdit={startEditing}
+              onCancelEdit={() => {
+                cancelEditing()
+                void configQuery.refetch()
+              }}
+              trailing={
+                <Button type='button' variant='outline' onClick={() => setMostrarSegredos((v) => !v)}>
+                  {mostrarSegredos ? <EyeOff className='mr-2 h-4 w-4' /> : <Eye className='mr-2 h-4 w-4' />}
+                  {mostrarSegredos ? 'Ocultar segredos' : 'Mostrar segredos'}
+                </Button>
+              }
+            />
           </CardHeader>
           <CardContent className='space-y-4'>
             {configQuery.isLoading ? <p className='text-sm text-muted-foreground'>A carregar configuração...</p> : null}
@@ -267,7 +287,7 @@ export function TeleconsultaConfigPage() {
               <Switch
                 checked={form.ativo}
                 onCheckedChange={(v) => handleChange('ativo', v)}
-                disabled={saveMutation.isPending}
+                disabled={formLocked || saveMutation.isPending}
               />
             </div>
 
@@ -282,7 +302,8 @@ export function TeleconsultaConfigPage() {
                   id='teleconsulta-base-url'
                   value={form.baseMeetingUrl}
                   onChange={(e) => handleChange('baseMeetingUrl', e.target.value)}
-                  disabled={saveMutation.isPending}
+                  readOnly={formLocked}
+                  disabled={formLocked || saveMutation.isPending}
                   placeholder='https://meet.jit.si'
                 />
               </div>
@@ -298,7 +319,8 @@ export function TeleconsultaConfigPage() {
                   max={180}
                   value={form.janelaEntradaMinutosAntes}
                   onChange={(e) => handleChange('janelaEntradaMinutosAntes', Number(e.target.value))}
-                  disabled={saveMutation.isPending}
+                  readOnly={formLocked}
+                  disabled={formLocked || saveMutation.isPending}
                 />
               </div>
               <div className='space-y-1'>
@@ -310,7 +332,8 @@ export function TeleconsultaConfigPage() {
                   max={360}
                   value={form.duracaoPadraoMinutos}
                   onChange={(e) => handleChange('duracaoPadraoMinutos', Number(e.target.value))}
-                  disabled={saveMutation.isPending}
+                  readOnly={formLocked}
+                  disabled={formLocked || saveMutation.isPending}
                 />
               </div>
             </div>
@@ -324,7 +347,7 @@ export function TeleconsultaConfigPage() {
                 <Switch
                   checked={form.permitirEntradaAntesDoInicio}
                   onCheckedChange={(v) => handleChange('permitirEntradaAntesDoInicio', v)}
-                  disabled={saveMutation.isPending}
+                  disabled={formLocked || saveMutation.isPending}
                 />
               </div>
               <div className='flex items-center justify-between rounded border p-3'>
@@ -335,7 +358,7 @@ export function TeleconsultaConfigPage() {
                 <Switch
                   checked={form.lobbyAtivo}
                   onCheckedChange={(v) => handleChange('lobbyAtivo', v)}
-                  disabled={saveMutation.isPending}
+                  disabled={formLocked || saveMutation.isPending}
                 />
               </div>
             </div>
@@ -348,7 +371,12 @@ export function TeleconsultaConfigPage() {
                     Ativa autenticação JWT para Jitsi self-hosted ou domínio com autenticação.
                   </p>
                 </div>
-                <Button type='button' variant='outline' onClick={() => setMostrarJwt((v) => !v)}>
+                <Button
+                  type='button'
+                  variant='outline'
+                  disabled={formLocked}
+                  onClick={() => setMostrarJwt((v) => !v)}
+                >
                   {mostrarJwt ? 'Ocultar' : 'Mostrar'}
                 </Button>
               </div>
@@ -360,7 +388,7 @@ export function TeleconsultaConfigPage() {
                 <Switch
                   checked={form.jwtAtivo}
                   onCheckedChange={(v) => handleChange('jwtAtivo', v)}
-                  disabled={saveMutation.isPending}
+                  disabled={formLocked || saveMutation.isPending}
                 />
               </div>
 
@@ -372,7 +400,8 @@ export function TeleconsultaConfigPage() {
                       id='jwt-app-id'
                       value={form.jwtAppId}
                       onChange={(e) => handleChange('jwtAppId', e.target.value)}
-                      disabled={saveMutation.isPending}
+                      readOnly={formLocked}
+                      disabled={formLocked || saveMutation.isPending}
                     />
                   </div>
                   <div className='space-y-1'>
@@ -381,7 +410,8 @@ export function TeleconsultaConfigPage() {
                       id='jwt-api-key'
                       value={form.jwtApiKey}
                       onChange={(e) => handleChange('jwtApiKey', e.target.value)}
-                      disabled={saveMutation.isPending}
+                      readOnly={formLocked}
+                      disabled={formLocked || saveMutation.isPending}
                     />
                   </div>
                   <div className='space-y-1'>
@@ -390,7 +420,8 @@ export function TeleconsultaConfigPage() {
                       id='jwt-kid'
                       value={form.jwtKid}
                       onChange={(e) => handleChange('jwtKid', e.target.value)}
-                      disabled={saveMutation.isPending}
+                      readOnly={formLocked}
+                      disabled={formLocked || saveMutation.isPending}
                     />
                   </div>
                   <div className='space-y-1 md:col-span-2'>
@@ -400,12 +431,22 @@ export function TeleconsultaConfigPage() {
                       rows={4}
                       value={form.jwtPrivateKey}
                       onChange={(e) => handleChange('jwtPrivateKey', e.target.value)}
-                      disabled={saveMutation.isPending}
+                      readOnly={formLocked}
+                      disabled={formLocked || saveMutation.isPending}
                       className={mostrarSegredos ? '' : 'blur-sm'}
                     />
                   </div>
                 </div>
               ) : null}
+            </div>
+
+            <div className='flex justify-end'>
+              <Button
+                onClick={handleGuardar}
+                disabled={!formEditable || saveMutation.isPending}
+              >
+                {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
+              </Button>
             </div>
 
             <div className='rounded border p-3 space-y-3'>
@@ -421,6 +462,8 @@ export function TeleconsultaConfigPage() {
                     id='tc-consulta-id'
                     value={consultaMarcacaoIdTeste}
                     onChange={(e) => setConsultaMarcacaoIdTeste(e.target.value)}
+                    readOnly={formLocked}
+                    disabled={formLocked}
                     placeholder='GUID da marcação'
                   />
                 </div>
@@ -430,16 +473,28 @@ export function TeleconsultaConfigPage() {
                     id='tc-sessao-id'
                     value={sessaoIdTeste}
                     onChange={(e) => setSessaoIdTeste(e.target.value)}
+                    readOnly={formLocked}
+                    disabled={formLocked}
                     placeholder='Preenchido após criar sessão'
                   />
                 </div>
               </div>
 
               <div className='flex flex-wrap gap-2'>
-                <Button type='button' variant='outline' onClick={handleCriarSessaoTeste} disabled={criarSessaoMutation.isPending}>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={handleCriarSessaoTeste}
+                  disabled={formLocked || criarSessaoMutation.isPending}
+                >
                   {criarSessaoMutation.isPending ? 'A criar...' : 'Criar/Obter Sessão'}
                 </Button>
-                <Button type='button' variant='outline' onClick={handleRevogarLinks} disabled={revogarLinksMutation.isPending}>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={handleRevogarLinks}
+                  disabled={formLocked || revogarLinksMutation.isPending}
+                >
                   {revogarLinksMutation.isPending ? 'A revogar...' : 'Revogar Links'}
                 </Button>
               </div>
@@ -451,6 +506,8 @@ export function TeleconsultaConfigPage() {
                     id='tc-nome-medico'
                     value={nomeMedicoTeste}
                     onChange={(e) => setNomeMedicoTeste(e.target.value)}
+                    readOnly={formLocked}
+                    disabled={formLocked}
                     placeholder='Profissional'
                   />
                 </div>
@@ -460,6 +517,8 @@ export function TeleconsultaConfigPage() {
                     id='tc-nome-utente'
                     value={nomeUtenteTeste}
                     onChange={(e) => setNomeUtenteTeste(e.target.value)}
+                    readOnly={formLocked}
+                    disabled={formLocked}
                     placeholder='Utente'
                   />
                 </div>
@@ -471,15 +530,27 @@ export function TeleconsultaConfigPage() {
                   id='tc-destino-utente'
                   value={destinoUtenteTeste}
                   onChange={(e) => setDestinoUtenteTeste(e.target.value)}
+                  readOnly={formLocked}
+                  disabled={formLocked}
                   placeholder='email ou telefone'
                 />
               </div>
 
               <div className='flex flex-wrap gap-2'>
-                <Button type='button' variant='outline' onClick={handleGerarLinkMedico} disabled={linkMedicoMutation.isPending}>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={handleGerarLinkMedico}
+                  disabled={formLocked || linkMedicoMutation.isPending}
+                >
                   {linkMedicoMutation.isPending ? 'A gerar...' : 'Gerar Link Médico'}
                 </Button>
-                <Button type='button' variant='outline' onClick={handleGerarLinkUtente} disabled={linkUtenteMutation.isPending}>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={handleGerarLinkUtente}
+                  disabled={formLocked || linkUtenteMutation.isPending}
+                >
                   {linkUtenteMutation.isPending ? 'A gerar...' : 'Gerar Link Utente'}
                 </Button>
               </div>
@@ -491,7 +562,7 @@ export function TeleconsultaConfigPage() {
                   <Button
                     type='button'
                     variant='outline'
-                    disabled={!linkMedicoGerado}
+                    disabled={formLocked || !linkMedicoGerado}
                     onClick={() => linkMedicoGerado && window.open(linkMedicoGerado, '_blank')}
                   >
                     Abrir
@@ -506,7 +577,7 @@ export function TeleconsultaConfigPage() {
                   <Button
                     type='button'
                     variant='outline'
-                    disabled={!linkUtenteGerado}
+                    disabled={formLocked || !linkUtenteGerado}
                     onClick={() => linkUtenteGerado && window.open(linkUtenteGerado, '_blank')}
                   >
                     Abrir

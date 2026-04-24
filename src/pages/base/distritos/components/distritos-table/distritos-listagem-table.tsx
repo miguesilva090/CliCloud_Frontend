@@ -31,6 +31,7 @@ export function DistritosListagemTable({
   hiddenColumns,
   onOpenView,
   onOpenEdit,
+  rowActionsFuncionalidadeId,
 }: {
   data: DistritoTableDTO[]
   isLoading: boolean
@@ -53,9 +54,14 @@ export function DistritosListagemTable({
   onOpenView?: (data: DistritoTableDTO) => void
   /** Quando definido (ex.: listagem área-comum), "Editar" abre o mesmo modal em modo edição */
   onOpenEdit?: (data: DistritoTableDTO) => void
+  rowActionsFuncionalidadeId?: string
 }) {
   const tableColumns = onOpenView
-    ? getListagemColumnsWithViewCallback(onOpenView, onOpenEdit)
+    ? getListagemColumnsWithViewCallback(
+        onOpenView,
+        onOpenEdit,
+        rowActionsFuncionalidadeId
+      )
     : listagemColumns
   return (
     <DataTable

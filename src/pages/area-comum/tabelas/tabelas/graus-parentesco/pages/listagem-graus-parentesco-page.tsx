@@ -28,10 +28,16 @@ import { GrauParentescoViewCreateModal } from '../modals/grau-parentesco-view-cr
 import { GrauParentescoService } from '@/lib/services/graus-parentesco/grau-parentesco-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const grausParentescoPermId = modules.areaComum.permissions.grausParentesco.id
 
 type GrauParentescoModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemGrausParentescoPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(grausParentescoPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -63,17 +69,22 @@ export function ListagemGrausParentescoPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => {
-        setViewData(null)
-        setModalMode('create')
-        setModalOpen(true)
-      },
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90'},
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => {
+              setViewData(null)
+              setModalMode('create')
+              setModalOpen(true)
+            },
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -189,16 +200,24 @@ export function ListagemGrausParentescoPage() {
           FilterControls={ListagemGrausParentescoFilterControls}
           hiddenColumns={[]}
           onOpenView={(data) => {
+            if (!canView) return
             setViewData(data)
             setModalMode('view')
             setModalOpen(true)
           }}
-          onOpenEdit={(data) => {
-            setViewData(data)
-            setModalMode('edit')
-            setModalOpen(true)
-          }}
-          onOpenDelete={handleOpenDelete}
+          onOpenEdit={
+            canChange
+              ? (data) => {
+                  setViewData(data)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <GrauParentescoViewCreateModal
           open={modalOpen}

@@ -31,6 +31,9 @@ export function ListagemHabilitacoesTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: HabilitacaoTableDTO[]
   isLoading: boolean
@@ -52,9 +55,16 @@ export function ListagemHabilitacoesTable({
   onOpenView?: (data: HabilitacaoTableDTO) => void
   onOpenEdit?: (data: HabilitacaoTableDTO) => void
   onOpenDelete?: (data: HabilitacaoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

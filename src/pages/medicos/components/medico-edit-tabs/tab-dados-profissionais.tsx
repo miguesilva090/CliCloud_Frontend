@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import type { MedicoDTO } from '@/types/dtos/saude/medicos.dtos'
 import type { MedicoEditFormValues } from '@/pages/medicos/types/medico-edit-form-types'
@@ -36,7 +36,6 @@ export function TabDadosProfissionais({
   void medico
   const navigate = useNavigate()
   const addWindow = useWindowsStore((s) => s.addWindow)
-  const queryClient = useQueryClient()
 
   const categoriasQuery = useQuery({
     queryKey: ['categorias-especialidades-light'],

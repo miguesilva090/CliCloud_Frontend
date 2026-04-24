@@ -34,6 +34,9 @@ export function ListagemEmpresasTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canViewEmpresa,
+  canChangeEmpresa,
+  canDeleteEmpresa,
 }: {
   data: EmpresaTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemEmpresasTable({
   onOpenView?: (data: EmpresaTableDTO) => void
   onOpenEdit?: (data: EmpresaTableDTO) => void
   onOpenDelete?: (data: EmpresaTableDTO) => void
+  canViewEmpresa?: boolean
+  canChangeEmpresa?: boolean
+  canDeleteEmpresa?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView: canViewEmpresa,
+        canChange: canChangeEmpresa,
+        canDelete: canDeleteEmpresa,
+      })
     : columns
 
   return (

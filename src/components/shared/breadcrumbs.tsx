@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { Slash } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { generateInstanceId } from '@/utils/window-utils'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -40,22 +40,13 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItemProps[] }) {
       // If no other window is open, go to the previous breadcrumb
       const previousItem = items[items.length - 2]
       if (previousItem) {
-        navigate(previousItem.link)
+        navigateManagedWindow(navigate, previousItem.link)
       }
     }
   }
 
   const handleBreadcrumbClick = (link: string) => {
-    // Generate a new instance ID for the new window
-    const newInstanceId = generateInstanceId()
-
-    // Parse the link to add the instance ID
-    const [path, search] = link.split('?')
-    const searchParams = new URLSearchParams(search || '')
-    searchParams.set('instanceId', newInstanceId)
-
-    // Navigate to the new path with the new instance ID
-    navigate(`${path}?${searchParams.toString()}`)
+    navigateManagedWindow(navigate, link)
   }
 
   return (

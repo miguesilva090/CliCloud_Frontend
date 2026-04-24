@@ -27,7 +27,10 @@ import {
 import { TabEmpresaIdentificacao } from '../components/tab-empresa-identificacao'
 import { TabEmpresaOutros } from '../components/tab-empresa-outros'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { useCurrentWindowId, handleWindowClose } from '@/utils/window-utils'
+import {
+  useCurrentWindowId,
+  handleWindowClose,
+} from '@/utils/window-utils'
 
 const schema = z
   .object({
@@ -468,9 +471,9 @@ export function EmpresaEditPage() {
                 })}
                 className='space-y-0'
               >
-                <div className='border-b bg-muted/30 px-4 py-4'>
-                  <div className='flex flex-col sm:flex-row sm:items-end sm:justify-end gap-4'>
-                    {!isReadOnly && (
+                {!isReadOnly ? (
+                  <div className='border-b bg-muted/30 px-4 py-4'>
+                    <div className='flex flex-col sm:flex-row sm:items-end sm:justify-end gap-4'>
                       <Button
                         type='submit'
                         disabled={!canSave}
@@ -480,22 +483,9 @@ export function EmpresaEditPage() {
                         <Save className='h-4 w-4 mr-2' />
                         Gravar Empresa
                       </Button>
-                    )}
-                    {isReadOnly && (
-                      <Button
-                        type='button'
-                        variant='default'
-                        onClick={() =>
-                          navigate(
-                            `/area-comum/tabelas/entidades/empresas/${id}/editar`
-                          )
-                        }
-                      >
-                        Editar
-                      </Button>
-                    )}
+                    </div>
                   </div>
-                </div>
+                ) : null}
                 <Tabs
                   value={activeTab}
                   onValueChange={setActiveTab}

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { useAuthStore } from '@/stores/auth-store'
 import { Icons } from '@/components/ui/icons'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -76,8 +77,7 @@ export function DashboardPage() {
                   }`}
                   onClick={() => {
                     if (!isUnderDevelopment) {
-                      // Módulo de saúde: navegação simples, sem WindowManager nem instanceId
-                      navigate(module.path)
+                      navigateManagedWindow(navigate, module.path)
                     }
                   }}
                 >

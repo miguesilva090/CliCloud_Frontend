@@ -94,7 +94,6 @@ export const useGetRuasSelect = (keyword?: string) => {
       const data = response.info.data || []
       return data.sort((a, b) => a.nome.localeCompare(b.nome))
     },
-    staleTime: 30000,
   })
 }
 

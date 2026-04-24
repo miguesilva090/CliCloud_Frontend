@@ -27,8 +27,15 @@ import { SubsistemaServicoViewCreateModal } from '../modals/subsistema-servico-v
 import { SubsistemaServicoService } from '@/lib/services/servicos/subsistema-servico-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const subsistemasServicosPermId =
+  modules.areaComum.permissions.subsistemasServicos.id
 
 export function ListagemSubsistemasServicosPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(subsistemasServicosPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -70,13 +77,18 @@ export function ListagemSubsistemasServicosPage() {
   }
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: abrirModalNovo,
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90'},
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: abrirModalNovo,
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -216,9 +228,15 @@ export function ListagemSubsistemasServicosPage() {
           globalSearchColumnId='servicoId'
           globalSearchPlaceholder='Procurar...'
           FilterControls={EmptyFilterControls}
-          onOpenView={handleOpenView}
-          onOpenEdit={handleOpenEdit}
-          onOpenDelete={handleOpenDelete}
+          onOpenView={(row) => {
+            if (!canView) return
+            handleOpenView(row)
+          }}
+          onOpenEdit={canChange ? handleOpenEdit : undefined}
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
 
         <SubsistemaServicoViewCreateModal

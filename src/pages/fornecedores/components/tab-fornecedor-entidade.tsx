@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
-import type { FornecedorEditFormValues } from '@/pages/fornecedores/fornecedor-edit-form-types'
+import type { FornecedorEditFormValues } from '@/pages/fornecedores/types/fornecedor-edit-form-types'
 import {
   usePaisesLight,
   useCodigosPostaisLight,

@@ -3,13 +3,13 @@ import { ArrowLeft } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useFormsStore } from '@/stores/use-forms-store'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { handleWindowClose } from '@/utils/window-utils'
+import { handleWindowClose, navigateManagedWindow } from '@/utils/window-utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHead } from '@/components/shared/page-head'
-import { FreguesiaUpdateForm } from '../freguesias-forms/freguesia-update-form'
+import { FreguesiaUpdateForm } from '../components/freguesias-forms/freguesia-update-form'
 
 export function FreguesiasUpdatePage() {
   const navigate = useNavigate()
@@ -40,7 +40,7 @@ export function FreguesiasUpdatePage() {
 
   // If no freguesiaId is provided, redirect to freguesias page
   if (!freguesiaId) {
-    navigate('/utilitarios/tabelas/geograficas/freguesias')
+    navigateManagedWindow(navigate, '/utilitarios/tabelas/geograficas/freguesias')
     return null
   }
 

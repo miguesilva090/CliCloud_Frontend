@@ -4,10 +4,13 @@ export function MedicoDetailsPage() {
   const params = useParams<{ id: string }>()
   const id = params.id ?? ''
   const [searchParams] = useSearchParams()
-  const from = searchParams.get('from')
 
   if (!id) return null
 
-  const suffix = from ? `?mode=view&from=${encodeURIComponent(from)}` : '?mode=view'
-  return <Navigate to={`/medicos/${id}/editar${suffix}`} replace />
+  // Mesmo fluxo que utentes: "ver" → /editar em modo leitura, preservando instanceId (e outros)
+  // para o WindowManager não criar uma segunda tab ao mudar de /medicos/:id para .../editar.
+  const next = new URLSearchParams(searchParams)
+  next.set('mode', 'view')
+
+  return <Navigate to={`/medicos/${id}/editar?${next.toString()}`} replace />
 }

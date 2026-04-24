@@ -2,13 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ConfigPageCardTitleRow } from '@/components/shared/config-page-card-title-row'
+import { modules } from '@/config/modules'
+import { useConfigPageEditMode } from '@/hooks/use-config-page-edit-mode'
 import { toast } from '@/utils/toast-utils'
 import { VozRuntimeService, VozService } from '@/lib/services/core/voz-service'
 import type { VozBrowserOpcao } from '@/lib/services/core/voz-service/voz-runtime'
@@ -46,6 +49,8 @@ type SessaoSttForm = {
   abortar: () => void
 } | null
 
+const vozPermId = modules.areaComum.permissions.configuracoesVoz.id
+
 const initialForm: VozForm = {
   ativo: false,
   provider: 'web-speech',
@@ -69,6 +74,16 @@ const initialForm: VozForm = {
 }
 
 export function VozConfigPage() {
+  const {
+    canChange,
+    isEditing,
+    formEditable,
+    startEditing,
+    cancelEditing,
+    exitEditAfterSave,
+  } = useConfigPageEditMode(vozPermId)
+  const formLocked = !formEditable
+
   const [form, setForm] = useState<VozForm>(initialForm)
   const [textoTeste, setTextoTeste] = useState('Olá. Esta é uma mensagem de teste de voz do CliCloud.')
   const [vozesBrowser, setVozesBrowser] = useState<VozBrowserOpcao[]>([])
@@ -93,6 +108,7 @@ export function VozConfigPage() {
     mutationFn: (payload: AtualizarConfiguracaoVozRequest) => VozService().updateConfiguracao(payload),
     onSuccess: () => {
       toast.success('Configuração de voz guardada com sucesso.')
+      exitEditAfterSave()
       void configQuery.refetch()
     },
     onError: () => {
@@ -318,8 +334,17 @@ export function VozConfigPage() {
       <PageHead title='Configuração de Voz | CliCloud' />
       <DashboardPageContainer>
         <Card>
-          <CardHeader>
-            <CardTitle>Configuração de Voz</CardTitle>
+          <CardHeader className='space-y-0 pb-2'>
+            <ConfigPageCardTitleRow
+              title='Configuração de Voz'
+              canChange={canChange}
+              isEditing={isEditing}
+              onStartEdit={startEditing}
+              onCancelEdit={() => {
+                cancelEditing()
+                void configQuery.refetch()
+              }}
+            />
           </CardHeader>
           <CardContent className='space-y-4'>
             {configQuery.isLoading ? <p className='text-sm text-muted-foreground'>A carregar configuração...</p> : null}
@@ -340,7 +365,7 @@ export function VozConfigPage() {
               <Switch
                 checked={form.ativo}
                 onCheckedChange={(v) => handleChange('ativo', v)}
-                disabled={saveMutation.isPending}
+                disabled={formLocked || saveMutation.isPending}
               />
             </div>
 
@@ -361,7 +386,7 @@ export function VozConfigPage() {
                 <Select
                   value={form.idiomaPadrao}
                   onValueChange={(v) => handleChange('idiomaPadrao', v)}
-                  disabled={saveMutation.isPending}
+                  disabled={formLocked || saveMutation.isPending}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder='Selecionar idioma' />
@@ -381,7 +406,7 @@ export function VozConfigPage() {
                 <Select
                   value={form.ttsVoice}
                   onValueChange={(v) => handleChange('ttsVoice', v)}
-                  disabled={saveMutation.isPending}
+                  disabled={formLocked || saveMutation.isPending}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder='Selecionar voz' />
@@ -407,7 +432,7 @@ export function VozConfigPage() {
                 <Switch
                   checked={form.sttAtivo}
                   onCheckedChange={(v) => handleChange('sttAtivo', v)}
-                  disabled={saveMutation.isPending}
+                  disabled={formLocked || saveMutation.isPending}
                 />
               </div>
 
@@ -419,7 +444,7 @@ export function VozConfigPage() {
                 <Switch
                   checked={form.ttsAtivo}
                   onCheckedChange={(v) => handleChange('ttsAtivo', v)}
-                  disabled={saveMutation.isPending}
+                  disabled={formLocked || saveMutation.isPending}
                 />
               </div>
 
@@ -429,7 +454,12 @@ export function VozConfigPage() {
                     <Label className='text-sm font-medium'>Definições avançadas</Label>
                     <p className='text-xs text-muted-foreground'>Parâmetros técnicos de STT/TTS.</p>
                   </div>
-                  <Button type='button' variant='outline' onClick={() => setMostrarAvancadas((v) => !v)}>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    disabled={formLocked}
+                    onClick={() => setMostrarAvancadas((v) => !v)}
+                  >
                     {mostrarAvancadas ? 'Ocultar' : 'Mostrar'}
                   </Button>
                 </div>
@@ -441,7 +471,7 @@ export function VozConfigPage() {
                       <Select
                         value={form.sttIdioma}
                         onValueChange={(v) => handleChange('sttIdioma', v)}
-                        disabled={saveMutation.isPending}
+                        disabled={formLocked || saveMutation.isPending}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder='Selecionar idioma STT' />
@@ -466,7 +496,8 @@ export function VozConfigPage() {
                         step={0.1}
                         value={form.sttConfidenceMin}
                         onChange={(e) => handleChange('sttConfidenceMin', Number(e.target.value))}
-                        disabled={saveMutation.isPending}
+                        readOnly={formLocked}
+                        disabled={formLocked || saveMutation.isPending}
                       />
                     </div>
 
@@ -480,7 +511,8 @@ export function VozConfigPage() {
                         step={100}
                         value={form.sttSilenceTimeoutMs}
                         onChange={(e) => handleChange('sttSilenceTimeoutMs', Number(e.target.value))}
-                        disabled={saveMutation.isPending}
+                        readOnly={formLocked}
+                        disabled={formLocked || saveMutation.isPending}
                       />
                     </div>
 
@@ -494,7 +526,8 @@ export function VozConfigPage() {
                         step={1}
                         value={form.sttMaxAlternatives}
                         onChange={(e) => handleChange('sttMaxAlternatives', Number(e.target.value))}
-                        disabled={saveMutation.isPending}
+                        readOnly={formLocked}
+                        disabled={formLocked || saveMutation.isPending}
                       />
                     </div>
 
@@ -506,7 +539,7 @@ export function VozConfigPage() {
                       <Switch
                         checked={form.sttProfanityFilter}
                         onCheckedChange={(v) => handleChange('sttProfanityFilter', v)}
-                        disabled={saveMutation.isPending}
+                        disabled={formLocked || saveMutation.isPending}
                       />
                     </div>
 
@@ -519,7 +552,8 @@ export function VozConfigPage() {
                         max={60000}
                         value={form.timeoutMs}
                         onChange={(e) => handleChange('timeoutMs', Number(e.target.value))}
-                        disabled={saveMutation.isPending}
+                        readOnly={formLocked}
+                        disabled={formLocked || saveMutation.isPending}
                       />
                     </div>
 
@@ -532,7 +566,8 @@ export function VozConfigPage() {
                         max={600}
                         value={form.maxDuracaoCapturaSegundos}
                         onChange={(e) => handleChange('maxDuracaoCapturaSegundos', Number(e.target.value))}
-                        disabled={saveMutation.isPending}
+                        readOnly={formLocked}
+                        disabled={formLocked || saveMutation.isPending}
                       />
                     </div>
 
@@ -546,7 +581,8 @@ export function VozConfigPage() {
                         step={0.1}
                         value={form.ttsRate}
                         onChange={(e) => handleChange('ttsRate', Number(e.target.value))}
-                        disabled={saveMutation.isPending}
+                        readOnly={formLocked}
+                        disabled={formLocked || saveMutation.isPending}
                       />
                     </div>
 
@@ -560,7 +596,8 @@ export function VozConfigPage() {
                         step={0.1}
                         value={form.ttsPitch}
                         onChange={(e) => handleChange('ttsPitch', Number(e.target.value))}
-                        disabled={saveMutation.isPending}
+                        readOnly={formLocked}
+                        disabled={formLocked || saveMutation.isPending}
                       />
                     </div>
 
@@ -574,7 +611,8 @@ export function VozConfigPage() {
                         step={0.1}
                         value={form.ttsVolume}
                         onChange={(e) => handleChange('ttsVolume', Number(e.target.value))}
-                        disabled={saveMutation.isPending}
+                        readOnly={formLocked}
+                        disabled={formLocked || saveMutation.isPending}
                       />
                     </div>
                   </div>
@@ -591,13 +629,24 @@ export function VozConfigPage() {
                   value={textoTeste}
                   onChange={(e) => setTextoTeste(e.target.value)}
                   rows={3}
+                  readOnly={formLocked}
+                  disabled={formLocked}
                   placeholder='Escreve o texto para testar a voz...'
                 />
                 <div className='flex gap-2 justify-end'>
-                  <Button type='button' variant='outline' onClick={handlePararTeste}>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    disabled={formLocked}
+                    onClick={handlePararTeste}
+                  >
                     Parar
                   </Button>
-                  <Button type='button' onClick={handleOuvirTeste} disabled={aTraduzirTeste}>
+                  <Button
+                    type='button'
+                    onClick={handleOuvirTeste}
+                    disabled={formLocked || aTraduzirTeste}
+                  >
                     {aTraduzirTeste ? 'A traduzir...' : 'Ouvir teste'}
                   </Button>
                 </div>
@@ -613,14 +662,25 @@ export function VozConfigPage() {
                   value={sttTranscricao}
                   onChange={(e) => setSttTranscricao(e.target.value)}
                   rows={4}
+                  readOnly={formLocked}
+                  disabled={formLocked}
                   placeholder='A transcrição aparece aqui...'
                 />
                 {sttErro ? <p className='text-xs text-destructive'>{sttErro}</p> : null}
                 <div className='flex gap-2 justify-end'>
-                  <Button type='button' variant='outline' onClick={handlePararTesteStt} disabled={!sttEscutando}>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    onClick={handlePararTesteStt}
+                    disabled={formLocked || !sttEscutando}
+                  >
                     Parar STT
                   </Button>
-                  <Button type='button' onClick={handleIniciarTesteStt} disabled={sttEscutando}>
+                  <Button
+                    type='button'
+                    onClick={handleIniciarTesteStt}
+                    disabled={formLocked || sttEscutando}
+                  >
                     {sttEscutando ? 'A escutar...' : 'Iniciar STT'}
                   </Button>
                 </div>
@@ -628,7 +688,10 @@ export function VozConfigPage() {
             </div>
 
             <div className='flex justify-end'>
-              <Button onClick={handleGuardar} disabled={saveMutation.isPending}>
+              <Button
+                onClick={handleGuardar}
+                disabled={!formEditable || saveMutation.isPending}
+              >
                 {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
               </Button>
             </div>

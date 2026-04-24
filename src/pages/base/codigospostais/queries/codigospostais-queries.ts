@@ -110,7 +110,6 @@ export const useGetCodigosPostaisSelect = (keyword?: string) => {
       const data = response.info.data || []
       return data.sort((a, b) => a.codigo.localeCompare(b.codigo))
     },
-    staleTime: 30000,
   })
 }
 

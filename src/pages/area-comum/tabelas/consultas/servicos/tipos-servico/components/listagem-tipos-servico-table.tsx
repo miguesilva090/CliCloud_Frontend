@@ -24,6 +24,9 @@ export function ListagemTiposServicoTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: TipoServicoTableDTO[]
   isLoading: boolean
@@ -42,6 +45,9 @@ export function ListagemTiposServicoTable({
   onOpenView?: (data: TipoServicoTableDTO) => void
   onOpenEdit?: (data: TipoServicoTableDTO) => void
   onOpenDelete?: (data: TipoServicoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const EmptyFilterControls: React.ComponentType<{
     table: any
@@ -51,7 +57,11 @@ export function ListagemTiposServicoTable({
   }> = () => null
 
   const tableColumns = onOpenView
-    ? getTiposServicoColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getTiposServicoColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : tiposServicoColumns
 
   return (

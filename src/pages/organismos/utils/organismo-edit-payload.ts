@@ -6,7 +6,7 @@ import type {
 
 import { ENTIDADE_TIPO, getTipoEntidadeIdForPayload } from '@/lib/entidade-tipo'
 
-import type { OrganismoEditFormValues } from '../organismo-edit-form-types'
+import type { OrganismoEditFormValues } from '../types/organismo-edit-form-types'
 
 export function buildEntidadeContactos(values: OrganismoEditFormValues) {
   const contactos: Array<{

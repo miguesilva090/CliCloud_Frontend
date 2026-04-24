@@ -27,8 +27,14 @@ import { TipoServicoViewCreateModal } from '../modals/tipo-servico-view-create-m
 import { TipoServicoService } from '@/lib/services/servicos/tipo-servico-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const tiposServicoPermId = modules.areaComum.permissions.tiposServico.id
 
 export function ListagemTiposServicoPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(tiposServicoPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -68,13 +74,18 @@ export function ListagemTiposServicoPage() {
   }
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: abrirModalNovo,
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90'},
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: abrirModalNovo,
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -202,9 +213,15 @@ export function ListagemTiposServicoPage() {
           toolbarActions={toolbarActions}
           globalSearchColumnId='descricao'
           globalSearchPlaceholder='Procurar...'
-          onOpenView={handleOpenView}
-          onOpenEdit={handleOpenEdit}
-          onOpenDelete={handleOpenDelete}
+          onOpenView={(row) => {
+            if (!canView) return
+            handleOpenView(row)
+          }}
+          onOpenEdit={canChange ? handleOpenEdit : undefined}
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
 
         <TipoServicoViewCreateModal

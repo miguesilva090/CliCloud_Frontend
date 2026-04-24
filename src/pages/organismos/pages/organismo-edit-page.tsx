@@ -10,23 +10,27 @@ import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RefreshCw, X, Save } from 'lucide-react'
-import type { OrganismoDTO } from '@/types/dtos/saude/organismos.dtos'
-import type { OrganismoEditFormValues } from './organismo-edit-form-types'
+import type { EntidadeContactoItem } from '@/types/dtos/saude/organismos.dtos'
+import type { OrganismoEditFormValues } from '../types/organismo-edit-form-types'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
 import {
   useCreateOrganismo,
   useGetOrganismo,
   useUpdateOrganismo,
-} from './queries/organismos-queries'
-import { organismoEditDefaultValues, organismoEditSchema } from './utils/organismo-edit-form'
-import { buildCreatePayload, buildUpdatePayload } from './utils/organismo-edit-payload'
-import { TabIdentificacao } from './components/organismo-edit-tabs/tab-identificacao'
-import { TabOutrosParametros } from './components/organismo-edit-tabs/tab-outros-parametros'
-import { TabInformacaoSNS } from './components/organismo-edit-tabs/tab-informacao-sns'
-import { TabFaturacao } from './components/organismo-edit-tabs/tab-faturacao'
+} from '../queries/organismos-queries'
+import { organismoEditDefaultValues, organismoEditSchema } from '../utils/organismo-edit-form'
+import { buildCreatePayload, buildUpdatePayload } from '../utils/organismo-edit-payload'
+import { TabIdentificacao } from '../components/organismo-edit-tabs/tab-identificacao'
+import { TabOutrosParametros } from '../components/organismo-edit-tabs/tab-outros-parametros'
+import { TabInformacaoSNS } from '../components/organismo-edit-tabs/tab-informacao-sns'
+import { TabFaturacao } from '../components/organismo-edit-tabs/tab-faturacao'
 import { NATUREZAS_ORGANISMO } from '@/pages/organismos/constants/naturezas-organismo'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { useCurrentWindowId, handleWindowClose } from '@/utils/window-utils'
+import {
+  useCurrentWindowId,
+  handleWindowClose,
+  navigateManagedWindow,
+} from '@/utils/window-utils'
 import { useFormValidationFeedback } from '@/hooks/use-form-validation-feedback'
 import { isZodError, applyZodErrorToForm } from '@/lib/zod-error-to-field-errors'
 
@@ -99,14 +103,17 @@ export function OrganismoEditPage() {
   useEffect(() => {
     if (!organismo) return
     const emailContacto =
-      organismo.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 3)
-        ?.valor ?? ''
+      organismo.entidadeContactos?.find(
+        (c: EntidadeContactoItem) => c.entidadeContactoTipoId === 3,
+      )?.valor ?? ''
     const telefoneContacto =
-      organismo.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 1)
-        ?.valor ?? ''
+      organismo.entidadeContactos?.find(
+        (c: EntidadeContactoItem) => c.entidadeContactoTipoId === 1,
+      )?.valor ?? ''
     const faxContacto =
-      organismo.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 2)
-        ?.valor ?? ''
+      organismo.entidadeContactos?.find(
+        (c: EntidadeContactoItem) => c.entidadeContactoTipoId === 2,
+      )?.valor ?? ''
     form.reset({
       nome: organismo.nome ?? '',
       nomeComercial: organismo.nomeComercial ?? '',
@@ -359,7 +366,10 @@ export function OrganismoEditPage() {
                         type='button'
                         variant='default'
                         onClick={() =>
-                          navigate(`/organismos/${id}/editar`)
+                          navigateManagedWindow(
+                            navigate,
+                            `/organismos/${id}/editar`
+                          )
                         }
                       >
                         Editar

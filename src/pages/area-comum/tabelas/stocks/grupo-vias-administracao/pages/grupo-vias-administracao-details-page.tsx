@@ -4,7 +4,7 @@ import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { Button } from '@/components/ui/button'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { openEntityEditInApp } from '@/utils/window-utils'
+import { openEntityEditInApp, navigateManagedWindow } from '@/utils/window-utils'
 import { useGetGrupoViasAdministracao } from '../queries/listagem-grupo-vias-administracao-queries'
 
 const LISTAGEM_PATH = '/area-comum/tabelas/stocks/grupo-vias-administracao'
@@ -17,7 +17,7 @@ export function GrupoViasAdministracaoDetailsPage() {
   const { data: response, isLoading } = useGetGrupoViasAdministracao(id ?? null)
   const grupo = response?.info?.data
 
-  const handleVoltar = () => navigate(LISTAGEM_PATH)
+  const handleVoltar = () => navigateManagedWindow(navigate, LISTAGEM_PATH)
   const handleEditar = () => {
     if (!id) return
     const path = `${LISTAGEM_PATH}/${id}/editar`

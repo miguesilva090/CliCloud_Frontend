@@ -3,18 +3,20 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Eye, EyeOff } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { ConfigPageCardTitleRow } from '@/components/shared/config-page-card-title-row'
+import { modules } from '@/config/modules'
+import { useConfigPageEditMode } from '@/hooks/use-config-page-edit-mode'
 import { toast } from '@/utils/toast-utils'
 import { ConfigWebServiceService } from '@/lib/services/core/config-webservice-service'
 import type {
   AtualizarConfigWebServiceRequest,
   ConfigWebServiceDTO,
 } from '@/types/dtos/core/config-webservice.dtos'
-
 type ConfigWebServiceForm = {
   versaoPrescricao: number
   urlRnu: string
@@ -37,6 +39,8 @@ type ConfigWebServiceForm = {
   loginAutenticacao: string
   passwordAutenticacao: string
 }
+
+const webservicesPermId = modules.areaComum.permissions.configuracoesWebservices.id
 
 const initialForm: ConfigWebServiceForm = {
   versaoPrescricao: 2,
@@ -62,17 +66,30 @@ const initialForm: ConfigWebServiceForm = {
 }
 
 export function WebserviceConfigPage() {
+  const {
+    canChange,
+    isEditing,
+    formEditable,
+    startEditing,
+    cancelEditing,
+    exitEditAfterSave,
+  } = useConfigPageEditMode(webservicesPermId)
+  const formLocked = !formEditable
+
   const [form, setForm] = useState<ConfigWebServiceForm>(initialForm)
   const [showPasswords, setShowPasswords] = useState(false)
   const [showAdvancedAuth, setShowAdvancedAuth] = useState(false)
 
-  const configQuery = useQuery({
-    queryKey: ['config-webservice', 'current'],
-    queryFn: () => ConfigWebServiceService().getConfiguracaoAtual(),
-  })
-  const versaoQuery = useQuery({
-    queryKey: ['config-webservice', 'versao-prescricao'],
-    queryFn: () => ConfigWebServiceService().getVersaoPrescricao(),
+  const bundleQuery = useQuery({
+    queryKey: ['config-webservice', 'bundle'],
+    queryFn: async () => {
+      const svc = ConfigWebServiceService()
+      const [configRes, versaoRes] = await Promise.all([
+        svc.getConfiguracaoAtual(),
+        svc.getVersaoPrescricao(),
+      ])
+      return { configRes, versaoRes }
+    },
   })
 
   const saveMutation = useMutation({
@@ -80,8 +97,8 @@ export function WebserviceConfigPage() {
       ConfigWebServiceService().updateConfiguracao(payload),
     onSuccess: () => {
       toast.success('Configuração de WebServices guardada com sucesso.')
-      void configQuery.refetch()
-      void versaoQuery.refetch()
+      exitEditAfterSave()
+      void bundleQuery.refetch()
     },
     onError: () => {
       toast.error('Falha ao guardar configuração de WebServices.')
@@ -89,7 +106,7 @@ export function WebserviceConfigPage() {
   })
 
   useEffect(() => {
-    const response = configQuery.data as any
+    const response = bundleQuery.data?.configRes as any
     const dto = response?.info?.data as ConfigWebServiceDTO | undefined
     if (!dto) return
 
@@ -115,14 +132,14 @@ export function WebserviceConfigPage() {
       loginAutenticacao: dto.loginAutenticacao ?? '',
       passwordAutenticacao: dto.passwordAutenticacao ?? '',
     })
-  }, [configQuery.data])
+  }, [bundleQuery.data?.configRes])
 
   useEffect(() => {
-    const response = versaoQuery.data as any
+    const response = bundleQuery.data?.versaoRes as any
     const versao = response?.info?.data
     if (typeof versao !== 'number') return
     setForm((prev) => ({ ...prev, versaoPrescricao: versao }))
-  }, [versaoQuery.data])
+  }, [bundleQuery.data?.versaoRes])
 
   const handleChange = <K extends keyof ConfigWebServiceForm>(key: K, value: ConfigWebServiceForm[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -170,6 +187,7 @@ export function WebserviceConfigPage() {
   }
 
   const passwordType = showPasswords ? 'text' : 'password'
+  const fieldDisabled = formLocked || saveMutation.isPending
 
   return (
     <>
@@ -177,24 +195,30 @@ export function WebserviceConfigPage() {
       <DashboardPageContainer>
         <div className='space-y-4'>
           <Card>
-            <CardHeader className='flex flex-row items-center justify-between'>
-              <CardTitle>Configuração de WebServices</CardTitle>
-              <div className='flex gap-2'>
-                <Button type='button' variant='outline' onClick={() => setShowPasswords((v) => !v)}>
-                  {showPasswords ? <EyeOff className='mr-2 h-4 w-4' /> : <Eye className='mr-2 h-4 w-4' />}
-                  {showPasswords ? 'Ocultar passwords' : 'Mostrar passwords'}
-                </Button>
-                <Button onClick={handleGuardar} disabled={saveMutation.isPending}>
-                  {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
-                </Button>
-              </div>
+            <CardHeader className='space-y-0 pb-2'>
+              <ConfigPageCardTitleRow
+                title='Configuração de WebServices'
+                canChange={canChange}
+                isEditing={isEditing}
+                onStartEdit={startEditing}
+                onCancelEdit={() => {
+                  cancelEditing()
+                  void bundleQuery.refetch()
+                }}
+                trailing={
+                  <Button type='button' variant='outline' onClick={() => setShowPasswords((v) => !v)}>
+                    {showPasswords ? <EyeOff className='mr-2 h-4 w-4' /> : <Eye className='mr-2 h-4 w-4' />}
+                    {showPasswords ? 'Ocultar passwords' : 'Mostrar passwords'}
+                  </Button>
+                }
+              />
             </CardHeader>
 
             <CardContent className='space-y-6'>
-              {configQuery.isLoading ? (
+              {bundleQuery.isLoading ? (
                 <p className='text-sm text-muted-foreground'>A carregar configuração...</p>
               ) : null}
-              {configQuery.isError ? (
+              {bundleQuery.isError ? (
                 <p className='text-sm text-destructive'>Falha ao carregar configuração atual.</p>
               ) : null}
 
@@ -207,7 +231,8 @@ export function WebserviceConfigPage() {
                       id='url-rnu'
                       value={form.urlRnu}
                       onChange={(e) => handleChange('urlRnu', e.target.value)}
-                      disabled={saveMutation.isPending}
+                      readOnly={formLocked}
+                      disabled={fieldDisabled}
                     />
                   </div>
                   <div className='space-y-1'>
@@ -217,7 +242,7 @@ export function WebserviceConfigPage() {
                       value={String(form.versaoPrescricao)}
                       onChange={(e) => handleChange('versaoPrescricao', Number(e.target.value))}
                       className='flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm'
-                      disabled={saveMutation.isPending}
+                      disabled={fieldDisabled}
                     >
                       <option value='1'>V1</option>
                       <option value='2'>V2</option>
@@ -231,15 +256,34 @@ export function WebserviceConfigPage() {
                 <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
                   <div className='md:col-span-3 space-y-1'>
                     <Label htmlFor='url-acss'>Endereço Prescrição</Label>
-                    <Input id='url-acss' value={form.urlAcss} onChange={(e) => handleChange('urlAcss', e.target.value)} />
+                    <Input
+                      id='url-acss'
+                      value={form.urlAcss}
+                      readOnly={formLocked}
+                      disabled={fieldDisabled}
+                      onChange={(e) => handleChange('urlAcss', e.target.value)}
+                    />
                   </div>
                   <div className='space-y-1'>
                     <Label htmlFor='login-acss'>Utilizador</Label>
-                    <Input id='login-acss' value={form.loginAcss} onChange={(e) => handleChange('loginAcss', e.target.value)} />
+                    <Input
+                      id='login-acss'
+                      value={form.loginAcss}
+                      readOnly={formLocked}
+                      disabled={fieldDisabled}
+                      onChange={(e) => handleChange('loginAcss', e.target.value)}
+                    />
                   </div>
                   <div className='space-y-1'>
                     <Label htmlFor='password-acss'>Palavra-passe</Label>
-                    <Input id='password-acss' type={passwordType} value={form.passwordAcss} onChange={(e) => handleChange('passwordAcss', e.target.value)} />
+                    <Input
+                      id='password-acss'
+                      type={passwordType}
+                      value={form.passwordAcss}
+                      readOnly={formLocked}
+                      disabled={fieldDisabled}
+                      onChange={(e) => handleChange('passwordAcss', e.target.value)}
+                    />
                   </div>
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-4 gap-3'>
@@ -267,33 +311,72 @@ export function WebserviceConfigPage() {
                 <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
                   <div className='md:col-span-3 space-y-1'>
                     <Label htmlFor='url-acss-rsp'>Endereço Prescrição</Label>
-                    <Input id='url-acss-rsp' value={form.urlAcssRsp} onChange={(e) => handleChange('urlAcssRsp', e.target.value)} />
+                    <Input
+                      id='url-acss-rsp'
+                      value={form.urlAcssRsp}
+                      readOnly={formLocked}
+                      disabled={fieldDisabled}
+                      onChange={(e) => handleChange('urlAcssRsp', e.target.value)}
+                    />
                   </div>
                   <div className='space-y-1'>
                     <Label htmlFor='login-acss-rsp'>Utilizador</Label>
-                    <Input id='login-acss-rsp' value={form.loginAcssRsp} onChange={(e) => handleChange('loginAcssRsp', e.target.value)} />
+                    <Input
+                      id='login-acss-rsp'
+                      value={form.loginAcssRsp}
+                      readOnly={formLocked}
+                      disabled={fieldDisabled}
+                      onChange={(e) => handleChange('loginAcssRsp', e.target.value)}
+                    />
                   </div>
                   <div className='space-y-1'>
                     <Label htmlFor='password-acss-rsp'>Palavra-passe</Label>
-                    <Input id='password-acss-rsp' type={passwordType} value={form.passwordAcssRsp} onChange={(e) => handleChange('passwordAcssRsp', e.target.value)} />
+                    <Input
+                      id='password-acss-rsp'
+                      type={passwordType}
+                      value={form.passwordAcssRsp}
+                      readOnly={formLocked}
+                      disabled={fieldDisabled}
+                      onChange={(e) => handleChange('passwordAcssRsp', e.target.value)}
+                    />
                   </div>
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-4 gap-3'>
                   <div className='flex items-center justify-between rounded border p-3'>
                     <Label className='text-sm font-medium'>Usar Proxy</Label>
-                    <Switch checked={form.usarProxyRsp} onCheckedChange={(v) => handleChange('usarProxyRsp', v)} />
+                    <Switch
+                      checked={form.usarProxyRsp}
+                      onCheckedChange={(v) => handleChange('usarProxyRsp', v)}
+                      disabled={fieldDisabled}
+                    />
                   </div>
                   <div className='space-y-1'>
                     <Label>Domínio</Label>
-                    <Input value={form.dominioProxyRsp} onChange={(e) => handleChange('dominioProxyRsp', e.target.value)} />
+                    <Input
+                      value={form.dominioProxyRsp}
+                      readOnly={formLocked}
+                      disabled={fieldDisabled}
+                      onChange={(e) => handleChange('dominioProxyRsp', e.target.value)}
+                    />
                   </div>
                   <div className='space-y-1'>
                     <Label>Utilizador</Label>
-                    <Input value={form.userProxyRsp} onChange={(e) => handleChange('userProxyRsp', e.target.value)} />
+                    <Input
+                      value={form.userProxyRsp}
+                      readOnly={formLocked}
+                      disabled={fieldDisabled}
+                      onChange={(e) => handleChange('userProxyRsp', e.target.value)}
+                    />
                   </div>
                   <div className='space-y-1'>
                     <Label>Palavra-passe</Label>
-                    <Input type={passwordType} value={form.passwordProxyRsp} onChange={(e) => handleChange('passwordProxyRsp', e.target.value)} />
+                    <Input
+                      type={passwordType}
+                      value={form.passwordProxyRsp}
+                      readOnly={formLocked}
+                      disabled={fieldDisabled}
+                      onChange={(e) => handleChange('passwordProxyRsp', e.target.value)}
+                    />
                   </div>
                 </div>
               </section>
@@ -305,6 +388,7 @@ export function WebserviceConfigPage() {
                     type='button'
                     variant='outline'
                     size='sm'
+                    disabled={formLocked}
                     onClick={() => setShowAdvancedAuth((v) => !v)}
                   >
                     {showAdvancedAuth ? 'Ocultar' : 'Mostrar'}
@@ -318,6 +402,8 @@ export function WebserviceConfigPage() {
                         <Label>Proxy de Autenticação</Label>
                         <Input
                           value={form.proxyAutenticacao}
+                          readOnly={formLocked}
+                          disabled={fieldDisabled}
                           onChange={(e) => handleChange('proxyAutenticacao', e.target.value)}
                         />
                       </div>
@@ -325,6 +411,8 @@ export function WebserviceConfigPage() {
                         <Label>Token de Autenticação</Label>
                         <Input
                           value={form.tokenAutenticacao}
+                          readOnly={formLocked}
+                          disabled={fieldDisabled}
                           onChange={(e) => handleChange('tokenAutenticacao', e.target.value)}
                         />
                       </div>
@@ -332,6 +420,8 @@ export function WebserviceConfigPage() {
                         <Label>Utilizador</Label>
                         <Input
                           value={form.loginAutenticacao}
+                          readOnly={formLocked}
+                          disabled={fieldDisabled}
                           onChange={(e) => handleChange('loginAutenticacao', e.target.value)}
                         />
                       </div>
@@ -340,6 +430,8 @@ export function WebserviceConfigPage() {
                         <Input
                           type={passwordType}
                           value={form.passwordAutenticacao}
+                          readOnly={formLocked}
+                          disabled={fieldDisabled}
                           onChange={(e) => handleChange('passwordAutenticacao', e.target.value)}
                         />
                       </div>
@@ -348,6 +440,11 @@ export function WebserviceConfigPage() {
                 ) : null}
               </section>
 
+              <div className='flex justify-end'>
+                <Button onClick={handleGuardar} disabled={!formEditable || saveMutation.isPending}>
+                  {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -1,4 +1,3 @@
-import { createTabsScope } from '@radix-ui/react-tabs'
 import { z } from 'zod'
 
 export type ClinicaEditFormValues = {

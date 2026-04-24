@@ -1,36 +1,30 @@
 import * as React from 'react'
-import { Menu } from 'lucide-react'
 import { useHeaderNav } from '@/contexts/header-nav-context'
-import { useSidebarOpen } from '@/contexts/sidebar-open-context'
 import { MenuItem } from '@/types/navigation/menu.types'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 // import { Logo } from '@/assets/logo-letters'
 import { useAuthStore } from '@/stores/auth-store'
 import { usePermissionsStore } from '@/stores/permissions-store'
-import { usePagesStore } from '@/stores/use-pages-store'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { isTabelasPath, isProcessoClinicoPath } from '@/utils/window-utils'
 import { cn } from '@/lib/utils'
-import { useHeaderMenu } from '@/hooks/use-header-menu'
-import { useTheme } from '@/providers/theme-provider'
-import { getMenuColorByTheme } from '@/utils/menu-colors'
+import { shouldManageWindow, navigateManagedWindow } from '@/utils/window-utils'
+import {
+  hasMenuFuncionalidadeAccess,
+  useHeaderMenu,
+} from '@/hooks/use-header-menu'
+import { ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/ui/icons'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  NavigationMenuContent,
-  NavigationMenuLink,
-  navigationMenuTriggerStyle,
-} from '@/components/ui/navigation-menu'
+import { navigationMenuTriggerStyle } from '@/components/ui/navigation-menu'
 import { ListItem } from '@/components/ui/navigation-menu-item'
 import { AppOptionsDrawer } from '@/components/shared/app-options-drawer'
 import { ConnectionStatusIndicator } from '@/components/shared/connection-status-indicator'
@@ -38,41 +32,6 @@ import { HeaderMemoryMonitor } from '@/components/shared/header-memory-monitor'
 import { ModeToggle } from '@/components/shared/theme-toggle'
 import UserNav from '@/components/shared/user-nav'
 import { VersionModal } from '@/components/shared/version-modal'
-import { useSidebar } from '@/hooks/use-sidebar'
-type NavButtonProps = {
-  to: string
-  className?: string
-  children: React.ReactNode
-  onBeforeClick?: () => void
-  hardNavigate?: boolean
-}
-
-/** Para area-comum/tabelas e area-clinica/processo-clinico usa reload (como area-comum); resto usa navigate(). */
-const NavButton = React.forwardRef<HTMLButtonElement, NavButtonProps>(
-function NavButton(
-  { to, className, children, onBeforeClick, hardNavigate }: NavButtonProps,
-  ref
-) {
-  const navigate = useNavigate()
-  const useHard = hardNavigate ?? (isTabelasPath(to) || isProcessoClinicoPath(to))
-  return (
-    <button
-      type='button'
-      className={className}
-      ref={ref}
-      onClick={() => {
-        onBeforeClick?.()
-        if (useHard) {
-          window.location.href = window.location.origin + to
-          return
-        }
-        navigate(to)
-      }}
-    >
-      {children}
-    </button>
-  )
-})
 
 export function HeaderNav() {
   const location = useLocation()
@@ -83,37 +42,13 @@ export function HeaderNav() {
   const role = roleId?.toLowerCase()
   const { hasPermission } = usePermissionsStore()
   const { windows, minimizeWindow } = useWindowsStore()
-  const { iconTheme } = useTheme()
-  const [inlineHeaderSubmenu, setInlineHeaderSubmenu] = React.useState<{
-    parentHref: string
-    item: MenuItem
-  } | null>(null)
   const [openMenuItem, setOpenMenuItem] = React.useState<string | undefined>(
     undefined
   )
   const [isVersionModalOpen, setIsVersionModalOpen] = React.useState(false)
-  const sidebarOpenContext = useSidebarOpen()
-  const [openSubmenuIndex, setOpenSubmenuIndex] = React.useState<number | null>(null)
-  useSidebar()
 
-  // Ensure NavigationMenu is always controlled by using empty string instead of undefined
-  // This prevents the "uncontrolled to controlled" warning
-  const controlledValue = openMenuItem ?? ''
-
-  const getIconThemeColor = React.useCallback(
-    (path: string) =>
-      iconTheme === 'theme-color'
-        ? 'bg-primary'
-        : getMenuColorByTheme(path, iconTheme),
-    [iconTheme]
-  )
-
-  const hasItemPermission = (item: MenuItem): boolean => {
-    if (item.funcionalidadeId) {
-      return hasPermission(item.funcionalidadeId, 'AuthVer')
-    }
-    return true
-  }
+  const hasItemPermission = (item: MenuItem): boolean =>
+    hasMenuFuncionalidadeAccess(item, hasPermission)
 
   const filteredMenuItems = menuItems.filter(hasItemPermission)
 
@@ -129,7 +64,14 @@ export function HeaderNav() {
           (dropdownItem) => location.pathname === dropdownItem.href
         )
 
-        return isDirectMatch || hasNestedMatch
+        // Check nested `items` (ex.: Configuração → Gestão de Separadores → Separadores / …)
+        const hasItemsNestedMatch = subItem.items?.some(
+          (nested) =>
+            location.pathname === nested.href ||
+            location.pathname.startsWith(`${nested.href}/`)
+        )
+
+        return isDirectMatch || hasNestedMatch || hasItemsNestedMatch
       })
 
       return hasActiveChild
@@ -190,36 +132,47 @@ export function HeaderNav() {
     if (isDropdownTrigger) return
   }
 
-  /** Como no CliCloud.ASPcli: abrir listagem como tab em baixo ao 1.º clique. */
-  const handleDropdownItemClick = (
+  const handleLinkClick = (
     e: React.MouseEvent,
     href: string,
-    openInNewTab?: boolean,
-    _label?: string
+    openInNewTab?: boolean
   ) => {
     if (href.startsWith('#')) {
       e.preventDefault()
       return
     }
+
     if (openInNewTab) {
       e.preventDefault()
-      window.open(`${window.location.origin}${href}`, '_blank', 'noopener,noreferrer')
+      const fullUrl = `${window.location.origin}${href}`
+      window.open(fullUrl, '_blank', 'noopener,noreferrer')
       return
     }
-    // Para listagens, deixar o <Link> tratar da navegação normal.
+
+    // Igual ao Luma: rotas com janelas/tabs usam instanceId na query
+    const pathOnly = href.split('?')[0]
+    if (shouldManageWindow(pathOnly)) {
+      e.preventDefault()
+      if (location.pathname === pathOnly) {
+        return
+      }
+      navigateManagedWindow(navigate, href)
+    }
   }
 
+  const submenuLeafLinkClass = cn(
+    'flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-sm outline-none transition-colors duration-150',
+    'hover:bg-accent/90 hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground'
+  )
+
   const handleLogoClick = () => {
-    // Reset navigation state when clicking the logo
     setCurrentMenu('dashboard')
-    // Minimize all windows and clear active window since dashboard is not managed as a window
     windows.forEach((window) => {
-      if (!window.isMinimized) {
+      if(!window.isMinimized) {
         minimizeWindow(window.id)
       }
     })
     useWindowsStore.setState({ activeWindow: null })
-    // Navigate to dashboard
     navigate('/')
   }
 
@@ -234,422 +187,274 @@ export function HeaderNav() {
               role='button'
               aria-label='Navigate to dashboard'
             >
-              {/* <Logo width={95} className='text-primary' disableLink={true} /> */}
             </div>
-            {/* Hamburger: visível em ecrãs &lt; 1515px; abre a sidebar existente (MobileSidebar) */}
-            <Button
-              variant='ghost'
-              size='icon'
-              className='min-[1515px]:hidden h-9 w-9 '
-              aria-label='Abrir menu de navegação'
-              onClick={() => sidebarOpenContext?.setSidebarOpen(true)}
-            >
-              <Menu className='h-5 w-5' />
-            </Button>
           </div>
-          {/* Navegação horizontal: visível a partir de 1515px; abaixo disso só hambúrguer */}
-          <div className='hidden min-w-0 flex-1 items-center justify-start min-[1515px]:flex min-[1515px]:gap-3'>
-          {(currentMenu === 'tabelas' || currentMenu === 'processo-clinico') ? (
-            <nav className='flex flex-wrap items-center gap-6 px-2 py-1.5'>
-              {currentMenu === 'tabelas' ? (
-                filteredMenuItems.map((item, index) => {
-                  const hasSubItems = item.items && item.items.length > 0
-                  if (hasSubItems) {
-                    return (
-                      <DropdownMenu key={index} modal={false}>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            className={cn(
-                              'h-auto px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                              'text-foreground/90 hover:bg-accent/80 hover:text-accent-foreground',
-                              isItemActive(item.href, item.items) &&
-                                'bg-accent text-accent-foreground font-semibold'
-                            )}
-                          >
-                            {item.label}
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align='start'
-                          side='bottom'
-                          sideOffset={4}
-                          className='min-w-0 p-0 relative overflow-visible'
-                        >
-                          <div className='relative'>
-                            <div className='flex flex-col py-1 w-[270px] shrink-0 px-1'>
-                              {(item.items ?? []).map((subItem, subIndex) => {
-                                const nestedItems = subItem.items ?? subItem.dropdown ?? []
-                                const hasNestedItems = nestedItems.length > 0
-                                if (hasNestedItems) {
-                                  const isSubmenuOpen = openSubmenuIndex === subIndex
-                                  const nested = nestedItems as { label: string; href: string }[]
-                                  return (
-                                    <div key={subIndex} className='relative'>
-                                      <button
-                                        type='button'
-                                        role='menuitem'
-                                        className={cn(
-                                          'w-full flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground text-left',
-                                          (location.pathname === subItem.href ||
-                                            nested.some(
-                                              (n) =>
-                                                location.pathname === n.href ||
-                                                location.pathname.startsWith(n.href + '/')
-                                            )) &&
-                                            'bg-accent text-accent-foreground',
-                                          isSubmenuOpen && 'bg-accent text-accent-foreground'
-                                        )}
-                                        onClick={(e) => {
-                                          e.preventDefault()
-                                          setOpenSubmenuIndex(
-                                            openSubmenuIndex === subIndex ? null : subIndex
-                                          )
-                                        }}
-                                      >
-                                        <span className='flex-1 text-left'>{subItem.label}</span>
-                                        <span className='ml-2 h-4 w-4 shrink-0 opacity-50' aria-hidden>›</span>
-                                      </button>
-                                      {isSubmenuOpen && (
-                                        <div
-                                          className='absolute left-full top-0 ml-0 z-10 min-w-0 w-max'
-                                          style={{ height: 'fit-content' }}
-                                        >
-                                          <div className='border border-border py-1.5 px-1 rounded-md bg-popover shadow-md'>
-                                            {nested.map((nestedItem, nestedIndex) => (
-                                              <NavButton
-                                                key={nestedIndex}
-                                                to={nestedItem.href}
-                                                className={cn(
-                                                  'w-full cursor-pointer block whitespace-nowrap rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none text-left',
-                                                  (location.pathname === nestedItem.href ||
-                                                    location.pathname.startsWith(
-                                                      nestedItem.href + '/'
-                                                    )) &&
-                                                    'bg-accent text-accent-foreground'
-                                                )}
-                                                onBeforeClick={() => {
-                                                  setOpenSubmenuIndex(null)
-                                                  if (nestedItem.href !== location.pathname) {
-                                                    usePagesStore
-                                                      .getState()
-                                                      .resetPageState(location.pathname)
-                                                  }
-                                                }}
-                                              >
-                                                {nestedItem.label}
-                                              </NavButton>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )
-                                }
-                                return (
-                                  <DropdownMenuItem key={subIndex} asChild>
-                                    <NavButton
-                                      to={subItem.href}
-                                      className={cn(
-                                        'w-full cursor-pointer flex items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-left',
-                                        (location.pathname === subItem.href ||
-                                          location.pathname.startsWith(
-                                            subItem.href + '/'
-                                          )) &&
-                                          'bg-accent text-accent-foreground'
-                                      )}
-                                      onBeforeClick={() => {
-                                        if (subItem.href !== location.pathname) {
-                                          usePagesStore
-                                            .getState()
-                                            .resetPageState(location.pathname)
-                                        }
-                                      }}
-                                    >
-                                      {subItem.label}
-                                    </NavButton>
-                                  </DropdownMenuItem>
-                                )
-                              })}
-                            </div>
-                          </div>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )
-                  }
-                  return (
-                    <Link
-                      key={index}
-                      to={item.href}
+          <nav
+            className='flex min-w-0 flex-1 flex-wrap items-center justify-center gap-1'
+            aria-label='Menu principal'
+          >
+            {filteredMenuItems.map((item, index) => {
+              const filteredSubItems = item.items?.filter(hasItemPermission) || []
+              /* Grupo sem sub-itens visíveis: mostrar ligação directa ao href do pai (ex.: permissões
+               * não carregadas para todos os filhos) em vez de desaparecer do header. */
+              if (item.items && filteredSubItems.length === 0) {
+                if (!hasItemPermission(item)) return null
+                const fallbackActive =
+                  item.href === '/area-comum/tabelas/notificacoes'
+                    ? location.pathname.startsWith('/area-comum/tabelas/notificacoes') ||
+                      location.pathname.startsWith('/area-comum/tabelas/notificacao-tipos')
+                    : isItemActive(item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      fallbackActive && 'bg-accent text-accent-foreground'
+                    )}
+                    onClick={(e) =>
+                      handleLinkClick(e, item.href, item.openInNewTab)
+                    }
+                  >
+                    <span>{item.label}</span>
+                  </Link>
+                )
+              }
+
+              if (!item.items) {
+                const linkActive =
+                  item.href === '/area-comum/tabelas/notificacoes'
+                    ? location.pathname.startsWith('/area-comum/tabelas/notificacoes') ||
+                      location.pathname.startsWith('/area-comum/tabelas/notificacao-tipos')
+                    : isItemActive(item.href)
+                return (
+                  <Link
+                    key={index}
+                    to={item.href}
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      linkActive && 'bg-accent text-accent-foreground'
+                    )}
+                    onClick={(e) =>
+                      handleLinkClick(e, item.href, item.openInNewTab)
+                    }
+                  >
+                    <span>{item.label}</span>
+                  </Link>
+                )
+              }
+
+              return (
+                <DropdownMenu
+                  key={item.href}
+                  modal
+                  open={openMenuItem === item.href}
+                  onOpenChange={(open) => {
+                    if (open) {
+                      setOpenMenuItem(item.href)
+                    } else {
+                      setOpenMenuItem(undefined)
+                    }
+                  }}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type='button'
                       className={cn(
-                        'text-sm font-medium px-3 py-2 rounded-md transition-colors',
-                        'text-foreground/90 hover:bg-accent/80 hover:text-accent-foreground',
-                        location.pathname === item.href &&
-                          'bg-accent text-accent-foreground font-semibold'
+                        navigationMenuTriggerStyle(),
+                        'group gap-0',
+                        isItemActive(item.href, item.items) &&
+                          'bg-accent text-accent-foreground'
                       )}
-                      onClick={(e) => handleDropdownItemClick(e, item.href, item.openInNewTab, item.label)}
+                      onClick={() => handleMenuItemClick(true)}
                     >
-                      {item.label}
-                    </Link>
-                  )
-                })
-              ) : (
-                filteredMenuItems.map((item, index) => {
-                  const filteredSubItems =
-                    item.items?.filter(hasItemPermission) || []
-                  if (!item.items?.length || filteredSubItems.length === 0) {
-                    return null
-                  }
-                  return (
-                    <DropdownMenu key={index}>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className={cn(
-                            'h-auto px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                            'text-foreground/90 hover:bg-accent/80 hover:text-accent-foreground',
-                            isItemActive(item.href, item.items) &&
-                              'bg-accent text-accent-foreground font-semibold'
-                          )}
-                        >
-                          {item.label}
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align='start'
-                        side='bottom'
-                        sideOffset={4}
-                        className='min-w-[200px]'
-                      >
-                        {filteredSubItems.map((subItem, subIndex) => (
-                          <DropdownMenuItem key={subIndex} asChild>
-                            <NavButton
-                              to={subItem.href}
-                              className={cn(
-                                'cursor-pointer flex items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
-                                (location.pathname === subItem.href ||
-                                  location.pathname.startsWith(subItem.href + '/')) &&
-                                  'bg-accent text-accent-foreground'
-                              )}
-                            >
-                              {subItem.label}
-                            </NavButton>
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )
-                })
-              )}
-            </nav>
-          ) : (
-            <NavigationMenu
-              value={controlledValue}
-              onValueChange={(value) => {
-                if (value === undefined || value === '') {
-                  setOpenMenuItem('')
-                  setInlineHeaderSubmenu(null)
-                } else {
-                  setOpenMenuItem(value)
-                  setInlineHeaderSubmenu(null)
-                }
-              }}
-            >
-              <NavigationMenuList>
-                {filteredMenuItems.map((item, index) => {
-                  const filteredSubItems =
-                    item.items?.filter(hasItemPermission) || []
-                  if (item.items && filteredSubItems.length === 0) {
-                    return null
-                  }
-                  return (
-                    <NavigationMenuItem key={index} value={item.href}>
-                      {item.items ? (
-                        <>
-                          <NavigationMenuTrigger
-                            triggerMode='click'
-                            className={cn(
-                              isItemActive(item.href, item.items) &&
-                                'bg-accent text-accent-foreground'
-                            )}
-                            onClick={() => {
-                              handleMenuItemClick(true)
-                              if (openMenuItem === item.href) {
-                                setOpenMenuItem('')
-                                setInlineHeaderSubmenu(null)
-                              } else {
-                                setOpenMenuItem(item.href)
-                                setInlineHeaderSubmenu(null)
-                              }
-                            }}
-                          >
-                            <div className='flex items-center gap-2'>
-                              {item.icon && Icons[item.icon] && (
-                                <span
-                                  className={`h-5 w-5 p-0.5 rounded flex items-center justify-center ${getIconThemeColor(item.href)}`}
-                                >
-                                  {React.createElement(
-                                    Icons[item.icon] as React.ComponentType<any>,
-                                    {
-                                      className: 'h-3 w-3 text-white',
-                                    }
-                                  )}
-                                </span>
-                              )}
-                              {item.label}
-                            </div>
-                          </NavigationMenuTrigger>
-                          <NavigationMenuContent>
-                            {inlineHeaderSubmenu &&
-                            inlineHeaderSubmenu.parentHref === item.href ? (
-                              <div className='md:w-[400px] lg:w-[500px]'>
-                                <div className='flex items-center justify-between px-4 pt-4 pb-2'>
-                                  <button
-                                    type='button'
-                                    className='text-xs text-muted-foreground hover:text-foreground'
-                                    onClick={() => setInlineHeaderSubmenu(null)}
-                                  >
-                                    ← Voltar
-                                  </button>
-                                  <div className='text-sm font-semibold'>
-                                    {inlineHeaderSubmenu.item.label}
-                                  </div>
-                                </div>
-                                <ul className='grid gap-3 p-4 pt-2 lg:grid-cols-[.75fr_1fr]'>
-                                  {(inlineHeaderSubmenu.item.dropdown || []).map(
-                                    (dropdownItem, dropdownIndex) => (
-                                      <ListItem
-                                        key={dropdownIndex}
-                                        title={dropdownItem.label}
+                      <span>{item.label}</span>
+                      <ChevronDown
+                        className='relative top-[1px] ml-1 h-3 w-3 shrink-0 transition duration-200 group-data-[state=open]:rotate-180'
+                        aria-hidden
+                      />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align='start'
+                    sideOffset={8}
+                    className='z-[60] overflow-hidden rounded-xl border border-border bg-popover p-1.5 text-popover-foreground shadow-lg shadow-black/[0.08] dark:border-border dark:shadow-black/30'
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                  >
+                    <div className='flex min-w-[220px] max-w-[min(100vw-2rem,320px)] flex-col gap-1 px-1 py-1.5'>
+                      {filteredSubItems.map((subItem, subIndex) => {
+                        const nestedFromDropdown = (subItem.dropdown || []).filter(
+                          hasItemPermission
+                        )
+                        const nestedFromItems = (subItem.items || []).filter(
+                          hasItemPermission
+                        )
+
+                        const activeState = nestedFromDropdown.length
+                          ? nestedFromDropdown.some((dropdownItem) => {
+                              const childHref = dropdownItem.href
+                              return (
+                                location.pathname === childHref ||
+                                location.pathname.startsWith(
+                                  childHref + '/'
+                                )
+                              )
+                            })
+                          : nestedFromItems.length
+                            ? nestedFromItems.some(
+                                (nested) =>
+                                  location.pathname === nested.href ||
+                                  location.pathname.startsWith(`${nested.href}/`)
+                              ) ||
+                              location.pathname === subItem.href ||
+                              location.pathname.startsWith(`${subItem.href}/`)
+                            : isItemActive(subItem.href)
+
+                        if (subItem.dropdown?.length && nestedFromDropdown.length === 0) {
+                          return null
+                        }
+
+                        if (subItem.items?.length && nestedFromItems.length === 0) {
+                          return null
+                        }
+
+                        if (nestedFromDropdown.length > 0) {
+                          return (
+                            <DropdownMenuSub key={subIndex}>
+                              <DropdownMenuSubTrigger
+                                className={cn(
+                                  'w-full rounded-lg border border-transparent text-left text-foreground hover:text-accent-foreground data-[state=open]:border-border/60',
+                                  activeState &&
+                                    'bg-accent text-accent-foreground data-[state=open]:bg-accent'
+                                )}
+                              >
+                                {subItem.label}
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent
+                                sideOffset={8}
+                                alignOffset={-2}
+                                className='z-[70] min-w-[200px] max-w-[min(100vw-2rem,320px)] border-border bg-popover p-1.5 shadow-lg dark:shadow-black/30'
+                              >
+                                {nestedFromDropdown.map((dropdownItem, dropdownIndex) => {
+                                  const childActive =
+                                    location.pathname === dropdownItem.href ||
+                                    location.pathname.startsWith(
+                                      `${dropdownItem.href}/`
+                                    )
+                                  return (
+                                    <DropdownMenuItem key={dropdownIndex} asChild>
+                                      <Link
                                         to={dropdownItem.href}
-                                        icon={
-                                          dropdownItem.icon as keyof typeof Icons
-                                        }
                                         className={cn(
-                                          isItemActive(dropdownItem.href) &&
+                                          submenuLeafLinkClass,
+                                          childActive &&
                                             'bg-accent text-accent-foreground'
                                         )}
                                         onClick={(e) => {
-                                          setOpenMenuItem('')
-                                          setInlineHeaderSubmenu(null)
-                                          handleDropdownItemClick(
+                                          handleLinkClick(
                                             e,
                                             dropdownItem.href,
-                                            dropdownItem.openInNewTab,
-                                            dropdownItem.label ?? dropdownItem.description
+                                            dropdownItem.openInNewTab
                                           )
+                                          setOpenMenuItem(undefined)
                                         }}
                                       >
-                                        <div className='flex items-center'>
-                                          {dropdownItem.description}
-                                        </div>
-                                      </ListItem>
-                                    )
-                                  )}
-                                </ul>
-                              </div>
-                            ) : (
-                              <ul className='grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]'>
-                                {filteredSubItems.map((subItem, subIndex) => {
-                                  const activeState = subItem.dropdown?.length
-                                    ? subItem.dropdown.some((dropdownItem) => {
-                                        const childHref = dropdownItem.href
-                                        return (
-                                          location.pathname === childHref ||
-                                          location.pathname.startsWith(
-                                            childHref + '/'
-                                          )
-                                        )
-                                      })
-                                    : isItemActive(subItem.href)
-
-                                  return (
-                                    <ListItem
-                                      key={subIndex}
-                                      title={subItem.label}
-                                      to={subItem.href}
-                                      icon={subItem.icon as keyof typeof Icons}
-                                      hasMoreOptions={!!subItem.dropdown?.length}
-                                      className={cn(
-                                        activeState &&
-                                          'bg-accent text-accent-foreground'
-                                      )}
-                                      onClick={(e) => {
-                                        if (subItem.dropdown?.length) {
-                                          e.preventDefault()
-                                          setInlineHeaderSubmenu({
-                                            parentHref: item.href,
-                                            item: subItem,
-                                          })
-                                          return
-                                        }
-                                          handleDropdownItemClick(
-                                            e,
-                                            subItem.href,
-                                            subItem.openInNewTab,
-                                            subItem.label
-                                        )
-                                        setOpenMenuItem('')
-                                        setInlineHeaderSubmenu(null)
-                                      }}
-                                    >
-                                      <div className='flex items-center'>
-                                        {subItem.description}
-                                      </div>
-                                    </ListItem>
+                                        {dropdownItem.label}
+                                      </Link>
+                                    </DropdownMenuItem>
                                   )
                                 })}
-                              </ul>
-                            )}
-                          </NavigationMenuContent>
-                        </>
-                      ) : (
-                        <NavigationMenuLink asChild>
-                          <NavButton
-                            to={item.href}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                          )
+                        }
+
+                        if (nestedFromItems.length > 0) {
+                          return (
+                            <DropdownMenuSub key={subIndex}>
+                              <DropdownMenuSubTrigger
+                                className={cn(
+                                  'w-full rounded-lg border border-transparent text-left text-foreground hover:text-accent-foreground data-[state=open]:border-border/60',
+                                  activeState &&
+                                    'bg-accent text-accent-foreground data-[state=open]:bg-accent'
+                                )}
+                              >
+                                {subItem.label}
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent
+                                sideOffset={8}
+                                alignOffset={-2}
+                                className='z-[70] min-w-[200px] max-w-[min(100vw-2rem,320px)] border-border bg-popover p-1.5 shadow-lg dark:shadow-black/30'
+                              >
+                                {nestedFromItems.map((nestedItem, nestedIndex) => {
+                                  const childActive =
+                                    location.pathname === nestedItem.href ||
+                                    location.pathname.startsWith(`${nestedItem.href}/`)
+                                  return (
+                                    <DropdownMenuItem key={nestedIndex} asChild>
+                                      <Link
+                                        to={nestedItem.href}
+                                        className={cn(
+                                          submenuLeafLinkClass,
+                                          childActive &&
+                                            'bg-accent text-accent-foreground'
+                                        )}
+                                        onClick={(e) => {
+                                          handleLinkClick(
+                                            e,
+                                            nestedItem.href,
+                                            nestedItem.openInNewTab
+                                          )
+                                          setOpenMenuItem(undefined)
+                                        }}
+                                      >
+                                        {nestedItem.label}
+                                      </Link>
+                                    </DropdownMenuItem>
+                                  )
+                                })}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                          )
+                        }
+
+                        return (
+                          <ListItem
+                            key={subIndex}
+                            title={subItem.label}
+                            to={subItem.href}
                             className={cn(
-                              navigationMenuTriggerStyle(),
-                              'flex items-center gap-2',
-                              isItemActive(item.href) &&
+                              activeState &&
                                 'bg-accent text-accent-foreground'
                             )}
-                          >
-                            {item.icon && Icons[item.icon] && (
-                              <span
-                                className={`h-5 w-5 p-0.5 rounded flex items-center justify-center ${getIconThemeColor(item.href)}`}
-                              >
-                                {React.createElement(
-                                  Icons[item.icon] as React.ComponentType<any>,
-                                  {
-                                    className: 'h-3 w-3 text-white',
-                                  }
-                                )}
-                              </span>
-                            )}
-                            {item.label}
-                          </NavButton>
-                        </NavigationMenuLink>
-                      )}
-                    </NavigationMenuItem>
-                  )
-                })}
-              </NavigationMenuList>
-            </NavigationMenu>
-          )}
-          </div>
-          <div className='ml-auto flex flex-shrink-0 items-center gap-1 sm:gap-2'>
+                            onClick={(e) => {
+                              setOpenMenuItem(undefined)
+                              handleLinkClick(
+                                e,
+                                subItem.href,
+                                subItem.openInNewTab
+                              )
+                            }}
+                          />
+                        )
+                      })}
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )
+            })}
+          </nav>
+          <div className='ml-auto flex items-center space-x-2'>
             <ConnectionStatusIndicator />
             <AppOptionsDrawer />
             <Button
               variant='outline'
               size='icon'
               onClick={() => setIsVersionModalOpen(true)}
-              className='h-8 w-8 transition-all duration-150 hover:scale-105 active:scale-95 sm:h-9 sm:w-9'
+              className='transition-all duration-150 hover:scale-105 active:scale-95'
               title='Ver versões'
             >
-              <Icons.help className='h-4 w-4 sm:h-[1.2rem] sm:w-[1.2rem]' />
+              <Icons.help className='h-[1.2rem] w-[1.2rem]' />
               <span className='sr-only'>Ver versões</span>
             </Button>
             <ModeToggle />

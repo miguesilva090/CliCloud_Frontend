@@ -28,10 +28,16 @@ import { GrupoSanguineoViewCreateModal } from '../modals/grupo-sanguineo-view-cr
 import { GrupoSanguineoService } from '@/lib/services/grupos-sanguineos/grupo-sanguineo-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const gruposSanguineosPermId = modules.areaComum.permissions.gruposSanguineos.id
 
 type GrupoSanguineoModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemGruposSanguineosPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(gruposSanguineosPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -63,17 +69,22 @@ export function ListagemGruposSanguineosPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => {
-        setViewData(null)
-        setModalMode('create')
-        setModalOpen(true)
-      },
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90'},
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => {
+              setViewData(null)
+              setModalMode('create')
+              setModalOpen(true)
+            },
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -189,16 +200,24 @@ export function ListagemGruposSanguineosPage() {
           FilterControls={ListagemGruposSanguineosFilterControls}
           hiddenColumns={[]}
           onOpenView={(data) => {
+            if (!canView) return
             setViewData(data)
             setModalMode('view')
             setModalOpen(true)
           }}
-          onOpenEdit={(data) => {
-            setViewData(data)
-            setModalMode('edit')
-            setModalOpen(true)
-          }}
-          onOpenDelete={handleOpenDelete}
+          onOpenEdit={
+            canChange
+              ? (data) => {
+                  setViewData(data)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <GrupoSanguineoViewCreateModal
           open={modalOpen}

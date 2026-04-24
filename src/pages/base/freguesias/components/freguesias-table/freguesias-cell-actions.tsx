@@ -13,11 +13,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { handleApiResponse } from '@/utils/response-handlers'
 import { toast } from '@/utils/toast-utils'
-import { generateInstanceId } from '@/utils/window-utils'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { useReportPrint } from '@/hooks/use-report-print'
 import { Button } from '@/components/ui/button'
 import { AlertModal } from '@/components/shared/alert-modal'
 import { useDeleteFreguesia } from '../../queries/freguesias-mutations'
+import { useGeograficasListRowPermissions } from '@/hooks/use-geograficas-list-row-permissions'
 
 const FREGUESIAS_BASE_PATH_AREACOMUM = '/area-comum/tabelas/tabelas/geograficas/freguesias'
 const FREGUESIAS_BASE_PATH_UTILITARIOS = '/utilitarios/tabelas/geograficas/freguesias'
@@ -28,13 +29,17 @@ interface CellActionProps {
   onOpenView?: (data: FreguesiaTableDTO) => void
   /** Quando definido (ex.: listagem área-comum), "Editar" abre o mesmo modal em modo edição */
   onOpenEdit?: (data: FreguesiaTableDTO) => void
+  funcionalidadeId?: string
 }
 
 export const CellAction: React.FC<CellActionProps> = ({
   data,
   onOpenView,
   onOpenEdit,
+  funcionalidadeId,
 }) => {
+  const { canView, canChange, canDelete } =
+    useGeograficasListRowPermissions(funcionalidadeId)
   const [open, setOpen] = useState(false)
   const [viewOpen, setViewOpen] = useState(false)
   const location = useLocation()
@@ -75,24 +80,26 @@ export const CellAction: React.FC<CellActionProps> = ({
     if (onOpenEdit) {
       onOpenEdit(freguesia)
     } else {
-      const instanceId = generateInstanceId()
-      navigate(
-        `${FREGUESIAS_BASE_PATH_UTILITARIOS}/update?freguesiaId=${freguesia.id}&instanceId=${instanceId}`
+      const basePath = location.pathname.startsWith(FREGUESIAS_BASE_PATH_AREACOMUM)
+        ? FREGUESIAS_BASE_PATH_AREACOMUM
+        : FREGUESIAS_BASE_PATH_UTILITARIOS
+      navigateManagedWindow(
+        navigate,
+        `${basePath}/update?freguesiaId=${freguesia.id}`
       )
     }
   }
 
   const handleViewRuas = (freguesia: string) => {
-    const instanceId = generateInstanceId()
     const basePath = location.pathname.startsWith(FREGUESIAS_BASE_PATH_AREACOMUM)
       ? FREGUESIAS_BASE_PATH_AREACOMUM
       : FREGUESIAS_BASE_PATH_UTILITARIOS
-    navigate(
-      `${basePath.replace('/freguesias', '/ruas')}?instanceId=${instanceId}`,
+    navigateManagedWindow(
+      navigate,
+      `${basePath.replace('/freguesias', '/ruas')}`,
       {
         state: {
           initialFilters: [{ id: 'freguesia.nome', value: freguesia }],
-          instanceId,
         },
       }
     )
@@ -145,37 +152,43 @@ export const CellAction: React.FC<CellActionProps> = ({
         </Dialog>
       )}
       <div className='flex items-center justify-end gap-1'>
-        <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          className='h-8 w-8'
-          onClick={handleViewClick}
-          title='Ver'
-        >
-          <Eye className='h-4 w-4' />
-        </Button>
-        <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          className='h-8 w-8'
-          onClick={() => handleUpdateClick(data)}
-          title='Editar'
-        >
-          <Pencil className='h-4 w-4' />
-        </Button>
-        <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          className='h-8 w-8 text-destructive hover:text-destructive'
-          disabled={deleteFreguesiaMutation.isPending}
-          onClick={() => setOpen(true)}
-          title='Apagar'
-        >
-          <Trash2 className='h-4 w-4' />
-        </Button>
+        {canView ? (
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='h-8 w-8'
+            onClick={handleViewClick}
+            title='Ver'
+          >
+            <Eye className='h-4 w-4' />
+          </Button>
+        ) : null}
+        {canChange ? (
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='h-8 w-8'
+            onClick={() => handleUpdateClick(data)}
+            title='Editar'
+          >
+            <Pencil className='h-4 w-4' />
+          </Button>
+        ) : null}
+        {canDelete ? (
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='h-8 w-8 text-destructive hover:text-destructive'
+            disabled={deleteFreguesiaMutation.isPending}
+            onClick={() => setOpen(true)}
+            title='Apagar'
+          >
+            <Trash2 className='h-4 w-4' />
+          </Button>
+        ) : null}
         {!onOpenView && (
           <>
             <Button

@@ -4,7 +4,7 @@ import { Map, Edit, Printer, Trash } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { handleApiResponse } from '@/utils/response-handlers'
 import { toast } from '@/utils/toast-utils'
-import { generateInstanceId } from '@/utils/window-utils'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { useReportPrint } from '@/hooks/use-report-print'
 import { Button } from '@/components/ui/button'
 import { AlertModal } from '@/components/shared/alert-modal'
@@ -43,20 +43,19 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   }
 
   const handleUpdateClick = (rua: RuaTableDTO) => {
-    const instanceId = generateInstanceId()
-    navigate(
-      `/utilitarios/tabelas/geograficas/ruas/update?ruaId=${rua.id}&instanceId=${instanceId}`
+    navigateManagedWindow(
+      navigate,
+      `/utilitarios/tabelas/geograficas/ruas/update?ruaId=${rua.id}`
     )
   }
 
   const handleViewFreguesias = (rua: string) => {
-    const instanceId = generateInstanceId()
-    navigate(
-      `/utilitarios/tabelas/geograficas/freguesias?instanceId=${instanceId}`,
+    navigateManagedWindow(
+      navigate,
+      `/utilitarios/tabelas/geograficas/freguesias`,
       {
         state: {
           initialFilters: [{ id: 'rua.nome', value: rua }],
-          instanceId,
         },
       }
     )

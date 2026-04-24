@@ -34,6 +34,9 @@ export function ListagemGrausAlergiaTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: GrauAlergiaTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemGrausAlergiaTable({
   onOpenView?: (data: GrauAlergiaTableDTO) => void
   onOpenEdit?: (data: GrauAlergiaTableDTO) => void
   onOpenDelete?: (data: GrauAlergiaTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

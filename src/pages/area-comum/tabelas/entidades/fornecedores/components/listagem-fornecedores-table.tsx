@@ -34,6 +34,9 @@ export function ListagemFornecedoresTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: FornecedorTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemFornecedoresTable({
   onOpenView?: (data: FornecedorTableDTO) => void
   onOpenEdit?: (data: FornecedorTableDTO) => void
   onOpenDelete?: (data: FornecedorTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

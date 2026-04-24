@@ -34,6 +34,9 @@ export function ListagemRegioesCorpoTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: RegiaoCorpoTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemRegioesCorpoTable({
   onOpenView?: (data: RegiaoCorpoTableDTO) => void
   onOpenEdit?: (data: RegiaoCorpoTableDTO) => void
   onOpenDelete?: (data: RegiaoCorpoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

@@ -1,7 +1,7 @@
 import type { CellContext, ColumnDef } from '@tanstack/react-table'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import type { UtenteTableDTO } from '@/types/dtos/saude/utentes.dtos'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useDeleteUtente } from '../../queries/utentes-queries'
@@ -13,6 +13,27 @@ const formatDate = (value?: string | null) => {
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return value
   return d.toLocaleDateString('pt-PT')
+}
+
+function UtenteNomeCell({ id, nome }: { id: string; nome: string }) {
+  const navigate = useNavigate()
+  const addWindow = useWindowsStore((s) => s.addWindow)
+  return (
+    <button
+      type='button'
+      className='cursor-pointer border-0 bg-transparent p-0 text-left font-inherit text-primary hover:underline'
+      onClick={() =>
+        openPathInApp(
+          navigate,
+          addWindow,
+          `/utentes/${id}?from=utentes`,
+          nome && nome !== '—' ? `Utente: ${nome}` : 'Utente'
+        )
+      }
+    >
+      {nome}
+    </button>
+  )
 }
 
 function UtenteRowActions({ id, nome }: { id: string; nome?: string | null }) {
@@ -80,12 +101,7 @@ export const columns: Array<ColumnDef<UtenteTableDTO> & DataTableColumnDef<Utent
       cell: ({ row }: CellContext<UtenteTableDTO, unknown>) => {
         const nome = row.original.nome || '—'
         return (
-          <Link
-            to={`/utentes/${row.original.id}`}
-            className='text-primary hover:underline'
-          >
-            {nome}
-          </Link>
+          <UtenteNomeCell id={row.original.id} nome={nome} />
         )
       },
       meta: { align: 'left' },

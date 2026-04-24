@@ -34,6 +34,9 @@ export function ListagemFraquezasMuscularesTable({
     onOpenView,
     onOpenEdit,
     onOpenDelete,
+    canView,
+    canChange,
+    canDelete,
 }: {
     data: FraquezasMuscularesTableDTO[]
     isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemFraquezasMuscularesTable({
     onOpenView?: (data: FraquezasMuscularesTableDTO) => void
     onOpenEdit?: (data: FraquezasMuscularesTableDTO) => void
     onOpenDelete?: (data: FraquezasMuscularesTableDTO) => void
+    canView?: boolean
+    canChange?: boolean
+    canDelete?: boolean
 }) {
-    const tableColumns = onOpenView 
-        ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    const tableColumns = onOpenView
+        ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+              canView,
+              canChange,
+              canDelete,
+          })
         : columns
 
     return (

@@ -34,6 +34,9 @@ export function ListagemEstadosListaEsperaTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: EstadoListaEsperaTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemEstadosListaEsperaTable({
   onOpenView?: (data: EstadoListaEsperaTableDTO) => void
   onOpenEdit?: (data: EstadoListaEsperaTableDTO) => void
   onOpenDelete?: (data: EstadoListaEsperaTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

@@ -19,7 +19,6 @@ export function TabDadosPessoais({
   form: UseFormReturn<MedicoEditFormValues>
   medico: MedicoDTO | undefined
 }) {
-  void medico
   const navigate = useNavigate()
   const addWindow = useWindowsStore((s) => s.addWindow)
 
@@ -164,6 +163,7 @@ export function TabDadosPessoais({
             <FormItem className='flex flex-col gap-1'>
               <FormLabel className={labelClass}>Imagem</FormLabel>
               <ImageUploader
+                key={`medico-url-foto-${medico?.id ?? 'new'}-${medico?.urlFoto ?? 'sem'}`}
                 uploadUrl='/client/utility/ImageUpload/upload-image'
                 fieldName='File'
                 additionalFields={{ Subfolder: 'Medicos' }}
@@ -178,7 +178,8 @@ export function TabDadosPessoais({
                 rootClassName='border-solid border-[#2aa89a] bg-background/0 backdrop-blur-0 w-[220px] max-w-[220px] h-[110px]'
                 actionButtonClassName='bg-[#2aa89a] text-white hover:bg-[#239b8f]'
                 placeholderIcon={<User className='h-8 w-8 text-muted-foreground/40' />}
-                onPartialUrlChange={(partialUrl) => field.onChange(partialUrl)}
+                onPartialUrlChange={(partialUrl) => field.onChange(partialUrl ?? '')}
+                onUploadSuccess={(partialUrl) => field.onChange(partialUrl ?? '')}
               />
             </FormItem>
           )}
@@ -191,6 +192,7 @@ export function TabDadosPessoais({
             <FormItem className='flex flex-col gap-1'>
               <FormLabel className={labelClass}>Assinatura</FormLabel>
               <ImageUploader
+                key={`medico-url-foto-assinatura-${medico?.id ?? 'new'}-${medico?.urlFotoAssinatura ?? 'sem'}`}
                 uploadUrl='/client/utility/ImageUpload/upload-image'
                 fieldName='File'
                 additionalFields={{ Subfolder: 'MedicosAssinaturas' }}
@@ -205,7 +207,8 @@ export function TabDadosPessoais({
                 rootClassName='border-solid border-[#2aa89a] bg-background/0 backdrop-blur-0 w-[220px] max-w-[220px] h-[110px]'
                 actionButtonClassName='bg-[#2aa89a] text-white hover:bg-[#239b8f]'
                 placeholderIcon={<User className='h-8 w-8 text-muted-foreground/40' />}
-                onPartialUrlChange={(partialUrl) => field.onChange(partialUrl)}
+                onPartialUrlChange={(partialUrl) => field.onChange(partialUrl ?? '')}
+                onUploadSuccess={(partialUrl) => field.onChange(partialUrl ?? '')}
               />
             </FormItem>
           )}

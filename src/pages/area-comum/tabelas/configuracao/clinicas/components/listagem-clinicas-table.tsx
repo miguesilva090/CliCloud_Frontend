@@ -1,10 +1,15 @@
 import React from 'react'
 import { DataTable } from '@/components/shared/data-table'
 import type { ClinicaTableDTO } from '@/types/dtos/core/clinica.dtos'
+import { modules } from '@/config/modules'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import {
   columns,
   getColumnsWithViewCallback,
 } from './listagem-clinicas-table.columns'
+
+const configuracaoClinicaPermId =
+  modules.areaComum.permissions.configuracoesClinica.id
 
 type FilterControlsComponent = React.ComponentType<{
   table: any
@@ -56,8 +61,13 @@ export function ListagemClinicasTable({
   onOpenEdit?: (data: ClinicaTableDTO) => void
   onSetDefault?: (id: string, porDefeito: boolean) => void
 }) {
+  const { canView, canChange } =
+    useAreaComumEntityListPermissions(configuracaoClinicaPermId)
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onSetDefault)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onSetDefault, {
+        canView,
+        canChange,
+      })
     : columns
 
   return (

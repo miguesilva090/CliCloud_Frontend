@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Eye, EyeOff, Pencil } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,6 +12,9 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ConfigPageCardTitleRow } from '@/components/shared/config-page-card-title-row'
+import { modules } from '@/config/modules'
+import { useConfigPageEditMode } from '@/hooks/use-config-page-edit-mode'
 import { toast } from '@/utils/toast-utils'
 import { EmailService } from '@/lib/services/core/email-service'
 import { EmailAutomaticaModal } from '../components/email-automatica-modal'
@@ -93,6 +97,8 @@ const isFlowTemplateCode = (codigo: string) => {
   return normalized === '8.1' || normalized === '8.2' || normalized === '8.3' || normalized === '8.4'
 }
 
+const emailPermId = modules.areaComum.permissions.configuracoesEmail.id
+
 const initialForm: EmailConfigForm = {
   username: '',
   server: '',
@@ -109,6 +115,16 @@ const initialForm: EmailConfigForm = {
 
 export function EmailConfigPage() {
   const navigate = useNavigate()
+  const {
+    canChange,
+    isEditing,
+    formEditable,
+    startEditing,
+    cancelEditing,
+    exitEditAfterSave,
+  } = useConfigPageEditMode(emailPermId)
+  const formLocked = !formEditable
+
   const [form, setForm] = useState<EmailConfigForm>(initialForm)
   const [showPassword, setShowPassword] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -126,6 +142,7 @@ export function EmailConfigPage() {
     mutationFn: (payload: AtualizarConfiguracaoEmailRequest) => EmailService().updateConfiguracao(payload),
     onSuccess: async () => {
       toast.success('Configuração de Email guardada com sucesso.')
+      exitEditAfterSave()
       await configQuery.refetch()
     },
     onError: () => {
@@ -337,31 +354,41 @@ export function EmailConfigPage() {
       <DashboardPageContainer>
         <div className='space-y-4'>
           <Card>
-            <CardHeader>
-              <CardTitle>Configuração do Servidor de Email</CardTitle>
+            <CardHeader className='space-y-0 pb-2'>
+              <ConfigPageCardTitleRow
+                title='Configuração do Servidor de Email'
+                canChange={canChange}
+                isEditing={isEditing}
+                onStartEdit={startEditing}
+                onCancelEdit={() => {
+                  cancelEditing()
+                  void configQuery.refetch()
+                }}
+                trailing={
+                  <Button
+                    type='button'
+                    variant='outline'
+                    onClick={() =>
+                      navigateManagedWindow(
+                        navigate,
+                        '/area-comum/tabelas/configuracao/email/historico'
+                      )
+                    }
+                    disabled={saveMutation.isPending}
+                  >
+                    Histórico de Emails
+                  </Button>
+                }
+              />
             </CardHeader>
             <CardContent className='space-y-4'>
-              <div className='flex justify-end gap-2'>
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={() => navigate('/area-comum/tabelas/configuracao/email/historico')}
-                  disabled={saveMutation.isPending}
-                >
-                  Histórico de Emails
-                </Button>
-                <Button onClick={handleGuardarConfig} disabled={saveMutation.isPending}>
-                  {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
-                </Button>
-              </div>
-
               <div className='grid grid-cols-1 md:grid-cols-4 gap-3'>
                 <div className='space-y-1'>
                   <Label>Tipo de Serviço</Label>
                   <Select
                     value={form.tipoServico}
                     onValueChange={(v) => handleChange('tipoServico', v)}
-                    disabled={saveMutation.isPending}
+                    disabled={formLocked || saveMutation.isPending}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder='Selecionar serviço' />
@@ -381,7 +408,8 @@ export function EmailConfigPage() {
                     id='username'
                     value={form.username}
                     onChange={(e) => handleChange('username', e.target.value)}
-                    disabled={saveMutation.isPending}
+                    readOnly={formLocked}
+                    disabled={formLocked || saveMutation.isPending}
                   />
                 </div>
                 <div className='space-y-1'>
@@ -390,7 +418,8 @@ export function EmailConfigPage() {
                     id='server'
                     value={form.server}
                     onChange={(e) => handleChange('server', e.target.value)}
-                    disabled={saveMutation.isPending}
+                    readOnly={formLocked}
+                    disabled={formLocked || saveMutation.isPending}
                   />
                 </div>
 
@@ -402,7 +431,8 @@ export function EmailConfigPage() {
                       type={showPassword ? 'text' : 'password'}
                       value={form.password}
                       onChange={(e) => handleChange('password', e.target.value)}
-                      disabled={saveMutation.isPending}
+                      readOnly={formLocked}
+                      disabled={formLocked || saveMutation.isPending}
                       className='pr-10'
                     />
                     <Button
@@ -411,7 +441,7 @@ export function EmailConfigPage() {
                       size='icon'
                       className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
                       onClick={() => setShowPassword((v) => !v)}
-                      disabled={saveMutation.isPending}
+                      disabled={formLocked || saveMutation.isPending}
                     >
                       {showPassword ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
                     </Button>
@@ -424,7 +454,8 @@ export function EmailConfigPage() {
                     id='porta'
                     value={form.porta}
                     onChange={(e) => handleChange('porta', e.target.value)}
-                    disabled={saveMutation.isPending}
+                    readOnly={formLocked}
+                    disabled={formLocked || saveMutation.isPending}
                   />
                 </div>
 
@@ -434,7 +465,8 @@ export function EmailConfigPage() {
                     id='inbox'
                     value={form.inbox}
                     onChange={(e) => handleChange('inbox', e.target.value)}
-                    disabled={saveMutation.isPending}
+                    readOnly={formLocked}
+                    disabled={formLocked || saveMutation.isPending}
                   />
                 </div>
                 <div className='space-y-1'>
@@ -443,7 +475,8 @@ export function EmailConfigPage() {
                     id='outbox'
                     value={form.outbox}
                     onChange={(e) => handleChange('outbox', e.target.value)}
-                    disabled={saveMutation.isPending}
+                    readOnly={formLocked}
+                    disabled={formLocked || saveMutation.isPending}
                   />
                 </div>
 
@@ -453,7 +486,8 @@ export function EmailConfigPage() {
                     id='email'
                     value={form.email}
                     onChange={(e) => handleChange('email', e.target.value)}
-                    disabled={saveMutation.isPending}
+                    readOnly={formLocked}
+                    disabled={formLocked || saveMutation.isPending}
                   />
                 </div>
                 <div className='space-y-1'>
@@ -462,7 +496,8 @@ export function EmailConfigPage() {
                     id='display-name'
                     value={form.displayName}
                     onChange={(e) => handleChange('displayName', e.target.value)}
-                    disabled={saveMutation.isPending}
+                    readOnly={formLocked}
+                    disabled={formLocked || saveMutation.isPending}
                   />
                 </div>
               </div>
@@ -475,7 +510,7 @@ export function EmailConfigPage() {
                   <Switch
                     checked={form.useSSL}
                     onCheckedChange={(v) => handleChange('useSSL', v)}
-                    disabled={saveMutation.isPending}
+                    disabled={formLocked || saveMutation.isPending}
                   />
                 </div>
 
@@ -486,11 +521,19 @@ export function EmailConfigPage() {
                   <Switch
                     checked={form.permitirEliminarEmail}
                     onCheckedChange={(v) => handleChange('permitirEliminarEmail', v)}
-                    disabled={saveMutation.isPending}
+                    disabled={formLocked || saveMutation.isPending}
                   />
                 </div>
               </div>
 
+              <div className='flex justify-end'>
+                <Button
+                  onClick={handleGuardarConfig}
+                  disabled={!formEditable || saveMutation.isPending}
+                >
+                  {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -529,7 +572,11 @@ export function EmailConfigPage() {
                                   ? openEditModal(row.auto!)
                                   : openFluxoModal(row.fluxo!)
                               }
-                              disabled={saveAutomaticaMutation.isPending || saveFluxoMutation.isPending}
+                              disabled={
+                                formLocked ||
+                                saveAutomaticaMutation.isPending ||
+                                saveFluxoMutation.isPending
+                              }
                             >
                               <Pencil className='h-4 w-4' />
                             </Button>

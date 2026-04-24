@@ -30,6 +30,10 @@ export function ListagemEstadosCivisTable({
   hiddenColumns,
   onOpenView,
   onOpenEdit,
+  onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: EstadoCivilTableDTO[]
   isLoading: boolean
@@ -50,9 +54,17 @@ export function ListagemEstadosCivisTable({
   hiddenColumns?: string[]
   onOpenView?: (data: EstadoCivilTableDTO) => void
   onOpenEdit?: (data: EstadoCivilTableDTO) => void
+  onOpenDelete?: (data: EstadoCivilTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

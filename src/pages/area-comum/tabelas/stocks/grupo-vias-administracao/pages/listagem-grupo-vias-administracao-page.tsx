@@ -34,8 +34,15 @@ import {
   openPathInApp,
 } from '@/utils/window-utils'
 import { ResponseStatus } from '@/types/api/responses'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const grupoViasAdministracaoPermId =
+  modules.areaComum.permissions.grupoViasAdministracao.id
 
 export function ListagemGrupoViasAdministracaoPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(grupoViasAdministracaoPermId)
   const navigate = useNavigate()
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
@@ -69,20 +76,24 @@ export function ListagemGrupoViasAdministracaoPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () =>
-        openPathInApp(
-          navigate,
-          addWindow,
-          '/area-comum/tabelas/stocks/grupo-vias-administracao/novo',
-          'Novo Grupo Vias de Administração',
-        ),
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    },
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () =>
+              openPathInApp(
+                navigate,
+                addWindow,
+                '/area-comum/tabelas/stocks/grupo-vias-administracao/novo',
+                'Novo Grupo Vias de Administração',
+              ),
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -211,6 +222,7 @@ export function ListagemGrupoViasAdministracaoPage() {
           FilterControls={ListagemGrupoViasAdministracaoFilterControls}
           hiddenColumns={[]}
           onOpenView={(data) => {
+            if (!canView) return
             const id = data.id ?? (data as { Id?: string }).Id
             if (!id) return
             openPathInApp(
@@ -220,20 +232,27 @@ export function ListagemGrupoViasAdministracaoPage() {
               data.descricao ? `Grupo Vias: ${data.descricao}` : 'Grupo Vias',
             )
           }}
-          onOpenEdit={(data) => {
-            const id = data.id ?? (data as { Id?: string }).Id
-            const descricao =
-              data.descricao ?? (data as { Descricao?: string }).Descricao
-            if (!id) return
-            openEntityEditInApp(
-              navigate,
-              addWindow,
-              `/area-comum/tabelas/stocks/grupo-vias-administracao/${id}/editar`,
-              String(id),
-              descricao ? `Grupo Vias: ${descricao}` : null,
-            )
-          }}
-          onOpenDelete={handleOpenDelete}
+          onOpenEdit={
+            canChange
+              ? (data) => {
+                  const id = data.id ?? (data as { Id?: string }).Id
+                  const descricao =
+                    data.descricao ?? (data as { Descricao?: string }).Descricao
+                  if (!id) return
+                  openEntityEditInApp(
+                    navigate,
+                    addWindow,
+                    `/area-comum/tabelas/stocks/grupo-vias-administracao/${id}/editar`,
+                    String(id),
+                    descricao ? `Grupo Vias: ${descricao}` : null,
+                  )
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
 
         <AlertDialog open={deleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>

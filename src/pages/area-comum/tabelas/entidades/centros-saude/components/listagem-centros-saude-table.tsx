@@ -34,6 +34,9 @@ export function ListagemCentrosSaudeTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: CentroSaudeTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemCentrosSaudeTable({
   onOpenView?: (data: CentroSaudeTableDTO) => void
   onOpenEdit?: (data: CentroSaudeTableDTO) => void
   onOpenDelete?: (data: CentroSaudeTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

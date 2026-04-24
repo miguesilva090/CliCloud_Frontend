@@ -64,7 +64,6 @@ export function EntidadeFinanceiraViewCreateModal({
       ).getTiposEntidadeLight()
       return response.info.data ?? []
     },
-    staleTime: 30_000,
   })
 
   const selectedPais = useMemo(

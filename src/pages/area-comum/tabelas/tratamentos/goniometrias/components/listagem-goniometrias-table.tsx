@@ -31,9 +31,12 @@ export function ListagemGoniometriasTable({
     globalSearchPlaceholder,
     FilterControls,
     hiddenColumns,
-    onOpenView,
-    onOpenEdit,
-    onOpenDelete,
+  onOpenView,
+  onOpenEdit,
+  onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
     data: GoniometriasTableDTO[]
     isLoading: boolean
@@ -52,12 +55,19 @@ export function ListagemGoniometriasTable({
     globalSearchPlaceholder?: string
     FilterControls: FilterControlsComponent
     hiddenColumns?: string[]
-    onOpenView?: (data: GoniometriasTableDTO) => void
-    onOpenEdit?: (data: GoniometriasTableDTO) => void
-    onOpenDelete?: (data: GoniometriasTableDTO) => void
+  onOpenView?: (data: GoniometriasTableDTO) => void
+  onOpenEdit?: (data: GoniometriasTableDTO) => void
+  onOpenDelete?: (data: GoniometriasTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
-    const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+  const tableColumns = onOpenView
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
     return (

@@ -48,6 +48,8 @@ export type SubsistemaSaudeRowInsert = {
   nomeBeneficiario?: string
   dataCartao?: string
   numeroApolice?: string
+  empresaId?: string | null
+  empresaNome?: string
 }
 
 export type SubsistemaSaudeInserirModalProps = {

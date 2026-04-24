@@ -33,6 +33,9 @@ export function ListagemGrupoViasAdministracaoTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: GrupoViasAdministracaoTableDTO[]
   isLoading: boolean
@@ -53,9 +56,16 @@ export function ListagemGrupoViasAdministracaoTable({
   onOpenView?: (data: GrupoViasAdministracaoTableDTO) => void
   onOpenEdit?: (data: GrupoViasAdministracaoTableDTO) => void
   onOpenDelete?: (data: GrupoViasAdministracaoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

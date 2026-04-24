@@ -1,12 +1,13 @@
 'use client'
 
-import { Dispatch, SetStateAction, useState, useEffect } from 'react'
+import { Dispatch, SetStateAction, useState } from 'react'
 import { useHeaderNav } from '@/contexts/header-nav-context'
 import type { NavItem } from '@/types/navigation/nav.types'
 import { ChevronRight } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
-import { isTabelasPath, isProcessoClinicoPath } from '@/utils/window-utils'
+import { Link, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { shouldManageWindow, navigateManagedWindow } from '@/utils/window-utils'
 import { useSidebar } from '@/hooks/use-sidebar'
 import { Icons } from '@/components/ui/icons'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -14,55 +15,16 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 interface DashboardNavProps {
   items: NavItem[]
   setOpen?: Dispatch<SetStateAction<boolean>>
-  /** 
-   * Variante visual: 
-   * - 'desktop' (default): textos truncados numa linha
-   * - 'mobile': textos podem ocupar múltiplas linhas para melhor legibilidade
-   */
-  variant?: 'desktop' | 'mobile'
 }
 
-function collectExpandableMenuIds(
-  pathname: string,
-  menuItems: NavItem[],
-  depth = 0
-): Record<string, boolean> {
-  const result: Record<string, boolean> = {}
-  for (const item of menuItems) {
-    const hasSubItems = item.items && item.items.length > 0
-    const menuId = `${item.title}-${depth}`
-    if (hasSubItems && item.href && pathname.startsWith(item.href + '/')) {
-      // Não auto-expandir o nó especial '/area-comum/tabelas' (Tabelas geográficas),
-      // que é um \"ramo paralelo\" ao caminho Área Comum → Tabelas → Exames → ...
-      if (item.href !== '/area-comum/tabelas') {
-        result[menuId] = true
-      }
-      if (item.items?.length) {
-        Object.assign(
-          result,
-          collectExpandableMenuIds(pathname, item.items, depth + 1)
-        )
-      }
-    }
-  }
-  return result
-}
-
-export function DashboardNav({ items, setOpen, variant = 'desktop' }: DashboardNavProps) {
+export function DashboardNav({ items, setOpen }: DashboardNavProps) {
   const { isMinimized, toggle } = useSidebar()
   const { setCurrentMenu, currentMenu, setActiveMenuItem } = useHeaderNav()
   const location = useLocation()
+  const navigate = useNavigate()
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(
     {}
   )
-
-  // Auto-expand parent menus when the current path is under one of their children (e.g. /area-clinica/processo-clinico or /area-comum/tabelas)
-  useEffect(() => {
-    const toExpand = collectExpandableMenuIds(location.pathname, items)
-    if (Object.keys(toExpand).length > 0) {
-      setExpandedMenus((prev) => ({ ...prev, ...toExpand }))
-    }
-  }, [location.pathname, items])
 
   const toggleMenu = (menuId: string) => {
     setExpandedMenus((prev) => ({
@@ -89,48 +51,51 @@ export function DashboardNav({ items, setOpen, variant = 'desktop' }: DashboardN
   }
 
   const isItemActive = (
+    _itemTitle: string | undefined,
     itemHref: string,
-    items: NavItem[] | undefined,
-    depth: number
+    items?: NavItem[]
   ) => {
     const isExactMatch = location.pathname === itemHref
     const isNestedMatch = location.pathname.startsWith(itemHref + '/')
     const isChildActive = items?.some(
-      (child) =>
-        location.pathname === child.href ||
-        location.pathname.startsWith(child.href + '/')
+      (item) =>
+        location.pathname === item.href ||
+        location.pathname.startsWith(item.href + '/')
     )
-    // Regra:
-    // - depth 0 e 1 (áreas e entrada \"Tabelas\" em Área Comum): ativo se for a rota ou qualquer descendente.
-    // - depth 2 (Exames, Consultas, Tratamentos, etc.): também consideramos descendentes,
-    //   EXCEPTO para o nó especial '/area-comum/tabelas' (Tabelas geográficas), que só deve ser ativo em match exato.
-    // - depth >= 3 (folhas como 'Tipos de Exame'): apenas match exato.
-    if (itemHref === '/area-comum/tabelas') {
-      return isExactMatch
-    }
-    if (depth <= 2) {
-      return isExactMatch || isNestedMatch || isChildActive
-    }
-    return isExactMatch
+
+    return isExactMatch || isNestedMatch || isChildActive
   }
 
   const handleLinkClick = (
     e: React.MouseEvent,
     href: string,
     openInNewTab?: boolean,
-    underDevelopment?: boolean,
-    _label?: string
+    underDevelopment?: boolean
   ) => {
+    // Prevent navigation if item is under development
     if (underDevelopment) {
       e.preventDefault()
       return
     }
+
+    // If item should open in new tab
     if (openInNewTab) {
       e.preventDefault()
-      window.open(`${window.location.origin}${href}`, '_blank', 'noopener,noreferrer')
+      const fullUrl = `${window.location.origin}${href}`
+      window.open(fullUrl, '_blank', 'noopener,noreferrer')
       return
     }
-    // Deixar o <Link> tratar da navegação normal para listagens.
+
+    // Igual ao Luma: janelas/tabs com instanceId; não alterar URL se já estamos no mesmo path
+    const pathOnly = href.split('?')[0]
+    if (shouldManageWindow(pathOnly)) {
+      e.preventDefault()
+      if (location.pathname === pathOnly) {
+        return
+      }
+      navigateManagedWindow(navigate, href)
+      return
+    }
   }
 
   const renderMenuItem = (item: NavItem, depth: number = 0) => {
@@ -140,8 +105,6 @@ export function DashboardNav({ items, setOpen, variant = 'desktop' }: DashboardN
     const hasSubItems = item.items && item.items.length > 0
     const menuId = `${item.title}-${depth}`
     const isExpanded = expandedMenus[menuId]
-    const showIcon = depth === 0
-    const isMobileVariant = variant === 'mobile'
 
     return (
       <div
@@ -163,34 +126,24 @@ export function DashboardNav({ items, setOpen, variant = 'desktop' }: DashboardN
               }}
               className={cn(
                 'sidebar-link relative',
-                isItemActive(item.href, item.items, depth) && 'active',
+                isItemActive(item.title, item.href, item.items) && 'active',
                 isMinimized && 'justify-center px-0',
                 item.underDevelopment && 'cursor-not-allowed opacity-75'
               )}
             >
               <div className='flex items-center gap-3'>
-                {showIcon && (
-                  <div className='icon-wrapper relative'>
-                    <Icon
-                      className={cn('size-4', isMinimized ? 'mx-auto' : 'ml-0')}
-                    />
-                    {item.underDevelopment && (
-                      <div className='absolute -top-0.5 -right-0.5 w-6 h-3 bg-violet-500 text-white text-[6px] font-bold flex items-center justify-center -rotate-[8deg] shadow-sm border border-violet-600/30'>
-                        des
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className='icon-wrapper relative'>
+                  <Icon
+                    className={cn('size-4', isMinimized ? 'mx-auto' : 'ml-0')}
+                  />
+                  {item.underDevelopment && (
+                    <div className='absolute -top-0.5 -right-0.5 w-6 h-3 bg-violet-500 text-white text-[6px] font-bold flex items-center justify-center -rotate-[8deg] shadow-sm border border-violet-600/30'>
+                      des
+                    </div>
+                  )}
+                </div>
                 {!isMinimized && (
-                  <span
-                    className={cn(
-                      isMobileVariant
-                        ? 'whitespace-normal break-words leading-snug text-[0.9rem]'
-                        : 'truncate'
-                    )}
-                  >
-                    {item.label || item.title}
-                  </span>
+                  <span className='truncate'>{item.label || item.title}</span>
                 )}
               </div>
               {!isMinimized && (
@@ -204,86 +157,50 @@ export function DashboardNav({ items, setOpen, variant = 'desktop' }: DashboardN
             </button>
             {isExpanded && !isMinimized && (
               <div className='pl-4'>
-                {item.items?.map((subItem) => renderMenuItem(subItem, depth + 1))}
+                {item.items?.map((subItem) =>
+                  renderMenuItem(subItem, depth + 1)
+                )}
               </div>
             )}
           </>
         ) : (
-          (() => {
-            const href = item.disabled || item.underDevelopment ? '#' : item.href
-            const useHard =
-              href !== '#' && (isTabelasPath(href) || isProcessoClinicoPath(href))
-            const className = cn(
+          <Link
+            to={item.disabled || item.underDevelopment ? '#' : item.href}
+            className={cn(
               'sidebar-nav-item',
-              isItemActive(item.href, item.items, depth) && 'active',
+              isItemActive(item.title, item.href, item.items) && 'active',
               (item.disabled || item.underDevelopment) &&
                 'cursor-not-allowed opacity-75',
               isMinimized && 'justify-center'
-            )
-            const content = (
-              <>
-                {showIcon && (
-                  <div className='icon-wrapper relative'>
-                    <Icon
-                      className={cn('size-4', isMinimized ? 'mx-auto' : 'ml-0')}
-                    />
-                    {item.underDevelopment && (
-                      <div className='absolute -top-0.5 -right-0.5 w-6 h-3 bg-violet-500 text-white text-[6px] font-bold flex items-center justify-center -rotate-[8deg] shadow-sm border border-violet-600/30'>
-                        des
-                      </div>
-                    )}
-                  </div>
-                )}
-                {!isMinimized && (
-                  <span
-                    className={cn(
-                      isMobileVariant
-                        ? 'whitespace-normal break-words leading-snug text-[0.9rem]'
-                        : 'truncate'
-                    )}
-                  >
-                    {item.label || item.title}
-                  </span>
-                )}
-              </>
-            )
-            if (useHard) {
-              return (
-                <button
-                  type='button'
-                  className={className}
-                  onClick={() => {
-                    handleMenuClick(item.title, hasSubItems)
-                    window.location.href = window.location.origin + href
-                  }}
-                >
-                  {content}
-                </button>
+            )}
+            onClick={(e) => {
+              handleLinkClick(
+                e,
+                item.href,
+                item.openInNewTab,
+                item.underDevelopment
               )
-            }
-            return (
-              <Link
-                to={href}
-                className={className}
-                onClick={(e) => {
-                  handleLinkClick(
-                    e,
-                    item.href,
-                    item.openInNewTab,
-                    item.underDevelopment,
-                    item.label || item.title
-                  )
-                  if (!item.underDevelopment) {
-                    handleMenuClick(item.title, hasSubItems)
-                  } else {
-                    e.preventDefault()
-                  }
-                }}
-              >
-                {content}
-              </Link>
-            )
-          })()
+              if (!item.underDevelopment) {
+                handleMenuClick(item.title, hasSubItems)
+              } else {
+                e.preventDefault()
+              }
+            }}
+          >
+            <div className='icon-wrapper relative'>
+              <Icon
+                className={cn('size-4', isMinimized ? 'mx-auto' : 'ml-0')}
+              />
+              {item.underDevelopment && (
+                <div className='absolute -top-0.5 -right-0.5 w-6 h-3 bg-violet-500 text-white text-[6px] font-bold flex items-center justify-center -rotate-[8deg] shadow-sm border border-violet-600/30'>
+                  des
+                </div>
+              )}
+            </div>
+            {!isMinimized && (
+              <span className='truncate'>{item.label || item.title}</span>
+            )}
+          </Link>
         )}
       </div>
     )

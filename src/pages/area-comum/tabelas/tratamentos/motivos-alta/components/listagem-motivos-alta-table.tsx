@@ -34,6 +34,9 @@ export function ListagemMotivosAltaTable({
     onOpenView,
     onOpenEdit,
     onOpenDelete,
+    canView,
+    canChange,
+    canDelete,
 }: {
     data: MotivoAltaTableDTO[]
     isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemMotivosAltaTable({
     onOpenView?: (data: MotivoAltaTableDTO) => void
     onOpenEdit?: (data: MotivoAltaTableDTO) => void
     onOpenDelete?: (data: MotivoAltaTableDTO) => void
+    canView?: boolean
+    canChange?: boolean
+    canDelete?: boolean
 }) {
     const tableColumns = onOpenView
-        ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+        ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+              canView,
+              canChange,
+              canDelete,
+          })
         : columns
 
     return (

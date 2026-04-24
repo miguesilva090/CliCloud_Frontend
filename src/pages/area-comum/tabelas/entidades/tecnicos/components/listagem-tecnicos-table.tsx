@@ -34,6 +34,9 @@ export function ListagemTecnicosTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: TecnicoTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemTecnicosTable({
   onOpenView?: (data: TecnicoTableDTO) => void
   onOpenEdit?: (data: TecnicoTableDTO) => void
   onOpenDelete?: (data: TecnicoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

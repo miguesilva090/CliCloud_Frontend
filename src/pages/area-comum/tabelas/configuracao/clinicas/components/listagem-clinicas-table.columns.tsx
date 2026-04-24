@@ -46,11 +46,21 @@ export const columns: DataTableColumnDef<ClinicaTableDTO>[] = [
   },
 ]
 
+export type ClinicaListRowPermissions = {
+  canView: boolean
+  canChange: boolean
+}
+
 export function getColumnsWithViewCallback(
   onOpenView: (data: ClinicaTableDTO) => void,
   onOpenEdit?: (data: ClinicaTableDTO) => void,
-  onSetDefault?: (id: string, porDefeito: boolean) => void
+  onSetDefault?: (id: string, porDefeito: boolean) => void,
+  rowPerms?: ClinicaListRowPermissions
 ): DataTableColumnDef<ClinicaTableDTO>[] {
+  const canView = rowPerms?.canView ?? false
+  const canChange = rowPerms?.canChange ?? false
+  const canToggleDefault = !!onSetDefault && canChange
+
   return [
     ...columns,
     {
@@ -63,10 +73,10 @@ export function getColumnsWithViewCallback(
         <div className='flex justify-center'>
           <Checkbox
             checked={!!row.original.porDefeito}
-            disabled={!onSetDefault}
+            disabled={!canToggleDefault}
             onCheckedChange={(v) => {
-              if (!onSetDefault) return
-              onSetDefault(row.original.id, v === true)
+              if (!canToggleDefault) return
+              onSetDefault!(row.original.id, v === true)
             }}
           />
         </div>
@@ -77,26 +87,30 @@ export function getColumnsWithViewCallback(
       header: () => <div className='text-right w-full pr-5'>Opções</div>,
       cell: ({ row }) => (
         <div className='flex items-center justify-end gap-1'>
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            className='h-8 w-8'
-            title='Ver'
-            onClick={() => onOpenView(row.original)}
-          >
-            <Eye className='h-4 w-4' />
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            className='h-8 w-8'
-            title='Editar'
-            onClick={() => onOpenEdit?.(row.original)}
-          >
-            <Pencil className='h-4 w-4' />
-          </Button>
+          {canView ? (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8'
+              title='Ver'
+              onClick={() => onOpenView(row.original)}
+            >
+              <Eye className='h-4 w-4' />
+            </Button>
+          ) : null}
+          {canChange ? (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8'
+              title='Editar'
+              onClick={() => onOpenEdit?.(row.original)}
+            >
+              <Pencil className='h-4 w-4' />
+            </Button>
+          ) : null}
         </div>
       ),
       enableSorting: false,

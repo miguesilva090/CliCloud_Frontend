@@ -27,10 +27,16 @@ import { TiposAparelhoViewCreateModal } from '../modals/tipos-aparelho-view-crea
 import { TipoAparelhoService } from '@/lib/services/tipo-aparelho'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const tiposAparelhoPermId = modules.areaComum.permissions.tiposAparelho.id
 
 type TipoAparelhoModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemTiposAparelhoPage() {
+  const { canView, canChange, canDelete } =
+    useAreaComumEntityListPermissions(tiposAparelhoPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -153,9 +159,25 @@ export function ListagemTiposAparelhoPage() {
           globalSearchPlaceholder='Procurar por designação...'
           FilterControls={ListagemTiposAparelhoFilterControls}
           hiddenColumns={[]}
-          onOpenView={(row) => { setViewData(row); setModalMode('view'); setModalOpen(true); }}
-          onOpenEdit={(row) => { setViewData(row); setModalMode('edit'); setModalOpen(true); }}
-          onOpenDelete={handleOpenDelete}
+          onOpenView={(row) => {
+            if (!canView) return
+            setViewData(row)
+            setModalMode('view')
+            setModalOpen(true)
+          }}
+          onOpenEdit={
+            canChange
+              ? (row) => {
+                  setViewData(row)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <TiposAparelhoViewCreateModal open={modalOpen} onOpenChange={setModalOpen} mode={modalMode} viewData={viewData} onSuccess={() => queryClient.invalidateQueries({ queryKey: ['tipos-aparelho-paginated'] })} />
         <AlertDialog open={deleteDialogOpen} onOpenChange={() => { if (!isDeleting) { setDeleteDialogOpen(false); setItemToDelete(null); } }}>

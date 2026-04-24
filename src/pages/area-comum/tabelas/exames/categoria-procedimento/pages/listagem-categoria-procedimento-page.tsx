@@ -29,10 +29,17 @@ import { CategoriaProcedimentoViewCreateModal } from '../modals/categoria-proced
 import { CategoriaProcedimentoService } from '@/lib/services/exames/categoria-procedimento-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const categoriasProcedimentoPermId =
+  modules.areaComum.permissions.categoriasProcedimento.id
 
 type CategoriaProcedimentoModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemCategoriaProcedimentoPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(categoriasProcedimentoPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -69,18 +76,22 @@ export function ListagemCategoriaProcedimentoPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => {
-        setViewData(null)
-        setModalMode('create')
-        setModalOpen(true)
-      },
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    },
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => {
+              setViewData(null)
+              setModalMode('create')
+              setModalOpen(true)
+            },
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -208,16 +219,24 @@ export function ListagemCategoriaProcedimentoPage() {
           FilterControls={ListagemCategoriaProcedimentoFilterControls}
           hiddenColumns={[]}
           onOpenView={(rowData) => {
+            if (!canView) return
             setViewData(rowData)
             setModalMode('view')
             setModalOpen(true)
           }}
-          onOpenEdit={(rowData) => {
-            setViewData(rowData)
-            setModalMode('edit')
-            setModalOpen(true)
-          }}
-          onOpenDelete={handleOpenDelete}
+          onOpenEdit={
+            canChange
+              ? (rowData) => {
+                  setViewData(rowData)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
 
         <CategoriaProcedimentoViewCreateModal

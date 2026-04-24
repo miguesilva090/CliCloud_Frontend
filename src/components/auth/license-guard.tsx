@@ -9,6 +9,16 @@ interface LicenseGuardProps {
   requiredPermission?: string
   requiredModule?: string
   actionType?: PermissionFlag
+  /**
+   * Quando true, a permissão principal só conta com entrada explícita na licença
+   * (flags); não usa o atalho «tem o módulo». Útil para subáreas com controlo fino.
+   */
+  requireExplicitPermission?: boolean
+  /**
+   * Se a principal falhar, aceitar qualquer uma destas (ex.: permissão legada
+   * «Processo clínico» que cobria todas as sub-rotas).
+   */
+  permissionFallbackIds?: string[]
 }
 
 export function LicenseGuard({
@@ -17,6 +27,8 @@ export function LicenseGuard({
   requiredPermission,
   requiredModule,
   actionType = 'AuthVer',
+  requireExplicitPermission = false,
+  permissionFallbackIds,
 }: LicenseGuardProps) {
   const location = useLocation()
   const { hasLicenseAccess, hasPermission, hasModuleAccess } =
@@ -38,9 +50,35 @@ export function LicenseGuard({
     return <Navigate to='/404' replace />
   }
 
-  // Check permission if required
-  if (requiredPermission && !hasPermission(requiredPermission, actionType)) {
-    return <Navigate to='/404' replace />
+  if (requiredPermission) {
+    const { getPermissionFlags } = usePermissionsStore.getState()
+    const strictPrimary = requireExplicitPermission
+
+    const resolvedAccess = (
+      permId: string,
+      strictNoModuleShortcut: boolean
+    ): boolean => {
+      const flags = getPermissionFlags(permId)
+      if (flags) {
+        return !!flags[actionType]
+      }
+      if (strictNoModuleShortcut) {
+        return false
+      }
+      if (requiredModule && hasModuleAccess(requiredModule)) {
+        return true
+      }
+      return hasPermission(permId, actionType)
+    }
+
+    const fallbacks = permissionFallbackIds ?? []
+    const allowed =
+      resolvedAccess(requiredPermission, strictPrimary) ||
+      fallbacks.some((id) => resolvedAccess(id, false))
+
+    if (!allowed) {
+      return <Navigate to='/404' replace />
+    }
   }
 
   return <>{children}</>

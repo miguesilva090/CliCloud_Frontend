@@ -31,6 +31,9 @@ export function ListagemGruposSanguineosTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: GrupoSanguineoTableDTO[]
   isLoading: boolean
@@ -52,9 +55,16 @@ export function ListagemGruposSanguineosTable({
   onOpenView?: (data: GrupoSanguineoTableDTO) => void
   onOpenEdit?: (data: GrupoSanguineoTableDTO) => void
   onOpenDelete?: (data: GrupoSanguineoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

@@ -4,12 +4,14 @@ export function UtenteDetailsPage() {
   const params = useParams<{ id: string }>()
   const id = params.id ?? ''
   const [searchParams] = useSearchParams()
-  const from = searchParams.get('from')
 
   if (!id) return null
 
-  // Quando se faz "ver utente", redireciona para o formulário de edição em modo só de leitura
-  const suffix = from ? `?mode=view&from=${encodeURIComponent(from)}` : '?mode=view'
-  return <Navigate to={`/utentes/${id}/editar${suffix}`} replace />
+  // Mesmo fluxo de "ver" → formulário em modo leitura, mas preservando instanceId (e outros)
+  // para o WindowManager não criar uma segunda tab ao mudar de /utentes/:id para .../editar.
+  const next = new URLSearchParams(searchParams)
+  next.set('mode', 'view')
+
+  return <Navigate to={`/utentes/${id}/editar?${next.toString()}`} replace />
 }
 

@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import { Eye, Megaphone, Pencil, PlayCircle, RefreshCw, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import type { CellContext, ColumnDef } from '@tanstack/react-table'
 import {
   AlertDialog,
@@ -185,6 +187,7 @@ function ConsultasDoDiaFilterControls(_: {
 }
 
 export function ConsultasDoDiaPage() {
+  const navigate = useNavigate()
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date())
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
   const { rows: consultasFiltradas, refetch, isFetching } = useConsultasDoDiaMarcacoes(
@@ -208,12 +211,12 @@ export function ConsultasDoDiaPage() {
   const [sorting, setSorting] = useState<Array<{ id: string; desc: boolean }>>([])
 
   const goToFichaClinica = (utenteId: string, consultaId?: string) => {
-    const base = `${window.location.origin}/area-clinica/processo-clinico/atendimento/ficha-clinica`
+    const base = `/area-clinica/processo-clinico/atendimento/ficha-clinica`
     const params = new URLSearchParams()
     if (utenteId) params.set('utenteId', utenteId)
     if (consultaId) params.set('consultaId', consultaId)
     const url = params.toString() ? `${base}?${params.toString()}` : base
-    window.location.href = url
+    navigateManagedWindow(navigate, url)
   }
 
   const handleIniciarConsulta = async (row: ConsultaDoDiaRow) => {

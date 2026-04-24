@@ -39,6 +39,7 @@ export function CodigosPostaisListagemTable({
   hiddenColumns,
   onOpenView,
   onOpenEdit,
+  rowActionsFuncionalidadeId,
 }: {
   data: CodigoPostalTableDTO[]
   isLoading: boolean
@@ -61,9 +62,14 @@ export function CodigosPostaisListagemTable({
   onOpenView?: (data: CodigoPostalTableDTO) => void
   /** Quando definido (ex.: listagem área-comum), "Editar" abre o mesmo modal em modo edição */
   onOpenEdit?: (data: CodigoPostalTableDTO) => void
+  rowActionsFuncionalidadeId?: string
 }) {
   const tableColumns = onOpenView
-    ? getListagemColumnsWithViewCallback(onOpenView, onOpenEdit)
+    ? getListagemColumnsWithViewCallback(
+        onOpenView,
+        onOpenEdit,
+        rowActionsFuncionalidadeId
+      )
     : listagemColumns
 
   return (

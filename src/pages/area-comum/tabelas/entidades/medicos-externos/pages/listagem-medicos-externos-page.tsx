@@ -30,14 +30,19 @@ import { MedicoExternoService } from '@/lib/services/saude/medico-externo-servic
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { useCloseCurrentWindowLikeTabBar, openEntityEditInApp, openPathInApp } from '@/utils/window-utils'
 import { ResponseStatus } from '@/types/api/responses'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
 
 const LISTAGEM_PATH = '/area-comum/tabelas/entidades/medicos-externos'
+const medicosExternosPermId = modules.areaComum.permissions.medicosExternos.id
 
 export function ListagemMedicosExternosPage() {
   const navigate = useNavigate()
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(medicosExternosPermId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<MedicoExternoTableDTO | null>(
     null
@@ -68,20 +73,24 @@ export function ListagemMedicosExternosPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () =>
-        openPathInApp(
-          navigate,
-          addWindow,
-          `${LISTAGEM_PATH}/novo`,
-          'Novo Médico Externo',
-        ),
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    },
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () =>
+              openPathInApp(
+                navigate,
+                addWindow,
+                `${LISTAGEM_PATH}/novo`,
+                'Novo Médico Externo',
+              ),
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -208,6 +217,7 @@ export function ListagemMedicosExternosPage() {
           FilterControls={ListagemMedicosExternosFilterControls}
           hiddenColumns={[]}
           onOpenView={(item) => {
+            if (!canView) return
             const id = item.id ?? (item as { Id?: string }).Id
             const nome = item.nome ?? (item as { Nome?: string }).Nome
             if (id) {
@@ -219,12 +229,26 @@ export function ListagemMedicosExternosPage() {
               )
             }
           }}
-          onOpenEdit={(item) => {
-            const id = item.id ?? (item as { Id?: string }).Id
-            const nome = item.nome ?? (item as { Nome?: string }).Nome
-            if (id) openEntityEditInApp(navigate, addWindow, `${LISTAGEM_PATH}/${id}/editar`, String(id), nome ? `Médico Externo: ${nome}` : null)
-          }}
-          onOpenDelete={handleOpenDelete}
+          onOpenEdit={
+            canChange
+              ? (item) => {
+                  const id = item.id ?? (item as { Id?: string }).Id
+                  const nome = item.nome ?? (item as { Nome?: string }).Nome
+                  if (id)
+                    openEntityEditInApp(
+                      navigate,
+                      addWindow,
+                      `${LISTAGEM_PATH}/${id}/editar`,
+                      String(id),
+                      nome ? `Médico Externo: ${nome}` : null
+                    )
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <AlertDialog
           open={deleteDialogOpen}

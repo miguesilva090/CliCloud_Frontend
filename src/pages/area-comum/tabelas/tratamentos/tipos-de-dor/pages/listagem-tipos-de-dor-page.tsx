@@ -27,10 +27,16 @@ import { TipoDeDorViewCreateModal } from '../modals/tipo-de-dor-view-create-moda
 import { TipoDeDorService } from '@/lib/services/tipos-de-dor/tipo-de-dor-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const tiposDeDorPermId = modules.areaComum.permissions.tiposDeDor.id
 
 type TipoDeDorModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemTiposDeDorPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(tiposDeDorPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -62,16 +68,22 @@ export function ListagemTiposDeDorPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => {
-        setViewData(null)
-        setModalMode('create')
-        setModalOpen(true)
-      },
-      variant: 'destructive',
-      className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90'},
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => {
+              setViewData(null)
+              setModalMode('create')
+              setModalOpen(true)
+            },
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -189,16 +201,24 @@ export function ListagemTiposDeDorPage() {
           FilterControls={ListagemTiposDeDorFilterControls}
           hiddenColumns={[]}
           onOpenView={(rowData) => {
+            if (!canView) return
             setViewData(rowData)
             setModalMode('view')
             setModalOpen(true)
           }}
-          onOpenEdit={(rowData) => {
-            setViewData(rowData)
-            setModalMode('edit')
-            setModalOpen(true)
-          }}
-          onOpenDelete={handleOpenDelete}
+          onOpenEdit={
+            canChange
+              ? (rowData) => {
+                  setViewData(rowData)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <TipoDeDorViewCreateModal
           open={modalOpen}

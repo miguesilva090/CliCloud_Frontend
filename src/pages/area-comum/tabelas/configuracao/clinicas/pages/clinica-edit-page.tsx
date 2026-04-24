@@ -37,7 +37,10 @@ import { CreateCodigoPostalModal } from '@/components/shared/address-quick-creat
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { ImageUploader } from '@/components/shared/image-uploader'
 import { CodigosPostaisService } from '@/lib/services/base/codigospostais-service'
-import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import {
+  useCloseCurrentWindowLikeTabBar,
+  navigateManagedWindow,
+} from '@/utils/window-utils'
 import { toastFirstValidationMessage } from '../utils/clinica-edit-validation'
 import {
   buildCodigoPostalComboboxItems,
@@ -116,19 +119,16 @@ export function ClinicaEditPage() {
   const moedasQuery = useQuery({
     queryKey: ['moedas-light', 'clinica-form'],
     queryFn: () => MoedaService().getMoedasLight(''),
-    staleTime: 5 * 60_000,
     enabled: !!clinica,
   })
   const motivosIsencaoQuery = useQuery({
     queryKey: ['motivos-isencao-light', 'clinica-form'],
     queryFn: () => MotivoIsencaoService().getMotivosIsencaoLight(''),
-    staleTime: 5 * 60_000,
     enabled: !!clinica,
   })
   const taxasIvaQuery = useQuery({
     queryKey: ['taxas-iva-light', 'clinica-form'],
     queryFn: () => TaxaIvaService().getTaxasIvaLight(''),
-    staleTime: 5 * 60_000,
     enabled: !!clinica,
   })
   const codigosPostaisQuery = useGetCodigosPostaisSelect('')
@@ -303,7 +303,7 @@ export function ClinicaEditPage() {
       closeWindowTab()
       return
     }
-    navigate(LISTAGEM_PATH)
+    navigateManagedWindow(navigate, LISTAGEM_PATH)
   }
 
   return (
@@ -318,7 +318,10 @@ export function ClinicaEditPage() {
                 type='button'
                 variant='default'
                 onClick={() =>
-                  navigate(`${LISTAGEM_PATH}/${clinica.id}/editar`)
+                  navigateManagedWindow(
+                    navigate,
+                    `${LISTAGEM_PATH}/${clinica.id}/editar`
+                  )
                 }
               >
                 Editar

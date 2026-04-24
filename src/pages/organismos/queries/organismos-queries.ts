@@ -13,8 +13,6 @@ export const useGetOrganismo = (id: string) =>
     queryKey: ['organismo', id],
     queryFn: () => OrganismoService('organismos').getOrganismo(id),
     enabled: !!id,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 
 const LISTAGEM_PATH = '/area-comum/tabelas/entidades/organismos'

@@ -16,10 +16,16 @@ import {
   usePrefetchAdjacentBancos} from '../queries/listagem-bancos-queries'
 import { BancoViewCreateModal } from '../modals/banco-view-create-modal'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const bancosPermId = modules.areaComum.permissions.bancos.id
 
 type BancoModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemBancosPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(bancosPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -48,17 +54,22 @@ export function ListagemBancosPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => {
-        setViewData(null)
-        setModalMode('create')
-        setModalOpen(true)
-      },
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90'},
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => {
+              setViewData(null)
+              setModalMode('create')
+              setModalOpen(true)
+            },
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -136,15 +147,23 @@ export function ListagemBancosPage() {
           FilterControls={ListagemBancosFilterControls}
           hiddenColumns={[]}
           onOpenView={(data) => {
+            if (!canView) return
             setViewData(data)
             setModalMode('view')
             setModalOpen(true)
           }}
-          onOpenEdit={(data) => {
-            setViewData(data)
-            setModalMode('edit')
-            setModalOpen(true)
-          }}
+          onOpenEdit={
+            canChange
+              ? (data) => {
+                  setViewData(data)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <BancoViewCreateModal
           open={modalOpen}

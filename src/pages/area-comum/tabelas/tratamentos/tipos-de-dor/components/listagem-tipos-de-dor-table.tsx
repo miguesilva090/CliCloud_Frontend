@@ -34,6 +34,9 @@ export function ListagemTiposDeDorTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: TipoDeDorTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemTiposDeDorTable({
   onOpenView?: (data: TipoDeDorTableDTO) => void
   onOpenEdit?: (data: TipoDeDorTableDTO) => void
   onOpenDelete?: (data: TipoDeDorTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

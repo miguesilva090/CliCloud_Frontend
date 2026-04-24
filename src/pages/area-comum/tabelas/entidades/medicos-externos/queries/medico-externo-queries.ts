@@ -34,8 +34,6 @@ export const useGetMedicoExterno = (id: string) =>
     queryFn: () =>
       MedicoExternoService('medicos-externos').getMedicoExterno(id),
     enabled: !!id,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 
 export const useCreateMedicoExterno = () => {

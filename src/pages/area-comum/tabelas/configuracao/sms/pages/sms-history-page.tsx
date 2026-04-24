@@ -5,7 +5,6 @@ import { useSearchParams } from 'react-router-dom'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
@@ -50,8 +49,6 @@ export function SmsHistoryPage() {
   const info = historicoQuery.data?.info
   const rows = (info?.data ?? []) as HistoricoSmsTabelaDTO[]
   const totalPages = info?.totalPages ?? 1
-  const tipoLabel = tipo === 'enviadas' ? 'Enviadas' : 'Recebidas'
-
   return (
     <>
       <PageHead title='Histórico de SMS | CliCloud' />
@@ -59,7 +56,12 @@ export function SmsHistoryPage() {
         <Card>
           <CardHeader className='pb-3'>
             <div className='flex items-center justify-between gap-3'>
-              <CardTitle>Histórico de SMS</CardTitle>
+              <CardTitle>
+                Histórico de SMS
+                <span className='ml-2 text-sm font-normal text-muted-foreground'>
+                  ({tipo === 'enviadas' ? 'Enviadas' : 'Recebidas'})
+                </span>
+              </CardTitle>
               <div className='flex items-center gap-2'>
                 <Button
                   size='sm'

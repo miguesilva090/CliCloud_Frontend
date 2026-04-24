@@ -6,7 +6,7 @@ import type {
 
 import { ENTIDADE_TIPO } from '@/lib/entidade-tipo'
 
-import type { UtenteEditFormValues } from '../utente-edit-form-types'
+import type { UtenteEditFormValues } from '../types/utente-edit-form-types'
 
 /**
  * Converte string vazia em null para campos DateTime?/DateOnly? do backend.

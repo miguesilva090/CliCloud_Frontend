@@ -31,6 +31,9 @@ export function ListagemSexosTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: SexoTableDTO[]
   isLoading: boolean
@@ -52,9 +55,16 @@ export function ListagemSexosTable({
   onOpenView?: (data: SexoTableDTO) => void
   onOpenEdit?: (data: SexoTableDTO) => void
   onOpenDelete?: (data: SexoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

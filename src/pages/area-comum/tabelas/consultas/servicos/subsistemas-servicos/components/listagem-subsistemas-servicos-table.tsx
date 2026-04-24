@@ -32,6 +32,9 @@ interface Props {
   onOpenView?: (data: SubsistemaServicoTableDTO) => void
   onOpenEdit?: (data: SubsistemaServicoTableDTO) => void
   onOpenDelete?: (data: SubsistemaServicoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }
 
 export function ListagemSubsistemasServicosTable({
@@ -53,13 +56,21 @@ export function ListagemSubsistemasServicosTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: Props) {
 
   const tableColumns = onOpenView
     ? getSubsistemasServicosColumnsWithViewCallback(
         onOpenView,
         onOpenEdit,
-        onOpenDelete
+        onOpenDelete,
+        {
+          canView,
+          canChange,
+          canDelete,
+        },
       )
     : subsistemasServicosColumns
 

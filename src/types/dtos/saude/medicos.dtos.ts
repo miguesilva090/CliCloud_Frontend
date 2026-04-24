@@ -105,6 +105,8 @@ export interface MedicoLightDTO {
   arquivo?: string | null
   carteira?: string | null
   nomeUtilizador?: string | null
+  /** Foto do médico (Entidade.UrlFoto). */
+  urlFoto?: string | null
   urlFotoAssinatura?: string | null
   numeroIdentificacaoBancaria?: string | null
   director: boolean
@@ -134,6 +136,8 @@ export interface MedicoTableDTO {
   numeroPorta?: string | null
   andarRua?: string | null
   status?: number | null
+  /** Foto do médico (URL parcial ou absoluta); para avatar na listagem. */
+  urlFoto?: string | null
   createdOn: string
   contactoCount: number
 

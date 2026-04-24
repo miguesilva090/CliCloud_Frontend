@@ -34,6 +34,9 @@ export function ListagemAlergiasTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: AlergiaTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemAlergiasTable({
   onOpenView?: (data: AlergiaTableDTO) => void
   onOpenEdit?: (data: AlergiaTableDTO) => void
   onOpenDelete?: (data: AlergiaTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

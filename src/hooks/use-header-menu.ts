@@ -4,23 +4,39 @@ import { MenuItem } from '@/types/navigation/menu.types'
 import { useAuthStore } from '@/stores/auth-store'
 import { usePermissionsStore, PermissionFlag } from '@/stores/permissions-store'
 
+/** Alinhado com `filterHeaderMenuByPermission`: respeita `funcionalidadeFallbackIds`. */
+export function hasMenuFuncionalidadeAccess(
+  item: MenuItem,
+  hasPermission: (id: string, flag: PermissionFlag) => boolean
+): boolean {
+  if (!item.funcionalidadeId) {
+    return true
+  }
+  if (hasPermission(item.funcionalidadeId, 'AuthVer')) {
+    return true
+  }
+  for (const fb of item.funcionalidadeFallbackIds ?? []) {
+    if (hasPermission(fb, 'AuthVer')) {
+      return true
+    }
+  }
+  return false
+}
+
 export const filterHeaderMenuByPermission = (
   items: MenuItem[],
   hasPermission: (id: string, flag: PermissionFlag) => boolean
 ): MenuItem[] => {
   return items.filter((item) => {
-    // If the item has a funcionalidadeId, check if user has permission
-    if (item.funcionalidadeId) {
-      // Check if user has at least AuthVer permission for this functionality
-      if (!hasPermission(item.funcionalidadeId, 'AuthVer')) {
-        return false
-      }
+    if (item.funcionalidadeId && !hasMenuFuncionalidadeAccess(item, hasPermission)) {
+      return false
     }
 
     // Recursively filter sub-items if they exist
     if (item.items) {
       item.items = filterHeaderMenuByPermission(item.items, hasPermission)
-      // Remove the item if it has no visible sub-items
+      /* Sem filhos visíveis: remover o grupo (evita mostrar entradas por fallbacks entre
+       * funcionalidades; cada filho deve ter AuthVer no próprio GUID). */
       if (item.items.length === 0) {
         return false
       }

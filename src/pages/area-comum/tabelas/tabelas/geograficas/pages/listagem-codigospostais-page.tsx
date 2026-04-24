@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {} from 'react-router-dom'
 import { Plus, List, RotateCw, RefreshCw, X } from 'lucide-react'
@@ -16,10 +16,18 @@ import { CodigoPostalViewCreateModal } from '../modals/codigopostal-view-create-
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { CodigoPostalTableDTO } from '@/types/dtos/base/codigospostais.dtos'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const LISTAGEM_CODIGO_POSTAL_PERM_ID =
+  modules.utilitarios.permissions.codigospostais.id
 
 type CodigoPostalModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemCodigosPostaisPage() {
+  const { canAdd } = useAreaComumEntityListPermissions(
+    LISTAGEM_CODIGO_POSTAL_PERM_ID
+  )
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -47,34 +55,44 @@ export function ListagemCodigosPostaisPage() {
   const errorMessage =
     error instanceof Error ? error.message : error ? String(error) : ''
 
-  const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => {
-        setViewData(null)
-        setModalMode('create')
-        setModalOpen(true)
+  const toolbarActions: DataTableAction[] = useMemo(() => {
+    const actions: DataTableAction[] = []
+    if (canAdd) {
+      actions.push({
+        label: 'Adicionar',
+        icon: <Plus className='h-4 w-4' />,
+        onClick: () => {
+          setViewData(null)
+          setModalMode('create')
+          setModalOpen(true)
+        },
+        variant: 'destructive',
+        className:
+          'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+      })
+    }
+    actions.push(
+      {
+        label: 'Listagens',
+        icon: <List className='h-4 w-4' />,
+        onClick: () => {},
+        variant: 'outline',
       },
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90'},
-    {
-      label: 'Listagens',
-      icon: <List className='h-4 w-4' />,
-      onClick: () => {},
-      variant: 'outline'},
-    {
-      label: 'Atualizar',
-      icon: <RotateCw className='h-4 w-4' />,
-      onClick: () => {
-        handleFiltersChange([])
-        handlePaginationChange(1, pageSize)
-        queryClient.invalidateQueries({
-          queryKey: ['codigospostais-paginated']})
-      },
-      variant: 'outline'},
-  ]
+      {
+        label: 'Atualizar',
+        icon: <RotateCw className='h-4 w-4' />,
+        onClick: () => {
+          handleFiltersChange([])
+          handlePaginationChange(1, pageSize)
+          queryClient.invalidateQueries({
+            queryKey: ['codigospostais-paginated'],
+          })
+        },
+        variant: 'outline',
+      }
+    )
+    return actions
+  }, [canAdd, pageSize, queryClient, handleFiltersChange, handlePaginationChange])
 
   return (
     <>
@@ -146,6 +164,7 @@ export function ListagemCodigosPostaisPage() {
             setModalMode('edit')
             setModalOpen(true)
           }}
+          rowActionsFuncionalidadeId={LISTAGEM_CODIGO_POSTAL_PERM_ID}
         />
         <CodigoPostalViewCreateModal
           open={modalOpen}

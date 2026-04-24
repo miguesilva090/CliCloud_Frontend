@@ -4,13 +4,13 @@ import { useNavigate } from 'react-router-dom'
 import { useLocation } from 'react-router-dom'
 import { useFormsStore } from '@/stores/use-forms-store'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { handleWindowClose } from '@/utils/window-utils'
+import { handleWindowClose, navigateManagedWindow } from '@/utils/window-utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHead } from '@/components/shared/page-head'
-import { DistritoUpdateForm } from '../distritos-forms/distrito-update-form'
+import { DistritoUpdateForm } from '../components/distritos-forms/distrito-update-form'
 
 export function DistritosUpdatePage() {
   const navigate = useNavigate()
@@ -41,7 +41,7 @@ export function DistritosUpdatePage() {
 
   // If no distritoId is provided, redirect to distritos page
   if (!distritoId) {
-    navigate('/utilitarios/tabelas/geograficas/distritos')
+    navigateManagedWindow(navigate, '/utilitarios/tabelas/geograficas/distritos')
     return null
   }
 

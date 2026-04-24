@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { toast } from '@/utils/toast-utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, type FieldError } from 'react-hook-form'
 import { useQueryClient } from '@tanstack/react-query'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
@@ -10,23 +10,19 @@ import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RefreshCw, X, Save } from 'lucide-react'
-import type {
-  CreateFornecedorRequest,
-  UpdateFornecedorRequest,
-  FornecedorDTO,
-} from '@/types/dtos/saude/fornecedores.dtos'
-import type { FornecedorEditFormValues } from './types/fornecedor-edit-form-types'
-import { ENTIDADE_TIPO, getTipoEntidadeIdForPayload } from '@/lib/entidade-tipo'
+import type { EntidadeContactoItem } from '@/types/dtos/saude/fornecedores.dtos'
+import type { FornecedorEditFormValues } from '../types/fornecedor-edit-form-types'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
 import {
   useCreateFornecedor,
   useGetFornecedor,
   useUpdateFornecedor,
-} from './queries/fornecedor-queries'
-import { fornecedorEditDefaultValues, fornecedorEditSchema } from './utils/fornecedor-edit-form'
-import { buildCreatePayload, buildUpdatePayload } from './utils/fornecedor-edit-payload'
-import { TabFornecedorEntidade } from './components/tab-fornecedor-entidade'
-import { TabFornecedorOutros } from './components/tab-fornecedor-outros'
+} from '../queries/fornecedor-queries'
+import { fornecedorEditDefaultValues, fornecedorEditSchema } from '../utils/fornecedor-edit-form'
+import { buildCreatePayload, buildUpdatePayload } from '../utils/fornecedor-edit-payload'
+import { TabFornecedorEntidade } from '../components/tab-fornecedor-entidade'
+import { TabFornecedorOutros } from '../components/tab-fornecedor-outros'
+import { navigateManagedWindow } from '@/utils/window-utils'
 
 // schema/payload extraídos para ./utils
 const LISTAGEM_PATH = '/area-comum/tabelas/entidades/fornecedores'
@@ -48,7 +44,7 @@ export function FornecedorEditPage() {
   const fornecedor = data?.info?.data
 
   const createFornecedor = useCreateFornecedor()
-  const updateFornecedor = useUpdateFornecedor(id)
+  const updateFornecedor = useUpdateFornecedor()
 
   const form = useForm<FornecedorEditFormValues>({
     resolver: zodResolver(fornecedorEditSchema),
@@ -59,11 +55,13 @@ export function FornecedorEditPage() {
   useEffect(() => {
     if (!fornecedor) return
     const emailContacto =
-      fornecedor.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 3)
-        ?.valor ?? ''
+      fornecedor.entidadeContactos?.find(
+        (c: EntidadeContactoItem) => c.entidadeContactoTipoId === 3,
+      )?.valor ?? ''
     const telefoneContacto =
-      fornecedor.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 1)
-        ?.valor ?? ''
+      fornecedor.entidadeContactos?.find(
+        (c: EntidadeContactoItem) => c.entidadeContactoTipoId === 1,
+      )?.valor ?? ''
     form.reset({
       nome: fornecedor.nome ?? '',
       email: fornecedor.email ?? emailContacto ?? '',
@@ -136,7 +134,7 @@ export function FornecedorEditPage() {
     }
     if (!fornecedor) return
     const payload = buildUpdatePayload(fornecedor, payloadValues)
-    updateFornecedor.mutate(payload)
+    updateFornecedor.mutate({ id, payload })
   }
 
   const title = isCreate
@@ -179,7 +177,7 @@ export function FornecedorEditPage() {
               variant='ghost'
               size='icon'
               className='h-8 w-8'
-              onClick={() => navigate(LISTAGEM_PATH)}
+              onClick={() => navigateManagedWindow(navigate, LISTAGEM_PATH)}
               title='Voltar'
             >
               <X className='h-4 w-4' />
@@ -193,7 +191,7 @@ export function FornecedorEditPage() {
               <form
                 onSubmit={form.handleSubmit(onSubmit, (errors) => {
                   const msg = Object.values(errors)
-                    .map((e) => (e?.message as string) ?? '')
+                    .map((e) => (e as FieldError | undefined)?.message ?? '')
                     .filter(Boolean)[0]
                   toast.error(msg || 'Corrija os erros do formulário antes de gravar.')
                 })}
@@ -238,7 +236,7 @@ export function FornecedorEditPage() {
               <form
                 onSubmit={form.handleSubmit(onSubmit, (errors) => {
                   const msg = Object.values(errors)
-                    .map((e) => (e?.message as string) ?? '')
+                    .map((e) => (e as FieldError | undefined)?.message ?? '')
                     .filter(Boolean)[0]
                   toast.error(msg || 'Corrija os erros do formulário antes de gravar.')
                 })}
@@ -257,7 +255,10 @@ export function FornecedorEditPage() {
                         type='button'
                         variant='default'
                         onClick={() =>
-                          navigate(`/fornecedores/${id}/editar`)
+                          navigateManagedWindow(
+                            navigate,
+                            `/fornecedores/${id}/editar`
+                          )
                         }
                       >
                         Editar

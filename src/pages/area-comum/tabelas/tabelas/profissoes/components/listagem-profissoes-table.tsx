@@ -31,6 +31,9 @@ export function ListagemProfissoesTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: ProfissaoTableDTO[]
   isLoading: boolean
@@ -52,9 +55,16 @@ export function ListagemProfissoesTable({
   onOpenView?: (data: ProfissaoTableDTO) => void
   onOpenEdit?: (data: ProfissaoTableDTO) => void
   onOpenDelete?: (data: ProfissaoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

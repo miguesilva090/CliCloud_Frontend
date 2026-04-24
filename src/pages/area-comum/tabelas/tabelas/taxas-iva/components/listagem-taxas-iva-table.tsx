@@ -31,6 +31,9 @@ export function ListagemTaxasIvaTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: TaxaIvaTableDTO[]
   isLoading: boolean
@@ -52,9 +55,16 @@ export function ListagemTaxasIvaTable({
   onOpenView?: (data: TaxaIvaTableDTO) => void
   onOpenEdit?: (data: TaxaIvaTableDTO) => void
   onOpenDelete?: (data: TaxaIvaTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

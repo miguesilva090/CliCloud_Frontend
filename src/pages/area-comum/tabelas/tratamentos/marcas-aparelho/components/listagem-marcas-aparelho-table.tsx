@@ -34,6 +34,9 @@ export function ListagemMarcasAparelhoTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: MarcaAparelhoTableDTO[]
   isLoading: boolean
@@ -55,10 +58,16 @@ export function ListagemMarcasAparelhoTable({
   onOpenView?: (data: MarcaAparelhoTableDTO) => void
   onOpenEdit?: (data: MarcaAparelhoTableDTO) => void
   onOpenDelete?: (data: MarcaAparelhoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
-  const tableColumns =
-    onOpenView ?
-      getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+  const tableColumns = onOpenView
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

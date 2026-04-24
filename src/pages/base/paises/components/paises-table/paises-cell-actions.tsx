@@ -4,10 +4,11 @@ import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { handleApiResponse } from '@/utils/response-handlers'
 import { toast } from '@/utils/toast-utils'
-import { generateInstanceId } from '@/utils/window-utils'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { Button } from '@/components/ui/button'
 import { AlertModal } from '@/components/shared/alert-modal'
 import { useDeletePais } from '../../queries/paises-mutations'
+import { useGeograficasListRowPermissions } from '@/hooks/use-geograficas-list-row-permissions'
 import {
   Dialog,
   DialogContent,
@@ -27,9 +28,18 @@ interface CellActionProps {
   onOpenView?: (data: PaisTableDTO) => void
   /** Quando definido (ex.: listagem área-comum), "Editar" abre o mesmo modal em modo edição */
   onOpenEdit?: (data: PaisTableDTO) => void
+  /** GUID da funcionalidade na licença (ex. Gestão de Países); controla Ver/Chg/Del. */
+  funcionalidadeId?: string
 }
 
-export const CellAction: React.FC<CellActionProps> = ({ data, onOpenView, onOpenEdit }) => {
+export const CellAction: React.FC<CellActionProps> = ({
+  data,
+  onOpenView,
+  onOpenEdit,
+  funcionalidadeId,
+}) => {
+  const { canView, canChange, canDelete } =
+    useGeograficasListRowPermissions(funcionalidadeId)
   const [open, setOpen] = useState(false)
   const [viewOpen, setViewOpen] = useState(false)
   const location = useLocation()
@@ -72,9 +82,9 @@ export const CellAction: React.FC<CellActionProps> = ({ data, onOpenView, onOpen
     if (onOpenEdit) {
       onOpenEdit(pais)
     } else {
-      const instanceId = generateInstanceId()
-      navigate(
-        `${basePath}/update?paisId=${pais.id}&instanceId=${instanceId}`
+      navigateManagedWindow(
+        navigate,
+        `${basePath}/update?paisId=${pais.id}`
       )
     }
   }
@@ -130,37 +140,43 @@ export const CellAction: React.FC<CellActionProps> = ({ data, onOpenView, onOpen
       </Dialog>
       )}
       <div className='flex items-center justify-end gap-1'>
-        <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          className='h-8 w-8'
-          onClick={handleViewClick}
-          title='Ver'
-        >
-          <Eye className='h-4 w-4' />
-        </Button>
-        <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          className='h-8 w-8'
-          onClick={() => handleUpdateClick(data)}
-          title='Editar'
-        >
-          <Pencil className='h-4 w-4' />
-        </Button>
-        <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          className='h-8 w-8 text-destructive hover:text-destructive'
-          disabled={deletePaisMutation.isPending}
-          onClick={() => setOpen(true)}
-          title='Apagar'
-        >
-          <Trash2 className='h-4 w-4' />
-        </Button>
+        {canView ? (
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='h-8 w-8'
+            onClick={handleViewClick}
+            title='Ver'
+          >
+            <Eye className='h-4 w-4' />
+          </Button>
+        ) : null}
+        {canChange ? (
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='h-8 w-8'
+            onClick={() => handleUpdateClick(data)}
+            title='Editar'
+          >
+            <Pencil className='h-4 w-4' />
+          </Button>
+        ) : null}
+        {canDelete ? (
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='h-8 w-8 text-destructive hover:text-destructive'
+            disabled={deletePaisMutation.isPending}
+            onClick={() => setOpen(true)}
+            title='Apagar'
+          >
+            <Trash2 className='h-4 w-4' />
+          </Button>
+        ) : null}
       </div>
     </>
   )

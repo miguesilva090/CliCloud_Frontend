@@ -27,10 +27,16 @@ import { MotivoAltaViewCreateModal } from '../modals/motivos-alta-view-create-mo
 import { MotivoAltaService } from '@/lib/services/motivos-alta'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const motivosAltaPermId = modules.areaComum.permissions.motivosAlta.id
 
 type MotivoAltaModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemMotivosAltaPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(motivosAltaPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
     const queryClient = useQueryClient()
     const [modalOpen, setModalOpen] = useState(false)
@@ -61,16 +67,22 @@ export function ListagemMotivosAltaPage() {
     const errorMessage = error instanceof Error ? error.message : error ? String(error) : ''
 
     const toolbarActions: DataTableAction[] = [
-        {
-            label: 'Adicionar',
-            icon: <Plus className='h-4 w-4' />,
-            onClick: () => {
-                setViewData(null)
-                setModalMode('create')
-                setModalOpen(true)
-            },
-            variant: 'destructive',
-            className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90'},
+        ...(canAdd
+            ? [
+                  {
+                      label: 'Adicionar',
+                      icon: <Plus className='h-4 w-4' />,
+                      onClick: () => {
+                          setViewData(null)
+                          setModalMode('create')
+                          setModalOpen(true)
+                      },
+                      variant: 'destructive' as const,
+                      className:
+                          'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+                  },
+              ]
+            : []),
         {
             label: 'Listagens',
             icon: <List className='h-4 w-4' />,
@@ -186,16 +198,24 @@ export function ListagemMotivosAltaPage() {
                 FilterControls={ListagemMotivosAltaFilterControls}
                 hiddenColumns={[]}
                 onOpenView={(rowData) => {
+                    if (!canView) return
                     setViewData(rowData)
                     setModalMode('view')
                     setModalOpen(true)
                 }}
-                onOpenEdit={(rowData) => {
-                    setViewData(rowData)
-                    setModalMode('edit')
-                    setModalOpen(true)
-                }}
-                onOpenDelete={handleOpenView}
+                onOpenEdit={
+                    canChange
+                        ? (rowData) => {
+                              setViewData(rowData)
+                              setModalMode('edit')
+                              setModalOpen(true)
+                          }
+                        : undefined
+                }
+                onOpenDelete={canDelete ? handleOpenView : undefined}
+                canView={canView}
+                canChange={canChange}
+                canDelete={canDelete}
             />
             <MotivoAltaViewCreateModal
                 open={modalOpen}

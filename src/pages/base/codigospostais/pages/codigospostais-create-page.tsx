@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHead } from '@/components/shared/page-head'
-import { CodigoPostalCreateForm } from '../codigospostais-forms/codigopostal-create-form'
+import { CodigoPostalCreateForm } from '../components/codigospostais-forms/codigopostal-create-form'
 
 export function CodigosPostaisCreatePage() {
   const navigate = useNavigate()

@@ -31,6 +31,9 @@ export function ListagemMoedasTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: MoedaTableDTO[]
   isLoading: boolean
@@ -52,9 +55,16 @@ export function ListagemMoedasTable({
   onOpenView?: (data: MoedaTableDTO) => void
   onOpenEdit?: (data: MoedaTableDTO) => void
   onOpenDelete?: (data: MoedaTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

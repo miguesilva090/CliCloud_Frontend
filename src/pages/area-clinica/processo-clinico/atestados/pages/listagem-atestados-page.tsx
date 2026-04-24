@@ -29,7 +29,7 @@ import { AtestadoViewModal } from '../modals/atestado-view-modal'
 import { AtestadosService } from '@/lib/services/saude/atestados-service'
 import type { AtestadoTableDTO } from '@/types/dtos/saude/atestados.dtos'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { openPathInApp } from '@/utils/window-utils'
+import { openPathInApp, navigateManagedWindow } from '@/utils/window-utils'
 
 export function ListagemAtestadosPage() {
   const navigate = useNavigate()
@@ -165,7 +165,12 @@ export function ListagemAtestadosPage() {
               variant='ghost'
               size='icon'
               className='h-8 w-8'
-              onClick={() => navigate('/area-clinica/processo-clinico')}
+              onClick={() =>
+                navigateManagedWindow(
+                  navigate,
+                  '/area-clinica/processo-clinico'
+                )
+              }
               title='Fechar'
             >
               <X className='h-4 w-4' />

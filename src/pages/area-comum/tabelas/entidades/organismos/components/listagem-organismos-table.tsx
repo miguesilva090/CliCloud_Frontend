@@ -34,6 +34,9 @@ export function ListagemOrganismosTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: OrganismoTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemOrganismosTable({
   onOpenView?: (data: OrganismoTableDTO) => void
   onOpenEdit?: (data: OrganismoTableDTO) => void
   onOpenDelete?: (data: OrganismoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

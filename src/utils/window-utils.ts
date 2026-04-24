@@ -1,24 +1,15 @@
 import { useCallback } from 'react'
 import { roleHeaderMenus } from '@/config/menu-items'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { matchPath, useLocation, useNavigate } from 'react-router-dom'
 import { useFormsStore } from '@/stores/use-forms-store'
 import { usePagesStore } from '@/stores/use-pages-store'
-import { useMapStore } from '@/stores/use-map-store'
 import { useWindowsStore, WindowState } from '@/stores/use-windows-store'
 import { Icons } from '@/components/ui/icons'
+import { utilitariosRoutes } from '@/routes/base/utilitarios-routes'
+import { areaComumRoutes } from '@/routes/area-comum/areaComum'
+import { areaClinicaRoutes } from '@/routes/area-clinica/areaClinica'
+import { reportsRoutes } from '@/routes/reports/reports-routes'
 
-// Wrapper de window.open para evitar erros de export em módulos ESM
-// e permitir imports `{ open } from '@/utils/window-utils'` se existirem.
-export function open(
-  url?: string | URL,
-  target?: string,
-  features?: string,
-): Window | null {
-  if (typeof window === 'undefined' || typeof window.open !== 'function') {
-    return null
-  }
-  return window.open(url?.toString(), target, features)
-}
 
 /**
  * Hook to get the current window ID based on the location and instance ID.
@@ -78,42 +69,97 @@ export function getCurrentWindowId() {
   return resolvedWindow?.id || ''
 }
 
-// Helpers para navegação especial (usadas no header/dashboard)
-export function isTabelasPath(href: string): boolean {
-  return typeof href === 'string' && href.startsWith('/area-comum/tabelas/')
-}
-
-export function isProcessoClinicoPath(href: string): boolean {
-  if (typeof href !== 'string') return false
-  return (
-    href === '/area-clinica/processo-clinico' ||
-    href.startsWith('/area-clinica/processo-clinico/')
-  )
-}
-
 /**
  * Indica se uma rota deve ser gerida pelo sistema de janelas/tabs.
  * Usado em stores de navegação (ex.: use-navigation-history-store)
  * para distinguir entre ecrãs "principais" e páginas simples.
  */
 export function shouldManageWindow(pathname: string): boolean {
-  if (typeof pathname !== 'string') return false
-  const path = pathname.startsWith('/') ? pathname : `/${pathname}`
+  const normalizedPath = pathname.startsWith('/')
+    ? pathname.substring(1)
+    : pathname
+  const pathForMatch = pathname.startsWith('/') ? pathname : `/${pathname}`
 
-  // Área Comum – Tabelas
-  if (path.startsWith('/area-comum/tabelas')) return true
+  const allRoutes = [
+    ...utilitariosRoutes,
+    ...areaComumRoutes,
+    ...areaClinicaRoutes,
+    ...reportsRoutes,
+  ]
 
-  // Área Clínica – Processo Clínico
-  if (path.startsWith('/area-clinica/processo-clinico')) return true
-
-  // Utentes raiz e suas secções principais
-  if (path === '/utentes' || path.startsWith('/utentes/')) return true
-
-  // Outras áreas principais onde faz sentido ter janelas
-  if (path.startsWith('/reports')) return true
-  if (path.startsWith('/utilitarios')) return true
+  for (const route of allRoutes) {
+    if (!route.manageWindow) continue
+    if (route.path === normalizedPath) {
+      return true
+    }
+    const pattern = route.path.startsWith('/') ? route.path : `/${route.path}`
+    if (matchPath({ path: pattern, end: true }, pathForMatch)) {
+      return true
+    }
+  }
 
   return false
+}
+
+/**
+ * Navegação alinhada ao Luma (sidebar/header): rotas com `manageWindow`
+ * recebem `instanceId` na query; preserva query string existente em `href`.
+ *
+ * Se já existir uma janela/tab para o mesmo `path`, reutiliza essa instância
+ * (a mais recentemente acedida) em vez de abrir outra tab.
+ */
+export type NavigateManagedWindowOptions = {
+  replace?: boolean
+  state?: unknown
+  /** Se true, ignora janelas existentes e gera um novo `instanceId` (nova tab). */
+  forceNewInstance?: boolean
+}
+
+export function navigateManagedWindow(
+  navigate: ReturnType<typeof useNavigate>,
+  href: string,
+  options?: NavigateManagedWindowOptions
+): void {
+  if (typeof href !== 'string') {
+    return
+  }
+
+  const { forceNewInstance, ...navigateOptions } = options ?? {}
+
+  const [rawPath, rawQuery = ''] = href.split('?')
+  const pathOnly = rawPath.startsWith('/') ? rawPath : `/${rawPath}`
+
+  if (!shouldManageWindow(pathOnly)) {
+    navigate(href, navigateOptions)
+    return
+  }
+
+  if (!forceNewInstance) {
+    const windowsOnPath = useWindowsStore.getState().getWindowsByPath(pathOnly)
+    if (windowsOnPath.length > 0) {
+      const pick = windowsOnPath.reduce((best, w) =>
+        (w.lastAccessed ?? 0) >= (best.lastAccessed ?? 0) ? w : best
+      )
+      const searchParams = new URLSearchParams()
+      if (pick.searchParams) {
+        Object.entries(pick.searchParams).forEach(([k, v]) => {
+          searchParams.set(k, v)
+        })
+      }
+      const hrefParams = new URLSearchParams(rawQuery)
+      hrefParams.delete('instanceId')
+      hrefParams.forEach((v, k) => {
+        searchParams.set(k, v)
+      })
+      searchParams.set('instanceId', pick.instanceId)
+      navigate(`${pathOnly}?${searchParams.toString()}`, navigateOptions)
+      return
+    }
+  }
+
+  const params = new URLSearchParams(rawQuery)
+  params.set('instanceId', generateInstanceId())
+  navigate(`${pathOnly}?${params.toString()}`, navigateOptions)
 }
 
 /**
@@ -137,95 +183,24 @@ export function handleWindowClose(
   navigate: (path: string) => void,
   removeWindow: (id: string) => void
 ) {
-  const normalizePathForWindow = (p: string) => {
-    const s = (p || '').split('?')[0].trim()
-    if (!s) return ''
-    const withSlash = s.startsWith('/') ? s : `/${s}`
-    return withSlash.replace(/\/+$/, '') || '/'
-  }
+  removeWindow(windowId)
 
-  const storeState = useWindowsStore.getState()
-  const mapStore = useMapStore.getState()
+  const windows = useWindowsStore.getState().windows
 
-  const getAreaRootPath = (path: string): string => {
-    const p = (path || '').toLowerCase()
-    if (p.startsWith('/area-clinica/processo-clinico'))
-      return '/area-clinica/processo-clinico'
-    if (p.startsWith('/area-comum/tabelas')) return '/area-comum/tabelas'
-    if (p.startsWith('/utentes')) return '/utentes'
-    if (p.startsWith('/reports')) return '/reports'
-    if (p.startsWith('/utilitarios')) return '/utilitarios'
-    return '/'
-  }
-
-  // 1) Identificar a janela a fechar (mesmo princípio do window-manager).
-  let effectiveWindowId = windowId
-  const instanceIdFromUrl =
-    new URLSearchParams(window.location.search).get('instanceId') || null
-
-  let closingWindow = storeState.windows.find((w) => w.id === effectiveWindowId)
-  if (!closingWindow?.id && instanceIdFromUrl) {
-    const here = normalizePathForWindow(window.location.pathname)
-    closingWindow =
-      storeState.windows.find(
-        (w) =>
-          w.instanceId === instanceIdFromUrl &&
-          normalizePathForWindow(w.path) === here
-      ) ?? storeState.windows.find((w) => w.instanceId === instanceIdFromUrl)
-  }
-
-  // Se não for possível identificar, não mexer (evita deixar tabs inconsistentes).
-  if (!closingWindow?.id) return
-
-  const windowPath = closingWindow.path
-
-  // 2) removeWindow + limpezas (igual ao window-manager).
-  removeWindow(closingWindow.id)
-
-  const pagesStore = usePagesStore.getState()
-  pagesStore.removePageStateByWindowId(closingWindow.id)
-  mapStore.cleanupWindowData(closingWindow.id)
-  cleanupWindowForms(closingWindow.id)
-
-  // 3) restante windows.
-  const remaining = useWindowsStore.getState().windows
-  if (remaining.length === 0) {
-    cleanupWindowForms('*')
-
-    const targetPath = getAreaRootPath(windowPath)
-    clearAllWindowData()
-    window.location.href = `${window.location.origin}${targetPath}`
-    return
-  }
-
-  // 4) Se estamos no path da janela que fechámos, ativar a última restante.
-  if (
-    normalizePathForWindow(windowPath) ===
-    normalizePathForWindow(window.location.pathname)
-  ) {
-    const last = remaining[remaining.length - 1]
+  const remainingWindows = windows.filter((w) => w.id !== windowId)
+  if (remainingWindows.length > 0 ) {
+    const lastWindow = remainingWindows[remainingWindows.length - 1]
     const searchParams = new URLSearchParams()
-    if (last.searchParams) {
-      Object.entries(last.searchParams).forEach(([k, v]) =>
-        searchParams.set(k, v)
-      )
+    if (lastWindow.searchParams) {
+      Object.entries(lastWindow.searchParams).forEach(([key, value]) => {
+        searchParams.set(key, value)
+      })
     }
-    searchParams.set('instanceId', last.instanceId)
-    useWindowsStore.getState().restoreWindow(last.id)
-    navigate(`${last.path}?${searchParams.toString()}`)
+    searchParams.set('instanceId', lastWindow.instanceId)
+    navigate(`${lastWindow.path}?${searchParams.toString()}`)
+  } else {
+    navigate('/')
   }
-}
-
-/**
- * Para páginas de listagem (botão X ao lado do refresh): mesmo fluxo que o "X" da barra inferior.
- * Usa `handleWindowClose` com o store — não usar `window.location.replace('/area-comum/tabelas')`.
- */
-export function useCloseCurrentWindowLikeTabBar() {
-  const navigate = useNavigate()
-  const removeWindow = useWindowsStore((s) => s.removeWindow)
-  return useCallback(() => {
-    handleWindowClose('', navigate, removeWindow)
-  }, [navigate, removeWindow])
 }
 
 /**
@@ -537,6 +512,195 @@ export function clearAllWindowData() {
   useFormsStore.persist.clearStorage()
 }
 
+function splitPathnameAndSearchParams(pathWithQuery: string): {
+  pathname: string
+  searchParams: Record<string, string>
+} {
+  const normalized = pathWithQuery.startsWith('/')
+    ? pathWithQuery
+    : `/${pathWithQuery}`
+  const q = normalized.indexOf('?')
+  const pathname = q === -1 ? normalized : normalized.slice(0, q)
+  const queryString = q === -1 ? '' : normalized.slice(q + 1)
+  const searchParams: Record<string, string> = {}
+  if (queryString) {
+    new URLSearchParams(queryString).forEach((value, key) => {
+      searchParams[key] = value
+    })
+  }
+  return { pathname, searchParams }
+}
+
+/**
+ * Regista a janela na store e navega com `instanceId`, para o WindowManager
+ * reconhecer a instância (título e query preservados).
+ */
+function registerInAppWindowAndNavigate(
+  navigate: (path: string) => void,
+  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
+  pathname: string,
+  searchParams: Record<string, string>,
+  title: string
+) {
+  const instanceId = generateInstanceId()
+  const windowId = generateInstanceId()
+
+  addWindow({
+    id: windowId,
+    instanceId,
+    title: truncateWindowTitle(title),
+    path: pathname,
+    hasFormData: false,
+    searchParams,
+  })
+
+  const pagesStore = usePagesStore.getState()
+  pagesStore.setPageStateByWindowId(windowId, {
+    windowId,
+    pathname,
+    searchParams,
+    filters: [],
+    sorting: [],
+    pagination: { page: 1, pageSize: 10 },
+    columnVisibility: {},
+    selectedRows: [],
+    modalStates: {},
+  })
+
+  const sp = new URLSearchParams()
+  Object.entries(searchParams).forEach(([k, v]) => {
+    sp.set(k, v)
+  })
+  sp.set('instanceId', instanceId)
+  navigate(`${pathname}?${sp.toString()}`)
+}
+
+export function openPathInApp(
+  navigate: (path: string) => void,
+  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
+  pathWithQuery: string,
+  title: string
+) {
+  const { pathname, searchParams } = splitPathnameAndSearchParams(pathWithQuery)
+  registerInAppWindowAndNavigate(navigate, addWindow, pathname, searchParams, title)
+}
+
+export function openEntityEditInApp(
+  navigate: (path: string) => void,
+  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
+  editPath: string,
+  _entityId: string,
+  title: string | null
+) {
+  openPathInApp(navigate, addWindow, editPath, title ?? 'Editar')
+}
+
+export function openUtenteCreationInApp(
+  navigate: (path: string) => void,
+  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void
+) {
+  openPathInApp(navigate, addWindow, '/utentes/novo', 'Novo utente')
+}
+
+export function openUtenteEditInApp(
+  navigate: (path: string) => void,
+  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
+  id: string,
+  nome?: string | null
+) {
+  openPathInApp(
+    navigate,
+    addWindow,
+    `/utentes/${id}/editar`,
+    nome ? `Utente: ${nome}` : 'Utente'
+  )
+}
+
+export function openMedicoCreationInApp(
+  navigate: (path: string) => void,
+  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void
+) {
+  openPathInApp(navigate, addWindow, '/medicos/novo', 'Novo médico')
+}
+
+export function openMedicoViewInApp(
+  navigate: (path: string) => void,
+  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
+  id: string,
+  nome?: string | null
+) {
+  openPathInApp(
+    navigate,
+    addWindow,
+    `/medicos/${id}`,
+    nome ? `Médico: ${nome}` : 'Médico'
+  )
+}
+
+export function openMedicoEditInApp(
+  navigate: (path: string) => void,
+  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
+  id: string,
+  nome?: string | null
+) {
+  openPathInApp(
+    navigate,
+    addWindow,
+    `/medicos/${id}/editar`,
+    nome ? `Médico: ${nome}` : 'Médico'
+  )
+}
+
+export function openOrganismoCreationInApp(
+  navigate: (path: string) => void,
+  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void
+) {
+  openPathInApp(navigate, addWindow, '/organismos/novo', 'Novo organismo')
+}
+
+export function openPatologiaCreationInApp(
+  navigate: (path: string) => void,
+  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void
+) {
+  openPathInApp(
+    navigate,
+    addWindow,
+    '/area-comum/tabelas/tratamentos/patologias/novo',
+    'Nova patologia'
+  )
+}
+
+export function openPatologiaEditInApp(
+  navigate: (path: string) => void,
+  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
+  id: string,
+  designacao: string,
+  mode: 'view' | 'edit'
+) {
+  const base = '/area-comum/tabelas/tratamentos/patologias'
+  const suffix = mode === 'view' ? '/ver' : '/editar'
+  openPathInApp(
+    navigate,
+    addWindow,
+    `${base}/${id}${suffix}`,
+    designacao ? `Patologia: ${designacao}` : 'Patologia'
+  )
+}
+
+export function useCloseCurrentWindowLikeTabBar() {
+  const navigate = useNavigate()
+  const removeWindow = useWindowsStore((s) => s.removeWindow)
+
+  return useCallback(() => {
+    const windowId = getCurrentWindowId()
+    if (windowId) {
+      handleWindowClose(windowId, navigate, removeWindow)
+    } else {
+      navigate(-1)
+    }
+  }, [navigate, removeWindow])
+}
+
 /**
  * Opens a new window for creating an item and sets up communication
  * with the parent window for auto-selection when the item is created.
@@ -595,258 +759,120 @@ export function createEntityCreationWindow(route: string) {
   }
 }
 
+export const openUtenteCreationWindow = createEntityCreationWindow(
+  '/area-comum/tabelas/entidades/utentes/novo'
+)
+
+export const openMedicoCreationWindow = createEntityCreationWindow(
+  '/area-comum/tabelas/entidades/medicos/novo'
+)
 
 
-// --- Criação em app para entidades clínicas principais ---
-// Estas funções são usadas nas listagens/tabelas para abrir janelas de criação dentro da app.
+export const openOrganismoCreationWindow = createEntityCreationWindow(
+  '/area-comum/tabelas/entidades/organismos/novo'
+)
 
-export function openUtenteCreationInApp(
+export const openMedicoExternoCreationWindow = createEntityCreationWindow(
+  '/area-comum/tabelas/entidades/medicos-externos/novo'
+)
+
+export const openCentroSaudeCreationWindow = createEntityCreationWindow(
+  '/area-comum/tabelas/entidades/centros-saude/novo'
+)
+
+export const openFuncionarioCreationWindow = createEntityCreationWindow(
+  '/area-comum/tabelas/entidades/funcionarios/novo'
+)
+
+export const openFornecedorCreationWindow = createEntityCreationWindow(
+  '/area-comum/tabelas/entidades/fornecedores/novo'
+)
+
+export const openTecnicoCreationWindow = createEntityCreationWindow(
+  '/area-comum/tabelas/entidades/tecnicos/novo'
+)
+
+export const openEmpresaCreationWindow = createEntityCreationWindow(
+  '/area-comum/tabelas/entidades/empresas/nova'
+)
+
+export const openSeguradoraCreationWindow = createEntityCreationWindow(
+  '/area-comum/tabelas/entidades/seguradoras/nova'
+)
+
+export const openPatologiaCreationWindow = createEntityCreationWindow(
+  '/area-comum/tabelas/tratamentos/patologias/novo'
+)
+
+export function openViewWindow(
   navigate: (path: string) => void,
-  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
+  parentWindowId: string,
+  route: string,
+  entityId: string,
+  entityIdParamName: string,
+  updateWindowState: (id: string, updates: Partial<WindowState>) => void,
+  findWindowByPathAndInstanceId: (
+    path: string,
+    instanceId: string
+  ) => WindowState | undefined
 ) {
-  const instanceId = generateInstanceId()
-  const basePath = '/utentes/novo'
-  const fullPath = `${basePath}?instanceId=${instanceId}`
-  addWindow({
-    id: instanceId,
-    path: basePath,
-    title: 'Novo Utente',
-    instanceId,
-    searchParams: { instanceId },
-  })
-  navigate(fullPath)
+  const windowId = `view-${Date.now()}`
+
+  sessionStorage.setItem(`parent-window-${windowId}`, parentWindowId)
+
+  navigate(`${route}?${entityIdParamName}=${entityId}&instanceId=${windowId}`)
+
+  setTimeout(() => {
+    const createdWindow = findWindowByPathAndInstanceId(route, windowId)
+
+    if (createdWindow) {
+      updateWindowState(createdWindow.id, {
+        parentWindowId: parentWindowId,
+      })
+    }
+  }, 500)
 }
 
-export function openUtenteEditInApp(
-  navigate: (path: string) => void,
-  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
-  id: string,
-  nome?: string | null,
+export function createEntityViewWindow(
+  route: string,
+  entityIdParamName: string
 ) {
-  const instanceId = generateInstanceId()
-  const basePath = `/utentes/${id}/editar`
-  const path = `${basePath}?instanceId=${instanceId}`
-  addWindow({
-    id: instanceId,
-    path: basePath,
-    title: nome ? `Utente: ${nome}` : 'Editar Utente',
-    instanceId,
-    searchParams: { instanceId },
-  })
-  navigate(path)
-}
-
-export function openMedicoCreationInApp(
-  navigate: (path: string) => void,
-  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
-) {
-  const instanceId = generateInstanceId()
-  const basePath = '/medicos/novo'
-  const fullPath = `${basePath}?instanceId=${instanceId}`
-  addWindow({
-    id: instanceId,
-    path: basePath,
-    title: 'Novo Médico',
-    instanceId,
-    searchParams: { instanceId },
-  })
-  navigate(fullPath)
-}
-
-export function openMedicoEditInApp(
-  navigate: (path: string) => void,
-  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
-  id: string,
-  nome?: string | null,
-) {
-  const instanceId = generateInstanceId()
-  const basePath = `/medicos/${id}/editar`
-  const fullPath = `${basePath}?instanceId=${instanceId}`
-  addWindow({
-    id: instanceId,
-    path: basePath,
-    title: nome ? `Médico: ${nome}` : 'Editar Médico',
-    instanceId,
-    searchParams: { instanceId },
-  })
-  navigate(fullPath)
-}
-
-export function openMedicoViewInApp(
-  navigate: (path: string) => void,
-  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
-  id: string,
-  nome?: string | null,
-) {
-  const instanceId = generateInstanceId()
-  const basePath = `/medicos/${id}`
-  const fullPath = `${basePath}?instanceId=${instanceId}`
-  addWindow({
-    id: instanceId,
-    path: basePath,
-    title: nome ? `Médico: ${nome}` : 'Médico',
-    instanceId,
-    searchParams: { instanceId },
-  })
-  navigate(fullPath)
-}
-
-export function openOrganismoCreationInApp(
-  navigate: (path: string) => void,
-  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
-  parentWindowId?: string,
-) {
-  const instanceId = generateInstanceId()
-  const basePath = '/organismos/novo'
-  const fullPath = `${basePath}?instanceId=${instanceId}`
-  addWindow({
-    id: instanceId,
-    path: basePath,
-    title: 'Novo Organismo',
-    instanceId,
-    searchParams: { instanceId },
-    parentWindowId,
-  })
-  navigate(fullPath)
-}
-
-export function openEmpresaCreationInApp(
-  navigate: (path: string) => void,
-  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
-) {
-  const instanceId = generateInstanceId()
-  const basePath = '/area-comum/tabelas/entidades/empresas/nova'
-  const fullPath = `${basePath}?instanceId=${instanceId}`
-  addWindow({
-    id: instanceId,
-    path: basePath,
-    title: 'Criar Empresa',
-    instanceId,
-    searchParams: { instanceId },
-  })
-  navigate(fullPath)
-}
-
-/**
- * Adiciona uma nova tab na barra de janelas da app sem navegar.
- * Mantém a vista atual (e o modal/estado) e quando o utilizador clicar na nova tab é que navega.
- */
-export function openPathInNewAppTab(
-  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
-  setActiveWindow: (id: string) => void,
-  path: string,
-  title: string,
-) {
-  const currentWindowId = getCurrentWindowId()
-  const instanceId = generateInstanceId()
-  const rawBasePath = path.startsWith('/') ? path : `/${path}`
-  const [pathname, queryPart = ''] = rawBasePath.split('?')
-  const existingParams = new URLSearchParams(queryPart)
-  existingParams.set('instanceId', instanceId)
-
-  addWindow({
-    id: instanceId,
-    instanceId,
-    path: pathname,
-    title,
-    searchParams: Object.fromEntries(existingParams.entries()),
-  })
-  if (currentWindowId) {
-    setActiveWindow(currentWindowId)
+  return function openEntityViewWindow(
+    navigate: (path: string) => void,
+    parentWindowId: string,
+    entityId: string,
+    updateWindowState: (id: string, updates: Partial<WindowState>) => void,
+    findWindowByPathAndInstanceId: (
+      path: string,
+      instanceId: string
+  ) => WindowState | undefined
+  ) {
+    return openViewWindow(
+      navigate,
+      parentWindowId,
+      route,
+      entityId,
+      entityIdParamName,
+      updateWindowState,
+      findWindowByPathAndInstanceId
+    )
   }
 }
 
-/**
- * Abre uma página numa nova tab da barra de janelas e navega para ela (mostra o conteúdo).
- * Mesmo padrão das outras listagens (Organismos, Patologias, etc.).
- */
-export function openPathInApp(
-  navigate: (path: string) => void,
-  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
-  path: string,
-  title: string,
-) {
-  const instanceId = generateInstanceId()
-  const rawBasePath = path.startsWith('/') ? path : `/${path}`
-  const [pathname, queryPart = ''] = rawBasePath.split('?')
-  const existingParams = new URLSearchParams(queryPart)
-  existingParams.set('instanceId', instanceId)
+export const openUtenteViewWindow = createEntityViewWindow(
+  '/area-comum/tabelas/entidades/utentes/update',
+  'utenteId'
+)
 
-  addWindow({
-    id: instanceId,
-    instanceId,
-    path: pathname,
-    title,
-    searchParams: Object.fromEntries(existingParams.entries()),
-  })
-  navigate(`${pathname}?${existingParams.toString()}`)
-}
+export const openMedicoViewWindow = createEntityViewWindow(
+  '/area-comum/tabelas/entidades/medicos/update',
+  'medicoId'
+)
 
-export function openPatologiaCreationInApp(
-  navigate: (path: string) => void,
-  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
-) {
-  const instanceId = generateInstanceId()
-  const basePath = '/area-comum/tabelas/tratamentos/patologias/novo'
-  const fullPath = `${basePath}?instanceId=${instanceId}`
-  addWindow({
-    id: instanceId,
-    path: basePath,
-    title: 'Nova Patologia',
-    instanceId,
-    searchParams: { instanceId },
-  })
-  navigate(fullPath)
-}
-
-export function openPatologiaEditInApp(
-  navigate: (path: string) => void,
-  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
-  id: string,
-  title: string | null,
-  mode: 'view' | 'edit',
-) {
-  const instanceId = generateInstanceId()
-  const basePath =
-    mode === 'view'
-      ? `/area-comum/tabelas/tratamentos/patologias/${id}/ver`
-      : `/area-comum/tabelas/tratamentos/patologias/${id}/editar`
-  const fullPath = `${basePath}?instanceId=${instanceId}`
-  addWindow({
-    id: instanceId,
-    path: basePath,
-    title: title ?? 'Patologia',
-    instanceId,
-    searchParams: { instanceId },
-  })
-  navigate(fullPath)
-}
-
-/**
- * Função genérica para abrir uma janela de edição de entidade a partir das Tabelas.
- * Usada por listagens de fornecedores, técnicos, centros de saúde, etc.
- */
-export function openEntityEditInApp(
-  navigate: (path: string) => void,
-  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void,
-  path: string,
-  _id: string,
-  title: string | null,
-) {
-  const instanceId = generateInstanceId()
-  const basePath = path
-  const fullPath = `${basePath}?instanceId=${instanceId}`
-
-  addWindow({
-    id: instanceId,
-    path: basePath,
-    title: title ?? 'Detalhe',
-    instanceId,
-    searchParams: { instanceId },
-  })
-
-  navigate(fullPath)
-}
+export const openOrganismoViewWindow = createEntityViewWindow(
+  '/area-comum/tabelas/entidades/organismos/update',
+  'organismoId'
+)
 
 export const openPaisCreationWindow = createEntityCreationWindow(
   '/utilitarios/tabelas/geograficas/paises/create'
@@ -896,74 +922,6 @@ export const openCodigoPostalViewWindow = createEntityViewWindow(
 export const openRuaCreationWindow = createEntityCreationWindow(
   '/utilitarios/tabelas/geograficas/ruas/create'
 )
-
-/**
- * Opens a window for viewing/editing an existing entity.
- * This is used when you want to open an entity in update mode.
- */
-export function openViewWindow(
-  navigate: (path: string) => void,
-  parentWindowId: string,
-  route: string,
-  entityId: string,
-  entityIdParamName: string,
-  updateWindowState: (id: string, updates: Partial<WindowState>) => void,
-  findWindowByPathAndInstanceId: (
-    path: string,
-    instanceId: string
-  ) => WindowState | undefined
-) {
-  const windowId = `view-${Date.now()}`
-
-  // Store the parent window ID in sessionStorage for the new window to access
-  sessionStorage.setItem(`parent-window-${windowId}`, parentWindowId)
-
-  // Navigate to the route with the entity ID parameter
-  navigate(`${route}?${entityIdParamName}=${entityId}&instanceId=${windowId}`)
-
-  // Update the window with parent reference after a delay
-  setTimeout(() => {
-    const createdWindow = findWindowByPathAndInstanceId(route, windowId)
-
-    if (createdWindow) {
-      updateWindowState(createdWindow.id, {
-        parentWindowId: parentWindowId,
-      })
-    }
-  }, 500)
-}
-
-/**
- * Helper function to create custom view window functions for different entities.
- * This makes it very easy to create specific functions for viewing different entity types.
- */
-export function createEntityViewWindow(
-  route: string,
-  entityIdParamName: string
-) {
-  return function openEntityViewWindow(
-    navigate: (path: string) => void,
-    parentWindowId: string,
-    entityId: string,
-    updateWindowState: (id: string, updates: Partial<WindowState>) => void,
-    findWindowByPathAndInstanceId: (
-      path: string,
-      instanceId: string
-    ) => WindowState | undefined
-  ) {
-    return openViewWindow(
-      navigate,
-      parentWindowId,
-      route,
-      entityId,
-      entityIdParamName,
-      updateWindowState,
-      findWindowByPathAndInstanceId
-    )
-  }
-}
-
-
 
 /**
  * Sets the return data for a window that will be used by the parent window

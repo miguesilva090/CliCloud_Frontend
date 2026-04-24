@@ -12,13 +12,12 @@ import type {
   UpdateHorarioMedicoDiaRequest,
 } from '@/types/dtos/saude/medicos.dtos'
 import { toast } from '@/utils/toast-utils'
+import { navigateManagedWindow } from '@/utils/window-utils'
 
 export const useMedicosLight = (keyword = '') =>
   useQuery({
     queryKey: ['medicos', 'light', keyword],
     queryFn: () => MedicosService('medicos').getMedicosLight(keyword),
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 
 export const useGetMedico = (id: string) =>
@@ -26,8 +25,6 @@ export const useGetMedico = (id: string) =>
     queryKey: ['medico', id],
     queryFn: () => MedicosService('medicos').getMedico(id),
     enabled: !!id,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 
 const LISTAGEM_PATH = '/area-comum/tabelas/entidades/medicos'
@@ -49,8 +46,6 @@ export const useGetMedicosPaginated = (
     queryKey: ['medicos-paginated', params],
     queryFn: () => MedicosService('medicos').getMedicosPaginated(params),
     placeholderData: (previousData) => previousData,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 }
 
@@ -105,7 +100,7 @@ export const useCreateMedico = () => {
       if (info.status === ResponseStatus.Success && info.data) {
         toast.success('Médico criado com sucesso')
         await queryClient.invalidateQueries({ queryKey: ['medicos-paginated'] })
-        navigate(LISTAGEM_PATH)
+        navigateManagedWindow(navigate, LISTAGEM_PATH)
         return
       }
 
@@ -163,7 +158,6 @@ export type UseUpdateMedicoOptions = {
 
 export const useUpdateMedico = (id: string, options?: UseUpdateMedicoOptions) => {
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
   const { onBeforeNavigate } = options ?? {}
 
   return useMutation({
@@ -182,7 +176,8 @@ export const useUpdateMedico = (id: string, options?: UseUpdateMedicoOptions) =>
           // Erro já tratado em saveHorario (toast). Não navegar para o utilizador poder corrigir.
           return
         }
-        navigate(`/medicos/${id}`)
+        // Não navegar para /medicos/:id — perdia instanceId na query e o WindowManager abria tabs extra
+        // (redirect Ver→Editar). O ecrã atual mantém-se; dados atualizados via invalidação acima.
         return
       }
 
@@ -272,7 +267,6 @@ export const useGetHorarioMedicoByMedicoId = (medicoId: string) =>
     queryKey: ['horario-medico', medicoId],
     queryFn: () => svc().getHorarioMedicoByMedicoId(medicoId),
     enabled: !!medicoId,
-    staleTime: 30_000,
     refetchOnMount: 'always',
   })
 
@@ -281,7 +275,6 @@ export const useGetHorarioMedicoDiaByHorarioMedicoId = (horarioMedicoId: string)
     queryKey: ['horario-medico-dia', horarioMedicoId],
     queryFn: () => svc().getHorarioMedicoDiaByHorarioMedicoId(horarioMedicoId),
     enabled: !!horarioMedicoId,
-    staleTime: 30_000,
     refetchOnMount: 'always',
   })
 
@@ -347,7 +340,6 @@ export const useGetHorarioMedicoVariavelByMedicoId = (medicoId: string) =>
     queryKey: ['horario-medico-variavel', medicoId],
     queryFn: () => svc().getHorarioMedicoVariavelByMedicoId(medicoId),
     enabled: !!medicoId,
-    staleTime: 30_000,
   })
 
 export const useCreateHorarioMedicoVariavel = (medicoId: string) => {
@@ -406,7 +398,6 @@ export const useGetFolgasMedicoByMedicoId = (medicoId: string) =>
     queryKey: ['folgas-medico', medicoId],
     queryFn: () => svc().getFolgasMedicoByMedicoId(medicoId),
     enabled: !!medicoId,
-    staleTime: 30_000,
   })
 
 export const useCreateFolgasMedico = (medicoId: string) => {

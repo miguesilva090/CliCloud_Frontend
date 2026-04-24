@@ -34,6 +34,9 @@ export function ListagemLocaisTratamentoTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: LocalTratamentoTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemLocaisTratamentoTable({
   onOpenView?: (data: LocalTratamentoTableDTO) => void
   onOpenEdit?: (data: LocalTratamentoTableDTO) => void
   onOpenDelete?: (data: LocalTratamentoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

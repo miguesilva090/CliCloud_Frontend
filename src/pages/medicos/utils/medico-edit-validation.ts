@@ -1,4 +1,4 @@
-import type { MedicoEditFormValues } from '../medico-edit-form-types'
+import type { MedicoEditFormValues } from '../types/medico-edit-form-types'
 
 /** Ordem dos campos obrigatórios (alinhado ao backend: Nome, TipoEntidadeId). */
 export const MEDICO_FORM_FIELD_ORDER: (keyof MedicoEditFormValues)[] = [

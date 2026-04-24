@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { Plus } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { PageHead } from '@/components/shared/page-head'
@@ -88,7 +89,7 @@ export function AparelhoFormPage() {
       if (status === ResponseStatus.Success) {
         toast.success('Aparelho criado com sucesso.')
         queryClient.invalidateQueries({ queryKey: ['aparelhos-paginated'] })
-        navigate(LISTAGEM_PATH)
+        navigateManagedWindow(navigate, LISTAGEM_PATH)
       } else {
         const msg = (response.info as { messages?: Record<string, string[]> })?.messages?.['$']?.[0] ?? 'Falha ao criar.'
         toast.error(msg)
@@ -107,7 +108,7 @@ export function AparelhoFormPage() {
         <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
           <h1 className='text-lg font-semibold'>Novo Aparelho</h1>
           <div className='flex items-center gap-2'>
-            <Button variant='outline' size='sm' onClick={() => navigate(LISTAGEM_PATH)}>
+            <Button variant='outline' size='sm' onClick={() => navigateManagedWindow(navigate, LISTAGEM_PATH)}>
               Voltar
             </Button>
             <Button size='sm' onClick={handleGuardar} disabled={saving}>

@@ -29,7 +29,7 @@ import { PatologiaDoencasModal } from '../modals/patologia-doencas-modal'
 import { X } from 'lucide-react'
 import { DoencaService } from '@/lib/services/doencas/doenca-service'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { openPathInApp } from '@/utils/window-utils'
+import { openPathInApp, navigateManagedWindow } from '@/utils/window-utils'
 
 const LISTAGEM_PATH = '/area-comum/tabelas/tratamentos/patologias'
 
@@ -237,7 +237,7 @@ export function PatologiaEditPage() {
         const resp = await PatologiaService().createPatologia(body)
         if (resp.info.status === ResponseStatus.Success) {
           toast.success('Patologia criada com sucesso.')
-          navigate(LISTAGEM_PATH)
+          navigateManagedWindow(navigate, LISTAGEM_PATH)
         } else {
           const msg = resp.info.messages?.['$']?.[0] ?? 'Falha ao criar Patologia.'
           toast.error(msg)
@@ -246,7 +246,7 @@ export function PatologiaEditPage() {
         const resp = await PatologiaService().updatePatologia(String(id), body)
         if (resp.info.status === ResponseStatus.Success) {
           toast.success('Patologia atualizada com sucesso.')
-          navigate(LISTAGEM_PATH)
+          navigateManagedWindow(navigate, LISTAGEM_PATH)
         } else {
           const msg = resp.info.messages?.['$']?.[0] ?? 'Falha ao atualizar Patologia.'
           toast.error(msg)
@@ -276,7 +276,7 @@ export function PatologiaEditPage() {
               variant='ghost'
               size='icon'
               className='h-8 w-8'
-              onClick={() => navigate(LISTAGEM_PATH)}
+              onClick={() => navigateManagedWindow(navigate, LISTAGEM_PATH)}
               title='Voltar'
             >
               <ArrowLeft className='h-4 w-4' />
@@ -298,7 +298,7 @@ export function PatologiaEditPage() {
             <Button
               type='button'
               variant='outline'
-              onClick={() => navigate(LISTAGEM_PATH)}
+              onClick={() => navigateManagedWindow(navigate, LISTAGEM_PATH)}
             >
               Voltar
             </Button>

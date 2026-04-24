@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Eye, EyeOff, Pencil, Users } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,6 +21,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { ConfigPageCardTitleRow } from '@/components/shared/config-page-card-title-row'
+import { modules } from '@/config/modules'
+import { useConfigPageEditMode } from '@/hooks/use-config-page-edit-mode'
 import { toast } from '@/utils/toast-utils'
 import { SmsService } from '@/lib/services/core/sms-service'
 import { MedicosService } from '@/lib/services/saude/medicos-service'
@@ -47,6 +51,8 @@ const initialForm: SmsConfigForm = {
   arpooneOrganizationID: '',
 }
 
+const smsPermId = modules.areaComum.permissions.configuracoesSms.id
+
 export function SmsConfigPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState<SmsConfigForm>(initialForm)
@@ -67,11 +73,22 @@ export function SmsConfigPage() {
     queryFn: () => SmsService().getConfiguracaoAtual(),
   })
 
+  const {
+    canChange,
+    isEditing,
+    formEditable,
+    startEditing,
+    cancelEditing,
+    exitEditAfterSave,
+  } = useConfigPageEditMode(smsPermId)
+  const formLocked = !formEditable
+
   const saveMutation = useMutation({
     mutationFn: (payload: AtualizarConfiguracaoSmsRequest) =>
       SmsService().updateConfiguracao(payload),
     onSuccess: () => {
       toast.success('Configuração SMS guardada com sucesso.')
+      exitEditAfterSave()
       void configQuery.refetch()
     },
     onError: () => {
@@ -258,15 +275,32 @@ export function SmsConfigPage() {
       <DashboardPageContainer>
         <div className='space-y-4'>
           <Card>
-            <CardHeader className='flex flex-row items-center justify-between gap-3'>
-              <CardTitle>Configuração SMS (Arpoone)</CardTitle>
-              <Button
-                type='button'
-                variant='outline'
-                onClick={() => navigate('/area-comum/tabelas/configuracao/sms/historico?tipo=enviadas')}
-              >
-                Histórico SMS
-              </Button>
+            <CardHeader className='space-y-0 pb-2'>
+              <ConfigPageCardTitleRow
+                title='Configuração SMS (Arpoone)'
+                canChange={canChange}
+                isEditing={isEditing}
+                onStartEdit={startEditing}
+                onCancelEdit={() => {
+                  cancelEditing()
+                  void configQuery.refetch()
+                  void automaticasQuery.refetch()
+                }}
+                trailing={
+                  <Button
+                    type='button'
+                    variant='outline'
+                    onClick={() =>
+                      navigateManagedWindow(
+                        navigate,
+                        '/area-comum/tabelas/configuracao/sms/historico?tipo=enviadas'
+                      )
+                    }
+                  >
+                    Histórico SMS
+                  </Button>
+                }
+              />
             </CardHeader>
             <CardContent className='space-y-4'>
               {configQuery.isLoading ? (
@@ -287,7 +321,7 @@ export function SmsConfigPage() {
                 <Switch
                   checked={form.ativo}
                   onCheckedChange={(v) => handleChange('ativo', v)}
-                  disabled={isBusy}
+                  disabled={formLocked || isBusy}
                 />
               </div>
 
@@ -301,7 +335,8 @@ export function SmsConfigPage() {
                       value={form.arpooneUrl}
                       onChange={(e) => handleChange('arpooneUrl', e.target.value)}
                       placeholder='https://api.arpoone.com/...'
-                      disabled={isBusy}
+                      readOnly={formLocked}
+                      disabled={formLocked || isBusy}
                       className='pr-10'
                     />
                     <Button
@@ -310,7 +345,7 @@ export function SmsConfigPage() {
                       size='icon'
                       className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
                       onClick={() => setShowArpooneUrl((prev) => !prev)}
-                      disabled={isBusy}
+                      disabled={formLocked || isBusy}
                     >
                       {showArpooneUrl ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
                     </Button>
@@ -326,7 +361,8 @@ export function SmsConfigPage() {
                       value={form.arpooneSender}
                       onChange={(e) => handleChange('arpooneSender', e.target.value)}
                       placeholder='CLICLOUD'
-                      disabled={isBusy}
+                      readOnly={formLocked}
+                      disabled={formLocked || isBusy}
                       className='pr-10'
                     />
                     <Button
@@ -335,7 +371,7 @@ export function SmsConfigPage() {
                       size='icon'
                       className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
                       onClick={() => setShowArpooneSender((prev) => !prev)}
-                      disabled={isBusy}
+                      disabled={formLocked || isBusy}
                     >
                       {showArpooneSender ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
                     </Button>
@@ -351,7 +387,8 @@ export function SmsConfigPage() {
                       value={form.arpooneOrganizationID}
                       onChange={(e) => handleChange('arpooneOrganizationID', e.target.value)}
                       placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-                      disabled={isBusy}
+                      readOnly={formLocked}
+                      disabled={formLocked || isBusy}
                       className='pr-10'
                     />
                     <Button
@@ -360,7 +397,7 @@ export function SmsConfigPage() {
                       size='icon'
                       className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
                       onClick={() => setShowArpooneOrganizationId((prev) => !prev)}
-                      disabled={isBusy}
+                      disabled={formLocked || isBusy}
                     >
                       {showArpooneOrganizationId ? (
                         <EyeOff className='h-4 w-4' />
@@ -380,7 +417,8 @@ export function SmsConfigPage() {
                       value={form.arpooneApiKey}
                       onChange={(e) => handleChange('arpooneApiKey', e.target.value)}
                       placeholder='API Key'
-                      disabled={isBusy}
+                      readOnly={formLocked}
+                      disabled={formLocked || isBusy}
                       className='pr-10'
                     />
                     <Button
@@ -389,7 +427,7 @@ export function SmsConfigPage() {
                       size='icon'
                       className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
                       onClick={() => setShowArpooneApiKey((prev) => !prev)}
-                      disabled={isBusy}
+                      disabled={formLocked || isBusy}
                     >
                       {showArpooneApiKey ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
                     </Button>
@@ -398,7 +436,10 @@ export function SmsConfigPage() {
               </div>
 
               <div className='flex justify-end'>
-                <Button onClick={handleGuardar} disabled={isBusy}>
+                <Button
+                  onClick={handleGuardar}
+                  disabled={!formEditable || isBusy}
+                >
                   {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
                 </Button>
               </div>
@@ -451,6 +492,7 @@ export function SmsConfigPage() {
                                   onCheckedChange={(checked) =>
                                     void handleTodosMedicosTabela(cfg, !!checked)
                                   }
+                                  disabled={formLocked}
                                 />
                                 <Button
                                   type='button'
@@ -458,6 +500,7 @@ export function SmsConfigPage() {
                                   variant='ghost'
                                   title='Escolher médicos'
                                   onClick={() => handleEscolherMedicosTabela(cfg)}
+                                  disabled={formLocked}
                                 >
                                   <Users className='h-4 w-4' />
                                 </Button>
@@ -473,6 +516,7 @@ export function SmsConfigPage() {
                               variant='ghost'
                               onClick={() => handleOpenEdit(cfg)}
                               title='Editar configuração'
+                              disabled={formLocked}
                             >
                               <Pencil className='h-4 w-4' />
                             </Button>

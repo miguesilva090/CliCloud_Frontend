@@ -28,14 +28,25 @@ import {
 } from '../queries/listagem-organismos-queries'
 import { OrganismoService } from '@/lib/services/saude/organismo-service'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { useCloseCurrentWindowLikeTabBar, openOrganismoCreationInApp, openEntityEditInApp } from '@/utils/window-utils'
+import {
+  useCloseCurrentWindowLikeTabBar,
+  openOrganismoCreationInApp,
+  openEntityEditInApp,
+  openPathInApp,
+} from '@/utils/window-utils'
 import { ResponseStatus } from '@/types/api/responses'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const organismosPermId = modules.areaComum.permissions.organismos.id
 
 export function ListagemOrganismosPage() {
   const navigate = useNavigate()
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(organismosPermId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<OrganismoTableDTO | null>(
     null
@@ -66,14 +77,18 @@ export function ListagemOrganismosPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => openOrganismoCreationInApp(navigate, addWindow),
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    },
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => openOrganismoCreationInApp(navigate, addWindow),
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -198,6 +213,7 @@ export function ListagemOrganismosPage() {
           FilterControls={ListagemOrganismosFilterControls}
           hiddenColumns={[]}
           onOpenView={(item) => {
+            if (!canView) return
             const id = item.id ?? (item as { Id?: string }).Id
             const nome = item.nome ?? (item as { Nome?: string }).Nome
             if (id)
@@ -208,12 +224,26 @@ export function ListagemOrganismosPage() {
                 nome ? `Organismo: ${nome}` : 'Organismo'
               )
           }}
-          onOpenEdit={(item) => {
-            const id = item.id ?? (item as { Id?: string }).Id
-            const nome = item.nome ?? (item as { Nome?: string }).Nome
-            if (id) openEntityEditInApp(navigate, addWindow, `/organismos/${id}/editar`, String(id), nome ? `Organismo: ${nome}` : null)
-          }}
-          onOpenDelete={handleOpenDelete}
+          onOpenEdit={
+            canChange
+              ? (item) => {
+                  const id = item.id ?? (item as { Id?: string }).Id
+                  const nome = item.nome ?? (item as { Nome?: string }).Nome
+                  if (id)
+                    openEntityEditInApp(
+                      navigate,
+                      addWindow,
+                      `/organismos/${id}/editar`,
+                      String(id),
+                      nome ? `Organismo: ${nome}` : null
+                    )
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <AlertDialog
           open={deleteDialogOpen}

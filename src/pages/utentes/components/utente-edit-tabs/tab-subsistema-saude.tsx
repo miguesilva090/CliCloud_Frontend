@@ -14,7 +14,7 @@ import { EmpresaService } from '@/lib/services/saude/empresa-service'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from '@/utils/toast-utils'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { useCurrentWindowId, openPathInApp } from '@/utils/window-utils'
+import { openPathInApp } from '@/utils/window-utils'
 import {
   SubsistemaSaudeInserirModal,
   type SubsistemaSaudeRowInsert,
@@ -30,7 +30,6 @@ export function TabSubsistemaSaude({
 }) {
   const navigate = useNavigate()
   const addWindow = useWindowsStore((s) => s.addWindow)
-  const currentWindowId = useCurrentWindowId()
   const subsistemaLinhasArray = useFieldArray({
     control: form.control,
     name: 'subsistemaLinhas',

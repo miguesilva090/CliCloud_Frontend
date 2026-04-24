@@ -12,19 +12,19 @@ import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RefreshCw, X, Save } from 'lucide-react'
 import type { MedicoDTO } from '@/types/dtos/saude/medicos.dtos'
-import type { MedicoEditFormValues } from './medico-edit-form-types'
+import type { MedicoEditFormValues } from '../types/medico-edit-form-types'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
-import { useCreateMedico, useGetMedico, useUpdateMedico, normalizeFieldKey } from './queries/medicos-queries'
-import { medicoEditDefaultValues, medicoEditSchema } from './utils/medico-edit-form'
-import { buildCreatePayload, buildUpdatePayload } from './utils/medico-edit-payload'
-import { MEDICO_FIELD_LABELS, MEDICO_FIELD_TO_TAB, MEDICO_FORM_FIELD_ORDER } from './utils/medico-edit-validation'
-import { TabDadosPessoais } from './components/medico-edit-tabs/tab-dados-pessoais'
-import { TabContactos } from './components/medico-edit-tabs/tab-contactos'
-import { TabDadosProfissionais } from './components/medico-edit-tabs/tab-dados-profissionais'
-import { TabHorarioFixo } from './components/medico-edit-tabs/tab-horario-fixo'
-import { TabHorarioVariavel } from './components/medico-edit-tabs/tab-horario-variavel'
-import { TabFeriasFolgas } from './components/medico-edit-tabs/tab-ferias-folgas'
-import type { TabHorarioFixoRef } from './components/medico-edit-tabs/tab-horario-fixo'
+import { useCreateMedico, useGetMedico, useUpdateMedico, normalizeFieldKey } from '../queries/medicos-queries'
+import { medicoEditDefaultValues, medicoEditSchema } from '../utils/medico-edit-form'
+import { buildCreatePayload, buildUpdatePayload } from '../utils/medico-edit-payload'
+import { MEDICO_FIELD_LABELS, MEDICO_FIELD_TO_TAB, MEDICO_FORM_FIELD_ORDER } from '../utils/medico-edit-validation'
+import { TabDadosPessoais } from '../components/medico-edit-tabs/tab-dados-pessoais'
+import { TabContactos } from '../components/medico-edit-tabs/tab-contactos'
+import { TabDadosProfissionais } from '../components/medico-edit-tabs/tab-dados-profissionais'
+import { TabHorarioFixo } from '../components/medico-edit-tabs/tab-horario-fixo'
+import { TabHorarioVariavel } from '../components/medico-edit-tabs/tab-horario-variavel'
+import { TabFeriasFolgas } from '../components/medico-edit-tabs/tab-ferias-folgas'
+import type { TabHorarioFixoRef } from '../components/medico-edit-tabs/tab-horario-fixo'
 import { useFormValidationFeedback } from '@/hooks/use-form-validation-feedback'
 import { useTabManager } from '@/hooks/use-tab-manager'
 import { useWindowsStore } from '@/stores/use-windows-store'
@@ -206,7 +206,11 @@ export function MedicoEditPage() {
       return
     }
     if (!medico) return
-    const payload = buildUpdatePayload(medico, payloadValues)
+    const d = form.formState.dirtyFields
+    const payload = buildUpdatePayload(medico, payloadValues, {
+      urlFoto: Boolean(d.urlFoto),
+      urlFotoAssinatura: Boolean(d.urlFotoAssinatura),
+    })
     updateMedico.mutate(payload)
   }
 

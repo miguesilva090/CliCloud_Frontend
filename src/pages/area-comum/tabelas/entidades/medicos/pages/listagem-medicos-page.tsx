@@ -25,12 +25,17 @@ import {
 import type { DataTableAction } from '@/components/shared/data-table'
 import { MedicosTable } from '@/pages/medicos/components/medicos-table/medicos-table'
 import { listagemMedicosColumns } from '../components/listagem-medicos-columns'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const medicosPermId = modules.areaComum.permissions.medicos.id
 
 export function ListagemMedicosPage() {
   const navigate = useNavigate()
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)
+  const { canAdd } = useAreaComumEntityListPermissions(medicosPermId)
 
   const {
     data,
@@ -56,13 +61,18 @@ export function ListagemMedicosPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => openMedicoCreationInApp(navigate, addWindow),
-      variant: 'destructive',
-      className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    },
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => openMedicoCreationInApp(navigate, addWindow),
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,

@@ -1,6 +1,8 @@
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import type { TipoEntidadeFinanceiraTableDTO } from '@/types/dtos/utility/tipo-entidade-financeira.dtos'
 import { DataTableColumnDef } from '@/components/shared/data-table-types'
+import { createAreaComumListActionsColumnDef } from '@/components/shared/area-comum-list-actions-column'
+import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { Button } from '@/components/ui/button'
 
 export const columns: DataTableColumnDef<TipoEntidadeFinanceiraTableDTO>[] = [
@@ -90,50 +92,16 @@ export function getColumnsWithViewCallback(
   onOpenView: (data: TipoEntidadeFinanceiraTableDTO) => void,
   onOpenEdit?: (data: TipoEntidadeFinanceiraTableDTO) => void,
   onOpenDelete?: (data: TipoEntidadeFinanceiraTableDTO) => void,
+  rowActionPermissions?: AreaComumListRowActionPermissions,
 ): DataTableColumnDef<TipoEntidadeFinanceiraTableDTO>[] {
   return [
     ...columns.filter((c) => c.id !== 'actions'),
-    {
-      id: 'actions',
-      header: () => <div className='text-right w-full pr-5'>Opções</div>,
-      cell: ({ row }) => (
-        <div className='flex items-center justify-end gap-1'>
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            className='h-8 w-8'
-            onClick={() => onOpenView(row.original)}
-            title='Ver'
-          >
-            <Eye className='h-4 w-4' />
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            className='h-8 w-8'
-            onClick={() => onOpenEdit?.(row.original)}
-            title='Editar'
-          >
-            <Pencil className='h-4 w-4' />
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            className='h-8 w-8 text-destructive hover:text-destructive'
-            onClick={() => onOpenDelete?.(row.original)}
-            title='Apagar'
-          >
-            <Trash2 className='h-4 w-4' />
-          </Button>
-        </div>
-      ),
-      enableSorting: false,
-      enableHiding: false,
-      meta: { align: 'right' as const },
-    },
+    createAreaComumListActionsColumnDef<TipoEntidadeFinanceiraTableDTO>({
+      onOpenView,
+      onOpenEdit,
+      onOpenDelete,
+      rowActionPermissions,
+    }),
   ]
 }
 

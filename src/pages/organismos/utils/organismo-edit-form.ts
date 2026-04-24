@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import type { OrganismoEditFormValues } from '../organismo-edit-form-types'
+import type { OrganismoEditFormValues } from '../types/organismo-edit-form-types'
 
 export const organismoEditSchema = z
   .object({

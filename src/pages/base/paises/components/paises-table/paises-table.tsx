@@ -31,6 +31,7 @@ export function PaisesTable({
   hiddenColumns,
   onOpenView,
   onOpenEdit,
+  rowActionsFuncionalidadeId,
 }: {
   data: PaisTableDTO[]
   isLoading: boolean
@@ -55,10 +56,16 @@ export function PaisesTable({
   onOpenView?: (data: PaisTableDTO) => void
   /** Quando definido (ex.: listagem área-comum), "Editar" abre o mesmo modal em modo edição */
   onOpenEdit?: (data: PaisTableDTO) => void
+  /** GUID da funcionalidade (licença) para controlar ações na listagem área-comum */
+  rowActionsFuncionalidadeId?: string
 }) {
   const FilterControls = FilterControlsOverride ?? PaisesFilterControls
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit)
+    ? getColumnsWithViewCallback(
+        onOpenView,
+        onOpenEdit,
+        rowActionsFuncionalidadeId
+      )
     : columns
   return (
     <DataTable

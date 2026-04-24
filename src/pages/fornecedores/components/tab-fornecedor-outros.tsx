@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { FornecedorEditFormValues } from '@/pages/fornecedores/fornecedor-edit-form-types'
+import type { FornecedorEditFormValues } from '@/pages/fornecedores/types/fornecedor-edit-form-types'
 import { MoedaService } from '@/lib/services/moedas/moeda-service'
 
 const ORIGEM_OPTIONS = [

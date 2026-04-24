@@ -16,7 +16,7 @@ import {
   useGetHorarioTecnicoVariavelByTecnicoId,
   useCreateHorarioTecnicoVariavel,
   useDeleteHorarioTecnicoVariavel,
-} from '../tecnico-horario-queries'
+} from '../queries/tecnico-horario-queries'
 
 function formatDateLabel(s: string) {
   if (!s) return '—'

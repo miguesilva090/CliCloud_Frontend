@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHead } from '@/components/shared/page-head'
-import { FreguesiaCreateForm } from '../freguesias-forms/freguesia-create-form'
+import { FreguesiaCreateForm } from '../components/freguesias-forms/freguesia-create-form'
 
 export function FreguesiasCreatePage() {
   const navigate = useNavigate()

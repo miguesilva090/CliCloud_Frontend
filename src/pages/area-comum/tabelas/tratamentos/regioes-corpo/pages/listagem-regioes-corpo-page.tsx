@@ -27,10 +27,16 @@ import { RegiaoCorpoViewCreateModal } from '../modals/regiao-corpo-view-create-m
 import { RegiaoCorpoService } from '@/lib/services/regioes-corpo/regiao-corpo-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const regioesCorpoPermId = modules.areaComum.permissions.regioesCorpo.id
 
 type RegiaoCorpoModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemRegioesCorpoPage() {
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(regioesCorpoPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
     const queryClient = useQueryClient()
     const[modalOpen, setModalOpen] = useState(false)
@@ -61,16 +67,22 @@ export function ListagemRegioesCorpoPage() {
     const errorMessage = error instanceof Error ? error.message : error ? String(error) : ''
 
     const toolbarActions: DataTableAction[] = [
-        {
-            label: 'Adicionar',
-            icon: <Plus className='h-4 w-4' />,
-            onClick: () => {
-                setViewData(null)
-                setModalMode('create')
-                setModalOpen(true)
-            },
-            variant: 'destructive',
-            className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90'},
+        ...(canAdd
+            ? [
+                  {
+                      label: 'Adicionar',
+                      icon: <Plus className='h-4 w-4' />,
+                      onClick: () => {
+                          setViewData(null)
+                          setModalMode('create')
+                          setModalOpen(true)
+                      },
+                      variant: 'destructive' as const,
+                      className:
+                          'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+                  },
+              ]
+            : []),
         {
             label: 'Listagens',
             icon: <List className='h-4 w-4' />,
@@ -180,16 +192,24 @@ export function ListagemRegioesCorpoPage() {
                 FilterControls={ListagemRegioesCorpoFilterControls}
                 hiddenColumns={[]}
                 onOpenView={(rowData) => {
+                    if (!canView) return
                     setViewData(rowData)
                     setModalMode('view')
                     setModalOpen(true)
                 }}
-                onOpenEdit={(rowData) => {
-                    setViewData(rowData)
-                    setModalMode('edit')
-                    setModalOpen(true)
-                }}
-                onOpenDelete={handleOpenDelete}
+                onOpenEdit={
+                    canChange
+                        ? (rowData) => {
+                              setViewData(rowData)
+                              setModalMode('edit')
+                              setModalOpen(true)
+                          }
+                        : undefined
+                }
+                onOpenDelete={canDelete ? handleOpenDelete : undefined}
+                canView={canView}
+                canChange={canChange}
+                canDelete={canDelete}
             />
             <RegiaoCorpoViewCreateModal
                 open={modalOpen}

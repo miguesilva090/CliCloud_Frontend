@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import type { FornecedorEditFormValues } from '../fornecedor-edit-form-types'
+import type { FornecedorEditFormValues } from '../types/fornecedor-edit-form-types'
 
 export const fornecedorEditSchema = z
   .object({

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHead } from '@/components/shared/page-head'
-import { RuaCreateForm } from '../ruas-forms/rua-create-form'
+import { RuaCreateForm } from '../components/ruas-forms/rua-create-form'
 
 export function RuasCreatePage() {
   const navigate = useNavigate()

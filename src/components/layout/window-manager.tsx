@@ -1,5 +1,6 @@
-import { useEffect, Suspense, memo, useState, useRef, useCallback } from 'react'
+import { useEffect, Suspense, memo, useState, useRef } from 'react'
 import { utilitariosRoutes } from '@/routes/base/utilitarios-routes'
+import { areaClinicaRoutes } from '@/routes/area-clinica/areaClinica'
 import { reportsRoutes } from '@/routes/reports/reports-routes'
 import { X, ChevronLeft, ChevronRight, XCircle } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -10,8 +11,8 @@ import { cn } from '@/lib/utils'
 import {
   cleanupWindowForms,
   truncateWindowTitle,
+  getParentWindowInfo as getParentWindowInfoUtil,
   generateInstanceId,
-  clearAllWindowData,
   shouldManageWindow,
 } from '@/utils/window-utils'
 import { useSidebar } from '@/hooks/use-sidebar'
@@ -22,6 +23,7 @@ interface WindowManagerProps {
   children: React.ReactNode
 }
 
+// Memoized window component to prevent unnecessary re-renders
 const Window = memo(
   ({
     window,
@@ -38,10 +40,10 @@ const Window = memo(
     const [isContentReady, setIsContentReady] = useState(false)
 
     useEffect(() => {
-      if (isActive && !cachedContent) {
+      if (isActive) {
         setCachedContent(window.id, children)
       }
-    }, [window.id, isActive, children, cachedContent])
+    }, [window.id, isActive, children, setCachedContent])
 
     useEffect(() => {
       if (isActive) {
@@ -49,10 +51,11 @@ const Window = memo(
         setIsContentReady(false)
         const timer = setTimeout(() => {
           setIsTransitioning(false)
+          // Add a small delay before showing content to ensure smooth transition
           setTimeout(() => {
             setIsContentReady(true)
           }, 100)
-        }, 300)
+        }, 300) // Match the transition duration
         return () => clearTimeout(timer)
       } else {
         setIsContentReady(false)
@@ -71,13 +74,17 @@ const Window = memo(
             ? 'visible opacity-100'
             : 'invisible pointer-events-none opacity-0'
         )}
-        style={{ zIndex: isActive ? 1 : -1 }}
+        style={{
+          zIndex: isActive ? 1 : -1,
+        }}
       >
         <Suspense fallback={<WindowLoadingState />}>
           {isTransitioning || !isContentReady ? (
             <WindowLoadingState />
           ) : (
-            <div className='fade-in'>{cachedContent || children}</div>
+            <div className='fade-in'>
+              {isActive ? children : cachedContent || children}
+            </div>
           )}
         </Suspense>
       </div>
@@ -87,6 +94,7 @@ const Window = memo(
 
 Window.displayName = 'Window'
 
+// Component for individual window tab that can use hooks
 const WindowTab = memo(
   ({
     window,
@@ -94,6 +102,8 @@ const WindowTab = memo(
     onRestore,
     onMinimize,
     onRemove,
+    parentWindowInfo,
+    parentWindowNumber,
     windowIndex,
   }: {
     window: WindowState
@@ -101,19 +111,34 @@ const WindowTab = memo(
     onRestore: (window: WindowState) => void
     onMinimize: (windowId: string) => void
     onRemove: (windowId: string, windowPath: string) => void
+    parentWindowInfo: { title: string; path: string } | null
+    parentWindowNumber: number
     windowIndex: number
   }) => {
+    const parentTooltip = window.parentWindowId
+      ? parentWindowInfo
+        ? `Aberto a partir da janela #${parentWindowNumber}: ${parentWindowInfo.title}`
+        : 'Aberto a partir de outra janela'
+      : undefined
+
     return (
-      <div className='relative group' data-window-id={window.id}>
+      <div
+        className='relative group'
+        data-window-id={window.id}
+        title={parentTooltip}
+      >
         <Button
           variant={
             window.isMinimized ? 'outline' : isActive ? 'default' : 'outline'
           }
           size='sm'
           onClick={() => {
-            if (window.isMinimized || !isActive) {
+            if (window.isMinimized) {
+              onRestore(window)
+            } else if (!isActive) {
               onRestore(window)
             } else {
+              // When clicking on the active window, minimize it and show dashboard
               onMinimize(window.id)
             }
           }}
@@ -155,18 +180,24 @@ WindowTab.displayName = 'WindowTab'
 const WindowLoadingState = () => (
   <div className='flex h-full w-full items-center justify-center'>
     <div className='flex flex-col items-center gap-4'>
+      {/* Animated icon */}
       <div className='relative'>
         <div className='w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center shadow-lg border border-primary/20'>
           <Icons.settings className='h-8 w-8 text-primary animate-spin' />
         </div>
+        {/* Pulsing ring effect */}
         <div className='absolute inset-0 rounded-2xl border-2 border-primary/30 animate-ping'></div>
       </div>
+
+      {/* Loading text */}
       <div className='text-center'>
         <p className='text-sm font-medium text-foreground mb-1'>
           A carregar página...
         </p>
         <p className='text-xs text-muted-foreground'>Por favor aguarde</p>
       </div>
+
+      {/* Progress dots */}
       <div className='flex gap-1'>
         <div className='w-2 h-2 bg-primary rounded-full animate-bounce'></div>
         <div
@@ -182,51 +213,15 @@ const WindowLoadingState = () => (
   </div>
 )
 
-function findRouteWithManageWindow(pathname: string) {
-  const allRoutes = [...utilitariosRoutes, ...reportsRoutes]
-  const normalized = pathname.replace(/^\//, '')
-
-  const matchingRoute = allRoutes.find(
-    (route) => route.path === normalized && route.manageWindow
-  )
-  if (matchingRoute) {
-    return {
-      label: matchingRoute.windowName || matchingRoute.path,
-      manageWindow: true,
-    }
-  }
-
-  if (pathname === '/area-clinica/processo-clinico') {
-    return null
-  }
-
-  if (pathname === '/area-comum/tabelas') {
-    return null
-  }
- 
-  if (shouldManageWindow(pathname)) {
-    const segments = pathname.split('/').filter(Boolean)
-    const lastSegment = segments[segments.length - 1] || ''
-    const pretty =
-      lastSegment
-        .replace(/-/g, ' ')
-        .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Janela'
-    return { label: pretty, manageWindow: true }
-  }
-
-  return null
-}
-
 export function WindowManager({ children }: WindowManagerProps) {
+  const { isMinimized } = useSidebar()
   const location = useLocation()
   const navigate = useNavigate()
-  const { isMinimized } = useSidebar()
   const windowsBarRef = useRef<HTMLDivElement>(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(false)
   const animationFrameRef = useRef<number>(0)
   const momentumRef = useRef<number>(0)
-
   const {
     windows,
     activeWindow,
@@ -234,285 +229,457 @@ export function WindowManager({ children }: WindowManagerProps) {
     minimizeWindow,
     restoreWindow,
     removeWindow,
+    updateWindowState,
   } = useWindowsStore()
   const mapStore = useMapStore.getState()
 
-  const checkScrollButtons = useCallback(() => {
+  // Helper function to get parent window information
+  const getParentWindowInfo = (parentWindowId: string) => {
+    return getParentWindowInfoUtil(parentWindowId, windows)
+  }
+
+  const checkScrollButtons = () => {
     if (!windowsBarRef.current) return
     const { scrollLeft, scrollWidth, clientWidth } = windowsBarRef.current
+    // Use a small threshold to account for floating-point precision and browser scroll behavior
     const threshold = 1
     setShowLeftArrow(scrollLeft > threshold)
     setShowRightArrow(scrollLeft < scrollWidth - clientWidth - threshold)
-  }, [])
+  }
 
-  const scroll = useCallback(
-    (direction: 'left' | 'right') => {
-      if (!windowsBarRef.current) return
-      const scrollAmount = 200
-      const currentScroll = windowsBarRef.current.scrollLeft
-      const containerWidth = windowsBarRef.current.clientWidth
-      const totalWidth = windowsBarRef.current.scrollWidth
+  const scroll = (direction: 'left' | 'right') => {
+    if (!windowsBarRef.current) return
+    const scrollAmount = 200 // Adjust this value to control scroll distance
+    const currentScroll = windowsBarRef.current.scrollLeft
+    const containerWidth = windowsBarRef.current.clientWidth
+    const totalWidth = windowsBarRef.current.scrollWidth
 
-      let targetScroll: number
-      if (direction === 'left') {
-        targetScroll = Math.max(0, currentScroll - scrollAmount)
-        if (targetScroll < scrollAmount) targetScroll = 0
-      } else {
-        targetScroll = Math.min(
-          totalWidth - containerWidth,
-          currentScroll + scrollAmount
-        )
+    let targetScroll
+    if (direction === 'left') {
+      // For left scroll, ensure we don't go past the start
+      targetScroll = Math.max(0, currentScroll - scrollAmount)
+      // If we're close to the left edge, scroll all the way to 0
+      if (targetScroll < scrollAmount) {
+        targetScroll = 0
       }
-      windowsBarRef.current.scrollTo({ left: targetScroll, behavior: 'smooth' })
-    },
-    []
-  )
+    } else {
+      // For right scroll, ensure we don't go past the end
+      targetScroll = Math.min(
+        totalWidth - containerWidth,
+        currentScroll + scrollAmount
+      )
+    }
 
-  // Scroll listeners
+    windowsBarRef.current.scrollTo({
+      left: targetScroll,
+      behavior: 'smooth',
+    })
+  }
+
   useEffect(() => {
     checkScrollButtons()
     const handleResize = () => checkScrollButtons()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [checkScrollButtons])
+  }, [])
 
   useEffect(() => {
-    const el = windowsBarRef.current
-    if (el) {
-      el.addEventListener('scroll', checkScrollButtons)
-      return () => el.removeEventListener('scroll', checkScrollButtons)
+    if (windowsBarRef.current) {
+      windowsBarRef.current.addEventListener('scroll', checkScrollButtons)
+      return () => {
+        windowsBarRef.current?.removeEventListener('scroll', checkScrollButtons)
+      }
     }
-  }, [checkScrollButtons])
+  }, [])
 
-  // Auto-scroll para a tab ativa
+  // Add effect to scroll to active window
   useEffect(() => {
     if (!windowsBarRef.current || !activeWindow) return
-    const activeEl = windowsBarRef.current.querySelector(
+
+    const activeWindowElement = windowsBarRef.current.querySelector(
       `[data-window-id="${activeWindow}"]`
     )
-    if (!activeEl) return
+    if (activeWindowElement) {
+      const containerRect = windowsBarRef.current.getBoundingClientRect()
+      const elementRect = activeWindowElement.getBoundingClientRect()
 
-    const containerRect = windowsBarRef.current.getBoundingClientRect()
-    const elementRect = activeEl.getBoundingClientRect()
+      // Calculate the scroll position needed to center the active window
+      const scrollTo = elementRect.left - containerRect.left
 
-    if (
-      elementRect.left < containerRect.left ||
-      elementRect.right > containerRect.right
-    ) {
+      // Get the current scroll position
+      const currentScroll = windowsBarRef.current.scrollLeft
+
+      // Calculate the target scroll position to center the window
       const targetScroll =
-        windowsBarRef.current.scrollLeft +
-        elementRect.left -
-        containerRect.left -
+        currentScroll +
+        scrollTo -
         containerRect.width / 2 +
         elementRect.width / 2
-      const maxScroll =
-        windowsBarRef.current.scrollWidth - containerRect.width
-      requestAnimationFrame(() => {
-        windowsBarRef.current?.scrollTo({
-          left: Math.max(0, Math.min(targetScroll, maxScroll)),
-          behavior: 'smooth',
+
+      // Ensure we don't scroll past the boundaries
+      const maxScroll = windowsBarRef.current.scrollWidth - containerRect.width
+      const boundedScroll = Math.max(0, Math.min(targetScroll, maxScroll))
+
+      // Only scroll if the window is not fully visible
+      if (
+        elementRect.left < containerRect.left ||
+        elementRect.right > containerRect.right
+      ) {
+        // Use requestAnimationFrame for smoother scrolling
+        requestAnimationFrame(() => {
+          if (windowsBarRef.current) {
+            windowsBarRef.current.scrollTo({
+              left: boundedScroll,
+              behavior: 'smooth',
+            })
+          }
         })
-      })
+      }
     }
   }, [activeWindow])
 
-  // ─── EFEITO PRINCIPAL: criar / ativar janela com base na rota ──────────
-  // Dependências: APENAS location.pathname e location.search.
-  // Lemos windows diretamente do store (getState) para evitar que uma
-  // mudança em windows re-dispare este efeito e crie duplicados.
+  // Rotas declaradas com manageWindow + áreas geridas por shouldManageWindow (Área Comum, Processo Clínico, utentes, etc.)
+  const findRouteWithManageWindow = (pathname: string) => {
+    const normalized = pathname.replace(/^\//, '')
+    const allRoutes = [...utilitariosRoutes, ...reportsRoutes, ...areaClinicaRoutes]
+
+    const matchingRoute = allRoutes.find(
+      (route) => route.path === normalized && route.manageWindow
+    )
+    if (matchingRoute) {
+      return {
+        label: matchingRoute.windowName || matchingRoute.path,
+        manageWindow: true,
+      }
+    }
+
+    if (pathname === '/area-clinica/processo-clinico') return null
+    if (pathname === '/area-comum/tabelas') return null
+
+    if (shouldManageWindow(pathname)) {
+      const segments = pathname.split('/').filter(Boolean)
+      const lastSegment = segments[segments.length - 1] || ''
+      const pretty =
+        lastSegment
+          .replace(/-/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Janela'
+      return { label: pretty, manageWindow: true }
+    }
+
+    return null
+  }
+
   useEffect(() => {
     const route = findRouteWithManageWindow(location.pathname)
     if (!route?.manageWindow) return
 
-    const urlParams = new URLSearchParams(location.search)
+    const searchParams = new URLSearchParams(location.search)
+    const hadInstanceInUrl = searchParams.has('instanceId')
     const filters: Record<string, string> = {}
-    urlParams.forEach((value, key) => {
-      if (key !== 'instanceId') filters[key] = value
+    const instanceId = searchParams.get('instanceId') || generateInstanceId()
+
+    searchParams.forEach((value, key) => {
+      if (key !== 'instanceId') {
+        filters[key] = value
+      }
     })
 
-    // Ler windows sempre do store (nunca da closure React)
-    const storeState = useWindowsStore.getState()
-    const currentWindows = storeState.windows
-    const existingByPath = currentWindows.find(
-      (w) => w.path === location.pathname
-    )
+    const { findWindowByPathAndInstanceId: findWin, windows: windowsSnapshot } =
+      useWindowsStore.getState()
 
-    if (existingByPath) {
-      // Tab já existe – ativar e sincronizar instanceId na URL
-      if (storeState.activeWindow !== existingByPath.id) {
-        restoreWindow(existingByPath.id)
-      }
-      const currentInstanceInUrl = urlParams.get('instanceId')
-      if (currentInstanceInUrl !== existingByPath.instanceId) {
-        const newSearch = new URLSearchParams(filters)
-        newSearch.set('instanceId', existingByPath.instanceId)
+    const exactMatch = findWin(location.pathname, instanceId)
+    // Redirect na mesma instância (ex.: /utentes/:id → /utentes/:id/editar) — uma tab só
+    const existingWindow =
+      exactMatch ??
+      (hadInstanceInUrl
+        ? windowsSnapshot.find((w) => w.instanceId === instanceId)
+        : undefined)
+
+    if (!existingWindow) {
+      const id = generateInstanceId()
+
+      const parentWindowId = sessionStorage.getItem(
+        `parent-window-${instanceId}`
+      )
+
+      addWindow({
+        id,
+        instanceId,
+        title: truncateWindowTitle(route.label),
+        path: location.pathname,
+        hasFormData: false,
+        searchParams: filters,
+        parentWindowId: parentWindowId || undefined,
+      })
+
+      const pagesStore = usePagesStore.getState()
+      pagesStore.setPageStateByWindowId(id, {
+        windowId: id,
+        pathname: location.pathname,
+        searchParams: filters,
+        filters: [],
+        sorting: [],
+        pagination: {
+          page: 1,
+          pageSize: 10,
+        },
+        columnVisibility: {},
+        selectedRows: [],
+        modalStates: {},
+      })
+
+      if (!hadInstanceInUrl) {
+        const newSearch = new URLSearchParams()
+        Object.entries(filters).forEach(([k, v]) => newSearch.set(k, v))
+        newSearch.set('instanceId', instanceId)
         navigate(`${location.pathname}?${newSearch.toString()}`, {
           replace: true,
         })
       }
-      return
-    }
+    } else {
+      restoreWindow(existingWindow.id)
+      const pathOrParamsChanged =
+        existingWindow.path !== location.pathname ||
+        JSON.stringify(existingWindow.searchParams ?? {}) !==
+          JSON.stringify(filters)
 
-    // Criar nova janela
-    const instanceId = urlParams.get('instanceId') || generateInstanceId()
-    const id = generateInstanceId()
-    const parentWindowId = sessionStorage.getItem(
-      `parent-window-${instanceId}`
-    )
-
-    addWindow({
-      id,
-      instanceId,
-      title: truncateWindowTitle(route.label),
-      path: location.pathname,
-      hasFormData: false,
-      searchParams: filters,
-      parentWindowId: parentWindowId || undefined,
-    })
-
-    usePagesStore.getState().setPageStateByWindowId(id, {
-      windowId: id,
-      pathname: location.pathname,
-      searchParams: filters,
-      filters: [],
-      sorting: [],
-      pagination: { page: 1, pageSize: 10 },
-      columnVisibility: {},
-      selectedRows: [],
-      modalStates: {},
-    })
-
-    if (!urlParams.get('instanceId')) {
-      const newSearch = new URLSearchParams(filters)
-      newSearch.set('instanceId', instanceId)
-      navigate(`${location.pathname}?${newSearch.toString()}`, {
-        replace: true,
-      })
+      if (pathOrParamsChanged) {
+        updateWindowState(existingWindow.id, {
+          path: location.pathname,
+          searchParams: filters,
+        })
+        const pagesStore = usePagesStore.getState()
+        pagesStore.setPageStateByWindowId(existingWindow.id, {
+          pathname: location.pathname,
+          searchParams: filters,
+        })
+      } else {
+        updateWindowState(existingWindow.id, {
+          hasFormData: existingWindow.hasFormData,
+          searchParams: filters,
+        })
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, location.search])
 
-  // Limpar page state de janelas que já não existem
+  // Add a new useEffect to clean up page state for closed windows
   useEffect(() => {
     const pagesStore = usePagesStore.getState()
     const currentPages = Object.keys(pagesStore.pages)
-    const openWindowIds = new Set(windows.map((w) => w.id))
 
+    // Get all window IDs from open windows
+    const openWindowIds = windows.map((window) => window.id)
+
+    // Remove page state for windows that don't exist anymore
     currentPages.forEach((pageId) => {
-      const ps = pagesStore.pages[pageId]
-      if (ps.windowId && !openWindowIds.has(ps.windowId)) {
-        pagesStore.removePageStateByWindowId(ps.windowId)
+      const pageState = pagesStore.pages[pageId]
+      if (pageState.windowId && !openWindowIds.includes(pageState.windowId)) {
+        pagesStore.removePageStateByWindowId(pageState.windowId)
       }
     })
   }, [windows])
 
-  // ─── Handlers ──────────────────────────────────────────────────────────
+  const handleRestoreWindow = (targetWindow: WindowState) => {
+    // Always update the URL with the correct instanceId, even if the path is the same
+    const searchParams = new URLSearchParams()
+    if (targetWindow.searchParams) {
+      Object.entries(targetWindow.searchParams).forEach(([key, value]) => {
+        searchParams.set(key, value)
+      })
+    }
+    searchParams.set('instanceId', targetWindow.instanceId)
+    const fullPath = `${targetWindow.path}?${searchParams.toString()}`
 
-  const handleRestoreWindow = useCallback(
-    (win: WindowState) => {
-      restoreWindow(win.id)
-      const searchParams = new URLSearchParams()
-      if (win.searchParams) {
-        Object.entries(win.searchParams).forEach(([k, v]) =>
-          searchParams.set(k, v)
-        )
-      }
-      searchParams.set('instanceId', win.instanceId)
-      navigate(`${win.path}?${searchParams.toString()}`)
-    },
-    [restoreWindow, navigate]
-  )
 
-  const handleRemoveWindow = useCallback(
-    (windowId: string, windowPath: string) => {
-      removeWindow(windowId)
+    navigate(fullPath, { replace: true })
+    restoreWindow(targetWindow.id)
 
-      const pagesStore = usePagesStore.getState()
-      pagesStore.removePageStateByWindowId(windowId)
-      mapStore.cleanupWindowData(windowId)
-      cleanupWindowForms(windowId)
+    // Scroll to make the window visible if needed
+    if (windowsBarRef.current) {
+      const windowElement = windowsBarRef.current.querySelector(
+        `[data-window-id="${targetWindow.id}"]`
+      )
+      if (windowElement) {
+        const containerRect = windowsBarRef.current.getBoundingClientRect()
+        const elementRect = windowElement.getBoundingClientRect()
 
-      // Ler remaining windows do store (já actualizado)
-      const remaining = useWindowsStore.getState().windows
-      if (remaining.length === 0) {
-        cleanupWindowForms('*')
-        // Navegar para a raiz da área actual
-        const targetPath = getAreaRootPath(windowPath)
-        clearAllWindowData()
-        window.location.href = `${window.location.origin}${targetPath}`
-        return
-      }
+        // Calculate how close the window is to the edges
+        const distanceFromLeft = elementRect.left - containerRect.left
+        const distanceFromRight = containerRect.right - elementRect.right
+        const containerWidth = containerRect.width
 
-      // Se estamos no path da janela que fechámos, activar a última restante
-      if (windowPath === location.pathname) {
-        const last = remaining[remaining.length - 1]
-        const searchParams = new URLSearchParams()
-        if (last.searchParams) {
-          Object.entries(last.searchParams).forEach(([k, v]) =>
-            searchParams.set(k, v)
+        // Define the edge detection area (30% of container width)
+        const edgeArea = containerWidth * 0.3
+
+        let targetScroll = windowsBarRef.current.scrollLeft
+
+        // If window is in the left edge area
+        if (distanceFromLeft < edgeArea) {
+          // Calculate scroll amount based on how close to the edge
+          const scrollAmount = (1 - distanceFromLeft / edgeArea) * 200
+          targetScroll = Math.max(0, targetScroll - scrollAmount)
+        }
+        // If window is in the right edge area
+        else if (distanceFromRight < edgeArea) {
+          // Calculate scroll amount based on how close to the edge
+          const scrollAmount = (1 - distanceFromRight / edgeArea) * 200
+          targetScroll = Math.min(
+            windowsBarRef.current.scrollWidth - containerWidth,
+            targetScroll + scrollAmount
           )
         }
-        searchParams.set('instanceId', last.instanceId)
-        restoreWindow(last.id)
-        navigate(`${last.path}?${searchParams.toString()}`)
+
+        // Only scroll if the position changed
+        if (targetScroll !== windowsBarRef.current.scrollLeft) {
+          windowsBarRef.current.scrollTo({
+            left: targetScroll,
+            behavior: 'smooth',
+          })
+        }
       }
-    },
-    [location.pathname, removeWindow, restoreWindow, navigate, mapStore]
-  )
+    }
+  }
 
-  const handleCloseAllWindows = useCallback(() => {
-    const targetPath = getAreaRootPath(location.pathname)
-    clearAllWindowData()
-    cleanupWindowForms('*')
-    window.location.href = `${window.location.origin}${targetPath}`
-  }, [location.pathname])
+  const handleRemoveWindow = (windowId: string, windowPath: string) => {
+    // Remove window from windows store
+    removeWindow(windowId)
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
+    // Remove page state for this specific window
+    const pagesStore = usePagesStore.getState()
+    pagesStore.removePageStateByWindowId(windowId)
+
+    // Clean up map data for this window
+    mapStore.cleanupWindowData(windowId)
+
+    // Check if this was the last window
+    const remainingWindows = windows.filter((w) => w.id !== windowId)
+    if (remainingWindows.length === 0) {
+      // If it was the last window, clean up all form instances
+      cleanupWindowForms('*') // Clean up all form instances
+    } else {
+      // Otherwise just clean up forms for this specific window
+      cleanupWindowForms(windowId)
+    }
+
+    if (windowPath === location.pathname) {
+      // Find any other open window to navigate to, or go home
+      if (remainingWindows.length > 0) {
+        const lastWindow = remainingWindows[remainingWindows.length - 1]
+        // Add instanceId to the URL if it exists
+        const searchParams = new URLSearchParams()
+        if (lastWindow.searchParams) {
+          Object.entries(lastWindow.searchParams).forEach(([key, value]) => {
+            searchParams.set(key, value)
+          })
+        }
+        searchParams.set('instanceId', lastWindow.instanceId)
+        const fullPathToShow = `${lastWindow.path}?${searchParams.toString()}`
+        navigate(fullPathToShow)
+      } else {
+        navigate('/')
+      }
+    }
+  }
+
+  const handleWheel = (e: React.WheelEvent) => {
     if (!windowsBarRef.current) return
     e.preventDefault()
-    const el = windowsBarRef.current
-    let target = el.scrollLeft + e.deltaY * 2
-    target = Math.max(0, Math.min(target, el.scrollWidth - el.clientWidth))
-    if (e.deltaY < 0 && target < 10) target = 0
-    el.scrollTo({ left: target, behavior: 'smooth' })
-  }, [])
 
-  // Cleanup animation frames
+    const currentScroll = windowsBarRef.current.scrollLeft
+    const containerWidth = windowsBarRef.current.clientWidth
+    const totalWidth = windowsBarRef.current.scrollWidth
+
+    // Calculate target scroll position
+    let targetScroll = currentScroll + e.deltaY * 2
+
+    // Ensure we don't scroll past the boundaries
+    targetScroll = Math.max(
+      0,
+      Math.min(targetScroll, totalWidth - containerWidth)
+    )
+
+    // If we're scrolling left and very close to the left edge, snap to exactly 0
+    if (e.deltaY < 0 && targetScroll < 10) {
+      targetScroll = 0
+    }
+
+    // Use smooth scrolling to the target position
+    windowsBarRef.current.scrollTo({
+      left: targetScroll,
+      behavior: 'smooth',
+    })
+  }
+
+  const handleCloseAllWindows = () => {
+    // Remove all windows and clean up their data
+    windows.forEach((window) => {
+      // Remove window from windows store
+      removeWindow(window.id)
+
+      // Remove page state for this window
+      const pagesStore = usePagesStore.getState()
+      pagesStore.removePageStateByWindowId(window.id)
+
+      // Clean up map data for this window
+      mapStore.cleanupWindowData(window.id)
+
+    })
+
+    // Clean up all form instances
+    cleanupWindowForms('*')
+
+    // Navigate to home
+    navigate('/')
+  }
+
+  // Cleanup animation frames on unmount
   useEffect(() => {
     return () => {
-      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
-      if (momentumRef.current) cancelAnimationFrame(momentumRef.current)
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+      if (momentumRef.current) {
+        cancelAnimationFrame(momentumRef.current)
+      }
     }
   }, [])
 
   return (
     <div className='relative h-full'>
+      {/* Windows Container */}
       <div className='relative h-full'>
-        {windows.length > 0 && windows.some((w) => !w.isMinimized) ? (
-          windows.map((win) => (
+        {windows.length > 0 &&
+        windows.some((window) => !window.isMinimized) &&
+        shouldManageWindow(location.pathname) ? (
+          windows.map((window) => (
             <Window
-              key={win.id}
-              window={win}
-              isActive={win.id === activeWindow}
+              key={window.id}
+              window={window}
+              isActive={window.id === activeWindow}
             >
               {children}
             </Window>
           ))
         ) : (
+          // Rotas sem manageWindow (ex.: hub processo clínico, /) mostram o Outlet aqui;
+          // caso contrário, com tabs abertas, o conteúdo ficava preso à janela "activa" errada.
           <div className='h-full'>{children}</div>
         )}
       </div>
 
+      {/* Windows Bar - Only show when there are windows */}
       {windows.length > 0 && (
-        <div className='fixed bottom-0 left-0 right-0 z-[80] pointer-events-none '>
-          <div
-            className={cn(
-              'relative pointer-events-auto',
-              isMinimized
-                ? 'min-[1515px]:pl-[110px]'
-                : 'min-[1515px]:pl-[250px]'
-            )}
-          >
+        <div
+          className={cn(
+            'fixed bottom-0 right-0 z-50',
+            // Alinhar à área de conteúdo (sidebar fixa só em >=1515px; ver dashboard-layout)
+            isMinimized
+              ? 'left-0 min-[1515px]:left-[110px]'
+              : 'left-0 min-[1515px]:left-[260px]'
+          )}
+        >
+          <div className='relative'>
             {showLeftArrow && (
               <button
                 onClick={() => scroll('left')}
@@ -535,20 +702,32 @@ export function WindowManager({ children }: WindowManagerProps) {
               >
                 <XCircle className='h-3 w-3' />
               </Button>
-              {windows.map((win, index) => (
-                <WindowTab
-                  key={win.id}
-                  window={win}
-                  isActive={win.id === activeWindow}
-                  onRestore={handleRestoreWindow}
-                  onMinimize={(id) => {
-                    minimizeWindow(id)
-                    navigate('/')
-                  }}
-                  onRemove={handleRemoveWindow}
-                  windowIndex={index}
-                />
-              ))}
+              {windows.map((window, index) => {
+                const parentInfo = window.parentWindowId
+                  ? getParentWindowInfo(window.parentWindowId)
+                  : null
+                const parentWindowIndex = window.parentWindowId
+                  ? windows.findIndex((w) => w.id === window.parentWindowId)
+                  : -1
+                const parentWindowNumber = parentWindowIndex + 1
+
+                return (
+                  <WindowTab
+                    key={window.id}
+                    window={window}
+                    isActive={window.id === activeWindow}
+                    onRestore={handleRestoreWindow}
+                    onMinimize={(windowId) => {
+                      minimizeWindow(windowId)
+                      navigate('/')
+                    }}
+                    onRemove={handleRemoveWindow}
+                    parentWindowInfo={parentInfo}
+                    parentWindowNumber={parentWindowNumber}
+                    windowIndex={index}
+                  />
+                )
+              })}
             </div>
 
             {showRightArrow && (
@@ -564,18 +743,4 @@ export function WindowManager({ children }: WindowManagerProps) {
       )}
     </div>
   )
-}
-
-/**
- * Dado um path qualquer, devolve o root da área correspondente
- * para onde navegar quando todas as tabs são fechadas.
- */
-function getAreaRootPath(path: string): string {
-  const p = path.toLowerCase()
-  if (p.startsWith('/area-clinica/processo-clinico')) return '/area-clinica/processo-clinico'
-  if (p.startsWith('/area-comum/tabelas')) return '/area-comum/tabelas'
-  if (p.startsWith('/utentes')) return '/utentes'
-  if (p.startsWith('/reports')) return '/reports'
-  if (p.startsWith('/utilitarios')) return '/utilitarios'
-  return '/'
 }

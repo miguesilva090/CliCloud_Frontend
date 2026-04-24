@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
-import type { FuncionarioEditFormValues } from '../funcionario-edit-form-types'
+import type { FuncionarioEditFormValues } from '../types/funcionario-edit-form-types'
 import { useCodigosPostaisLight } from '@/lib/services/utility/lookups/lookups-queries'
 import { CreateCodigoPostalModal } from '@/components/shared/address-quick-create'
 

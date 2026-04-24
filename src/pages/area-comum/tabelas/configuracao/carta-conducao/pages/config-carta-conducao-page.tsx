@@ -3,12 +3,15 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Eye, EyeOff } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { toast } from '@/utils/toast-utils'
+import { ConfigPageCardTitleRow } from '@/components/shared/config-page-card-title-row'
+import { modules } from '@/config/modules'
+import { useConfigPageEditMode } from '@/hooks/use-config-page-edit-mode'
 import { ConfigCartaConducaoService } from '@/lib/services/core/config-carta-conducao-service'
 import type {
   AtualizarConfigCartaConducaoRequest,
@@ -31,9 +34,20 @@ const initialForm: ConfigCartaConducaoForm = {
   autoridadeSaudePublica: false,
 }
 
+const cartaPermId = modules.areaComum.permissions.configuracoesCartaConducao.id
+
 export function ConfigCartaConducaoPage() {
   const [form, setForm] = useState<ConfigCartaConducaoForm>(initialForm)
   const [showPassword, setShowPassword] = useState(false)
+  const {
+    canChange,
+    isEditing,
+    formEditable,
+    startEditing,
+    cancelEditing,
+    exitEditAfterSave,
+  } = useConfigPageEditMode(cartaPermId)
+  const formLocked = !formEditable
 
   const configQuery = useQuery({
     queryKey: ['config-carta-conducao', 'current'],
@@ -45,6 +59,7 @@ export function ConfigCartaConducaoPage() {
       ConfigCartaConducaoService().updateConfiguracao(payload),
     onSuccess: () => {
       toast.success('Configuração guardada com sucesso.')
+      exitEditAfterSave()
       void configQuery.refetch()
     },
     onError: () => {
@@ -107,8 +122,17 @@ export function ConfigCartaConducaoPage() {
       <PageHead title='Configuração Atestados Carta Condução | CliCloud' />
       <DashboardPageContainer>
         <Card>
-          <CardHeader>
-            <CardTitle>Configuração Atestados Carta Condução</CardTitle>
+          <CardHeader className='space-y-0'>
+            <ConfigPageCardTitleRow
+              title='Configuração Atestados Carta Condução'
+              canChange={canChange}
+              isEditing={isEditing}
+              onStartEdit={startEditing}
+              onCancelEdit={() => {
+                cancelEditing()
+                void configQuery.refetch()
+              }}
+            />
           </CardHeader>
           <CardContent className='space-y-4'>
             {configQuery.isLoading ? (
@@ -126,7 +150,8 @@ export function ConfigCartaConducaoPage() {
                   value={form.urlOnline}
                   onChange={(e) => handleChange('urlOnline', e.target.value)}
                   placeholder='https://...'
-                  disabled={saveMutation.isPending}
+                  readOnly={formLocked}
+                  disabled={formLocked || saveMutation.isPending}
                 />
               </div>
 
@@ -137,7 +162,8 @@ export function ConfigCartaConducaoPage() {
                   value={form.urlOffline}
                   onChange={(e) => handleChange('urlOffline', e.target.value)}
                   placeholder='https://...'
-                  disabled={saveMutation.isPending}
+                  readOnly={formLocked}
+                  disabled={formLocked || saveMutation.isPending}
                 />
               </div>
 
@@ -147,7 +173,8 @@ export function ConfigCartaConducaoPage() {
                   id='utilizador'
                   value={form.utilizador}
                   onChange={(e) => handleChange('utilizador', e.target.value)}
-                  disabled={saveMutation.isPending}
+                  readOnly={formLocked}
+                  disabled={formLocked || saveMutation.isPending}
                 />
               </div>
 
@@ -159,7 +186,8 @@ export function ConfigCartaConducaoPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={form.password}
                     onChange={(e) => handleChange('password', e.target.value)}
-                    disabled={saveMutation.isPending}
+                    readOnly={formLocked}
+                    disabled={formLocked || saveMutation.isPending}
                     className='pr-10'
                   />
                   <Button
@@ -168,7 +196,7 @@ export function ConfigCartaConducaoPage() {
                     size='icon'
                     className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
                     onClick={() => setShowPassword((prev) => !prev)}
-                    disabled={saveMutation.isPending}
+                    disabled={formLocked || saveMutation.isPending}
                   >
                     {showPassword ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
                   </Button>
@@ -186,12 +214,15 @@ export function ConfigCartaConducaoPage() {
               <Switch
                 checked={form.autoridadeSaudePublica}
                 onCheckedChange={(v) => handleChange('autoridadeSaudePublica', v)}
-                disabled={saveMutation.isPending}
+                disabled={formLocked || saveMutation.isPending}
               />
             </div>
 
             <div className='flex justify-end'>
-              <Button onClick={handleGuardar} disabled={saveMutation.isPending}>
+              <Button
+                onClick={handleGuardar}
+                disabled={!formEditable || saveMutation.isPending}
+              >
                 {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
               </Button>
             </div>

@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Eye, FileText, Trash2, Check, ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
 import { Button } from '@/components/ui/button'
@@ -92,7 +93,12 @@ export function ReferenciasMbHistoryPage() {
               variant='outline'
               size='sm'
               title='Voltar'
-              onClick={() => navigate('/area-comum/tabelas/configuracao/referencias-mb')}
+              onClick={() =>
+                navigateManagedWindow(
+                  navigate,
+                  '/area-comum/tabelas/configuracao/referencias-mb'
+                )
+              }
             >
               <ArrowLeft className='mr-2 h-4 w-4' />
               Voltar

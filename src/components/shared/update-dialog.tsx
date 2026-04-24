@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { UpdateInfo, AppUpdateDTO } from '@/types/api/responses'
 import {
   Server,
@@ -145,6 +146,7 @@ export function UpdateDialog({
   update,
   onOpenChange,
 }: UpdateDialogProps) {
+  const navigate = useNavigate()
   const [isUpdating, setIsUpdating] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
@@ -174,7 +176,12 @@ export function UpdateDialog({
         trackingId,
         returnUrl
       )
-      window.location.href = updatingPageUrl
+      const target = new URL(updatingPageUrl, window.location.origin)
+      if (target.origin === window.location.origin) {
+        navigate(`${target.pathname}${target.search}${target.hash}`)
+      } else {
+        window.location.assign(updatingPageUrl)
+      }
     } catch (error) {
       const message =
         error instanceof Error

@@ -34,6 +34,9 @@ export function ListagemFuncionariosTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: FuncionarioTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemFuncionariosTable({
   onOpenView?: (data: FuncionarioTableDTO) => void
   onOpenEdit?: (data: FuncionarioTableDTO) => void
   onOpenDelete?: (data: FuncionarioTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

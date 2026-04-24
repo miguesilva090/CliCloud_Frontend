@@ -34,6 +34,9 @@ export function ListagemMotivosDesmarcacaoTable({
     onOpenView,
     onOpenEdit,
     onOpenDelete,
+    canView,
+    canChange,
+    canDelete,
 }: {
     data: MotivosDesmarcacaoTableDTO[]
     isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemMotivosDesmarcacaoTable({
     onOpenView?: (data: MotivosDesmarcacaoTableDTO) => void
     onOpenEdit?: (data: MotivosDesmarcacaoTableDTO) => void
     onOpenDelete?: (data: MotivosDesmarcacaoTableDTO) => void
+    canView?: boolean
+    canChange?: boolean
+    canDelete?: boolean
 }) {
     const tableColumns = onOpenView
-        ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+        ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+              canView,
+              canChange,
+              canDelete,
+          })
         : columns
 
     return (

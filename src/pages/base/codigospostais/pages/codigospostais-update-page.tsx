@@ -2,14 +2,14 @@ import { ArrowLeft } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useFormsStore } from '@/stores/use-forms-store'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { handleWindowClose } from '@/utils/window-utils'
+import { handleWindowClose, navigateManagedWindow } from '@/utils/window-utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHead } from '@/components/shared/page-head'
-import { useGetCodigoPostal } from '../../queries/codigospostais-queries'
-import { CodigoPostalUpdateForm } from '../codigospostais-forms/codigopostal-update-form'
+import { useGetCodigoPostal } from '../queries/codigospostais-queries'
+import { CodigoPostalUpdateForm } from '../components/codigospostais-forms/codigopostal-update-form'
 
 export function CodigosPostaisUpdatePage() {
   const navigate = useNavigate()
@@ -42,7 +42,10 @@ export function CodigosPostaisUpdatePage() {
 
   // If no codigoPostalId is provided, redirect to codigospostais page
   if (!codigoPostalId) {
-    navigate('/utilitarios/tabelas/geograficas/codigospostais')
+    navigateManagedWindow(
+      navigate,
+      '/utilitarios/tabelas/geograficas/codigospostais'
+    )
     return null
   }
 

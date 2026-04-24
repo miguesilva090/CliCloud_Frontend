@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import type { MedicoEditFormValues } from '../medico-edit-form-types'
+import type { MedicoEditFormValues } from '../types/medico-edit-form-types'
 
 export const medicoEditSchema = z.object({
   nome: z.string().min(1, 'Nome é obrigatório'),

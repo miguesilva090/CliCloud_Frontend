@@ -34,6 +34,9 @@ export function ListagemMedicosExternosTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: MedicoExternoTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemMedicosExternosTable({
   onOpenView?: (data: MedicoExternoTableDTO) => void
   onOpenEdit?: (data: MedicoExternoTableDTO) => void
   onOpenDelete?: (data: MedicoExternoTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

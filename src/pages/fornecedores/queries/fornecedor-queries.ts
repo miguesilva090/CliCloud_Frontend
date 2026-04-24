@@ -37,8 +37,6 @@ export const useGetFornecedor = (id: string) =>
     queryKey: ['fornecedor', id],
     queryFn: () => FornecedorService('fornecedores').getFornecedor(id),
     enabled: !!id,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 
 export const useCreateFornecedor = () => {
@@ -49,12 +47,19 @@ export const useCreateFornecedor = () => {
     mutationFn: (payload: CreateFornecedorRequest) =>
       FornecedorService('fornecedores').createFornecedor(payload),
     onSuccess: (res) => {
-      if (res.status === ResponseStatus.Success) {
+      const body = res.info
+      if (body?.status === ResponseStatus.Success) {
         toast.success('Fornecedor criado com sucesso.')
         queryClient.invalidateQueries({ queryKey: ['fornecedores-paginated'] })
         navigate(LISTAGEM_PATH, { replace: true })
       } else {
-        toast.error(res.message ?? 'Falha ao criar fornecedor.')
+        const msg = body?.messages
+          ? Object.values(body.messages)
+              .flatMap((arr) => arr ?? [])
+              .filter(Boolean)
+              .join(' ')
+          : ''
+        toast.error(msg || 'Falha ao criar fornecedor.')
       }
     },
     onError: (error) => {
@@ -76,13 +81,20 @@ export const useUpdateFornecedor = () => {
       payload: UpdateFornecedorRequest
     }) => FornecedorService('fornecedores').updateFornecedor(id, payload),
     onSuccess: (res) => {
-      if (res.status === ResponseStatus.Success) {
+      const body = res.info
+      if (body?.status === ResponseStatus.Success) {
         toast.success('Fornecedor atualizado com sucesso.')
         queryClient.invalidateQueries({ queryKey: ['fornecedores-paginated'] })
         queryClient.invalidateQueries({ queryKey: ['fornecedor'] })
         navigate(LISTAGEM_PATH, { replace: true })
       } else {
-        toast.error(res.message ?? 'Falha ao atualizar fornecedor.')
+        const msg = body?.messages
+          ? Object.values(body.messages)
+              .flatMap((arr) => arr ?? [])
+              .filter(Boolean)
+              .join(' ')
+          : ''
+        toast.error(msg || 'Falha ao atualizar fornecedor.')
       }
     },
     onError: (error) => {
@@ -98,12 +110,19 @@ export const useDeleteFornecedor = ({ onSuccessNavigateTo }: { onSuccessNavigate
   return useMutation({
     mutationFn: (id: string) => FornecedorService('fornecedores').deleteFornecedor(id),
     onSuccess: (res) => {
-      if (res.status === ResponseStatus.Success) {
+      const body = res.info
+      if (body?.status === ResponseStatus.Success) {
         toast.success('Fornecedor eliminado com sucesso.')
         queryClient.invalidateQueries({ queryKey: ['fornecedores-paginated'] })
         if (onSuccessNavigateTo) navigate(onSuccessNavigateTo, { replace: true })
       } else {
-        toast.error(res.message ?? 'Falha ao eliminar fornecedor.')
+        const msg = body?.messages
+          ? Object.values(body.messages)
+              .flatMap((arr) => arr ?? [])
+              .filter(Boolean)
+              .join(' ')
+          : ''
+        toast.error(msg || 'Falha ao eliminar fornecedor.')
       }
     },
     onError: (error) => {

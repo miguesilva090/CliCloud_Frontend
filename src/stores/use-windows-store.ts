@@ -54,20 +54,10 @@ export const useWindowsStore = create<WindowStore>()(
       windowCache: new Map(),
       maxCacheSize: 10, // Maximum number of windows to cache
 
+      // Igual ao Luma: cada instância (path + instanceId) é uma janela distinta;
+      // não deduplicar só por path (evita URL/instanceId desalinhados com a tab ativa).
       addWindow: (window) =>
         set((state) => {
-          // Deduplicação: se já existe janela com o mesmo path, apenas activá-la
-          const existing = state.windows.find((w) => w.path === window.path)
-          if (existing) {
-            return {
-              windows: state.windows.map((w) => ({
-                ...w,
-                isMinimized: w.id !== existing.id,
-              })),
-              activeWindow: existing.id,
-            }
-          }
-
           const updatedWindows = state.windows.map((w) => ({
             ...w,
             isMinimized: true,

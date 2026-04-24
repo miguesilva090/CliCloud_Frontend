@@ -38,6 +38,7 @@ import type {
 } from '@/types/dtos/tratamentos/evolucao-tratamento.dtos'
 import { EvolucaoTratamentoService } from '@/lib/services/tratamentos/evolucao-tratamento-service'
 import { toast } from '@/utils/toast-utils'
+import { navigateManagedWindow } from '@/utils/window-utils'
 import { TratamentoService } from '@/lib/services/tratamentos/tratamento-service'
 import { useGetHistoriasClinicasPaginated } from '@/pages/area-clinica/processo-clinico/tabelas/historia-clinica/queries/historia-clinica-queries'
 import type {
@@ -474,9 +475,11 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
 
       // Abre o viewer genérico de relatórios, passando o DTO como dataset
       // O .mrt correspondente deve chamar-se "evolucao-tratamento.mrt"
-      navigate('/reports/viewer?reportName=evolucao-tratamento', {
-        state: { data: info.data },
-      })
+      navigateManagedWindow(
+        navigate,
+        '/reports/viewer?reportName=evolucao-tratamento',
+        { state: { data: info.data } }
+      )
     } catch (error) {
       toast.error(
         'Erro ao carregar os dados da evolução de tratamento para o relatório.',

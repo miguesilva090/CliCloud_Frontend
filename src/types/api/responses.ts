@@ -56,6 +56,22 @@ export interface TokenResponse {
   refreshToken: string
   refreshTokenExpiryTime: string
   expiryTime: string
+  license?: {
+    expirationDate: string
+    isActive: boolean
+    permissions: Record<string, number>
+    modules: string[]
+  }
+  user?: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+    imageUrl: string | null
+    phoneNumber: string | null
+    isActive: boolean
+    clienteId: string
+  }
 }
 
 export interface PaginatedRequest {
@@ -143,8 +159,9 @@ export interface UpdateInfo {
 }
 
 export interface LoginResponse {
-  /** Compat: o backend atual devolve um envelope Response<TokenResponse>. */
+  /** Compat: suporta envelope antigo (status) e novo (succeeded). */
   status: ResponseStatus
   messages: Record<string, string[]>
   data?: TokenResponse
+  succeeded?: boolean
 }

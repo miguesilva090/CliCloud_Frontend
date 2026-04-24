@@ -3,8 +3,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import {
-  useCloseCurrentWindowLikeTabBar,
   openUtenteCreationInApp,
+  useCloseCurrentWindowLikeTabBar,
 } from '@/utils/window-utils'
 import {
   RefreshCw,
@@ -39,13 +39,17 @@ import { UtentesTable } from '@/pages/utentes/components/utentes-table/utentes-t
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { UtenteTableDTO } from '@/types/dtos/saude/utentes.dtos'
 import { toast } from '@/utils/toast-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
 
 const LISTAGEM_PATH = '/area-comum/tabelas/entidades/utentes'
+const utentesPermId = modules.areaComum.permissions.utentes.id
 
 export function ListagemUtentesPage() {
   const navigate = useNavigate()
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const addWindow = useWindowsStore((s) => s.addWindow)
+  const { canAdd } = useAreaComumEntityListPermissions(utentesPermId)
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<UtenteTableDTO | null>(null)
@@ -107,13 +111,18 @@ export function ListagemUtentesPage() {
       onClick: () => {},
       variant: 'outline',
     },
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => openUtenteCreationInApp(navigate, addWindow),
-      variant: 'destructive',
-      className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    },
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => openUtenteCreationInApp(navigate, addWindow),
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,

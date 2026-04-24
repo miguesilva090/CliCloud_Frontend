@@ -34,6 +34,9 @@ export function ListagemAcordosTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: AcordosTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemAcordosTable({
   onOpenView?: (data: AcordosTableDTO) => void
   onOpenEdit?: (data: AcordosTableDTO) => void
   onOpenDelete?: (data: AcordosTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

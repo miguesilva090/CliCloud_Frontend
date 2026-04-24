@@ -1,6 +1,6 @@
 import React from 'react'
 import { DataTable } from '@/components/shared/data-table'
-import { FeriadoDTO } from '@/types/dtos/utility/feriado.dtos'
+import type { FeriadoDTO } from '@/types/dtos/utility/feriado.dtos'
 import { columns, getColumnsWithViewCallbacks } from './listagem-feriados-table.columns'
 
 type FilterControlsComponent = React.ComponentType<{
@@ -30,6 +30,9 @@ export function ListagemFeriadosTable({
     onOpenView,
     onOpenEdit,
     onOpenDelete,
+    canView,
+    canChange,
+    canDelete,
 }: {
     data: FeriadoDTO[]
     isLoading: boolean
@@ -50,9 +53,16 @@ export function ListagemFeriadosTable({
     onOpenView?: (data: FeriadoDTO) => void
     onOpenEdit?: (data: FeriadoDTO) => void
     onOpenDelete?: (data: FeriadoDTO) => void
+    canView?: boolean
+    canChange?: boolean
+    canDelete?: boolean
 }) {
     const tableColumns = onOpenView
-        ? getColumnsWithViewCallbacks(onOpenView, onOpenEdit, onOpenDelete)
+        ? getColumnsWithViewCallbacks(onOpenView, onOpenEdit, onOpenDelete, {
+              canView,
+              canChange,
+              canDelete,
+          })
         : columns
 
     return (

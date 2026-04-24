@@ -4,13 +4,13 @@ import { useNavigate } from 'react-router-dom'
 import { useLocation } from 'react-router-dom'
 import { useFormsStore } from '@/stores/use-forms-store'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { handleWindowClose } from '@/utils/window-utils'
+import { handleWindowClose, navigateManagedWindow } from '@/utils/window-utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHead } from '@/components/shared/page-head'
-import { RuaUpdateForm } from '../ruas-forms/rua-update-form'
+import { RuaUpdateForm } from '../components/ruas-forms/rua-update-form'
 
 export function RuasUpdatePage() {
   const navigate = useNavigate()
@@ -41,7 +41,7 @@ export function RuasUpdatePage() {
 
   // If no ruaId is provided, redirect to ruas page
   if (!ruaId) {
-    navigate('/utilitarios/tabelas/geograficas/ruas')
+    navigateManagedWindow(navigate, '/utilitarios/tabelas/geograficas/ruas')
     return null
   }
 

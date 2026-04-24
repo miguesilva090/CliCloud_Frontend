@@ -22,7 +22,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import {
   useGetHorarioTecnicoByTecnicoId,
   useGetHorarioTecnicoDiaByHorarioTecnicoId,
-} from '../tecnico-horario-queries'
+} from '../queries/tecnico-horario-queries'
 import { TecnicoService } from '@/lib/services/saude/tecnico-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'

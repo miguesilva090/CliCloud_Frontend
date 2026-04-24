@@ -13,8 +13,6 @@ export const useUtentesLight = (keyword = '') =>
   useQuery({
     queryKey: ['utentes', 'light', keyword],
     queryFn: () => UtentesService('utentes').getUtentesLight(keyword),
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 
 const LISTAGEM_PATH = '/area-comum/tabelas/entidades/utentes'
@@ -24,8 +22,6 @@ export const useGetUtente = (id: string) => {
     queryKey: ['utente', id],
     queryFn: () => UtentesService('utentes').getUtente(id),
     enabled: !!id,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 }
 
@@ -46,8 +42,6 @@ export const useGetUtentesPaginated = (
     queryKey: ['utentes-paginated', params],
     queryFn: () => UtentesService('utentes').getUtentesPaginated(params),
     placeholderData: (previousData) => previousData,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 }
 

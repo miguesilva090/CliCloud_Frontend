@@ -34,6 +34,9 @@ export function ListagemPrioridadesTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  canView,
+  canChange,
+  canDelete,
 }: {
   data: PrioridadeTableDTO[]
   isLoading: boolean
@@ -55,9 +58,16 @@ export function ListagemPrioridadesTable({
   onOpenView?: (data: PrioridadeTableDTO) => void
   onOpenEdit?: (data: PrioridadeTableDTO) => void
   onOpenDelete?: (data: PrioridadeTableDTO) => void
+  canView?: boolean
+  canChange?: boolean
+  canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
+        canView,
+        canChange,
+        canDelete,
+      })
     : columns
 
   return (

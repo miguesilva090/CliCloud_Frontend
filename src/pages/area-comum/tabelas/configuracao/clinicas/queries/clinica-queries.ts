@@ -4,15 +4,11 @@ import { ResponseStatus } from '@/types/api/responses'
 import { ClinicaService } from '@/lib/services/core/clinica-service'
 import type { UpdateClinicaRequest } from '@/types/dtos/core/clinica.dtos'
 import { BaseApiError } from '@/lib/base-client'
-
 export const useGetClinicaCurrent = (options?: { enabled?: boolean }) =>
   useQuery({
     queryKey: ['clinica', 'current'],
     queryFn: () => ClinicaService('tabelas').getClinicaCurrent(),
     enabled: options?.enabled ?? true,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
-    refetchOnMount: 'always',
   })
 
 const getFirstErrorFromMessages = (

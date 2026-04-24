@@ -33,8 +33,6 @@ export const useGetFuncionario = (id: string) =>
     queryKey: ['funcionario', id],
     queryFn: () => FuncionarioService('funcionarios').getFuncionario(id),
     enabled: !!id,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 
 export const useCreateFuncionario = () => {

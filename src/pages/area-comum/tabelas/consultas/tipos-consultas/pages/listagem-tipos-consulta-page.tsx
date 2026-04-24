@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import {} from 'react-router-dom'
 import { List, RotateCw, RefreshCw, X } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
@@ -16,10 +15,16 @@ import {
   usePrefetchAdjacentTiposConsulta} from '../queries/listagem-tipos-consulta-queries'
 import { TipoConsultaViewEditModal } from '../modals/tipo-consulta-view-edit-modal'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const tiposConsultasPermId = modules.areaComum.permissions.tiposConsultas.id
 
 type TipoConsultaModalMode = 'view' | 'edit'
 
 export function ListagemTiposConsultaPage() {
+  const { canView, canChange, canDelete } =
+    useAreaComumEntityListPermissions(tiposConsultasPermId)
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -128,15 +133,23 @@ export function ListagemTiposConsultaPage() {
           FilterControls={ListagemTiposConsultaFilterControls}
           hiddenColumns={[]}
           onOpenView={(rowData) => {
+            if (!canView) return
             setViewData(rowData)
             setModalMode('view')
             setModalOpen(true)
           }}
-          onOpenEdit={(rowData) => {
-            setViewData(rowData)
-            setModalMode('edit')
-            setModalOpen(true)
-          }}
+          onOpenEdit={
+            canChange
+              ? (rowData) => {
+                  setViewData(rowData)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          canView={canView}
+          canChange={canChange}
+          canDelete={canDelete}
         />
         <TipoConsultaViewEditModal
           open={modalOpen}

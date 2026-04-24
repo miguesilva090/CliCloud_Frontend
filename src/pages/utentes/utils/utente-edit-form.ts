@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import type { UtenteEditFormValues } from '../utente-edit-form-types'
+import type { UtenteEditFormValues } from '../types/utente-edit-form-types'
 
 export const utenteEditSchema = z
   .object({

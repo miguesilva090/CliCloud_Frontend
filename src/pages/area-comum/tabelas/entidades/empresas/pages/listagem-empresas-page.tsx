@@ -28,14 +28,20 @@ import {
 } from '../queries/listagem-empresas-queries'
 import { EmpresaService } from '@/lib/services/saude/empresa-service'
 import { useWindowsStore } from '@/stores/use-windows-store'
+import { modules } from '@/config/modules'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { useCloseCurrentWindowLikeTabBar, openEntityEditInApp, openPathInApp } from '@/utils/window-utils'
 import { ResponseStatus } from '@/types/api/responses'
+
+const empresasFuncionalidadeId = modules.areaComum.permissions.empresas.id
 
 export function ListagemEmpresasPage() {
   const navigate = useNavigate()
   const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(empresasFuncionalidadeId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<EmpresaTableDTO | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -64,20 +70,24 @@ export function ListagemEmpresasPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () =>
-        openPathInApp(
-          navigate,
-          addWindow,
-          '/area-comum/tabelas/entidades/empresas/nova',
-          'Nova Empresa'
-        ),
-      variant: 'destructive',
-      className:
-        'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    },
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () =>
+              openPathInApp(
+                navigate,
+                addWindow,
+                '/area-comum/tabelas/entidades/empresas/nova',
+                'Nova Empresa'
+              ),
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -200,6 +210,7 @@ export function ListagemEmpresasPage() {
           FilterControls={ListagemEmpresasFilterControls}
           hiddenColumns={[]}
           onOpenView={(item) => {
+            if (!canView) return
             const id = item.id ?? (item as { Id?: string }).Id
             const nome = item.nome ?? (item as { Nome?: string }).Nome
             if (id)
@@ -210,12 +221,26 @@ export function ListagemEmpresasPage() {
                 nome ? `Empresa: ${nome}` : 'Empresa'
               )
           }}
-          onOpenEdit={(item) => {
-            const id = item.id ?? (item as { Id?: string }).Id
-            const nome = item.nome ?? (item as { Nome?: string }).Nome
-            if (id) openEntityEditInApp(navigate, addWindow, `/area-comum/tabelas/entidades/empresas/${id}/editar`, String(id), nome ? `Empresa: ${nome}` : null)
-          }}
-          onOpenDelete={handleOpenDelete}
+          onOpenEdit={
+            canChange
+              ? (item) => {
+                  const id = item.id ?? (item as { Id?: string }).Id
+                  const nome = item.nome ?? (item as { Nome?: string }).Nome
+                  if (id)
+                    openEntityEditInApp(
+                      navigate,
+                      addWindow,
+                      `/area-comum/tabelas/entidades/empresas/${id}/editar`,
+                      String(id),
+                      nome ? `Empresa: ${nome}` : null
+                    )
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          canViewEmpresa={canView}
+          canChangeEmpresa={canChange}
+          canDeleteEmpresa={canDelete}
         />
         <AlertDialog
           open={deleteDialogOpen}

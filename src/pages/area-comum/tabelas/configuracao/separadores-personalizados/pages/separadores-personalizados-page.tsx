@@ -38,9 +38,6 @@ interface PendingVinculo {
   entidadeId: string
 }
 
-const GUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-
 const tryExtractEntityId = (response: unknown): string | null => {
   const root = response as
     | { info?: { data?: unknown; Data?: unknown } }
@@ -114,7 +111,6 @@ export function SeparadoresPersonalizadosPage() {
       const api = res as unknown as { info?: { data?: SeparadorPersonalizadoDTO[] } }
       return (api.info?.data ?? []) as SeparadorPersonalizadoDTO[]
     },
-    staleTime: 60_000,
   })
 
   const { data: formulariosData } = useQuery({
@@ -125,7 +121,6 @@ export function SeparadoresPersonalizadosPage() {
       const api = res as unknown as { info?: { data?: FichaClinicaSecaoTemplateDTO[] } }
       return (api.info?.data ?? []) as FichaClinicaSecaoTemplateDTO[]
     },
-    staleTime: 60_000,
   })
 
   const { data: vinculosData, refetch: refetchVinculos } = useQuery({
@@ -138,7 +133,6 @@ export function SeparadoresPersonalizadosPage() {
       const api = res as unknown as { info?: { data?: SeparadorPersonalizadoVinculoDTO[] } }
       return (api.info?.data ?? []) as SeparadorPersonalizadoVinculoDTO[]
     },
-    staleTime: 30_000,
   })
 
   const { data: medicosLight = [] } = useQuery({
@@ -149,7 +143,6 @@ export function SeparadoresPersonalizadosPage() {
       const api = res as unknown as { info?: { data?: Array<{ id: string; nome: string }> } }
       return api.info?.data ?? []
     },
-    staleTime: 30_000,
   })
 
   const { data: especialidadesLight = [] } = useQuery({
@@ -162,7 +155,6 @@ export function SeparadoresPersonalizadosPage() {
       const api = res as unknown as { info?: { data?: Array<{ id: string; nome: string }> } }
       return api.info?.data ?? []
     },
-    staleTime: 30_000,
   })
 
   const separadores = useMemo(() => {

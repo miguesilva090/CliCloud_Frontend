@@ -43,7 +43,7 @@ export const columns: DataTableColumnDef<PaisTableDTO>[] = [
   },
   {
     id: 'actions',
-    header: () => <div className='text-right w-full pr-5'>Opções</div>,
+    header: () => <div className='w-full pr-5 text-right'>Ações</div>,
     cell: ({ row }) => (
       <div className='flex items-center justify-end'>
         <CellAction data={row.original} />
@@ -60,19 +60,21 @@ export const columns: DataTableColumnDef<PaisTableDTO>[] = [
 /** Colunas com callbacks "Ver" e "Editar" para abrir modal na página (ex.: listagem área-comum) */
 export function getColumnsWithViewCallback(
   onOpenView: (data: PaisTableDTO) => void,
-  onOpenEdit?: (data: PaisTableDTO) => void
+  onOpenEdit?: (data: PaisTableDTO) => void,
+  funcionalidadeId?: string
 ): DataTableColumnDef<PaisTableDTO>[] {
   return [
     ...columns.filter((c) => c.id !== 'actions'),
     {
       id: 'actions',
-      header: () => <div className='text-right w-full pr-5'>Opções</div>,
+      header: () => <div className='w-full pr-5 text-right'>Ações</div>,
       cell: ({ row }) => (
         <div className='flex items-center justify-end'>
           <CellAction
             data={row.original}
             onOpenView={onOpenView}
             onOpenEdit={onOpenEdit}
+            funcionalidadeId={funcionalidadeId}
           />
         </div>
       ),

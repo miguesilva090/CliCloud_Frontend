@@ -30,8 +30,6 @@ export function useGetFeriadosPaginated(
         queryKey: ['feriados-paginated', params],
         queryFn:  () => FeriadoService().getFeriadosPaginated(params),
         placeholderData: (previousData) => previousData,
-        staleTime: 5 * 60 * 1000,
-        gcTime: 30 * 60 * 1000,
     })
 }
 

@@ -27,8 +27,6 @@ export const useGetCentroSaude = (id: string) =>
     queryKey: ['centro-saude', id],
     queryFn: () => CentroSaudeService('tabelas').getCentroSaude(id),
     enabled: !!id,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 
 export const useCreateCentroSaude = () => {

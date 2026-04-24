@@ -31,6 +31,7 @@ export function ConcelhosListagemTable({
   hiddenColumns,
   onOpenView,
   onOpenEdit,
+  rowActionsFuncionalidadeId,
 }: {
   data: ConcelhoTableDTO[]
   isLoading: boolean
@@ -53,9 +54,14 @@ export function ConcelhosListagemTable({
   onOpenView?: (data: ConcelhoTableDTO) => void
   /** Quando definido (ex.: listagem área-comum), "Editar" abre o mesmo modal em modo edição */
   onOpenEdit?: (data: ConcelhoTableDTO) => void
+  rowActionsFuncionalidadeId?: string
 }) {
   const tableColumns = onOpenView
-    ? getListagemColumnsWithViewCallback(onOpenView, onOpenEdit)
+    ? getListagemColumnsWithViewCallback(
+        onOpenView,
+        onOpenEdit,
+        rowActionsFuncionalidadeId
+      )
     : listagemColumns
   return (
     <DataTable

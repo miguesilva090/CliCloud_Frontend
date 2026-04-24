@@ -20,8 +20,6 @@ export function useGetTecnicosPaginated(
     queryKey: ['tecnicos-paginated', params],
     queryFn: () => TecnicoService('tecnicos').getTecnicosPaginated(params),
     placeholderData: (previousData) => previousData,
-    staleTime: 30_000,
-    gcTime: 10 * 60 * 1000,
   })
 }
 

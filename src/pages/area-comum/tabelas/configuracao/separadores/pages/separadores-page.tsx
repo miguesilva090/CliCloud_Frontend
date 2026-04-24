@@ -56,7 +56,6 @@ export function SeparadoresPage() {
       const api = res as unknown as { info?: { data?: SeparadorDTO[] } }
       return (api.info?.data ?? []) as SeparadorDTO[]
     },
-    staleTime: 60_000,
   })
 
   const separadores = useMemo(() => {
@@ -127,7 +126,6 @@ export function SeparadoresPage() {
       return (api.info?.data ?? []) as MedicoLightDTO[]
     },
     enabled: medicoPickerOpen,
-    staleTime: 60_000,
   })
 
   const especialidadesQuery = useQuery({
@@ -138,7 +136,6 @@ export function SeparadoresPage() {
       return (api.info?.data ?? []) as EspecialidadeLightItem[]
     },
     enabled: especialidadePickerOpen,
-    staleTime: 60_000,
   })
 
   const medicosMap = useMemo(() => {
@@ -240,7 +237,7 @@ export function SeparadoresPage() {
   const allMedicosLoaded = medicosQuery.isFetched
   const allEspecialidadesLoaded = especialidadesQuery.isFetched
 
-  const resolverNamesQuery = useQuery({
+  useQuery({
     queryKey: ['separadores', 'resolve-names', selectedItem?.id, vinculosData?.length],
     enabled: !!vinculosData && vinculosData.length > 0 && dialogOpen,
     queryFn: async () => {
@@ -270,7 +267,6 @@ export function SeparadoresPage() {
       await Promise.all(promises)
       return true
     },
-    staleTime: 60_000,
   })
 
   return (

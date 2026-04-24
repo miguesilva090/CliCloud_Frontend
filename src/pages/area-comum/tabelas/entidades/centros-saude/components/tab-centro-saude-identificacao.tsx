@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
-import type { CentroSaudeEditFormValues } from '../centro-saude-edit-form-types'
+import type { CentroSaudeEditFormValues } from '../types/centro-saude-edit-form-types'
 import {
   usePaisesLight,
   useCodigosPostaisLight,

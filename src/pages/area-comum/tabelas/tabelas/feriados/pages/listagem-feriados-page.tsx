@@ -31,10 +31,16 @@ import { FeriadoImportarModal } from '../modals/feriado-importar-modal'
 import { FeriadoService } from '@/lib/services/utility/feriados-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+
+const feriadosPermId = modules.areaComum.permissions.feriados.id
 
 type FeriadoModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemFeriadosPage() {
+    const { canView, canAdd, canChange, canDelete } =
+        useAreaComumEntityListPermissions(feriadosPermId)
     const closeWindowTab = useCloseCurrentWindowLikeTabBar()
     const queryClient = useQueryClient()
 
@@ -71,36 +77,41 @@ export function ListagemFeriadosPage() {
     const errorMessage = error instanceof Error ? error.message : error ? String(error) : ''
 
     const toolbarActions: DataTableAction[] = [
+        ...(canAdd
+            ? [
+                  {
+                      label: 'Adicionar',
+                      icon: <Plus className='h-4 w-4' />,
+                      onClick: () => {
+                          setViewData(null)
+                          setModalMode('create')
+                          setModalOpen(true)
+                      },
+                      variant: 'destructive' as const,
+                      className:
+                          'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+                  },
+              ]
+            : []),
         {
-            label: 'Adicionar',
+            label: 'Importar',
+            icon: <Download className='h-4 w-4' />,
+            onClick: () => setImportarOpen(true),
+            variant: 'outline',
+        },
+        {
+            label: 'Inserir Ano',
             icon: <Plus className='h-4 w-4' />,
+            onClick: () => setInserirAnoOpen(true),
+            variant: 'outline',
+        },
+        {
+            label: 'Atualizar',
+            icon: <RotateCw className='h-4 w-4' />,
             onClick: () => {
-                setViewData(null)
-                setModalMode('create')
-                setModalOpen(true)
-            },
-            variant: 'destructive',
-            className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-            },
-            {
-                label: 'Importar',
-                icon: <Download className='h-4 w-4' />,
-                onClick: () => setImportarOpen(true),
-                variant: 'outline',
-            },
-            {
-                label: 'Inserir Ano',
-                icon: <Plus className='h-4 w-4' />,
-                onClick: () => setInserirAnoOpen(true),
-                variant: 'outline',
-            },
-            {
-                label: 'Atualizar',
-                icon: <RotateCw className='h-4 w-4' />,
-                onClick: () => {
-                    handleFiltersChange([])
-                    handlePaginationChange(1, pageSize)
-                    queryClient.invalidateQueries({ queryKey: ['feriados-paginated'] })
+                handleFiltersChange([])
+                handlePaginationChange(1, pageSize)
+                queryClient.invalidateQueries({ queryKey: ['feriados-paginated'] })
             },
             variant: 'outline',
         },
@@ -139,10 +150,10 @@ export function ListagemFeriadosPage() {
         if (!isDeleting) {
             setDeleteDialogOpen(false)
             setItemToDelete(null)
+        }
     }
-}
 
-return (
+    return (
     <>
         <PageHead title='Feriados' />
             <DashboardPageContainer>
@@ -201,16 +212,24 @@ return (
                     FilterControls={ListagemFeriadosFilterControls}
                     hiddenColumns={[]}
                     onOpenView={(row) => {
+                        if (!canView) return
                         setViewData(row)
                         setModalMode('view')
                         setModalOpen(true)
                     }}
-                    onOpenEdit={(row) => {
-                        setViewData(row)
-                        setModalMode('edit')
-                        setModalOpen(true)
-                    }}
-                    onOpenDelete={handleOpenDelete}
+                    onOpenEdit={
+                        canChange
+                            ? (row) => {
+                                  setViewData(row)
+                                  setModalMode('edit')
+                                  setModalOpen(true)
+                              }
+                            : undefined
+                    }
+                    onOpenDelete={canDelete ? handleOpenDelete : undefined}
+                    canView={canView}
+                    canChange={canChange}
+                    canDelete={canDelete}
                 />
 
                 <FeriadoViewCreateModal 
