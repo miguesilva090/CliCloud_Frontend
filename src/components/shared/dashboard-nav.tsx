@@ -53,10 +53,16 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
   const isItemActive = (
     _itemTitle: string | undefined,
     itemHref: string,
-    items?: NavItem[]
+    items?: NavItem[],
+    options?: {
+      parentHref?: string
+    }
   ) => {
     const isExactMatch = location.pathname === itemHref
-    const isNestedMatch = location.pathname.startsWith(itemHref + '/')
+    const isSameHrefAsParent =
+      !!options?.parentHref && options.parentHref === itemHref
+    const isNestedMatch =
+      !isSameHrefAsParent && location.pathname.startsWith(itemHref + '/')
     const isChildActive = items?.some(
       (item) =>
         location.pathname === item.href ||
@@ -98,7 +104,11 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
     }
   }
 
-  const renderMenuItem = (item: NavItem, depth: number = 0) => {
+  const renderMenuItem = (
+    item: NavItem,
+    depth: number = 0,
+    parentHref?: string
+  ) => {
     const Icon = item.icon
       ? Icons[item.icon] || Icons.arrowRight
       : Icons.arrowRight
@@ -126,7 +136,8 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
               }}
               className={cn(
                 'sidebar-link relative',
-                isItemActive(item.title, item.href, item.items) && 'active',
+                isItemActive(item.title, item.href, item.items, { parentHref }) &&
+                  'active',
                 isMinimized && 'justify-center px-0',
                 item.underDevelopment && 'cursor-not-allowed opacity-75'
               )}
@@ -158,7 +169,7 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
             {isExpanded && !isMinimized && (
               <div className='pl-4'>
                 {item.items?.map((subItem) =>
-                  renderMenuItem(subItem, depth + 1)
+                  renderMenuItem(subItem, depth + 1, item.href)
                 )}
               </div>
             )}
@@ -168,7 +179,8 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
             to={item.disabled || item.underDevelopment ? '#' : item.href}
             className={cn(
               'sidebar-nav-item',
-              isItemActive(item.title, item.href, item.items) && 'active',
+              isItemActive(item.title, item.href, item.items, { parentHref }) &&
+                'active',
               (item.disabled || item.underDevelopment) &&
                 'cursor-not-allowed opacity-75',
               isMinimized && 'justify-center'

@@ -29,12 +29,17 @@ import {
   useUploadDocumentoFichaClinica,
 } from '../queries/documentos-ficha-clinica-queries'
 import type { DocumentoFichaClinicaDTO } from '@/lib/services/processo-clinico/documentos-ficha-clinica-service'
+import { modules } from '@/config/modules'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 
 export type DocumentosFichaClinicaTabProps = {
   utenteId?: string
 }
 
 export function DocumentosFichaClinicaTab({ utenteId }: DocumentosFichaClinicaTabProps) {
+  const fichaClinicaPermissionId = modules.areaClinica.permissions.fichaClinica.id
+  const { canView, canAdd, canDelete } =
+    useAreaComumEntityListPermissions(fichaClinicaPermissionId)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [descricao, setDescricao] = useState('')
   const [categoria, setCategoria] = useState<string>('Clinico')
@@ -149,7 +154,7 @@ export function DocumentosFichaClinicaTab({ utenteId }: DocumentosFichaClinicaTa
           type="button"
           className="mt-5"
           size="sm"
-          disabled={!utenteId || !selectedFile || !descricao.trim()}
+          disabled={!utenteId || !canAdd || !selectedFile || !descricao.trim()}
           onClick={handleUpload}
         >
           <Paperclip className="mr-1 h-4 w-4" />
@@ -166,7 +171,7 @@ export function DocumentosFichaClinicaTab({ utenteId }: DocumentosFichaClinicaTa
             type="button"
             variant="outline"
             size="sm"
-            disabled={selectedIds.size === 0}
+            disabled={!canDelete || selectedIds.size === 0}
             onClick={handleDeleteSelected}
           >
             <Trash2 className="mr-1 h-4 w-4" />
@@ -180,10 +185,11 @@ export function DocumentosFichaClinicaTab({ utenteId }: DocumentosFichaClinicaTa
           <thead className="bg-muted">
             <tr>
               <th className="px-2 py-1 text-left">
-                <Input
+                  <Input
                   type="checkbox"
                   className="h-4 w-4"
                   checked={allSelected}
+                    disabled={!canDelete}
                   onChange={toggleSelectAll}
                 />
               </th>
@@ -209,6 +215,7 @@ export function DocumentosFichaClinicaTab({ utenteId }: DocumentosFichaClinicaTa
                     type="checkbox"
                     className="h-4 w-4"
                     checked={selectedIds.has(doc.id)}
+                    disabled={!canDelete}
                     onChange={() => toggleSelect(doc.id)}
                   />
                 </td>
@@ -219,7 +226,8 @@ export function DocumentosFichaClinicaTab({ utenteId }: DocumentosFichaClinicaTa
                 <td className="px-2 py-1 align-middle">{doc.categoria}</td>
                 <td className="px-2 py-1 align-middle">{doc.tipo}</td>
                 <td className="px-2 py-1 align-middle text-right space-x-2">
-                  <Button
+                  {canView ? (
+                    <Button
                     type="button"
                     variant="ghost"
                     size="icon"
@@ -228,8 +236,10 @@ export function DocumentosFichaClinicaTab({ utenteId }: DocumentosFichaClinicaTa
                     title="Ver documento"
                   >
                     <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button
+                    </Button>
+                  ) : null}
+                  {canDelete ? (
+                    <Button
                     type="button"
                     variant="ghost"
                     size="icon"
@@ -238,7 +248,8 @@ export function DocumentosFichaClinicaTab({ utenteId }: DocumentosFichaClinicaTa
                     title="Apagar documento"
                   >
                     <Trash2 className="h-4 w-4" />
-                  </Button>
+                    </Button>
+                  ) : null}
                 </td>
               </tr>
             ))}
@@ -246,7 +257,10 @@ export function DocumentosFichaClinicaTab({ utenteId }: DocumentosFichaClinicaTa
         </table>
       </div>
 
-      <AlertDialog open={!!idToDelete} onOpenChange={(open) => !open && setIdToDelete(null)}>
+      <AlertDialog
+        open={canDelete ? !!idToDelete : false}
+        onOpenChange={(open) => !open && setIdToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Apagar documento</AlertDialogTitle>

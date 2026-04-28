@@ -42,7 +42,7 @@ function UtenteRowActions({ id, nome }: { id: string; nome?: string | null }) {
   const addWindow = useWindowsStore((s) => s.addWindow)
 
   return (
-    <div className='flex items-center justify-end gap-1'>
+    <div className='flex w-full items-center justify-end gap-1'>
       <Button
         type='button'
         variant='ghost'
@@ -143,12 +143,14 @@ export const columns: Array<ColumnDef<UtenteTableDTO> & DataTableColumnDef<Utent
     },
     {
       id: 'opcoes',
-      header: 'Opções',
+      header: () => (
+        <div className='w-full pr-5 text-right'>Opções</div>
+      ),
       cell: ({ row }: CellContext<UtenteTableDTO, unknown>) => (
         <UtenteRowActions id={row.original.id} nome={row.original.nome} />
       ),
       enableSorting: false,
-      meta: { align: 'right' },
+      meta: { align: 'right' as const },
     },
   ]
 

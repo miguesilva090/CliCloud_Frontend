@@ -5,6 +5,7 @@ import { List, RotateCw, RefreshCw, X, ChevronRight } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
@@ -27,7 +28,7 @@ import {
 import { DoencaViewEditModal } from '../modals/doenca-view-edit-modal'
 import { DoencaService } from '@/lib/services/doencas/doenca-service'
 import { ResponseStatus } from '@/types/api/responses'
-import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
 
@@ -40,7 +41,6 @@ type BreadcrumbItem = { id: string; code: string; title: string }
 export function ListagemDoencasPage() {
   const { canView, canChange, canDelete } =
     useAreaComumEntityListPermissions(doencasPermId)
-  const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [path, setPath] = useState<BreadcrumbItem[]>([])
   const [modalOpen, setModalOpen] = useState(false)
@@ -167,34 +167,15 @@ export function ListagemDoencasPage() {
     <>
       <PageHead title='Doenças | Tabelas | Área Comum | CliCloud' />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>Doenças</h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
+        <AreaComumListagemPageShell
+            title='Doenças'
+            onRefresh={() => {
                 handleFiltersChange([])
                 handlePaginationChange(1, pageSize)
                 queryClient.invalidateQueries({
                   queryKey: ['doencas-paginated']})
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={closeWindowTab}
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+            }}
+        >
 
         {isError ? (
           <Alert variant='destructive' className='mb-4'>
@@ -307,9 +288,9 @@ export function ListagemDoencasPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </DashboardPageContainer>
+        </AreaComumListagemPageShell>
+        </DashboardPageContainer>
     </>
   )
 }
-
 

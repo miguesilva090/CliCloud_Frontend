@@ -1,5 +1,19 @@
 import type { NotificacaoTableDTO } from '@/types/dtos/notificacoes/notificacao.dtos'
 import { DataTableColumnDef } from '@/components/shared/data-table-types'
+
+/** Data + hora/minutos (sem frações de segundo). */
+function fmtDataHora(iso?: string | null): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  return d.toLocaleString('pt-PT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { mergeRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { Button } from '@/components/ui/button'
@@ -21,10 +35,21 @@ const baseColumns: DataTableColumnDef<NotificacaoTableDTO>[] = [
     meta: { align: 'left' as const },
   },
   {
+    accessorKey: 'prioridade',
+    header: 'Prioridade',
+    sortKey: 'prioridade',
+    enableSorting: true,
+    cell: ({ row }) =>
+      row.original.prioridadeDesignacao ?? String(row.original.prioridade ?? ''),
+    meta: { align: 'center' as const },
+  },
+  {
     accessorKey: 'estado',
     header: 'Estado',
+    sortKey: 'estado',
     enableSorting: true,
-    cell: ({ row }) => String(row.original.estado ?? ''),
+    cell: ({ row }) =>
+      row.original.estadoDesignacao ?? String(row.original.estado ?? ''),
     meta: { align: 'center' as const },
   },
   {
@@ -39,6 +64,7 @@ const baseColumns: DataTableColumnDef<NotificacaoTableDTO>[] = [
     header: 'Criada em',
     sortKey: 'createdOn',
     enableSorting: true,
+    cell: ({ row }) => fmtDataHora(row.original.createdOn),
     meta: { align: 'left' as const },
   },
 ]
@@ -59,12 +85,12 @@ export function getNotificacoesTableColumns(
 
   const actionsCol: DataTableColumnDef<NotificacaoTableDTO> = {
     id: 'actions',
-    header: () => <div className='text-right w-full pr-5'>Opções</div>,
+    header: () => <div className='w-full pr-5 text-right'>Opções</div>,
     cell: ({ row }) => {
       const data = row.original
       const podeMarcar = showMarcarLida && !data.lida
       return (
-        <div className='flex items-center justify-end gap-1'>
+        <div className='flex w-full items-center justify-end gap-1'>
           {canView ? (
             <Button
               type='button'

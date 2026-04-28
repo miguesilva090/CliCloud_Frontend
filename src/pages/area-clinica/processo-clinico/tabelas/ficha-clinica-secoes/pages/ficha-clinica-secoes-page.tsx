@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
+import { AreaComumDashboardCard } from '@/components/shared/area-comum-dashboard-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -26,6 +27,8 @@ import { toast } from '@/utils/toast-utils'
 import { getCurrentWindowId } from '@/utils/window-utils'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { modules } from '@/config/modules'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 
 interface TemplateFormState {
   id?: string
@@ -77,6 +80,10 @@ const tryExtractGuid = (response: unknown): string | null => {
 
 export function FichaClinicaSecoesPage() {
   const queryClient = useQueryClient()
+  const fichaClinicaSecoesPermissionId =
+    modules.areaClinica.permissions.fichaClinica.id
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(fichaClinicaSecoesPermissionId)
   const updateWindowState = useWindowsStore((s) => s.updateWindowState)
   const [dialogMode, setDialogMode] = useState<'create' | 'edit' | 'view'>('create')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -449,7 +456,13 @@ export function FichaClinicaSecoesPage() {
       return
     }
 
-    const numeroLinhas = tipoCampo === 'TextoMultilinha' ? 10 : 3
+    const nLinhas = campoFormState.numeroLinhas
+    const numeroLinhas =
+      Number.isFinite(nLinhas) && nLinhas >= 1
+        ? Math.floor(nLinhas)
+        : tipoCampo === 'TextoMultilinha'
+          ? 10
+          : 3
 
     const dataToSave: CampoFormState = {
       ...campoFormState,
@@ -507,19 +520,20 @@ export function FichaClinicaSecoesPage() {
     <>
       <PageHead title='Formulários Personalizados | CliCloud' />
       <DashboardPageContainer>
-        <div className='flex flex-col gap-3'>
-          <div className='flex flex-wrap items-center justify-between gap-3'>
-            <h1 className='text-lg font-semibold'>Formulários Personalizados</h1>
-            <div className='flex items-center gap-2'>
+        <AreaComumDashboardCard title='Formulários Personalizados'>
+          <div className='mb-3 flex flex-wrap items-center justify-end gap-2'>
+            {canAdd ? (
               <Button size='sm' onClick={openCreateDialog}>
                 <Plus className='mr-1 h-3.5 w-3.5' />
                 Adicionar
               </Button>
+            ) : null}
+            {canDelete ? (
               <Button size='sm' variant='destructive' onClick={handleDeleteSelected}>
                 <Trash2 className='mr-1 h-3.5 w-3.5' />
                 Excluir
               </Button>
-            </div>
+            ) : null}
           </div>
 
           <div className='rounded-md border bg-card'>
@@ -550,45 +564,53 @@ export function FichaClinicaSecoesPage() {
                   templates.map((t) => (
                     <TableRow key={t.id}>
                       <TableCell>
-                        <Checkbox
-                          checked={selectedIds.has(t.id)}
-                          onCheckedChange={(checked) =>
-                            toggleSelected(t.id, Boolean(checked))
-                          }
-                        />
+                        {canDelete ? (
+                          <Checkbox
+                            checked={selectedIds.has(t.id)}
+                            onCheckedChange={(checked) =>
+                              toggleSelected(t.id, Boolean(checked))
+                            }
+                          />
+                        ) : null}
                       </TableCell>
                       <TableCell className='text-center'>{t.ordem}</TableCell>
                       <TableCell className='text-left'>{t.nome}</TableCell>
                       <TableCell className='text-center'>{t.ativo ? 'Sim' : 'Não'}</TableCell>
                       <TableCell className='text-right'>
                         <div className='flex justify-end gap-2'>
-                        <Button
-                          size='icon'
-                          variant='ghost'
-                          className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
-                          onClick={() => openViewDialog(t)}
-                          title='Campos'
-                        >
-                          <Search className='h-3.5 w-3.5' />
-                        </Button>
-                        <Button
-                          size='icon'
-                          variant='ghost'
-                          className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
-                          onClick={() => openEditDialog(t)}
-                          title='Editar'
-                        >
-                          <Pencil className='h-3.5 w-3.5' />
-                        </Button>
-                        <Button
-                          size='icon'
-                          variant='ghost'
-                          className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
-                          onClick={() => deleteMutation.mutate([t.id])}
-                          title='Eliminar'
-                        >
-                          <Trash2 className='h-3.5 w-3.5' />
-                        </Button>
+                        {canView ? (
+                          <Button
+                            size='icon'
+                            variant='ghost'
+                            className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
+                            onClick={() => openViewDialog(t)}
+                            title='Campos'
+                          >
+                            <Search className='h-3.5 w-3.5' />
+                          </Button>
+                        ) : null}
+                        {canChange ? (
+                          <Button
+                            size='icon'
+                            variant='ghost'
+                            className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
+                            onClick={() => openEditDialog(t)}
+                            title='Editar'
+                          >
+                            <Pencil className='h-3.5 w-3.5' />
+                          </Button>
+                        ) : null}
+                        {canDelete ? (
+                          <Button
+                            size='icon'
+                            variant='ghost'
+                            className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
+                            onClick={() => deleteMutation.mutate([t.id])}
+                            title='Eliminar'
+                          >
+                            <Trash2 className='h-3.5 w-3.5' />
+                          </Button>
+                        ) : null}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -597,7 +619,7 @@ export function FichaClinicaSecoesPage() {
               </TableBody>
             </Table>
           </div>
-        </div>
+        </AreaComumDashboardCard>
       </DashboardPageContainer>
 
       <Dialog
@@ -645,14 +667,16 @@ export function FichaClinicaSecoesPage() {
               <>
                 <div className='mb-1 flex items-center justify-between gap-4'>
                   <div />
-                  <Button
-                    size='sm'
-                    onClick={handleOpenNovoCampo}
-                    disabled={dialogMode === 'view' || (!templateSelecionado && !formState.id)}
-                  >
-                    <Plus className='mr-1 h-3.5 w-3.5' />
-                    Inserir
-                  </Button>
+                  {canAdd || canChange ? (
+                    <Button
+                      size='sm'
+                      onClick={handleOpenNovoCampo}
+                      disabled={dialogMode === 'view'}
+                    >
+                      <Plus className='mr-1 h-3.5 w-3.5' />
+                      Inserir
+                    </Button>
+                  ) : null}
                 </div>
 
                 <div className='max-h-[320px] overflow-auto rounded-md border'>
@@ -690,34 +714,38 @@ export function FichaClinicaSecoesPage() {
                             <TableCell className='text-center'>{c.ativo ? 'Sim' : 'Não'}</TableCell>
                             <TableCell className='text-right'>
                               <div className='flex justify-end gap-2'>
-                                <Button
-                                  size='icon'
-                                  variant='ghost'
-                                  className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
-                                  onClick={() => openEditCampoDialog(c)}
-                                  title='Editar'
-                                  disabled={dialogMode === 'view'}
-                                >
-                                  <Pencil className='h-3.5 w-3.5' />
-                                </Button>
-                                <Button
-                                  size='icon'
-                                  variant='ghost'
-                                  className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
-                                  onClick={() => {
-                                    if (c.id) {
-                                      deleteCampoMutation.mutate(c.id)
-                                      return
-                                    }
-                                    if (c.tempId) {
-                                      setPendingCampos((prev) => prev.filter((p) => p.tempId !== c.tempId))
-                                    }
-                                  }}
-                                  title='Eliminar'
-                                  disabled={dialogMode === 'view'}
-                                >
-                                  <Trash2 className='h-3.5 w-3.5' />
-                                </Button>
+                                {canChange ? (
+                                  <Button
+                                    size='icon'
+                                    variant='ghost'
+                                    className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
+                                    onClick={() => openEditCampoDialog(c)}
+                                    title='Editar'
+                                    disabled={dialogMode === 'view'}
+                                  >
+                                    <Pencil className='h-3.5 w-3.5' />
+                                  </Button>
+                                ) : null}
+                                {canDelete ? (
+                                  <Button
+                                    size='icon'
+                                    variant='ghost'
+                                    className='h-7 w-7 border-0 bg-transparent p-0 shadow-none hover:bg-transparent'
+                                    onClick={() => {
+                                      if (c.id) {
+                                        deleteCampoMutation.mutate(c.id)
+                                        return
+                                      }
+                                      if (c.tempId) {
+                                        setPendingCampos((prev) => prev.filter((p) => p.tempId !== c.tempId))
+                                      }
+                                    }}
+                                    title='Eliminar'
+                                    disabled={dialogMode === 'view'}
+                                  >
+                                    <Trash2 className='h-3.5 w-3.5' />
+                                  </Button>
+                                ) : null}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -733,7 +761,8 @@ export function FichaClinicaSecoesPage() {
             <Button variant='outline' type='button' onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
-            {dialogMode !== 'view' ? (
+            {dialogMode !== 'view' &&
+            ((formState.id && canChange) || (!formState.id && canAdd)) ? (
               <Button type='button' onClick={handleSave}>
                 OK
               </Button>

@@ -1,27 +1,15 @@
 import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { pt } from 'date-fns/locale'
-import { Eye, Megaphone, Pencil, PlayCircle, RefreshCw, Trash2 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { navigateManagedWindow } from '@/utils/window-utils'
+import { RotateCw } from 'lucide-react'
 import type { CellContext, ColumnDef } from '@tanstack/react-table'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { DataTable } from '@/components/shared/data-table'
+import type { DataTableAction } from '@/components/shared/data-table'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
@@ -29,17 +17,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { toast } from '@/utils/toast-utils'
-import { ConsultaMarcadaViewEditModal } from '@/pages/area-clinica/processo-clinico/agenda/modals/consulta-marcada-view-edit-modal'
 import type { ConsultaMarcadaRow } from '@/pages/area-clinica/processo-clinico/agenda/types/consulta-marcada-types'
 import { useConsultasDoDiaMarcacoes } from '@/pages/area-clinica/processo-clinico/agenda/queries/consultas-do-dia-queries'
-import { ConsultaService } from '@/lib/services/consultas/consulta-service'
-import { MarcacaoConsultaService } from '@/lib/services/consultas/marcacao-consulta-service'
-import { ChamadaUtentesService } from '@/lib/services/core/chamada-utentes-service'
 
 export type ConsultaDoDiaRow = ConsultaMarcadaRow
 
-const baseColumns: Array<ColumnDef<ConsultaDoDiaRow> & DataTableColumnDef<ConsultaDoDiaRow>> = [
+const columns: Array<ColumnDef<ConsultaDoDiaRow> & DataTableColumnDef<ConsultaDoDiaRow>> = [
   {
     accessorKey: 'dataLabel',
     header: 'Data',
@@ -84,99 +67,6 @@ const baseColumns: Array<ColumnDef<ConsultaDoDiaRow> & DataTableColumnDef<Consul
   },
 ]
 
-function getColumnsWithActions(
-  onChamarUtente: (row: ConsultaDoDiaRow) => void,
-  onIniciarConsulta: (row: ConsultaDoDiaRow) => void,
-  onOpenView: (row: ConsultaDoDiaRow) => void,
-  onOpenEdit: (row: ConsultaDoDiaRow) => void,
-  onOpenDelete: (row: ConsultaDoDiaRow) => void
-): Array<ColumnDef<ConsultaDoDiaRow> & DataTableColumnDef<ConsultaDoDiaRow>> {
-  return [
-    ...baseColumns,
-    {
-      id: 'acoes',
-      header: () => <div className='text-right w-full pr-5'>Opções</div>,
-      cell: ({ row }: CellContext<ConsultaDoDiaRow, unknown>) => {
-        const r = row.original
-        const jaTemConsulta = !!r.consultaId
-        const title = jaTemConsulta ? 'Abrir Ficha Clínica' : 'Iniciar Consulta'
-        return (
-          <div className='flex items-center justify-end gap-1'>
-            <Button
-              type='button'
-              variant='outline'
-              size='icon'
-              className='h-8 w-8'
-              title='Chamar Utente'
-              onClick={(e) => {
-                e.stopPropagation()
-                onChamarUtente(r)
-              }}
-            >
-              <Megaphone className='h-4 w-4' />
-            </Button>
-            <Button
-              type='button'
-              variant='default'
-              size='icon'
-              className='h-8 w-8'
-              title={title}
-              onClick={(e) => {
-                e.stopPropagation()
-                onIniciarConsulta(r)
-              }}
-            >
-              <PlayCircle className='h-4 w-4' />
-            </Button>
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              title='Ver'
-              onClick={(e) => {
-                e.stopPropagation()
-                onOpenView(r)
-              }}
-            >
-              <Eye className='h-4 w-4' />
-            </Button>
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              title='Editar'
-              onClick={(e) => {
-                e.stopPropagation()
-                onOpenEdit(r)
-              }}
-            >
-              <Pencil className='h-4 w-4' />
-            </Button>
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8 text-destructive hover:text-destructive'
-              title='Remover'
-              onClick={(e) => {
-                e.stopPropagation()
-                onOpenDelete(r)
-              }}
-            >
-              <Trash2 className='h-4 w-4' />
-            </Button>
-          </div>
-        )
-      },
-      enableSorting: false,
-      enableHiding: false,
-      meta: { align: 'right', width: 'w-[180px]' },
-    },
-  ]
-}
-
 function ConsultasDoDiaFilterControls(_: {
   table: any
   columns: any[]
@@ -187,184 +77,31 @@ function ConsultasDoDiaFilterControls(_: {
 }
 
 export function ConsultasDoDiaPage() {
-  const navigate = useNavigate()
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date())
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
   const { rows: consultasFiltradas, refetch, isFetching } = useConsultasDoDiaMarcacoes(
     selectedDateStr,
-    { enabled: true }
+    { enabled: true },
   )
 
-  const [viewEditModalOpen, setViewEditModalOpen] = useState(false)
-  const [viewEditMode, setViewEditMode] = useState<'view' | 'edit'>('view')
-  const [selectedRow, setSelectedRow] = useState<ConsultaDoDiaRow | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [itemToDelete, setItemToDelete] = useState<ConsultaDoDiaRow | null>(null)
-  const [iniciarLoading, setIniciarLoading] = useState(false)
-  const [chamadaLoading, setChamadaLoading] = useState(false)
-  const [chamarDialogOpen, setChamarDialogOpen] = useState(false)
-  const [chamarOutraVezDialogOpen, setChamarOutraVezDialogOpen] = useState(false)
-  const [rowToCall, setRowToCall] = useState<ConsultaDoDiaRow | null>(null)
-  const [salaToCall, setSalaToCall] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [sorting, setSorting] = useState<Array<{ id: string; desc: boolean }>>([])
-
-  const goToFichaClinica = (utenteId: string, consultaId?: string) => {
-    const base = `/area-clinica/processo-clinico/atendimento/ficha-clinica`
-    const params = new URLSearchParams()
-    if (utenteId) params.set('utenteId', utenteId)
-    if (consultaId) params.set('consultaId', consultaId)
-    const url = params.toString() ? `${base}?${params.toString()}` : base
-    navigateManagedWindow(navigate, url)
-  }
-
-  const handleIniciarConsulta = async (row: ConsultaDoDiaRow) => {
-    if (!row?.id) return
-    const jaTemConsulta = !!row.consultaId
-    if (jaTemConsulta) {
-      goToFichaClinica(row.utenteId ?? '', row.consultaId ?? undefined)
-      return
-    }
-    setIniciarLoading(true)
-    try {
-      const res = await ConsultaService().createConsultaFromMarcacao(row.id)
-      const status = res?.info?.status
-      if (status !== 0 && status !== undefined) {
-        const msgs = res?.info?.messages as Record<string, string[] | undefined> | undefined
-        const firstMsg = msgs?.$?.[0] ?? (msgs && Object.values(msgs).flat()[0])
-        toast.error(firstMsg ?? 'Erro ao iniciar consulta.')
-        return
-      }
-      const consultaId = res?.info?.data
-      toast.success('Consulta iniciada. A abrir Ficha Clínica…')
-      refetch()
-      goToFichaClinica(row.utenteId ?? '', consultaId ?? undefined)
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao iniciar consulta.')
-    } finally {
-      setIniciarLoading(false)
-    }
-  }
-
-  const chamarConsulta = async (row: ConsultaDoDiaRow, chamarOutraVez: boolean) => {
-    setChamadaLoading(true)
-    try {
-      const dadosRes = await ChamadaUtentesService().getDadosChamadaConsulta(row.id, chamarOutraVez)
-      const dados = dadosRes?.info?.data
-      if (!dados) {
-        toast.error('Não foi possível obter dados da chamada.')
-        return
-      }
-
-      if (dados.existeChamadaAtiva) {
-        toast.error('Já existe uma chamada ativa para esta consulta.')
-        return
-      }
-
-      if (dados.existeChamadaFeita && !chamarOutraVez) {
-        setRowToCall(row)
-        setSalaToCall(dados.sala ?? '')
-        setChamarOutraVezDialogOpen(true)
-        return
-      }
-
-      setRowToCall(row)
-      setSalaToCall(dados.sala ?? '')
-      setChamarDialogOpen(true)
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao preparar chamada do utente.')
-    } finally {
-      setChamadaLoading(false)
-    }
-  }
-
-  const handleChamarUtente = async (row: ConsultaDoDiaRow) => {
-    if (!row?.id) return
-    await chamarConsulta(row, false)
-  }
-
-  const confirmarChamada = async () => {
-    if (!rowToCall?.id) return
-    setChamadaLoading(true)
-    try {
-      const res = await ChamadaUtentesService().chamarUtenteConsulta(rowToCall.id, {
-        sala: salaToCall.trim() || null,
-      })
-      const status = res?.info?.status
-      if (status !== 0 && status !== undefined) {
-        const msgs = res?.info?.messages as Record<string, string[] | undefined> | undefined
-        const firstMsg = msgs?.$?.[0] ?? (msgs && Object.values(msgs).flat()[0])
-        toast.error(firstMsg ?? 'Erro ao chamar utente.')
-        return
-      }
-
-      toast.success('Utente chamado com sucesso.')
-      setChamarDialogOpen(false)
-      setRowToCall(null)
-      setSalaToCall('')
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao chamar utente.')
-    } finally {
-      setChamadaLoading(false)
-    }
-  }
-
-  const handleOpenView = (row: ConsultaDoDiaRow) => {
-    setSelectedRow(row)
-    setViewEditMode('view')
-    setViewEditModalOpen(true)
-  }
-
-  const handleOpenEdit = (row: ConsultaDoDiaRow) => {
-    setSelectedRow(row)
-    setViewEditMode('edit')
-    setViewEditModalOpen(true)
-  }
-
-  const handleOpenDelete = (row: ConsultaDoDiaRow) => {
-    setItemToDelete(row)
-    setDeleteDialogOpen(true)
-  }
-
-  const handleEditSuccess = () => {
-    refetch()
-  }
-
-  const handleConfirmDelete = async () => {
-    if (!itemToDelete?.id) return
-    setDeleteDialogOpen(false)
-    const id = itemToDelete.id
-    setItemToDelete(null)
-    try {
-      const res = await MarcacaoConsultaService().deleteMarcacaoConsulta(id)
-      if (res?.info?.status !== 0 && res?.info?.status !== undefined) {
-        toast.error(res?.info?.messages?.$?.[0] ?? 'Erro ao remover.')
-        return
-      }
-      refetch()
-      toast.success('Marcação removida.')
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao remover.')
-    }
-  }
 
   const handleRefresh = () => {
     setPage(1)
     refetch()
   }
 
-  const columns = useMemo(
-    () =>
-      getColumnsWithActions(
-        handleChamarUtente,
-        handleIniciarConsulta,
-        handleOpenView,
-        handleOpenEdit,
-        handleOpenDelete
-      ),
-    [refetch]
-  )
+  const toolbarActions: DataTableAction[] = [
+    {
+      label: 'Atualizar',
+      icon: <RotateCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />,
+      onClick: handleRefresh,
+      variant: 'outline',
+      disabled: isFetching,
+    },
+  ]
 
   const totalRegistos = consultasFiltradas.length
   const totalPages = Math.max(1, Math.ceil(totalRegistos / pageSize))
@@ -375,174 +112,55 @@ export function ConsultasDoDiaPage() {
 
   const filters: Array<{ id: string; value: string }> = []
 
+  const datePickerTrigger = (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type='button'
+          variant='outline'
+          className={cn('min-w-[200px] justify-start text-left font-normal')}
+        >
+          {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className='w-auto p-0' align='start'>
+        <Calendar
+          mode='single'
+          selected={selectedDate}
+          onSelect={(d) => d && setSelectedDate(d)}
+          locale={pt}
+        />
+      </PopoverContent>
+    </Popover>
+  )
+
   return (
     <>
       <PageHead title='Consultas do Dia | CliCloud' />
       <DashboardPageContainer>
-        <div className='mb-6 flex flex-wrap items-center justify-between gap-4'>
-          <h1 className='text-2xl font-bold text-foreground'>Consultas do Dia</h1>
-          <div className='flex items-center gap-2'>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant='outline'
-                  className={cn('min-w-[200px] justify-start text-left font-normal')}
-                >
-                  {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className='w-auto p-0' align='start'>
-                <Calendar
-                  mode='single'
-                  selected={selectedDate}
-                  onSelect={(d) => d && setSelectedDate(d)}
-                  locale={pt}
-                />
-              </PopoverContent>
-            </Popover>
-            <Button
-              variant='outline'
-              size='sm'
-              className='h-8'
-              onClick={handleRefresh}
-              title='Atualizar'
-              disabled={isFetching}
-            >
-              <RefreshCw className={cn('h-4 w-4 sm:mr-2', isFetching && 'animate-spin')} />
-              <span className='hidden sm:inline'>Atualizar</span>
-            </Button>
-          </div>
-        </div>
-
-        <ConsultaMarcadaViewEditModal
-          open={viewEditModalOpen}
-          onOpenChange={setViewEditModalOpen}
-          mode={viewEditMode}
-          rowData={selectedRow}
-          onSuccess={handleEditSuccess}
-        />
-
-        <AlertDialog
-          open={deleteDialogOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              setDeleteDialogOpen(false)
-              setItemToDelete(null)
-            }
-          }}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Remover marcação</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem a certeza que pretende remover a marcação de{' '}
-                {itemToDelete?.utenteNome ?? ''}? Esta ação não pode ser revertida.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={(e) => {
-                  e.preventDefault()
-                  handleConfirmDelete()
-                }}
-                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-              >
-                Remover
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        <AlertDialog
-          open={chamarOutraVezDialogOpen}
-          onOpenChange={(open) => {
-            setChamarOutraVezDialogOpen(open)
-            if (!open) setRowToCall(null)
-          }}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Chamada já efetuada</AlertDialogTitle>
-              <AlertDialogDescription>
-                Este utente já foi chamado anteriormente. Pretende chamar outra vez?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={async (e) => {
-                  e.preventDefault()
-                  setChamarOutraVezDialogOpen(false)
-                  if (rowToCall) await chamarConsulta(rowToCall, true)
-                }}
-              >
-                Chamar Outra Vez
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        <AlertDialog
-          open={chamarDialogOpen}
-          onOpenChange={(open) => {
-            setChamarDialogOpen(open)
-            if (!open) {
-              setRowToCall(null)
-              setSalaToCall('')
-            }
-          }}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Chamar Utente</AlertDialogTitle>
-              <AlertDialogDescription>
-                Defina a sala para a chamada. Se deixar vazio, fica sem sala.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className='space-y-2'>
-              <Label htmlFor='salaChamada'>Sala</Label>
-              <Input
-                id='salaChamada'
-                value={salaToCall}
-                onChange={(e) => setSalaToCall(e.target.value)}
-                placeholder='Ex.: Sala 1'
-              />
-            </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={chamadaLoading}>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={chamadaLoading}
-                onClick={(e) => {
-                  e.preventDefault()
-                  confirmarChamada()
-                }}
-              >
-                {chamadaLoading ? 'A chamar...' : 'Confirmar Chamada'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        <DataTable
-          columns={columns}
-          data={paginatedRows}
-          pageCount={totalPages}
-          totalRows={totalRegistos}
-          initialPage={page}
-          initialPageSize={pageSize}
-          initialFilters={filters}
-          initialSorting={sorting}
-          onPaginationChange={(newPage, newPageSize) => {
-            setPage(newPage)
-            setPageSize(newPageSize)
-          }}
-          onFiltersChange={() => {}}
-          onSortingChange={(newSorting) => setSorting(newSorting)}
-          FilterControls={ConsultasDoDiaFilterControls}
-          hideToolbar
-          isLoading={iniciarLoading}
-        />
+        <AreaComumListagemPageShell title='Consultas do Dia'>
+          <DataTable
+            columns={columns}
+            data={paginatedRows}
+            pageCount={totalPages}
+            totalRows={totalRegistos}
+            initialPage={page}
+            initialPageSize={pageSize}
+            initialFilters={filters}
+            initialSorting={sorting}
+            onPaginationChange={(newPage, newPageSize) => {
+              setPage(newPage)
+              setPageSize(newPageSize)
+            }}
+            onFiltersChange={() => {}}
+            onSortingChange={(newSorting) => setSorting(newSorting)}
+            FilterControls={ConsultasDoDiaFilterControls}
+            hideToolbarFilters
+            toolbarEndPrefix={datePickerTrigger}
+            toolbarActions={toolbarActions}
+            isLoading={isFetching}
+          />
+        </AreaComumListagemPageShell>
       </DashboardPageContainer>
     </>
   )

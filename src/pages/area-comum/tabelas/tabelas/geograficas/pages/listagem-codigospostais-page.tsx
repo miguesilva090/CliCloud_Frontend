@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {} from 'react-router-dom'
-import { Plus, List, RotateCw, RefreshCw, X } from 'lucide-react'
+import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import {
   useGetCodigosPostaisPaginated,
   usePrefetchAdjacentCodigosPostais} from '@/pages/base/codigospostais/queries/codigospostais-queries'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { CodigosPostaisListagemTable } from '@/pages/base/codigospostais/components/codigospostais-table/codigospostais-listagem-table'
@@ -15,7 +16,7 @@ import { ListagemCodigosPostaisFilterControls } from '../components/listagem-cod
 import { CodigoPostalViewCreateModal } from '../modals/codigopostal-view-create-modal'
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { CodigoPostalTableDTO } from '@/types/dtos/base/codigospostais.dtos'
-import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
 
@@ -28,7 +29,6 @@ export function ListagemCodigosPostaisPage() {
   const { canAdd } = useAreaComumEntityListPermissions(
     LISTAGEM_CODIGO_POSTAL_PERM_ID
   )
-  const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<CodigoPostalModalMode>('view')
@@ -98,34 +98,15 @@ export function ListagemCodigosPostaisPage() {
     <>
       <PageHead title='Listagem de Códigos Postais | Geográficas | Tabelas | Área Comum | CliCloud' />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>Listagem de Códigos Postais</h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
+        <AreaComumListagemPageShell
+            title='Listagem de Códigos Postais'
+            onRefresh={() => {
                 handleFiltersChange([])
                 handlePaginationChange(1, pageSize)
                 queryClient.invalidateQueries({
                   queryKey: ['codigospostais-paginated']})
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={closeWindowTab}
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+            }}
+        >
 
         {isError ? (
           <Alert variant='destructive' className='mb-4'>
@@ -176,7 +157,8 @@ export function ListagemCodigosPostaisPage() {
               queryKey: ['codigospostais-paginated']})
           }}
         />
-      </DashboardPageContainer>
+        </AreaComumListagemPageShell>
+        </DashboardPageContainer>
     </>
   )
 }

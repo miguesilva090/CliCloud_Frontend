@@ -95,16 +95,18 @@ export const HeaderNavProvider: React.FC<{ children: React.ReactNode }> = ({
         return 'processo-clinico'
       }
 
-      // First check nested items (e.g. /area-clinica/processo-clinico/... → "processo-clinico" for header sub-menu)
-      for (const item of menuItems) {
-        if (item.items) {
-          const nestedMatch = item.items.find(
-            (subItem) =>
-              pathname === subItem.href ||
-              pathname.startsWith(subItem.href + '/')
-          )
-          if (nestedMatch?.title) return nestedMatch.title
-        }
+      // First check nested items and pick the most specific match
+      // (longest href wins, e.g. /area-comum/utilitarios over /area-comum)
+      const nestedCandidates = menuItems
+        .flatMap((item) => item.items ?? [])
+        .filter(
+          (subItem) =>
+            pathname === subItem.href ||
+            pathname.startsWith(subItem.href + '/')
+        )
+        .sort((a, b) => b.href.length - a.href.length)
+      if (nestedCandidates.length > 0 && nestedCandidates[0].title) {
+        return nestedCandidates[0].title
       }
 
       // Then check direct top-level matches

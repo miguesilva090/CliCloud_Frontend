@@ -18,6 +18,22 @@ export function useAreaComumEntityListPermissions(funcionalidadeId: string) {
   }
 }
 
+/** Permissões típicas das listagens, aceitando múltiplas funcionalidades (OR lógico). */
+export function useEntityListPermissionsFromMany(funcionalidadeIds: string[]) {
+  const hasPermission = usePermissionsStore((s) => s.hasPermission)
+  const ids = funcionalidadeIds.filter(Boolean)
+
+  const hasAny = (action: 'AuthVer' | 'AuthAdd' | 'AuthChg' | 'AuthDel') =>
+    ids.some((id) => hasPermission(id, action))
+
+  return {
+    canView: hasAny('AuthVer'),
+    canAdd: hasAny('AuthAdd'),
+    canChange: hasAny('AuthChg'),
+    canDelete: hasAny('AuthDel'),
+  }
+}
+
 export function mergeRowActionPermissions(
   input?: AreaComumListRowActionPermissions
 ) {

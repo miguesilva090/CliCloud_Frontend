@@ -49,6 +49,8 @@ import type {
 import { HistoriaClinicaService } from '@/lib/services/historia-clinica/historia-clinica-service'
 import { useGetUtente } from '@/pages/utentes/queries/utentes-queries'
 import type { GSResponse } from '@/types/api/responses'
+import { modules } from '@/config/modules'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 
 type TratamentosTabProps = {
   utenteId: string
@@ -63,6 +65,9 @@ type DraftServicoTratamento = {
 }
 
 export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProps) {
+  const fichaClinicaPermissionId = modules.areaClinica.permissions.fichaClinica.id
+  const { canView, canAdd, canChange } =
+    useAreaComumEntityListPermissions(fichaClinicaPermissionId)
   const navigate = useNavigate()
   const [novoOpen, setNovoOpen] = useState(false)
   const [data, setData] = useState<Date | null>(null)
@@ -630,7 +635,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
       <TabsContent value='ficha' className='mt-0 rounded-lg border bg-card p-4 text-sm'>
         <div className='flex items-center justify-between border-b pb-3'>
           <h3 className='text-base font-semibold text-teal-700'>Tratamentos</h3>
-          <Button size='sm' onClick={handleOpenNovo} disabled={!utenteId}>
+          <Button size='sm' onClick={handleOpenNovo} disabled={!utenteId || !canAdd}>
             <PlusCircle className='mr-2 h-4 w-4' />
             Prescrever Novo Tratamento
           </Button>
@@ -711,12 +716,13 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                               className='h-3 w-3'
                               checked={!!t.dataFim}
                               onChange={(e) => handleToggleAlta(t.id, e.target.checked)}
-                              disabled={toggleAltaMutation.isPending}
+                              disabled={toggleAltaMutation.isPending || !canChange}
                             />
                           </TableCell>
                           <TableCell className='text-center'>
                             <div className='flex items-center justify-center gap-1'>
-                              <Button
+                              {canView ? (
+                                <Button
                                 variant='outline'
                                 size='icon'
                                 className='h-7 w-7'
@@ -731,8 +737,10 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                                 ) : (
                                   <Search className='h-3 w-3' />
                                 )}
-                              </Button>
-                              <Button
+                                </Button>
+                              ) : null}
+                              {canView ? (
+                                <Button
                                 variant='outline'
                                 size='icon'
                                 className='h-7 w-7'
@@ -751,7 +759,8 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                                 }}
                               >
                                 <FileText className='h-3 w-3' />
-                              </Button>
+                                </Button>
+                              ) : null}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -833,12 +842,13 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                               className='h-3 w-3'
                               checked={!!t.dataFim}
                               onChange={(e) => handleToggleAlta(t.id, e.target.checked)}
-                              disabled={toggleAltaMutation.isPending}
+                              disabled={toggleAltaMutation.isPending || !canChange}
                             />
                           </TableCell>
                           <TableCell className='text-center'>
                             <div className='flex items-center justify-center gap-1'>
-                              <Button
+                              {canView ? (
+                                <Button
                                 variant='outline'
                                 size='icon'
                                 className='h-7 w-7'
@@ -853,8 +863,10 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                                 ) : (
                                   <Search className='h-3 w-3' />
                                 )}
-                              </Button>
-                              <Button
+                                </Button>
+                              ) : null}
+                              {canView ? (
+                                <Button
                                 variant='outline'
                                 size='icon'
                                 className='h-7 w-7'
@@ -873,7 +885,8 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                                 }}
                               >
                                 <FileText className='h-3 w-3' />
-                              </Button>
+                                </Button>
+                              ) : null}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -1071,7 +1084,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                       variant='outline'
                       size='sm'
                       className='h-7 px-2 text-[11px]'
-                      disabled={isViewMode}
+                      disabled={isViewMode || !canAdd}
                       onClick={() => {
                         if (isViewMode) return
                         setServicoSearchModal('')
@@ -1088,7 +1101,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                       variant='outline'
                       size='sm'
                       className='h-7 px-2 text-[11px] text-destructive hover:text-destructive'
-                      disabled={isViewMode || selectedServicosIds.length === 0}
+                      disabled={isViewMode || !canChange || selectedServicosIds.length === 0}
                       onClick={() => {
                         if (isViewMode || !selectedServicosIds.length) return
                         if (!selectedServicosIds.length) return
@@ -1170,7 +1183,12 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                     Especificação Técnica
                   </span>
                   {!isViewMode && (
-                    <Button variant='outline' size='sm' className='h-7 px-2 text-[11px]'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='h-7 px-2 text-[11px]'
+                      disabled={!canChange}
+                    >
                       Atualizar Esp. Técnica
                     </Button>
                   )}
@@ -1201,7 +1219,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                 />
               </div>
 
-              {!isViewMode && (
+              {!isViewMode && canChange && (
                 <div className='flex items-center gap-2'>
                   <input
                     id='tratamento-send-email'
@@ -1250,7 +1268,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                     </Button>
                     <Button
                       onClick={handlePrescrever}
-                      disabled={!utenteId || createMutation.isPending}
+                      disabled={!utenteId || !canAdd || createMutation.isPending}
                     >
                       {createMutation.isPending ? 'A guardar…' : 'Prescrever'}
                     </Button>

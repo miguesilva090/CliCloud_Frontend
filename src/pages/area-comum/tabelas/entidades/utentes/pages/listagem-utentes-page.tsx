@@ -1,14 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import {
-  openUtenteCreationInApp,
-  useCloseCurrentWindowLikeTabBar,
-} from '@/utils/window-utils'
+import { openUtenteCreationInApp } from '@/utils/window-utils'
 import {
   RefreshCw,
-  X,
   CreditCard,
   MessageSquare,
   Plus,
@@ -16,8 +12,8 @@ import {
   RotateCw,
 } from 'lucide-react'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { PageHead } from '@/components/shared/page-head'
-import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   AlertDialog,
@@ -31,6 +27,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { usePageData } from '@/utils/page-data-utils'
 import {
+  UTENTE_LIST_ALLOWED_SORT_IDS,
   useGetUtentesPaginated,
   usePrefetchAdjacentUtentes,
   useDeleteUtente,
@@ -47,7 +44,6 @@ const utentesPermId = modules.areaComum.permissions.utentes.id
 
 export function ListagemUtentesPage() {
   const navigate = useNavigate()
-  const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const addWindow = useWindowsStore((s) => s.addWindow)
   const { canAdd } = useAreaComumEntityListPermissions(utentesPermId)
   const queryClient = useQueryClient()
@@ -85,6 +81,20 @@ export function ListagemUtentesPage() {
     useGetDataPaginated: (p, ps, f, s) => useGetUtentesPaginated(p, ps, f, s),
     usePrefetchAdjacentData: (p, ps, f) => usePrefetchAdjacentUtentes(p, ps, f),
   })
+
+  useEffect(() => {
+    const cleaned = sorting.filter((s) =>
+      UTENTE_LIST_ALLOWED_SORT_IDS.has(s.id)
+    )
+    const same =
+      cleaned.length === sorting.length &&
+      cleaned.every(
+        (s, i) => s.id === sorting[i]?.id && s.desc === sorting[i]?.desc
+      )
+    if (!same) {
+      handleSortingChange(cleaned)
+    }
+  }, [sorting, handleSortingChange])
 
   const utentes = data?.info?.data ?? []
   const pageCount = data?.info?.totalPages ?? 0
@@ -145,32 +155,12 @@ export function ListagemUtentesPage() {
     <>
       <PageHead title='CliCloud' />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>Utentes</h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() =>
-                queryClient.invalidateQueries({ queryKey: ['utentes-paginated'] })
-              }
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={closeWindowTab}
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
-
+        <AreaComumListagemPageShell
+          title='Utentes'
+          onRefresh={() =>
+            queryClient.invalidateQueries({ queryKey: ['utentes-paginated'] })
+          }
+        >
         {isError ? (
           <Alert variant='destructive' className='mb-4'>
             <AlertTitle>Falha ao carregar utentes</AlertTitle>
@@ -199,6 +189,7 @@ export function ListagemUtentesPage() {
           globalSearchColumnId='nome'
           globalSearchPlaceholder='Procurar por nome...'
         />
+        </AreaComumListagemPageShell>
         <AlertDialog
           open={deleteDialogOpen}
           onOpenChange={(open) => {

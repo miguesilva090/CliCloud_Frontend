@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { List, RotateCw, RefreshCw, X, FilePlus } from 'lucide-react'
+import { List, RotateCw, FilePlus } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,10 +14,10 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from '@/utils/toast-utils'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { ResponseStatus } from '@/types/api/responses'
 import { PageHead } from '@/components/shared/page-head'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import type { DataTableAction } from '@/components/shared/data-table'
 import { usePageData } from '@/utils/page-data-utils'
 import {
@@ -29,7 +29,9 @@ import { AtestadoViewModal } from '../modals/atestado-view-modal'
 import { AtestadosService } from '@/lib/services/saude/atestados-service'
 import type { AtestadoTableDTO } from '@/types/dtos/saude/atestados.dtos'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { openPathInApp, navigateManagedWindow } from '@/utils/window-utils'
+import { openPathInApp } from '@/utils/window-utils'
+import { modules } from '@/config/modules'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 
 export function ListagemAtestadosPage() {
   const navigate = useNavigate()
@@ -40,6 +42,10 @@ export function ListagemAtestadosPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<AtestadoTableDTO | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const atestadosPermissionId =
+    modules.areaClinica.permissions.listagemAtestadosCartaConducao.id
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(atestadosPermissionId)
 
   const {
     data,
@@ -65,19 +71,21 @@ export function ListagemAtestadosPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Novo Atestado',
-      icon: <FilePlus className='h-4 w-4' />,
-      onClick: () =>
-        openPathInApp(
-          navigate,
-          addWindow,
-          '/area-clinica/processo-clinico/atestados/novo-atestado',
-          'Novo Atestado'
-        ),
-      variant: 'destructive',
-      className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    },
+    ...(canAdd
+      ? [{
+          label: 'Novo Atestado',
+          icon: <FilePlus className='h-4 w-4' />,
+          onClick: () =>
+            openPathInApp(
+              navigate,
+              addWindow,
+              '/area-clinica/processo-clinico/atestados/novo-atestado',
+              'Novo Atestado'
+            ),
+          variant: 'destructive' as const,
+          className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        }]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -145,73 +153,49 @@ export function ListagemAtestadosPage() {
     <>
       <PageHead title='Listagem Atestados Carta Condução | CliCloud' />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>Atestados Carta Condução</h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
-                handleFiltersChange([])
-                handlePaginationChange(1, pageSize)
-                queryClient.invalidateQueries({ queryKey: ['atestados-paginated'] })
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() =>
-                navigateManagedWindow(
-                  navigate,
-                  '/area-clinica/processo-clinico'
-                )
-              }
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+        <AreaComumListagemPageShell title='Atestados Carta Condução'>
+          {isError ? (
+            <Alert variant='destructive' className='mb-4'>
+              <AlertTitle>Falha ao carregar atestados</AlertTitle>
+              <AlertDescription>
+                {errorMessage || 'Ocorreu um erro ao pedir a lista de atestados.'}
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
-        {isError ? (
-          <Alert variant='destructive' className='mb-4'>
-            <AlertTitle>Falha ao carregar atestados</AlertTitle>
-            <AlertDescription>
-              {errorMessage || 'Ocorreu um erro ao pedir a lista de atestados.'}
-            </AlertDescription>
-          </Alert>
+          <AtestadosTable
+            data={atestados}
+            isLoading={isLoading}
+            pageCount={pageCount}
+            totalRows={totalRows}
+            page={page}
+            pageSize={pageSize}
+            filters={filters}
+            sorting={sorting.length > 0 ? sorting : [{ id: 'dataAtestado', desc: true }]}
+            onPaginationChange={handlePaginationChange}
+            onFiltersChange={handleFiltersChange}
+            onSortingChange={handleSortingChange}
+            onOpenView={handleOpenView}
+            onOpenEdit={canChange ? handleOpenEdit : undefined}
+            onOpenDelete={canDelete ? handleOpenDelete : undefined}
+            rowActionPermissions={{
+              canView,
+              canChange,
+              canDelete,
+            }}
+            toolbarActions={toolbarActions}
+            globalSearchColumnId='nomeUtente'
+            globalSearchPlaceholder='Procurar por nome utente...'
+          />
+        </AreaComumListagemPageShell>
+
+        {canView ? (
+          <AtestadoViewModal
+            open={viewModalOpen}
+            onOpenChange={setViewModalOpen}
+            rowData={viewRowData}
+          />
         ) : null}
-
-        <AtestadosTable
-          data={atestados}
-          isLoading={isLoading}
-          pageCount={pageCount}
-          totalRows={totalRows}
-          page={page}
-          pageSize={pageSize}
-          filters={filters}
-          sorting={sorting.length > 0 ? sorting : [{ id: 'dataAtestado', desc: true }]}
-          onPaginationChange={handlePaginationChange}
-          onFiltersChange={handleFiltersChange}
-          onSortingChange={handleSortingChange}
-          onOpenView={handleOpenView}
-          onOpenEdit={handleOpenEdit}
-          onOpenDelete={handleOpenDelete}
-          toolbarActions={toolbarActions}
-          globalSearchColumnId='nomeUtente'
-          globalSearchPlaceholder='Procurar por nome utente...'
-        />
-
-        <AtestadoViewModal
-          open={viewModalOpen}
-          onOpenChange={setViewModalOpen}
-          rowData={viewRowData}
-        />
 
         <AlertDialog open={deleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>
           <AlertDialogContent>

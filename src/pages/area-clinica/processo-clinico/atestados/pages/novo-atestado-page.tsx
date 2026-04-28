@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
 import {
   Brush,
+  ChevronLeft,
   CloudUpload,
   Plus,
 } from 'lucide-react'
@@ -52,6 +53,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
 
 const SEXO_OPTIONS = [
   { value: 'indefinido', label: 'Indefinido' },
@@ -73,6 +75,7 @@ type GeoModalType = 'pais' | 'distrito' | 'concelho' | 'freguesia' | null
 export function NovoAtestadoPage() {
   const clientId = useAuthStore((s) => s.clientId)
   const queryClient = useQueryClient()
+  const closeLikeTabBar = useCloseCurrentWindowLikeTabBar()
   const createAtestado = useCreateAtestado()
   const [geoModalOpen, setGeoModalOpen] = useState(false)
   const [geoModalType, setGeoModalType] = useState<GeoModalType>(null)
@@ -404,13 +407,51 @@ export function NovoAtestadoPage() {
     <>
       <PageHead title='Atestados - Carta de Condução | CliCloud' />
       <DashboardPageContainer>
-        {/* Barra superior: título + ações */}
-        <div className='mb-4 flex flex-col gap-3'>
-          <div className='flex flex-wrap items-center justify-between gap-3'>
-            <h1 className='text-2xl font-bold text-foreground'>
-              Atestados - Carta de Condução
-            </h1>
-            <div className='flex items-center gap-2'>
+        <div className='rounded-xl border border-border bg-card p-4 shadow-sm'>
+          {/* Header alinhado com o padrão das listagens (dentro do container) */}
+          <div className='mb-3 flex flex-nowrap items-center gap-x-3 overflow-x-auto border-b border-border/70 pb-3'>
+            <div className='flex min-h-8 min-w-0 max-w-[min(55vw,22rem)] flex-shrink-0 items-center gap-2'>
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon'
+                className='h-8 w-8 shrink-0'
+                onClick={closeLikeTabBar}
+                title='Voltar'
+              >
+                <ChevronLeft className='h-5 w-5' aria-hidden />
+              </Button>
+              <h1 className='truncate text-base font-semibold leading-snug tracking-tight text-foreground sm:text-lg'>
+                Atestados - Carta de Condução
+              </h1>
+            </div>
+            <div className='mx-3 hidden min-w-0 flex-1 justify-center md:flex'>
+              <div className='grid w-full max-w-md grid-cols-2 gap-3'>
+                <div className='space-y-1'>
+                  <Label htmlFor='numero-atestado' className='text-xs'>Nº Atestado</Label>
+                  <Input
+                    id='numero-atestado'
+                    readOnly
+                    disabled
+                    placeholder='Id'
+                    value={numeroAtestado}
+                    className='h-8 bg-muted/50 cursor-not-allowed'
+                  />
+                </div>
+                <div className='space-y-1'>
+                  <Label htmlFor='data-atestado' className='text-xs'>Data</Label>
+                  <DatePicker
+                    id='data-atestado'
+                    value={dataAtestado}
+                    onChange={() => {}}
+                    placeholder='Data'
+                    disabled
+                    className='h-8 w-full min-w-0 border border-input bg-muted/50 py-1.5 shadow-sm cursor-not-allowed'
+                  />
+                </div>
+              </div>
+            </div>
+            <div className='ml-auto flex flex-shrink-0 flex-nowrap items-center gap-2'>
               <Button
                 variant='outline'
                 size='default'
@@ -432,35 +473,11 @@ export function NovoAtestadoPage() {
             </div>
           </div>
 
-          {/* Área do formulário: fundo sólido, layout em coluna para evitar sobreposição */}
-          <div className='flex flex-col rounded-xl border border-border bg-card p-4 shadow-sm [&_input]:bg-background [&_input]:h-8 [&_textarea]:bg-background [&_textarea]:min-h-[4rem] [&_[role=combobox]]:bg-background'>
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'dados' | 'categorias')} className='flex w-full flex-col'>
+          {/* Área do formulário */}
+          <div className='flex flex-col [&_input]:bg-background [&_input]:h-8 [&_textarea]:bg-background [&_textarea]:min-h-[4rem] [&_[role=combobox]]:bg-background'>
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'dados' | 'categorias')} className='flex w-full flex-col'>
           {/* Cabeçalho: linha 1 = Nº Atestado + Data; linha 2 = abas (evita sobreposição) */}
           <div className='w-full shrink-0 space-y-3'>
-            <div className='grid w-full grid-cols-1 gap-3 sm:grid-cols-2 sm:max-w-md'>
-              <div className='space-y-1'>
-                <Label htmlFor='numero-atestado' className='text-xs'>Nº Atestado</Label>
-                <Input
-                  id='numero-atestado'
-                  readOnly
-                  disabled
-                  placeholder='Id '
-                  value={numeroAtestado}
-                  className='h-8 bg-muted/50 cursor-not-allowed'
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label htmlFor='data-atestado' className='text-xs'>Data</Label>
-                <DatePicker
-                  id='data-atestado'
-                  value={dataAtestado}
-                  onChange={() => {}}
-                  placeholder='Data'
-                  disabled
-                  className='h-8 w-full min-w-0 max-w-[200px] border border-input bg-muted/50 py-1.5 shadow-sm cursor-not-allowed'
-                />
-              </div>
-            </div>
             <div className='w-full'>
               <TabsList className='inline-grid w-full max-w-md grid-cols-2'>
                 <TabsTrigger value='dados'>Dados do Utente</TabsTrigger>
@@ -906,7 +923,7 @@ export function NovoAtestadoPage() {
                 <Textarea placeholder='Observações...' value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={2} className='min-h-[4rem]' />
               </div>
             </TabsContent>
-          </Tabs>
+            </Tabs>
           </div>
         </div>
       </DashboardPageContainer>

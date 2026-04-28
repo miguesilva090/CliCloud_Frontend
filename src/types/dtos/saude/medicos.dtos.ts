@@ -112,6 +112,8 @@ export interface MedicoLightDTO {
   director: boolean
   especialidadeId?: string | null
   especialidadeNome?: string | null
+  /** GUID da conta na plataforma — necessário para notificações a utilizadores. */
+  idUtilizador?: string | null
 }
 
 export interface MedicoTableDTO {

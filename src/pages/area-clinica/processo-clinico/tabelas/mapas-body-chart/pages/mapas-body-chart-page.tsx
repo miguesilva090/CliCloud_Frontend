@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Plus, List, RefreshCw, RotateCw, X } from 'lucide-react'
+import { Plus, List, RotateCw } from 'lucide-react'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -24,7 +25,8 @@ import { MapaBodyChartService } from '@/lib/services/processo-clinico/body-chart
 import { MapasBodyChartTable } from '../components/mapas-body-chart-table'
 import { MapasBodyChartFilterControls } from '../components/mapas-body-chart-filter-controls'
 import { MapaBodyChartViewCreateModal } from '../modals/mapa-body-chart-view-create-modal'
-import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { modules } from '@/config/modules'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import {
   useGetMapasBodyChartPaginated,
   usePrefetchAdjacentMapasBodyChart,
@@ -33,7 +35,6 @@ import {
 type MapaBodyChartModalMode = 'view' | 'create' | 'edit'
 
 export function MapasBodyChartPage() {
-  const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -43,6 +44,9 @@ export function MapasBodyChartPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<MapaBodyChartTableDTO | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const mapasBodyChartPermissionId = modules.areaClinica.permissions.mapasBodyChart.id
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(mapasBodyChartPermissionId)
 
   const {
     data,
@@ -67,17 +71,19 @@ export function MapasBodyChartPage() {
   const errorMessage = error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
-    {
-      label: 'Adicionar',
-      icon: <Plus className='h-4 w-4' />,
-      onClick: () => {
-        setViewData(null)
-        setModalMode('create')
-        setModalOpen(true)
-      },
-      variant: 'destructive',
-      className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    },
+    ...(canAdd
+      ? [{
+          label: 'Adicionar',
+          icon: <Plus className='h-4 w-4' />,
+          onClick: () => {
+            setViewData(null)
+            setModalMode('create')
+            setModalOpen(true)
+          },
+          variant: 'destructive' as const,
+          className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        }]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -137,33 +143,7 @@ export function MapasBodyChartPage() {
     <>
       <PageHead title='Mapas de Body Chart | CliCloud' />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>Mapas de Body Chart</h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
-                handleFiltersChange([])
-                handlePaginationChange(1, pageSize)
-                queryClient.invalidateQueries({ queryKey: ['mapas-body-chart-paginated'] })
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={closeWindowTab}
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+        <AreaComumListagemPageShell title='Mapas de Body Chart'>
 
         {isError ? (
           <Alert variant='destructive' className='mb-4'>
@@ -191,53 +171,67 @@ export function MapasBodyChartPage() {
           globalSearchPlaceholder='Procurar por nome...'
           FilterControls={MapasBodyChartFilterControls}
           hiddenColumns={[]}
-          onOpenView={(rowData: MapaBodyChartTableDTO) => {
-            setViewData(rowData)
-            setModalMode('view')
-            setModalOpen(true)
-          }}
-          onOpenEdit={(rowData: MapaBodyChartTableDTO) => {
-            setViewData(rowData)
-            setModalMode('edit')
-            setModalOpen(true)
-          }}
-          onOpenDelete={handleOpenDelete}
+          onOpenView={
+            canView
+              ? (rowData: MapaBodyChartTableDTO) => {
+                  setViewData(rowData)
+                  setModalMode('view')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          onOpenEdit={
+            canChange
+              ? (rowData: MapaBodyChartTableDTO) => {
+                  setViewData(rowData)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }
+              : undefined
+          }
+          onOpenDelete={canDelete ? handleOpenDelete : undefined}
+          rowActionPermissions={{ canView, canChange, canDelete }}
         />
 
-        <MapaBodyChartViewCreateModal
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-          mode={modalMode}
-          viewData={viewData}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['mapas-body-chart-paginated'] })
-          }}
-        />
+        {canView || canAdd || canChange ? (
+          <MapaBodyChartViewCreateModal
+            open={modalOpen}
+            onOpenChange={setModalOpen}
+            mode={modalMode}
+            viewData={viewData}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ['mapas-body-chart-paginated'] })
+            }}
+          />
+        ) : null}
 
-        <AlertDialog open={deleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Eliminar Mapa de Body Chart</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem a certeza que pretende eliminar o mapa &quot;{itemToDelete?.nome ?? ''}&quot;? Esta
-                ação não pode ser revertida.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={(e) => {
-                  e.preventDefault()
-                  handleConfirmDelete()
-                }}
-                disabled={isDeleting}
-                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-              >
-                {isDeleting ? 'A eliminar...' : 'Eliminar'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {canDelete ? (
+          <AlertDialog open={deleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Eliminar Mapa de Body Chart</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem a certeza que pretende eliminar o mapa &quot;{itemToDelete?.nome ?? ''}&quot;? Esta
+                  ação não pode ser revertida.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handleConfirmDelete()
+                  }}
+                  disabled={isDeleting}
+                  className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                >
+                  {isDeleting ? 'A eliminar...' : 'Eliminar'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        ) : null}
+        </AreaComumListagemPageShell>
       </DashboardPageContainer>
     </>
   )

@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {} from 'react-router-dom'
-import { Plus, List, RotateCw, RefreshCw, X } from 'lucide-react'
+import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import {
   useGetFreguesiasPaginated,
   usePrefetchAdjacentFreguesias} from '@/pages/base/freguesias/queries/freguesias-queries'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { FreguesiasListagemTable } from '@/pages/base/freguesias/components/freguesias-table/freguesias-listagem-table'
@@ -15,7 +16,7 @@ import { ListagemFreguesiasFilterControls } from '../components/listagem-fregues
 import { FreguesiaViewCreateModal } from '../modals/freguesia-view-create-modal'
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { FreguesiaTableDTO } from '@/types/dtos/base/freguesias.dtos'
-import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
 
@@ -25,7 +26,6 @@ type FreguesiaModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemFreguesiasPage() {
   const { canAdd } = useAreaComumEntityListPermissions(LISTAGEM_FREGUESIA_PERM_ID)
-  const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<FreguesiaModalMode>('view')
@@ -93,33 +93,14 @@ export function ListagemFreguesiasPage() {
     <>
       <PageHead title='Listagem de Freguesias | Geográficas | Tabelas | Área Comum | CliCloud' />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>Listagem de Freguesias</h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
+        <AreaComumListagemPageShell
+            title='Listagem de Freguesias'
+            onRefresh={() => {
                 handleFiltersChange([])
                 handlePaginationChange(1, pageSize)
                 queryClient.invalidateQueries({ queryKey: ['freguesias-paginated'] })
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={closeWindowTab}
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+            }}
+        >
 
         {isError ? (
           <Alert variant='destructive' className='mb-4'>
@@ -169,7 +150,8 @@ export function ListagemFreguesiasPage() {
             queryClient.invalidateQueries({ queryKey: ['freguesias-paginated'] })
           }}
         />
-      </DashboardPageContainer>
+        </AreaComumListagemPageShell>
+        </DashboardPageContainer>
     </>
   )
 }

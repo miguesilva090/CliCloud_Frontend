@@ -19,14 +19,6 @@ function getLocalidade(row: OrganismoTableDTO): string {
 
 export const columns: DataTableColumnDef<OrganismoTableDTO>[] = [
   {
-    id: 'codigo',
-    header: 'Código',
-    cell: ({ row }) => row.index + 1,
-    enableSorting: false,
-    enableHiding: true,
-    meta: { align: 'left' as const, width: '80px' },
-  },
-  {
     accessorKey: 'nome',
     header: 'Nome',
     sortKey: 'nome',

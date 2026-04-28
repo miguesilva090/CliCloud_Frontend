@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Download, Plus, RefreshCw, RotateCw, X } from 'lucide-react'
+import { Download, Plus, RefreshCw, RotateCw } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
@@ -30,7 +31,7 @@ import { FeriadoInserirAnoModal } from '../modals/feriado-inserir-ano-modal'
 import { FeriadoImportarModal } from '../modals/feriado-importar-modal'
 import { FeriadoService } from '@/lib/services/utility/feriados-service'
 import { ResponseStatus } from '@/types/api/responses'
-import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
 
@@ -41,7 +42,6 @@ type FeriadoModalMode = 'view' | 'create' | 'edit'
 export function ListagemFeriadosPage() {
     const { canView, canAdd, canChange, canDelete } =
         useAreaComumEntityListPermissions(feriadosPermId)
-    const closeWindowTab = useCloseCurrentWindowLikeTabBar()
     const queryClient = useQueryClient()
 
     const [modalOpen, setModalOpen] = useState(false)
@@ -157,33 +157,14 @@ export function ListagemFeriadosPage() {
     <>
         <PageHead title='Feriados' />
             <DashboardPageContainer>
-                <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-                    <h1 className='text-lg font-semibold'>Feriados</h1>
-                    <div className='flex items-center gap-2'>
-                        <Button
-                            variant='ghost'
-                            size='icon'
-                            className='h-8 w-8'
-                            onClick={() => {
-                                handleFiltersChange([])
+                <AreaComumListagemPageShell
+            title='Feriados'
+            onRefresh={() => {
+                handleFiltersChange([])
                                 handlePaginationChange(1, pageSize)
                                 queryClient.invalidateQueries({ queryKey: ['feriados-paginated'] })
-                            }}
-                            title='Atualizar'
-                        >
-                            <RefreshCw className='h-4 w-4' />
-                        </Button>
-                        <Button
-                            variant='ghost'
-                            size='icon'
-                            className='h-8 w-8'
-                            onClick={closeWindowTab}
-                            title='Fechar'
-                        >
-                            <X className='h-4 w-4' />
-                        </Button>
-                    </div>
-                </div>
+            }}
+        >
 
                 {isError ? (
                     <Alert variant='destructive' className='mb-4'>
@@ -281,7 +262,8 @@ export function ListagemFeriadosPage() {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-            </DashboardPageContainer>
+        </AreaComumListagemPageShell>
+        </DashboardPageContainer>
         </>
     )
 }

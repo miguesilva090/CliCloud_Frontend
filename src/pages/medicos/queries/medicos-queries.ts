@@ -29,6 +29,17 @@ export const useGetMedico = (id: string) =>
 
 const LISTAGEM_PATH = '/area-comum/tabelas/entidades/medicos'
 
+/** Colunas que o backend ordena sobre `Medico`; ids do TanStack devem coincidir com propriedades da entidade (ex.: nome). */
+export const MEDICO_LIST_ALLOWED_SORT_IDS = new Set(['nome'])
+
+export function sanitizeMedicoListSorting(
+  sorting: Array<{ id: string; desc: boolean }> | null | undefined
+): Array<{ id: string; desc: boolean }> | undefined {
+  if (sorting == null || sorting.length === 0) return undefined
+  const ok = sorting.filter((s) => MEDICO_LIST_ALLOWED_SORT_IDS.has(s.id))
+  return ok.length > 0 ? ok : undefined
+}
+
 export const useGetMedicosPaginated = (
   pageNumber: number,
   pageLimit: number,
@@ -38,7 +49,7 @@ export const useGetMedicosPaginated = (
   const params: MedicoTableFilterRequest = {
     pageNumber,
     pageSize: pageLimit,
-    sorting: sorting ?? undefined,
+    sorting: sanitizeMedicoListSorting(sorting),
     filters: (filters ?? []).filter((f) => f.value),
   }
 

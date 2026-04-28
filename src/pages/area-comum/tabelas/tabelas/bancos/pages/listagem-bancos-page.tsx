@@ -1,12 +1,24 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {} from 'react-router-dom'
-import { Plus, List, RotateCw, RefreshCw, X } from 'lucide-react'
+import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { toast } from '@/utils/toast-utils'
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { BancoTableDTO } from '@/types/dtos/utility/banco.dtos'
 import { ListagemBancosTable } from '../components/listagem-bancos-table'
@@ -15,7 +27,9 @@ import {
   useGetBancosPaginated,
   usePrefetchAdjacentBancos} from '../queries/listagem-bancos-queries'
 import { BancoViewCreateModal } from '../modals/banco-view-create-modal'
-import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { BancosService } from '@/lib/services/utility/bancos-service'
+import { ResponseStatus } from '@/types/api/responses'
+
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
 
@@ -26,11 +40,13 @@ type BancoModalMode = 'view' | 'create' | 'edit'
 export function ListagemBancosPage() {
   const { canView, canAdd, canChange, canDelete } =
     useAreaComumEntityListPermissions(bancosPermId)
-  const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<BancoModalMode>('view')
   const [viewData, setViewData] = useState<BancoTableDTO | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<BancoTableDTO | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const {
     data,
@@ -87,38 +103,57 @@ export function ListagemBancosPage() {
       variant: 'outline'},
   ]
 
+  const handleOpenDelete = (data: BancoTableDTO) => {
+    if (!canDelete) return
+    setItemToDelete(data)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return
+    const id = itemToDelete.id ?? (itemToDelete as { Id?: string }).Id
+    if (!id) return
+    setIsDeleting(true)
+    try {
+      const response = await BancosService('bancos').deleteBanco(String(id))
+      if (response.info.status === ResponseStatus.Success) {
+        toast.success('Banco eliminado com sucesso.')
+        setDeleteDialogOpen(false)
+        setItemToDelete(null)
+        queryClient.invalidateQueries({ queryKey: ['bancos-paginated'] })
+      } else {
+        const msg =
+          response.info.messages?.['$']?.[0] ?? 'Falha ao eliminar banco.'
+        toast.error(msg)
+      }
+    } catch (error: unknown) {
+      const err = error as { message?: string }
+      toast.error(err?.message ?? 'Erro ao eliminar banco.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleCloseDeleteDialog = () => {
+    if (!isDeleting) {
+      setDeleteDialogOpen(false)
+      setItemToDelete(null)
+    }
+  }
+
   return (
     <>
       <PageHead title='Bancos | Tabelas | Área Comum | CliCloud' />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>Bancos</h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
+        <AreaComumListagemPageShell
+            title='Bancos'
+            onRefresh={() => {
                 handleFiltersChange([])
                 handlePaginationChange(1, pageSize)
                 queryClient.invalidateQueries({
                   queryKey: ['bancos-paginated']})
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={closeWindowTab}
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+            }}
+        >
 
         {isError ? (
           <Alert variant='destructive' className='mb-4'>
@@ -161,6 +196,7 @@ export function ListagemBancosPage() {
                 }
               : undefined
           }
+          onOpenDelete={handleOpenDelete}
           canView={canView}
           canChange={canChange}
           canDelete={canDelete}
@@ -175,7 +211,33 @@ export function ListagemBancosPage() {
               queryKey: ['bancos-paginated']})
           }}
         />
-      </DashboardPageContainer>
+        <AlertDialog open={deleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminar banco</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem a certeza que pretende eliminar &quot;
+                {itemToDelete?.nome ?? ''}
+                &quot;? Esta ação não pode ser revertida.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleConfirmDelete()
+                }}
+                disabled={isDeleting}
+                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              >
+                {isDeleting ? 'A eliminar...' : 'Eliminar'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        </AreaComumListagemPageShell>
+        </DashboardPageContainer>
     </>
   )
 }

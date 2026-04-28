@@ -4,18 +4,16 @@ import { MenuItem } from '@/types/navigation/menu.types'
 import { useAuthStore } from '@/stores/auth-store'
 import { usePermissionsStore } from '@/stores/permissions-store'
 import { PermissionFlag } from '@/stores/permissions-store'
-import { modules } from '@/config/modules'
-import { filterHeaderMenuByPermission } from '@/hooks/use-header-menu'
-
-const AREA_CLINICA_MODULE_ID = modules.areaClinica.id
-const AREA_COMUM_MODULE_ID = modules.areaComum.id
+import {
+  filterHeaderMenuByPermission,
+  hasMenuFuncionalidadeAccess,
+} from '@/hooks/use-header-menu'
 
 const filterMenuItemsByPermission = (
   items: MenuItem[],
   hasPermission: (permissionId: string, flag: PermissionFlag) => boolean,
   hasModuleAccess: (moduleId: string) => boolean,
-  isTopLevel = false,
-  parentModuloId?: string
+  isTopLevel = false
 ): MenuItem[] => {
   return items.filter((item) => {
     // Categorias de topo na sidebar: mostrar sempre para o role; só filtrar os filhos
@@ -25,8 +23,7 @@ const filterMenuItemsByPermission = (
           item.items,
           hasPermission,
           hasModuleAccess,
-          false,
-          item.moduloId
+          false
         )
       }
       if (item.dropdown) {
@@ -34,22 +31,9 @@ const filterMenuItemsByPermission = (
           item.dropdown,
           hasPermission,
           hasModuleAccess,
-          false,
-          item.moduloId
+          false
         )
       }
-      return true
-    }
-
-    // Sub-itens da Área Clinica: mostrar sempre os 4 sub-módulos quando o pai tem o módulo
-    if (parentModuloId === AREA_CLINICA_MODULE_ID && item.funcionalidadeId) {
-      // Não filtrar por permissão; mostrar Processo Clinico, Prescrição Eletronica, Prescrição MCDTs, Enfermagem
-      return true
-    }
-
-    // Sub-itens da Área Comum: mostrar sempre os 4 sub-módulos quando o pai tem o módulo
-    if (parentModuloId === AREA_COMUM_MODULE_ID && item.funcionalidadeId) {
-      // Não filtrar por permissão; mostrar Tabelas, Utilitários, App de Saúde, Ajuda
       return true
     }
 
@@ -60,7 +44,7 @@ const filterMenuItemsByPermission = (
 
     // For sub-items and other menu items, check funcionalidadeId
     if (item.funcionalidadeId) {
-      if (!hasPermission(item.funcionalidadeId, 'AuthVer')) {
+      if (!hasMenuFuncionalidadeAccess(item, hasPermission)) {
         return false
       }
     }
@@ -71,8 +55,7 @@ const filterMenuItemsByPermission = (
         item.items,
         hasPermission,
         hasModuleAccess,
-        false,
-        item.moduloId
+        false
       )
       if (item.items.length === 0) {
         return false
@@ -84,8 +67,7 @@ const filterMenuItemsByPermission = (
         item.dropdown,
         hasPermission,
         hasModuleAccess,
-        false,
-        item.moduloId
+        false
       )
       if (filteredDropdown.length > 0) {
         item.dropdown = filteredDropdown

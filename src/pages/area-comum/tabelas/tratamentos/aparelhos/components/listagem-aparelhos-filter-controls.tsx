@@ -9,7 +9,6 @@ export function ListagemAparelhosFilterControls({
   onApplyFilters: () => void
   onClearFilters: () => void
 }) {
-  const codigoSerie = (table.getColumn('codigoSerie')?.getFilterValue() as string) ?? ''
   const local = (table.getColumn('local')?.getFilterValue() as string) ?? ''
   const tipo = (table.getColumn('tipoAparelhoDesignacao')?.getFilterValue() as string) ?? ''
   const marca = (table.getColumn('marcaAparelhoDesignacao')?.getFilterValue() as string) ?? ''
@@ -27,10 +26,6 @@ export function ListagemAparelhosFilterControls({
       <div className='space-y-2'>
         <Label>Modelo:</Label>
         <Input placeholder='Procurar modelo...' value={modelo} onChange={(e) => table.getColumn('modeloAparelhoDesignacao')?.setFilterValue(e.target.value)} className='w-full max-w-[240px] bg-background border border-input shadow-sm' />
-      </div>
-      <div className='space-y-2'>
-        <Label>Código Série:</Label>
-        <Input placeholder='Procurar...' value={codigoSerie} onChange={(e) => table.getColumn('codigoSerie')?.setFilterValue(e.target.value)} className='w-full max-w-[240px] bg-background border border-input shadow-sm' />
       </div>
       <div className='space-y-2'>
         <Label>Local:</Label>

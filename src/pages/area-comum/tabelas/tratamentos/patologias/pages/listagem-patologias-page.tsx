@@ -3,10 +3,11 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { Plus, List, RotateCw, RefreshCw, X } from 'lucide-react'
+import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
@@ -30,7 +31,7 @@ import {
 } from '../queries/listagem-patologias-queries'
 import { PatologiaService } from '@/lib/services/patologias/patologia-service'
 import { ResponseStatus } from '@/types/api/responses'
-import { useCloseCurrentWindowLikeTabBar, openPatologiaCreationInApp, openPatologiaEditInApp } from '@/utils/window-utils'
+import { openPatologiaCreationInApp, openPatologiaEditInApp } from '@/utils/window-utils'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
 
@@ -40,7 +41,6 @@ export function ListagemPatologiasPage() {
   const { canView, canAdd, canChange, canDelete } =
     useAreaComumEntityListPermissions(patologiasPermId)
   const navigate = useNavigate()
-  const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -148,35 +148,16 @@ export function ListagemPatologiasPage() {
     <>
       <PageHead title='CliCloud' />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>Patologias</h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
+        <AreaComumListagemPageShell
+            title='Patologias'
+            onRefresh={() => {
                 handleFiltersChange([])
                 handlePaginationChange(1, pageSize)
                 queryClient.invalidateQueries({
                   queryKey: ['patologias-paginated'],
                 })
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={closeWindowTab}
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+            }}
+        >
 
         {isError ? (
           <Alert variant='destructive' className='mb-4'>
@@ -203,6 +184,7 @@ export function ListagemPatologiasPage() {
           onFiltersChange={handleFiltersChange}
           onSortingChange={handleSortingChange}
           toolbarActions={toolbarActions}
+          expandableSearch
           globalSearchColumnId='designacao'
           globalSearchPlaceholder='Procurar por designação...'
           FilterControls={ListagemPatologiasFilterControls}
@@ -262,9 +244,9 @@ export function ListagemPatologiasPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </DashboardPageContainer>
+        </AreaComumListagemPageShell>
+        </DashboardPageContainer>
     </>
   )
 }
-
 

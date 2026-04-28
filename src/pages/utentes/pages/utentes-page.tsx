@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { CreditCard, MessageSquare, Plus, List, RotateCw } from 'lucide-react'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -20,6 +20,7 @@ import { useWindowsStore } from '@/stores/use-windows-store'
 import { openUtenteCreationInApp } from '@/utils/window-utils'
 import { usePageData } from '@/utils/page-data-utils'
 import {
+  UTENTE_LIST_ALLOWED_SORT_IDS,
   useGetUtentesPaginated,
   usePrefetchAdjacentUtentes,
   useDeleteUtente,
@@ -71,6 +72,20 @@ export function UtentesPage() {
     useGetDataPaginated: (p, ps, f, s) => useGetUtentesPaginated(p, ps, f, s),
     usePrefetchAdjacentData: (p, ps, f) => usePrefetchAdjacentUtentes(p, ps, f),
   })
+
+  useEffect(() => {
+    const cleaned = sorting.filter((s) =>
+      UTENTE_LIST_ALLOWED_SORT_IDS.has(s.id)
+    )
+    const same =
+      cleaned.length === sorting.length &&
+      cleaned.every(
+        (s, i) => s.id === sorting[i]?.id && s.desc === sorting[i]?.desc
+      )
+    if (!same) {
+      handleSortingChange(cleaned)
+    }
+  }, [sorting, handleSortingChange])
 
   const utentes = data?.info?.data ?? []
   const pageCount = data?.info?.totalPages ?? 0

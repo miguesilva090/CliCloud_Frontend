@@ -7,6 +7,7 @@ import { AnamneseOrtodonticaDenticaoDeciduaeMistaTab } from './AnamneseOrtodonti
 import { AnamneseOrtodonticaATMTab } from './AnamneseOrtodonticaATMTab'
 import { AnamneseOrtodonticaAnaliseFuncionalTab } from './AnamneseOrtodonticaAnaliseFuncional'
 import { OdontogramaTab } from './OdontogramaTab'
+import { RelatorioDentariaTab } from './RelatorioDentariaTab'
 
 export interface DentariaTabProps {
   utenteId: string
@@ -134,7 +135,7 @@ export function DentariaTab({ utenteId }: DentariaTabProps) {
         value='relatorio'
         className='mt-0 rounded-lg border bg-card p-4 text-sm text-muted-foreground'
       >
-        Relatório Dentária (a implementar).
+        <RelatorioDentariaTab utenteId={utenteId} />
       </TabsContent>
       <TabsContent
         value='orcamentos'

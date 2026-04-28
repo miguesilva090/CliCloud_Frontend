@@ -23,6 +23,29 @@ interface WindowManagerProps {
   children: React.ReactNode
 }
 
+function normalizeComparablePath(path: string): string {
+  if (!path) return '/'
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  return normalized.endsWith('/') && normalized.length > 1
+    ? normalized.slice(0, -1)
+    : normalized
+}
+
+function canReuseInstanceAcrossPaths(
+  existingPath: string,
+  targetPath: string
+): boolean {
+  const from = normalizeComparablePath(existingPath)
+  const to = normalizeComparablePath(targetPath)
+
+  if (from === to) return true
+
+  // Permite apenas transições hierárquicas da mesma instância
+  // (ex.: /utentes/:id -> /utentes/:id/editar), evitando "trocas"
+  // entre páginas irmãs como "X" e "Listagem X".
+  return from.startsWith(`${to}/`) || to.startsWith(`${from}/`)
+}
+
 // Memoized window component to prevent unnecessary re-renders
 const Window = memo(
   ({
@@ -392,7 +415,11 @@ export function WindowManager({ children }: WindowManagerProps) {
     const existingWindow =
       exactMatch ??
       (hadInstanceInUrl
-        ? windowsSnapshot.find((w) => w.instanceId === instanceId)
+        ? windowsSnapshot.find(
+            (w) =>
+              w.instanceId === instanceId &&
+              canReuseInstanceAcrossPaths(w.path, location.pathname)
+          )
         : undefined)
 
     if (!existingWindow) {

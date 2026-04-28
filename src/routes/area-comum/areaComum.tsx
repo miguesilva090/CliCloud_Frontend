@@ -118,6 +118,14 @@ const ClinicaEditPage = lazy(() =>
     }))
 )
 
+const ClinicaEditLicenseGate = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/clinicas/pages/clinica-edit-license-guard'
+  ).then((m) => ({
+    default: m.ClinicaEditLicenseGate,
+  }))
+)
+
 const SmsConfigPage = lazy(() =>
     import(
       '@/pages/area-comum/tabelas/configuracao/sms/pages/sms-config-page'
@@ -672,13 +680,7 @@ const ListagemPaisesPage = lazy(() =>
       default: m.DocumentoEditorPage,
     }))
   )
-  
-  const DocumentosGeradosPage = lazy(() =>
-    import('@/pages/area-comum/tabelas/configuracao/documentos/pages/documentos-gerados-page').then((m) => ({
-      default: m.DocumentosGeradosPage,
-    }))
-  )
-  
+
 export const areaComumRoutes = [
             {
               path: 'area-comum',
@@ -1011,6 +1013,36 @@ export const areaComumRoutes = [
               windowName: areaComum?.permissions?.notificacoes?.name,
             },
             {
+              path: 'area-comum/tabelas/tabelas/notificacoes/enviadas',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.notificacoesEnviadas?.id}
+                  actionType={actionTypes.AuthVer}
+                  requireExplicitPermission
+                >
+                  <NotificacoesEnviadasPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: 'Notificações enviadas',
+            },
+            {
+              path: 'area-comum/tabelas/tabelas/notificacoes/atualizacoes',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.notificacoesAtualizacao?.id}
+                  actionType={actionTypes.AuthVer}
+                  requireExplicitPermission
+                >
+                  <NotificacoesAtualizacoesPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: 'Notificações de atualização',
+            },
+            {
               path: 'area-comum/tabelas/tabelas/moedas',
               element: (
                 <LicenseGuard 
@@ -1138,21 +1170,7 @@ export const areaComumRoutes = [
             },
             {
               path: 'area-comum/tabelas/configuracao/documentos/gerados',
-              element: <Navigate to='/area-comum/posto-assinaturas' replace />,
-            },
-            {
-              path: 'area-comum/posto-assinaturas',
-              element: (
-                <LicenseGuard 
-                requiredModule={areaComum.id}
-                requiredPermission={areaComum?.permissions?.documentos?.id}
-                actionType={actionTypes.AuthVer}
-                >
-                  <DocumentosGeradosPage />
-                </LicenseGuard>
-              ), 
-              manageWindow: true,
-              windowName: areaComum?.permissions?.documentos?.name,
+              element: <Navigate to='/area-comum/tabelas/configuracao/documentos' replace />,
             },
             {
               path: 'area-comum/tabelas/stocks',
@@ -1710,15 +1728,7 @@ export const areaComumRoutes = [
             },
             {
               path: 'area-comum/tabelas/configuracao/clinicas/:id/editar',
-              element: (
-                <LicenseGuard 
-                requiredModule={areaComum.id}
-                requiredPermission={areaComum?.permissions?.configuracoesClinica?.id}
-                actionType={actionTypes.AuthChg}
-                >
-                  <ClinicaEditPage />
-                </LicenseGuard>
-              ),
+              element: <ClinicaEditLicenseGate />,
               manageWindow: true,
               windowName: areaComum?.permissions?.configuracoesClinica?.name,
             },
@@ -2393,14 +2403,84 @@ export const areaComumRoutes = [
               element: (
                 <LicenseGuard 
                 requiredModule={areaComum.id}
-                requiredPermission={areaComum?.permissions?.utilitarios?.id}
+                requiredPermission={areaComum?.permissions?.utilitariosLinhaMenu?.id}
                 actionType={actionTypes.AuthVer}
                 >
                   <AreaComumUtilitariosPage />
                 </LicenseGuard>
               ),
-              manageWindow: true,
-              windowName: areaComum?.permissions?.utilitarios?.name,
+              manageWindow: false,
+              windowName: areaComum?.permissions?.utilitariosLinhaMenu?.name,
+            },
+            {
+              path: 'area-comum/utilitarios/replicar-patologias',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.utilitariosLinhaMenu?.id}
+                  actionType={actionTypes.AuthVer}
+                >
+                  <AreaComumUtilitariosPage />
+                </LicenseGuard>
+              ),
+              manageWindow: false,
+              windowName: 'Replicar Patologias',
+            },
+            {
+              path: 'area-comum/utilitarios/replicar-subsistemas',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.utilitariosLinhaMenu?.id}
+                  actionType={actionTypes.AuthVer}
+                >
+                  <AreaComumUtilitariosPage />
+                </LicenseGuard>
+              ),
+              manageWindow: false,
+              windowName: 'Replicar Subsistemas',
+            },
+            {
+              path: 'area-comum/utilitarios/atualizar-subsistemas-entidade',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.utilitariosLinhaMenu?.id}
+                  actionType={actionTypes.AuthVer}
+                >
+                  <AreaComumUtilitariosPage />
+                </LicenseGuard>
+              ),
+              manageWindow: false,
+              windowName: 'Atualizar Subsistemas Por Entidade',
+            },
+            {
+              path: 'area-comum/utilitarios/replicar-margem-medicos',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.utilitariosLinhaMenu?.id}
+                  actionType={actionTypes.AuthVer}
+                >
+                  <AreaComumUtilitariosPage />
+                </LicenseGuard>
+              ),
+              manageWindow: false,
+              windowName: 'Replicar Margem/Médicos Consultas',
+            },
+            {
+              path: 'area-comum/utilitarios/fundir-utentes',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.utilitariosLinhaMenu?.id}
+                  actionType={actionTypes.AuthVer}
+                >
+                  <AreaComumUtilitariosPage />
+                </LicenseGuard>
+              ),
+              manageWindow: false,
+              windowName: 'Fundir Utentes',
             },
             {
               path: 'area-comum/app-saude',

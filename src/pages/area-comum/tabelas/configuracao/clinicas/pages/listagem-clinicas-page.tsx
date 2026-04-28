@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { RefreshCw, X } from 'lucide-react'
+import { Plus, RefreshCw } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import type { DataTableAction } from '@/components/shared/data-table'
@@ -14,18 +15,19 @@ import {
   usePrefetchAdjacentClinicas,
   useSetDefaultClinica,
 } from '../queries/clinicas-queries'
-import {
-  openEntityEditInApp,
-  openPathInApp,
-  useCloseCurrentWindowLikeTabBar,
-} from '@/utils/window-utils'
+import { openEntityEditInApp, openPathInApp } from '@/utils/window-utils'
 import { useWindowsStore } from '@/stores/use-windows-store'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
 
 const LISTAGEM_PATH = '/area-comum/tabelas/configuracao/clinicas'
 
+const configuracaoClinicaPermId =
+  modules.areaComum.permissions.configuracoesClinica.id
+
 export function ListagemClinicasPage() {
+  const { canAdd } = useAreaComumEntityListPermissions(configuracaoClinicaPermId)
   const navigate = useNavigate()
-  const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)
   const setDefaultClinica = useSetDefaultClinica()
@@ -54,6 +56,24 @@ export function ListagemClinicasPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () =>
+              openPathInApp(
+                navigate,
+                addWindow,
+                `${LISTAGEM_PATH}/novo/editar`,
+                'Nova clínica',
+              ),
+            variant: 'destructive' as const,
+            className:
+              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          },
+        ]
+      : []),
     {
       label: 'Atualizar',
       icon: <RefreshCw className='h-4 w-4' />,
@@ -70,35 +90,16 @@ export function ListagemClinicasPage() {
     <>
       <PageHead title='Configuração| CliCloud' />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>Definições da Clínica</h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
+        <AreaComumListagemPageShell
+            title='Definições da Clínica'
+            onRefresh={() => {
                 handleFiltersChange([])
                 handlePaginationChange(1, pageSize)
                 queryClient.invalidateQueries({
                   queryKey: ['clinicas-paginated'],
                 })
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={closeWindowTab}
-              title='Voltar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+            }}
+        >
 
         {isError ? (
           <Alert variant='destructive' className='mb-4'>
@@ -123,6 +124,7 @@ export function ListagemClinicasPage() {
           onFiltersChange={handleFiltersChange}
           onSortingChange={handleSortingChange}
           toolbarActions={toolbarActions}
+          expandableSearch
           globalSearchColumnId='nome'
           globalSearchPlaceholder='Procurar...'
           FilterControls={ListagemClinicasFilterControls}
@@ -152,7 +154,8 @@ export function ListagemClinicasPage() {
             setDefaultClinica.mutate({ id, porDefeito })
           }}
         />
-      </DashboardPageContainer>
+        </AreaComumListagemPageShell>
+        </DashboardPageContainer>
     </>
   )
 }

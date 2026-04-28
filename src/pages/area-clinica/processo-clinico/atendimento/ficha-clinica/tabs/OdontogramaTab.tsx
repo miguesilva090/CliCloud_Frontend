@@ -36,6 +36,8 @@ import { SubsistemaServicoService } from '@/lib/services/servicos/subsistema-ser
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { SubsistemaServicoViewCreateModal } from '@/pages/area-comum/tabelas/consultas/servicos/subsistemas-servicos/modals/subsistema-servico-view-create-modal'
+import { modules } from '@/config/modules'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import {
   ODONTOGRAMA_BUTTON_ICON_SVG,
   ODONTOGRAMA_BUTTON_ICON_SVG_ALL_BLACK,
@@ -44,6 +46,9 @@ import {
 } from '@/components/odontograma/odontograma-button-icon'
 
 export function OdontogramaTab({ utenteId }: DentariaTabProps) {
+  const fichaClinicaPermissionId = modules.areaClinica.permissions.fichaClinica.id
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(fichaClinicaPermissionId)
   const [searchParams, setSearchParams] = useSearchParams()
   const consultaId = searchParams.get('consultaId') ?? null
   const { data: linhas, isLoading } = useOdontogramaByUtenteConsulta(utenteId, consultaId)
@@ -385,6 +390,10 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
     zonaClass: string,
     selected?: boolean,
   ): boolean => {
+    if (!(canAdd || canChange)) {
+      toast.error('Sem permissão para alterar o odontograma.')
+      return false
+    }
     const estadoSel = codigoEstadoPadrao || null
     const tratSel = codigoTratamentoPadrao || null
     const activeAction = getActiveAction()
@@ -1279,7 +1288,8 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
                     <td className='px-2 py-1'>{linha.numeroDenteAte ?? '-'}</td>
                     <td className='px-2 py-1'>{linha.descricao}</td>
                     <td className='px-2 py-1 text-right'>
-                      <Button
+                      {canChange ? (
+                        <Button
                         type='button'
                         variant='ghost'
                         size='icon'
@@ -1300,8 +1310,10 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
                         }}
                       >
                         <Pencil className='h-4 w-4' />
-                      </Button>
-                      <Button
+                        </Button>
+                      ) : null}
+                      {canDelete ? (
+                        <Button
                         type='button'
                         variant='ghost'
                         size='icon'
@@ -1312,7 +1324,8 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
                         }}
                       >
                         <Trash2 className='h-4 w-4' />
-                      </Button>
+                        </Button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -1498,7 +1511,7 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
                     toast.error('Erro ao atualizar.')
                   }
                 }}
-                disabled={updateLinhaMutation.isPending}
+                disabled={!canChange || updateLinhaMutation.isPending}
               >
                 OK
               </Button>
@@ -1610,6 +1623,7 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
                 type='button'
                 variant='outline'
                 size='sm'
+                disabled={!canAdd}
                 onClick={() => setSubsistemaCrudOpen(true)}
               >
                 Novo subsistema
@@ -1628,7 +1642,7 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
                 <Button
                   type='button'
                   size='sm'
-                  disabled={!selectedSubsistemaId}
+                  disabled={!canChange || !selectedSubsistemaId}
                   onClick={() => {
                     if (!selectedSubsistemaId) return
                     const selecionado = subsistemasAll.find((s) => s.id === selectedSubsistemaId)
@@ -1730,7 +1744,11 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
             </Button>
             <Button
               type='button'
-              disabled={createEstadoMutation.isPending || createTratMutation.isPending}
+              disabled={
+                !(canAdd || canChange) ||
+                createEstadoMutation.isPending ||
+                createTratMutation.isPending
+              }
               onClick={async () => {
                 try {
                   if (!addCodigo.trim() || !addDescricao.trim()) {

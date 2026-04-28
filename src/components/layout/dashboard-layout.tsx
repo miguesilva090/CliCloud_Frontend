@@ -63,12 +63,12 @@ function DashboardLayoutInner({
         <main className='relative flex-1 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'>
           {/* Imagem de fundo clínico (apenas nas páginas após login) */}
           <div
-            className='fixed inset-0 bg-cover bg-right bg-no-repeat opacity-[0.35] dark:opacity-[0.28] pointer-events-none'
+            className='fixed inset-0 bg-cover bg-right bg-no-repeat opacity-[0.4] dark:opacity-[0.32] pointer-events-none'
             style={{ backgroundImage: 'url(/assets/media/background-clinical.jpg)' }}
             aria-hidden
           />
           <div
-            className='fixed inset-0 bg-background/50 dark:bg-background/60 pointer-events-none'
+            className='fixed inset-0 bg-background/45 dark:bg-background/58 pointer-events-none'
             aria-hidden
           />
           <div className='relative z-10 min-h-full'>

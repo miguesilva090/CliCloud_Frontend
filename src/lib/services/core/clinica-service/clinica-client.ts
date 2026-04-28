@@ -62,6 +62,19 @@ export class ClinicaClient extends BaseApiClient {
   }
 
   /**
+   * POST /client/core/Clinica
+   */
+  public async createClinica(
+    payload: UpdateClinicaRequest,
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest<UpdateClinicaRequest, GSResponse<string>>(
+      state.URL,
+      BASE,
+      payload,
+    )
+  }
+
+  /**
    * PUT /client/core/Clinica/{id}
    */
   public async updateClinicaById(

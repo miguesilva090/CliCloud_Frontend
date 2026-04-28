@@ -51,6 +51,8 @@ import {
   useGetRelatorioExamesByUtente,
   useUpsertRelatorioExames,
 } from '../queries/relatorio-exames-queries'
+import { modules } from '@/config/modules'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 
 type PrescricaoExamesTabProps = {
   utenteId?: string
@@ -68,6 +70,9 @@ type ModalMode = 'create' | 'edit' | 'view'
 type ResultadoModalMode = 'view' | 'edit'
 
 export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
+  const fichaClinicaPermissionId = modules.areaClinica.permissions.fichaClinica.id
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(fichaClinicaPermissionId)
   const [pageNumber] = useState(1)
   const [pageSize] = useState(20)
 
@@ -501,7 +506,7 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
             <span className='font-medium text-foreground'>
               Prescrições de Exames do utente
             </span>
-            <Button size='sm' onClick={handleOpenCreate} disabled={!utenteId}>
+            <Button size='sm' onClick={handleOpenCreate} disabled={!utenteId || !canAdd}>
               Nova prescrição
             </Button>
           </div>
@@ -544,7 +549,8 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                     </td>
                     <td className='px-3 py-2'>
                       <div className='flex items-center justify-center gap-1'>
-                        <Button
+                        {canChange ? (
+                          <Button
                           type='button'
                           variant='ghost'
                           size='icon'
@@ -553,8 +559,10 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                           onClick={() => handleOpenEdit(e)}
                         >
                           <Pencil className='h-4 w-4' />
-                        </Button>
-                        <Button
+                          </Button>
+                        ) : null}
+                        {canDelete ? (
+                          <Button
                           type='button'
                           variant='ghost'
                           size='icon'
@@ -563,8 +571,10 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                           onClick={() => handleOpenDelete(e)}
                         >
                           <Trash2 className='h-4 w-4' />
-                        </Button>
-                        <Button
+                          </Button>
+                        ) : null}
+                        {canView ? (
+                          <Button
                           type='button'
                           variant='ghost'
                           size='icon'
@@ -576,7 +586,8 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                           }}
                         >
                           <Printer className='h-4 w-4' />
-                        </Button>
+                          </Button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -629,7 +640,8 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                       <td className='px-3 py-2 text-center'>{r.quantidade}</td>
                       <td className='px-3 py-2'>
                         <div className='flex items-center justify-center gap-1'>
-                          <Button
+                          {canView ? (
+                            <Button
                             type='button'
                             variant='ghost'
                             size='icon'
@@ -638,8 +650,10 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                             onClick={() => handleOpenResultado(r, 'view')}
                           >
                             <Eye className='h-4 w-4' />
-                          </Button>
-                          <Button
+                            </Button>
+                          ) : null}
+                          {canChange ? (
+                            <Button
                             type='button'
                             variant='ghost'
                             size='icon'
@@ -648,8 +662,10 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                             onClick={() => handleOpenResultado(r, 'edit')}
                           >
                             <Pencil className='h-4 w-4' />
-                          </Button>
-                          <Button
+                            </Button>
+                          ) : null}
+                          {canView ? (
+                            <Button
                             type='button'
                             variant='ghost'
                             size='icon'
@@ -658,7 +674,8 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                             onClick={() => handleOpenResultadoAnexos(r)}
                           >
                             <FileText className='h-4 w-4' />
-                          </Button>
+                            </Button>
+                          ) : null}
                         </div>
                       </td>
                     </tr>
@@ -689,7 +706,7 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
               <Button
                 size='sm'
                 onClick={handleGuardarRelatorioExames}
-                disabled={!utenteId || upsertRelatorioExames.isPending}
+                disabled={!utenteId || !canChange || upsertRelatorioExames.isPending}
               >
                 Guardar
               </Button>
@@ -703,6 +720,7 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                 value={relatorioTexto}
                 onChange={(e) => setRelatorioTexto(e.target.value)}
                 placeholder='Escreva aqui o relatório de exames...'
+                disabled={!canChange}
               />
             </div>
           </div>
@@ -757,7 +775,7 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
             <Button type='button' variant='outline' onClick={() => setResultadoModalOpen(false)}>
               Fechar
             </Button>
-            {resultadoModalMode === 'edit' && (
+            {resultadoModalMode === 'edit' && canChange && (
               <Button
                 type='button'
                 disabled={!selectedExameId || !resultadoLinhaId || upsertResultadoMutation.isPending}
@@ -839,6 +857,7 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                 type='button'
                 size='sm'
                 disabled={!utenteId || !resultadoAnexoFile || !resultadoAnexoDescricao.trim()}
+                hidden={!canAdd}
                 onClick={() => {
                   if (!utenteId || !resultadoAnexoFile || !resultadoAnexoDescricao.trim()) return
                   uploadAnexoResultado.mutate({
@@ -892,7 +911,8 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                         <td className='px-3 py-2'>{doc.tipo}</td>
                         <td className='px-3 py-2 text-right'>
                           <div className='flex items-center justify-end gap-1'>
-                            <Button
+                            {canView ? (
+                              <Button
                               type='button'
                               variant='ghost'
                               size='icon'
@@ -908,8 +928,10 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                               }}
                             >
                               <Eye className='h-4 w-4' />
-                            </Button>
-                            <Button
+                              </Button>
+                            ) : null}
+                            {canDelete ? (
+                              <Button
                               type='button'
                               variant='ghost'
                               size='icon'
@@ -918,7 +940,8 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
                               onClick={() => setResultadoAnexoIdToDelete(doc.id)}
                             >
                               <Trash2 className='h-4 w-4' />
-                            </Button>
+                              </Button>
+                            ) : null}
                           </div>
                         </td>
                       </tr>
@@ -1142,7 +1165,7 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
               >
                 {modalMode === 'view' ? 'Fechar' : 'Cancelar'}
               </Button>
-              {modalMode !== 'view' && (
+              {modalMode !== 'view' && canChange && (
                 <Button
                   type='button'
                   onClick={handleGuardarPrescricao}
@@ -1156,7 +1179,10 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog
+        open={canDelete ? deleteDialogOpen : false}
+        onOpenChange={setDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar Prescrição de Exames</AlertDialogTitle>

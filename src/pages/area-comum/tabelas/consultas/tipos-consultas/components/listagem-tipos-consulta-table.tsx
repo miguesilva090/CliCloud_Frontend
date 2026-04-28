@@ -33,6 +33,7 @@ export function ListagemTiposConsultaTable({
   hiddenColumns,
   onOpenView,
   onOpenEdit,
+  onOpenDelete,
   canView,
   canChange,
   canDelete,
@@ -56,12 +57,13 @@ export function ListagemTiposConsultaTable({
   hiddenColumns?: string[]
   onOpenView?: (data: TipoConsultaTableDTO) => void
   onOpenEdit?: (data: TipoConsultaTableDTO) => void
+  onOpenDelete?: (data: TipoConsultaTableDTO) => void
   canView?: boolean
   canChange?: boolean
   canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, undefined, {
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
         canView,
         canChange,
         canDelete,

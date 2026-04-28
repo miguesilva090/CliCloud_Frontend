@@ -51,7 +51,7 @@ Esta ação não pode ser desfeita.`
   }
 
   return (
-    <div className='flex items-center justify-end gap-1'>
+    <div className='flex w-full items-center justify-end gap-1'>
       {canView ? (
         <Button
           type='button'
@@ -144,6 +144,7 @@ export function getUtentesTableColumns(
     {
       id: 'morada',
       header: 'Morada',
+      enableSorting: false,
       cell: ({ row }: CellContext<UtenteTableDTO, unknown>) => {
         const rua = row.original.rua?.nome?.trim()
         const numeroPorta = row.original.numeroPorta?.trim()
@@ -156,6 +157,7 @@ export function getUtentesTableColumns(
     {
       id: 'localidade',
       header: 'Localidade',
+      enableSorting: false,
       cell: ({ row }: CellContext<UtenteTableDTO, unknown>) => {
         const localidade =
           row.original.codigoPostal?.localidade?.trim() ??
@@ -170,17 +172,21 @@ export function getUtentesTableColumns(
       header: 'Telemóvel',
       cell: ({ row }: CellContext<UtenteTableDTO, unknown>) =>
         getContactoTelemovelOuTelefone(row.original),
+      enableSorting: false,
       meta: { align: 'left' as const },
     },
     {
       id: 'debito',
       header: 'Débito',
       cell: () => '—',
-      meta: { align: 'right' as const },
+      enableSorting: false,
+      meta: { align: 'left' as const },
     },
     {
       id: 'opcoes',
-      header: 'Opções',
+      header: () => (
+        <div className='w-full pr-5 text-right'>Opções</div>
+      ),
       cell: ({ row }: CellContext<UtenteTableDTO, unknown>) => (
         <UtenteRowActions
           row={row.original}

@@ -1,12 +1,18 @@
-import { NotificacoesPageShell } from '../components/notificacoes-page-shell'
+import { PageHead } from '@/components/shared/page-head'
+import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
+import { ListagemNotificacoesSection } from '../components/listagem-notificacoes-section'
 
-/** Alinhado ao legado `NotificacoesAtualizacoesLst.aspx`. */
+/** Alinhado ao legado `NotificacoesAtualizacoesLst.aspx`. Mesmo layout que as restantes listagens (seta retroceder + toolbar em linha). */
 export function NotificacoesAtualizacoesPage() {
   return (
-    <NotificacoesPageShell
-      pageHeadTitle='Notificações de atualização | Área Comum | CliCloud'
-      heading='Notificações de atualização'
-      listMode={2}
-    />
+    <>
+      <PageHead title='Notificações de atualização | Área Comum | CliCloud' />
+      <DashboardPageContainer>
+        <AreaComumListagemPageShell title='Notificações de atualização'>
+          <ListagemNotificacoesSection listMode={2} />
+        </AreaComumListagemPageShell>
+      </DashboardPageContainer>
+    </>
   )
 }

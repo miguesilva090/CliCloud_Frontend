@@ -22,7 +22,7 @@ export function DashboardPageContainer({
   return (
     <div
       className={cn(
-        'px-4 md:px-8 md:pb-14 md:pt-20 pt-4 md:mx-0 md:my-4 md:mr-4 md:rounded-xl pb-40',
+        'px-4 md:px-8 md:pb-14 md:pt-20 pt-4 md:mx-0 md:my-4 md:rounded-xl pb-40',
         className
       )}
     >

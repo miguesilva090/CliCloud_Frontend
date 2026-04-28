@@ -8,7 +8,10 @@ import { Eye, Pencil, Trash2 } from 'lucide-react'
 export const columns: DataTableColumnDef<AlergiaTableDTO>[] = [
   {
     accessorKey: 'descricao',
-    header: 'Descrição',
+    header: () => <div className='w-full pl-2 text-left'>Descrição</div>,
+    cell: ({ row }) => (
+      <div className='w-full pl-2 text-left'>{row.original.descricao ?? '-'}</div>
+    ),
     sortKey: 'descricao',
     enableSorting: true,
     enableHiding: true,

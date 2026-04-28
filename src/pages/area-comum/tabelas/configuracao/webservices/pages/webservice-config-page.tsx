@@ -12,6 +12,7 @@ import { ConfigPageCardTitleRow } from '@/components/shared/config-page-card-tit
 import { modules } from '@/config/modules'
 import { useConfigPageEditMode } from '@/hooks/use-config-page-edit-mode'
 import { toast } from '@/utils/toast-utils'
+import { cn } from '@/lib/utils'
 import { ConfigWebServiceService } from '@/lib/services/core/config-webservice-service'
 import type {
   AtualizarConfigWebServiceRequest,
@@ -189,6 +190,9 @@ export function WebserviceConfigPage() {
   const passwordType = showPasswords ? 'text' : 'password'
   const fieldDisabled = formLocked || saveMutation.isPending
 
+  /** Alinhado a `email-config-page`: `readOnly` + `disabled` em vista para estilo «campos desativados» (evitar parecer editável). */
+  const inputReadOnly = fieldDisabled
+
   return (
     <>
       <PageHead title='Configuração WebServices | CliCloud' />
@@ -231,7 +235,7 @@ export function WebserviceConfigPage() {
                       id='url-rnu'
                       value={form.urlRnu}
                       onChange={(e) => handleChange('urlRnu', e.target.value)}
-                      readOnly={formLocked}
+                      readOnly={inputReadOnly}
                       disabled={fieldDisabled}
                     />
                   </div>
@@ -241,7 +245,12 @@ export function WebserviceConfigPage() {
                       id='versao-prescricao'
                       value={String(form.versaoPrescricao)}
                       onChange={(e) => handleChange('versaoPrescricao', Number(e.target.value))}
-                      className='flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm'
+                      className={cn(
+                        'flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm shadow-sm',
+                        fieldDisabled
+                          ? 'cursor-not-allowed bg-muted text-muted-foreground opacity-70'
+                          : 'bg-background',
+                      )}
                       disabled={fieldDisabled}
                     >
                       <option value='1'>V1</option>
@@ -259,7 +268,7 @@ export function WebserviceConfigPage() {
                     <Input
                       id='url-acss'
                       value={form.urlAcss}
-                      readOnly={formLocked}
+                      readOnly={inputReadOnly}
                       disabled={fieldDisabled}
                       onChange={(e) => handleChange('urlAcss', e.target.value)}
                     />
@@ -269,7 +278,7 @@ export function WebserviceConfigPage() {
                     <Input
                       id='login-acss'
                       value={form.loginAcss}
-                      readOnly={formLocked}
+                      readOnly={inputReadOnly}
                       disabled={fieldDisabled}
                       onChange={(e) => handleChange('loginAcss', e.target.value)}
                     />
@@ -280,7 +289,7 @@ export function WebserviceConfigPage() {
                       id='password-acss'
                       type={passwordType}
                       value={form.passwordAcss}
-                      readOnly={formLocked}
+                      readOnly={inputReadOnly}
                       disabled={fieldDisabled}
                       onChange={(e) => handleChange('passwordAcss', e.target.value)}
                     />
@@ -289,19 +298,39 @@ export function WebserviceConfigPage() {
                 <div className='grid grid-cols-1 md:grid-cols-4 gap-3'>
                   <div className='flex items-center justify-between rounded border p-3'>
                     <Label className='text-sm font-medium'>Usar Proxy</Label>
-                    <Switch checked={form.usarProxy} onCheckedChange={(v) => handleChange('usarProxy', v)} />
+                    <Switch
+                      checked={form.usarProxy}
+                      onCheckedChange={(v) => handleChange('usarProxy', v)}
+                      disabled={fieldDisabled}
+                    />
                   </div>
                   <div className='space-y-1'>
                     <Label>Domínio</Label>
-                    <Input value={form.dominioProxy} onChange={(e) => handleChange('dominioProxy', e.target.value)} />
+                    <Input
+                      value={form.dominioProxy}
+                      readOnly={inputReadOnly}
+                      disabled={fieldDisabled}
+                      onChange={(e) => handleChange('dominioProxy', e.target.value)}
+                    />
                   </div>
                   <div className='space-y-1'>
                     <Label>Utilizador</Label>
-                    <Input value={form.userProxy} onChange={(e) => handleChange('userProxy', e.target.value)} />
+                    <Input
+                      value={form.userProxy}
+                      readOnly={inputReadOnly}
+                      disabled={fieldDisabled}
+                      onChange={(e) => handleChange('userProxy', e.target.value)}
+                    />
                   </div>
                   <div className='space-y-1'>
                     <Label>Palavra-passe</Label>
-                    <Input type={passwordType} value={form.passwordProxy} onChange={(e) => handleChange('passwordProxy', e.target.value)} />
+                    <Input
+                      type={passwordType}
+                      value={form.passwordProxy}
+                      readOnly={inputReadOnly}
+                      disabled={fieldDisabled}
+                      onChange={(e) => handleChange('passwordProxy', e.target.value)}
+                    />
                   </div>
                 </div>
               </section>
@@ -314,7 +343,7 @@ export function WebserviceConfigPage() {
                     <Input
                       id='url-acss-rsp'
                       value={form.urlAcssRsp}
-                      readOnly={formLocked}
+                      readOnly={inputReadOnly}
                       disabled={fieldDisabled}
                       onChange={(e) => handleChange('urlAcssRsp', e.target.value)}
                     />
@@ -324,7 +353,7 @@ export function WebserviceConfigPage() {
                     <Input
                       id='login-acss-rsp'
                       value={form.loginAcssRsp}
-                      readOnly={formLocked}
+                      readOnly={inputReadOnly}
                       disabled={fieldDisabled}
                       onChange={(e) => handleChange('loginAcssRsp', e.target.value)}
                     />
@@ -335,7 +364,7 @@ export function WebserviceConfigPage() {
                       id='password-acss-rsp'
                       type={passwordType}
                       value={form.passwordAcssRsp}
-                      readOnly={formLocked}
+                      readOnly={inputReadOnly}
                       disabled={fieldDisabled}
                       onChange={(e) => handleChange('passwordAcssRsp', e.target.value)}
                     />
@@ -354,7 +383,7 @@ export function WebserviceConfigPage() {
                     <Label>Domínio</Label>
                     <Input
                       value={form.dominioProxyRsp}
-                      readOnly={formLocked}
+                      readOnly={inputReadOnly}
                       disabled={fieldDisabled}
                       onChange={(e) => handleChange('dominioProxyRsp', e.target.value)}
                     />
@@ -363,7 +392,7 @@ export function WebserviceConfigPage() {
                     <Label>Utilizador</Label>
                     <Input
                       value={form.userProxyRsp}
-                      readOnly={formLocked}
+                      readOnly={inputReadOnly}
                       disabled={fieldDisabled}
                       onChange={(e) => handleChange('userProxyRsp', e.target.value)}
                     />
@@ -373,7 +402,7 @@ export function WebserviceConfigPage() {
                     <Input
                       type={passwordType}
                       value={form.passwordProxyRsp}
-                      readOnly={formLocked}
+                      readOnly={inputReadOnly}
                       disabled={fieldDisabled}
                       onChange={(e) => handleChange('passwordProxyRsp', e.target.value)}
                     />
@@ -402,7 +431,7 @@ export function WebserviceConfigPage() {
                         <Label>Proxy de Autenticação</Label>
                         <Input
                           value={form.proxyAutenticacao}
-                          readOnly={formLocked}
+                          readOnly={inputReadOnly}
                           disabled={fieldDisabled}
                           onChange={(e) => handleChange('proxyAutenticacao', e.target.value)}
                         />
@@ -411,7 +440,7 @@ export function WebserviceConfigPage() {
                         <Label>Token de Autenticação</Label>
                         <Input
                           value={form.tokenAutenticacao}
-                          readOnly={formLocked}
+                          readOnly={inputReadOnly}
                           disabled={fieldDisabled}
                           onChange={(e) => handleChange('tokenAutenticacao', e.target.value)}
                         />
@@ -420,7 +449,7 @@ export function WebserviceConfigPage() {
                         <Label>Utilizador</Label>
                         <Input
                           value={form.loginAutenticacao}
-                          readOnly={formLocked}
+                          readOnly={inputReadOnly}
                           disabled={fieldDisabled}
                           onChange={(e) => handleChange('loginAutenticacao', e.target.value)}
                         />
@@ -430,7 +459,7 @@ export function WebserviceConfigPage() {
                         <Input
                           type={passwordType}
                           value={form.passwordAutenticacao}
-                          readOnly={formLocked}
+                          readOnly={inputReadOnly}
                           disabled={fieldDisabled}
                           onChange={(e) => handleChange('passwordAutenticacao', e.target.value)}
                         />

@@ -9,24 +9,11 @@ export function ListagemPatologiasFilterControls({
   onApplyFilters: () => void
   onClearFilters: () => void
 }) {
-  const designacao =
-    (table.getColumn('designacao')?.getFilterValue() as string) ?? ''
   const organismoNome =
     (table.getColumn('organismoNome')?.getFilterValue() as string) ?? ''
 
   return (
     <div className='space-y-4'>
-      <div className='space-y-2'>
-        <Label>Designação:</Label>
-        <Input
-          placeholder='Procurar por designação...'
-          value={designacao}
-          onChange={(e) =>
-            table.getColumn('designacao')?.setFilterValue(e.target.value)
-          }
-          className='w-full max-w-[240px] bg-background border border-input shadow-sm'
-        />
-      </div>
       <div className='space-y-2'>
         <Label>Organismo:</Label>
         <Input

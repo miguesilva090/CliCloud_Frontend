@@ -30,6 +30,7 @@ export function ListagemCategoriasEspecialidadesTable({
   hiddenColumns,
   onOpenView,
   onOpenEdit,
+  onOpenDelete,
   canView,
   canChange,
   canDelete,
@@ -53,12 +54,13 @@ export function ListagemCategoriasEspecialidadesTable({
   hiddenColumns?: string[]
   onOpenView?: (data: CategoriaEspecialidadeTableDTO) => void
   onOpenEdit?: (data: CategoriaEspecialidadeTableDTO) => void
+  onOpenDelete?: (data: CategoriaEspecialidadeTableDTO) => void
   canView?: boolean
   canChange?: boolean
   canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, undefined, {
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
         canView,
         canChange,
         canDelete,

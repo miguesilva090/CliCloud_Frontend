@@ -3,6 +3,7 @@ import { DataTable } from '@/components/shared/data-table'
 import type { AtestadoTableDTO } from '@/types/dtos/saude/atestados.dtos'
 import { columns, getColumnsWithViewCallback } from './atestados-columns'
 import { AtestadosFilterControls } from './atestados-filter-controls'
+import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 
 const HIDDEN_FILTER_COLUMNS = [
   'data',
@@ -29,6 +30,7 @@ export function AtestadosTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  rowActionPermissions,
   toolbarActions,
   globalSearchColumnId,
   globalSearchPlaceholder,
@@ -47,13 +49,19 @@ export function AtestadosTable({
   onOpenView?: (data: AtestadoTableDTO) => void
   onOpenEdit?: (data: AtestadoTableDTO) => void
   onOpenDelete?: (data: AtestadoTableDTO) => void
+  rowActionPermissions?: AreaComumListRowActionPermissions
   toolbarActions?: React.ComponentProps<typeof DataTable>['toolbarActions']
   globalSearchColumnId?: string
   globalSearchPlaceholder?: string
 }) {
   const tableColumns =
     onOpenView != null
-      ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+      ? getColumnsWithViewCallback(
+          onOpenView,
+          onOpenEdit,
+          onOpenDelete,
+          rowActionPermissions
+        )
       : columns
 
   return (

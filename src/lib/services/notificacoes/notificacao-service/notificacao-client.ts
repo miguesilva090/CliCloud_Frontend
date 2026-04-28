@@ -48,9 +48,11 @@ export class NotificacaoClient extends BaseApiClient {
     prioridade: number
     notificacaoTipoId: string
     destinatarioUtilizadorId?: string | null
+    /** Vários destinatários (equivalente a tipoDestinatario «utilizadores» no ASP). */
+    destinatariosUtilizadorIds?: string[] | null
     clinicaDestinoId?: string | null
-  }): Promise<ResponseApi<GSResponse<string>>> {
-    return this.httpClient.postRequest<typeof body, GSResponse<string>>(
+  }): Promise<ResponseApi<GSResponse<string[]>>> {
+    return this.httpClient.postRequest<typeof body, GSResponse<string[]>>(
       state.URL,
       BASE,
       body,

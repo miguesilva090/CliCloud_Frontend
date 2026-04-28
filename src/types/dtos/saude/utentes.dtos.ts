@@ -111,6 +111,8 @@ export interface UtenteDTO {
   nDocMigrante?: string | null
   dataRegisto?: string | null
   tipoTaxaModeradora?: number | null
+  /** Conta na plataforma (notificações, portal do utente). */
+  idUtilizador?: string | null
 }
 
 export interface UtenteSubsistemaLinhaDTO {
@@ -143,6 +145,8 @@ export interface UtenteLightDTO {
   numeroUtente?: string | null
   dataNascimento?: string | null
   status?: number | null
+  /** Conta na plataforma — para seleção como destinatário de notificações. */
+  idUtilizador?: string | null
 }
 
 export interface UtenteTableRuaDTO {
@@ -301,6 +305,8 @@ export interface CreateUtenteRequest {
   dataRegisto?: string | null
   tipoTaxaModeradora?: number | null
   subsistemaLinhas?: UpsertUtenteSubsistemaLinhaItemRequest[]
+  /** Opcional: associar conta da plataforma ao utente. */
+  idUtilizador?: string | null
 }
 
 /**

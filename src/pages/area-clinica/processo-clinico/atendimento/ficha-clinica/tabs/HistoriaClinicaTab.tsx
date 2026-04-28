@@ -33,6 +33,8 @@ import { HistoriaClinicaService } from '@/lib/services/historia-clinica/historia
 import { useGetUtente } from '@/pages/utentes/queries/utentes-queries'
 import state from '@/states/state'
 import { toast } from '@/utils/toast-utils'
+import { modules } from '@/config/modules'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 
 export interface HistoriaClinicaTabProps {
   utenteId: string
@@ -63,6 +65,9 @@ export function HistoriaClinicaTab({
   isActive = true,
   onAutoSaved,
 }: HistoriaClinicaTabProps) {
+  const fichaClinicaPermissionId = modules.areaClinica.permissions.fichaClinica.id
+  const { canView, canAdd, canChange, canDelete } =
+    useAreaComumEntityListPermissions(fichaClinicaPermissionId)
   const ALL_ESPECIALIDADES_VALUE = '__all__'
   const [obs, setObs] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -403,6 +408,7 @@ export function HistoriaClinicaTab({
           disabled={!utenteId}
           value={obs}
           onChange={(e) => {
+            if (!(canAdd || canChange)) return
             setObs(e.target.value)
             setHasChanges(true)
           }}
@@ -414,7 +420,11 @@ export function HistoriaClinicaTab({
           <Button variant='outline' size='sm' onClick={handlePrint} disabled={!historias.length}>
             Imprimir
           </Button>
-          <Button size='sm' onClick={handleSave} disabled={!utenteId}>
+          <Button
+            size='sm'
+            onClick={handleSave}
+            disabled={!utenteId || !(canAdd || canChange)}
+          >
             Guardar
           </Button>
         </div>
@@ -524,7 +534,7 @@ export function HistoriaClinicaTab({
                           </div>
                         </TableCell>
                         <TableCell className='text-center align-middle'>
-                          {canDelete && (
+                          {canDelete && canView && (
                             <Button
                               variant='ghost'
                               size='icon'
@@ -574,7 +584,10 @@ export function HistoriaClinicaTab({
         </>
       )}
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog
+        open={canDelete ? deleteDialogOpen : false}
+        onOpenChange={setDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remover entrada de história clínica</AlertDialogTitle>

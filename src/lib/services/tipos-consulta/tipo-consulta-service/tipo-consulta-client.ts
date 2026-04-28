@@ -56,4 +56,13 @@ export class TipoConsultaClient extends BaseApiClient {
       body
     )
   }
+
+  public async deleteTipoConsulta(
+    id: string
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.deleteRequest<GSResponse<string>>(
+      state.URL,
+      `${BASE}/${id}`
+    )
+  }
 }

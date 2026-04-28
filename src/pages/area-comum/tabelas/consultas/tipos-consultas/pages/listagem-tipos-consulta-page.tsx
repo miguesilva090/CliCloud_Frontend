@@ -1,20 +1,33 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { List, RotateCw, RefreshCw, X } from 'lucide-react'
+import { List, RotateCw } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
-import { Button } from '@/components/ui/button'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { toast } from '@/utils/toast-utils'
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { TipoConsultaTableDTO } from '@/types/dtos/tipos-consulta/tipo-consulta.dtos'
+import { TipoConsultaService } from '@/lib/services/tipos-consulta/tipo-consulta-service'
+import { ResponseStatus } from '@/types/api/responses'
 import { ListagemTiposConsultaTable } from '../components/listagem-tipos-consulta-table'
 import { ListagemTiposConsultaFilterControls } from '../components/listagem-tipos-consulta-filter-controls'
 import {
   useGetTiposConsultaPaginated,
   usePrefetchAdjacentTiposConsulta} from '../queries/listagem-tipos-consulta-queries'
 import { TipoConsultaViewEditModal } from '../modals/tipo-consulta-view-edit-modal'
-import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
 
@@ -25,11 +38,15 @@ type TipoConsultaModalMode = 'view' | 'edit'
 export function ListagemTiposConsultaPage() {
   const { canView, canChange, canDelete } =
     useAreaComumEntityListPermissions(tiposConsultasPermId)
-  const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<TipoConsultaModalMode>('view')
   const [viewData, setViewData] = useState<TipoConsultaTableDTO | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<TipoConsultaTableDTO | null>(
+    null,
+  )
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const {
     data,
@@ -70,38 +87,62 @@ export function ListagemTiposConsultaPage() {
       variant: 'outline'},
   ]
 
+  const handleOpenDelete = (data: TipoConsultaTableDTO) => {
+    if (!canDelete) return
+    setItemToDelete(data)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return
+    const id =
+      itemToDelete.id ??
+      (itemToDelete as { Id?: string }).Id
+    if (!id) return
+    setIsDeleting(true)
+    try {
+      const response = await TipoConsultaService().deleteTipoConsulta(String(id))
+      if (response.info.status === ResponseStatus.Success) {
+        toast.success('Tipo de consulta eliminado com sucesso.')
+        setDeleteDialogOpen(false)
+        setItemToDelete(null)
+        queryClient.invalidateQueries({
+          queryKey: ['tipos-consulta-paginated'],
+        })
+      } else {
+        const msg =
+          response.info.messages?.['$']?.[0] ??
+          'Falha ao eliminar tipo de consulta.'
+        toast.error(msg)
+      }
+    } catch (error: unknown) {
+      const err = error as { message?: string }
+      toast.error(err?.message ?? 'Erro ao eliminar tipo de consulta.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleCloseDeleteDialog = () => {
+    if (!isDeleting) {
+      setDeleteDialogOpen(false)
+      setItemToDelete(null)
+    }
+  }
+
   return (
     <>
       <PageHead title='CliCloud' />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>Tipos de Consulta</h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
+        <AreaComumListagemPageShell
+            title='Tipos de Consulta'
+            onRefresh={() => {
                 handleFiltersChange([])
                 handlePaginationChange(1, pageSize)
                 queryClient.invalidateQueries({
                   queryKey: ['tipos-consulta-paginated']})
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={closeWindowTab}
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+            }}
+        >
 
         {isError ? (
           <Alert variant='destructive' className='mb-4'>
@@ -147,6 +188,7 @@ export function ListagemTiposConsultaPage() {
                 }
               : undefined
           }
+          onOpenDelete={handleOpenDelete}
           canView={canView}
           canChange={canChange}
           canDelete={canDelete}
@@ -161,7 +203,33 @@ export function ListagemTiposConsultaPage() {
               queryKey: ['tipos-consulta-paginated']})
           }}
         />
-      </DashboardPageContainer>
+        <AlertDialog open={deleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminar tipo de consulta</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem a certeza que pretende eliminar &quot;
+                {itemToDelete?.designacao ?? ''}
+                &quot;? Esta ação não pode ser revertida.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleConfirmDelete()
+                }}
+                disabled={isDeleting}
+                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              >
+                {isDeleting ? 'A eliminar...' : 'Eliminar'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        </AreaComumListagemPageShell>
+        </DashboardPageContainer>
     </>
   )
 }

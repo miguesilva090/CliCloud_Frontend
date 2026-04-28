@@ -5,12 +5,14 @@ import type { CellContext, ColumnDef } from '@tanstack/react-table'
 import {
   Check,
   ChevronDown,
+  ChevronLeft,
   FileText,
   Filter,
   RefreshCw,
   Search,
   Trash2,
 } from 'lucide-react'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
 import { DataTable } from '@/components/shared/data-table'
@@ -32,6 +34,7 @@ import type {
 } from '@/types/dtos/consultas/exames-sem-papel.dtos'
 import { toast } from '@/utils/toast-utils'
 import { ResponseStatus } from '@/types/api/responses'
+import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
 
 const columns: Array<ColumnDef<ExameSemPapelTabelaDTO> & DataTableColumnDef<ExameSemPapelTabelaDTO>> = [
   {
@@ -44,116 +47,144 @@ const columns: Array<ColumnDef<ExameSemPapelTabelaDTO> & DataTableColumnDef<Exam
       />
     ),
     cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(checked) => row.toggleSelected(!!checked)}
-        aria-label={`Selecionar ${row.original.requisicaoNum}`}
-      />
+      <div className='flex justify-center'>
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(checked) => row.toggleSelected(!!checked)}
+          aria-label={`Selecionar ${row.original.requisicaoNum}`}
+        />
+      </div>
     ),
     enableSorting: false,
     enableHiding: false,
-    meta: { align: 'center', width: 'w-[40px]' },
+    meta: { align: 'center', width: 'w-10 min-w-[2.5rem]' },
   },
   {
     accessorKey: 'requisicaoNum',
     header: 'Requisição Nº',
-    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) =>
-      row.original.requisicaoNum || '-',
-    meta: { align: 'left', width: 'w-[100px]' },
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
+      <span className='block truncate' title={String(row.original.requisicaoNum ?? '')}>
+        {row.original.requisicaoNum || '-'}
+      </span>
+    ),
+    meta: { align: 'left', width: 'w-[88px] min-w-[88px]' },
   },
   {
     accessorKey: 'utente',
     header: 'Utente',
-    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) =>
-      row.original.utente || '-',
-    meta: { align: 'left', width: 'w-[220px]' },
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
+      <span className='block truncate' title={String(row.original.utente ?? '')}>
+        {row.original.utente || '-'}
+      </span>
+    ),
+    meta: { align: 'left', width: 'w-[148px] min-w-[148px]' },
   },
   {
     accessorKey: 'area',
     header: 'Área',
-    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) =>
-      row.original.area || '-',
-    meta: { align: 'left', width: 'w-[50px]' },
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
+      <span className='block truncate text-center' title={String(row.original.area ?? '')}>
+        {row.original.area || '-'}
+      </span>
+    ),
+    meta: { align: 'center', width: 'w-[64px] min-w-[64px]' },
   },
   {
     accessorKey: 'estado',
     header: 'Estado',
-    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) =>
-      row.original.estado || '-',
-    meta: { align: 'left', width: 'w-[95px]' },
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
+      <span className='block truncate' title={String(row.original.estado ?? '')}>
+        {row.original.estado || '-'}
+      </span>
+    ),
+    meta: { align: 'left', width: 'w-[104px] min-w-[104px]' },
   },
   {
     accessorKey: 'lotes',
     header: 'Lotes',
     cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
-      <Checkbox checked={row.original.lotes} disabled aria-label='Lotes' />
+      <div className='flex justify-center'>
+        <Checkbox checked={row.original.lotes} disabled aria-label='Lotes' />
+      </div>
     ),
     enableSorting: false,
-    meta: { align: 'center', width: 'w-[55px]' },
+    meta: { align: 'center', width: 'w-[52px] min-w-[52px]' },
   },
   {
     accessorKey: 'medico',
     header: 'Médico',
-    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) =>
-      row.original.medico || '-',
-    meta: { align: 'left', width: 'w-[120px]' },
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
+      <span className='block truncate' title={String(row.original.medico ?? '')}>
+        {row.original.medico || '-'}
+      </span>
+    ),
+    meta: { align: 'left', width: 'w-[136px] min-w-[136px]' },
   },
   {
     accessorKey: 'isencaoTaxa',
     header: 'Isenção Taxa',
     cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
-      <Checkbox
-        checked={row.original.isencaoTaxa}
-        disabled
-        aria-label='Isenção'
-      />
+      <div className='flex justify-center'>
+        <Checkbox
+          checked={row.original.isencaoTaxa}
+          disabled
+          aria-label='Isenção'
+        />
+      </div>
     ),
     enableSorting: false,
-    meta: { align: 'center', width: 'w-[85px]' },
+    meta: { align: 'center', width: 'w-[92px] min-w-[92px]' },
   },
   {
     accessorKey: 'comTaxa',
     header: 'Com. Taxa',
     cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
-      <Checkbox
-        checked={row.original.comTaxa}
-        disabled
-        aria-label='Com taxa'
-      />
+      <div className='flex justify-center'>
+        <Checkbox
+          checked={row.original.comTaxa}
+          disabled
+          aria-label='Com taxa'
+        />
+      </div>
     ),
     enableSorting: false,
-    meta: { align: 'center', width: 'w-[75px]' },
+    meta: { align: 'center', width: 'w-[80px] min-w-[80px]' },
   },
   {
     accessorKey: 'pnp',
     header: 'P.N.P.',
     cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
-      <Checkbox checked={row.original.pnp} disabled aria-label='P.N.P.' />
+      <div className='flex justify-center'>
+        <Checkbox checked={row.original.pnp} disabled aria-label='P.N.P.' />
+      </div>
     ),
     enableSorting: false,
-    meta: { align: 'center', width: 'w-[55px]' },
+    meta: { align: 'center', width: 'w-[52px] min-w-[52px]' },
   },
   {
     accessorKey: 'assinado',
     header: 'Assinado',
     cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
-      <Checkbox checked={row.original.assinado} disabled aria-label='Assinado' />
+      <div className='flex justify-center'>
+        <Checkbox checked={row.original.assinado} disabled aria-label='Assinado' />
+      </div>
     ),
     enableSorting: false,
-    meta: { align: 'center', width: 'w-[75px]' },
+    meta: { align: 'center', width: 'w-[76px] min-w-[76px]' },
   },
   {
     accessorKey: 'dataRequisicao',
     header: 'Data',
-    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) =>
-      row.original.dataRequisicao || '-',
-    meta: { align: 'left', width: 'w-[90px]' },
+    cell: ({ row }: CellContext<ExameSemPapelTabelaDTO, unknown>) => (
+      <span className='block whitespace-nowrap'>{row.original.dataRequisicao || '-'}</span>
+    ),
+    meta: { align: 'left', width: 'w-[100px] min-w-[100px]' },
   },
   {
     id: 'acoes',
     header: 'Opções',
     cell: () => (
-      <div className='flex items-center justify-end gap-1'>
+      <div className='flex w-full items-center justify-center gap-1'>
         <Button variant='ghost' size='icon' className='h-8 w-8' title='Documento'>
           <FileText className='h-4 w-4' />
         </Button>
@@ -172,7 +203,7 @@ const columns: Array<ColumnDef<ExameSemPapelTabelaDTO> & DataTableColumnDef<Exam
     ),
     enableSorting: false,
     enableHiding: false,
-    meta: { align: 'right', width: 'w-[90px]' },
+    meta: { align: 'center', width: 'w-[120px] min-w-[120px]' },
   },
 ]
 
@@ -187,6 +218,7 @@ function ExamesSemPapelFilterControls(_: {
 
 export function ExamesSemPapelPage() {
   const queryClient = useQueryClient()
+  const closeListagemLikeTabBar = useCloseCurrentWindowLikeTabBar()
   const [searchUtente, setSearchUtente] = useState('')
   const [dataInicio, setDataInicio] = useState<Date | undefined>(undefined)
   const [dataFim, setDataFim] = useState<Date | undefined>(undefined)
@@ -311,80 +343,95 @@ export function ExamesSemPapelPage() {
 
   return (
     <>
-      <PageHead title='Exames Sem Papel | CliCloud' />
+      <PageHead title='Exames Sem Papel | Exames | Área Clínica | CliCloud' />
       <DashboardPageContainer>
-        <div className='mb-6'>
-          <h1 className='text-2xl font-bold text-foreground'>Exames Sem Papel</h1>
-        </div>
+        <AreaComumListagemPageShell title='Exames Sem Papel'>
+          <div className='mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border/70 pb-3'>
+            <div className='flex min-h-8 min-w-0 max-w-[min(55vw,22rem)] shrink-0 items-center gap-2'>
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon'
+                className='h-8 w-8 shrink-0'
+                onClick={closeListagemLikeTabBar}
+                title='Voltar'
+              >
+                <ChevronLeft className='h-5 w-5' aria-hidden />
+              </Button>
+              <h2 className='truncate text-base font-semibold leading-snug tracking-tight text-foreground sm:text-lg'>
+                Exames Sem Papel
+              </h2>
+            </div>
 
-        <div className='mb-4 flex flex-wrap items-center justify-between gap-3'>
-          <div className='flex shrink-0 items-center'>
-            <Input
-              placeholder='Procurar...'
-              value={searchUtente}
-              onChange={(e) => setSearchUtente(e.target.value)}
-              className='h-8 w-[180px] sm:w-[200px] bg-muted/60'
-            />
-          </div>
-          <div className='flex flex-1 justify-center items-center gap-3 min-w-0'>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size='sm' className='h-8 gap-2 bg-primary text-primary-foreground hover:bg-primary/90'>
-                  <Check className='h-4 w-4' />
-                  {assinarMutation.isPending || comunicarMutation.isPending ? 'A executar' : 'Executar'}
-                  <ChevronDown className='h-4 w-4' />
+            <div className='flex min-w-0 flex-1 flex-wrap items-center justify-end gap-y-2 gap-x-2'>
+              <div className='flex flex-wrap items-center gap-2'>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size='sm' className='h-8 gap-2 bg-primary text-primary-foreground hover:bg-primary/90'>
+                      <Check className='h-4 w-4' />
+                      {assinarMutation.isPending || comunicarMutation.isPending ? 'A executar' : 'Executar'}
+                      <ChevronDown className='h-4 w-4' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='start'>
+                    <DropdownMenuItem onClick={handleExecutarAssinarLote}>
+                      Assinar em Lote
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExecutarComunicarLote}>
+                      Comunicar em Lote
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <div className='flex items-center gap-2'>
+                  <DatePicker value={dataInicio} onChange={setDataInicio} placeholder='Data início' displayFormat='dd-MM-yyyy' className='h-8 w-[130px]' />
+                  <DatePicker value={dataFim} onChange={setDataFim} placeholder='Data fim' displayFormat='dd-MM-yyyy' className='h-8 w-[130px]' />
+                </div>
+              </div>
+
+              <div className='ml-5 flex flex-wrap items-center justify-end gap-2 sm:ml-16'>
+                <Input
+                  placeholder='Procurar...'
+                  value={searchUtente}
+                  onChange={(e) => setSearchUtente(e.target.value)}
+                  className='h-8 w-[180px] shrink-0 bg-muted/60 sm:w-[200px]'
+                />
+
+                <Button
+                  size='sm'
+                  variant={porAssinarActive ? 'default' : 'outline'}
+                  className={`h-8 shrink-0 gap-2 ${porAssinarActive ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
+                  onClick={() => {
+                    setPorAssinarActive((v) => !v)
+                    setPage(1)
+                  }}
+                >
+                  <FileText className='h-4 w-4' />
+                  Por Assinar
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='start'>
-                <DropdownMenuItem onClick={handleExecutarAssinarLote}>
-                  Assinar em Lote
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExecutarComunicarLote}>
-                  Comunicar em Lote
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <div className='flex items-center gap-2'>
-              <DatePicker value={dataInicio} onChange={setDataInicio} placeholder='Data início' displayFormat='dd-MM-yyyy' className='h-8 w-[130px]' />
-              <DatePicker value={dataFim} onChange={setDataFim} placeholder='Data fim' displayFormat='dd-MM-yyyy' className='h-8 w-[130px]' />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size='sm' variant='outline' className='h-8 shrink-0 gap-2'>
+                      <Filter className='h-4 w-4' />
+                      {todosFilter === 'todos' ? 'Todos' : 'Efetuados Não prescritos'}
+                      <ChevronDown className='h-4 w-4' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end'>
+                    <DropdownMenuItem onClick={() => { setTodosFilter('todos'); setPage(1) }}>
+                      Todos
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setTodosFilter('efetuados_nao_prescritos'); setPage(1) }}>
+                      Efetuados Não prescritos
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button size='sm' variant='outline' className='h-8 shrink-0 gap-2' onClick={handleRefresh}>
+                  <RefreshCw className='h-4 w-4' />
+                  Atualizar
+                </Button>
+              </div>
             </div>
           </div>
-          <div className='flex shrink-0 flex-wrap items-center gap-2'>
-            <Button
-              size='sm'
-              variant={porAssinarActive ? 'default' : 'outline'}
-              className={`h-8 gap-2 ${porAssinarActive ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
-              onClick={() => {
-                setPorAssinarActive((v) => !v)
-                setPage(1)
-              }}
-            >
-              <FileText className='h-4 w-4' />
-              Por Assinar
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size='sm' variant='outline' className='h-8 gap-2 border-dashed'>
-                  <Filter className='h-4 w-4' />
-                  {todosFilter === 'todos' ? 'Todos' : 'Efetuados Não prescritos'}
-                  <ChevronDown className='h-4 w-4' />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end'>
-                <DropdownMenuItem onClick={() => { setTodosFilter('todos'); setPage(1) }}>
-                  Todos
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => { setTodosFilter('efetuados_nao_prescritos'); setPage(1) }}>
-                  Efetuados Não prescritos
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button size='sm' variant='outline' className='h-8 gap-2' onClick={handleRefresh}>
-              <RefreshCw className='h-4 w-4' />
-              Atualizar
-            </Button>
-          </div>
-        </div>
 
         <DataTable
           columns={columns}
@@ -408,7 +455,9 @@ export function ExamesSemPapelPage() {
           onSortingChange={(newSorting) => setSorting(newSorting)}
           FilterControls={ExamesSemPapelFilterControls}
           hideToolbar
+          tableClassName='table-fixed min-w-[1160px]'
         />
+        </AreaComumListagemPageShell>
       </DashboardPageContainer>
     </>
   )

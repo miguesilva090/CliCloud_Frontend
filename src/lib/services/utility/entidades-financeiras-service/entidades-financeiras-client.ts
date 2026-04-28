@@ -69,6 +69,18 @@ export class EntidadesFinanceirasClient extends BaseApiClient {
   }
 
   /**
+   * DELETE /client/entidades-financeiras/EntidadesFinanceiras/{id}
+   */
+  public async deleteEntidadeFinanceira(
+    id: string,
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.deleteRequest<GSResponse<string>>(
+      state.URL,
+      `${BASE}/${id}`,
+    )
+  }
+
+  /**
    * POST /client/entidades-financeiras/EntidadesFinanceiras/basica
    * Fluxo simplificado para criação a partir da listagem básica
    */

@@ -16,9 +16,9 @@ export const columns: DataTableColumnDef<EstadoCivilTableDTO>[] = [
   },
   {
     id: 'actions',
-    header: () => <div className='text-right w-full pr-5'>Opções</div>,
+    header: () => <div className='w-full pr-5 text-right'>Opções</div>,
     cell: () => (
-      <div className='flex items-center justify-end gap-1'>
+      <div className='flex w-full items-center justify-end gap-1'>
         <Button
           type='button'
           variant='ghost'

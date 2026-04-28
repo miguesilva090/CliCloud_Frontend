@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import {
-  ArrowUpIcon,
-  ArrowDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   DoubleArrowLeftIcon,
@@ -21,16 +19,10 @@ import {
   Updater,
 } from '@tanstack/react-table'
 import { PrintOption } from '@/types/data-table'
-import { ArrowUpDown, ArrowRight } from 'lucide-react'
+import { ArrowRight, ChevronLeft } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import {
   Select,
@@ -54,6 +46,8 @@ import {
 } from '@/components/shared/data-table-types'
 import { LoadingSpinner } from '@/components/shared/loading-spinner'
 import { DataTableToolbar } from './data-table-toolbar'
+import { useListagemPageHeader } from '@/contexts/listagem-page-header-context'
+import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
 
 export type DataTableAction = {
   label: string
@@ -102,7 +96,7 @@ type DataTableProps<TData, TValue> = {
   initialColumnVisibility?: Record<string, boolean>
   onColumnVisibilityChange?: (visibility: Record<string, boolean>) => void
   isLoading?: boolean
-  /** Exibir pesquisa expansível: botão "Pesquisa" que abre painel por datas/código; campo nome sempre visível */
+  /** Pesquisa expansível: painel extra (datas/código…); com pesquisa global, input + seta à direita abrem o painel */
   expandableSearch?: boolean
   /** Coluna à qual aplicar o valor do campo "Procurar por nome" (ex.: 'nomeUtente') */
   globalSearchColumnId?: string
@@ -112,6 +106,10 @@ type DataTableProps<TData, TValue> = {
   hideToolbarFilters?: boolean
   /** Esconder a toolbar inteira (ex.: Exames Sem Papel – toolbar custom na página) */
   hideToolbar?: boolean
+  /** Conteúdo à direita antes da pesquisa e dos botões (ex.: seletor de data). */
+  toolbarEndPrefix?: React.ReactNode
+  /** Classes extra no `<table>` (ex.: `table-fixed min-w-[…]` para alinhar colunas). */
+  tableClassName?: string
 }
 
 // Textos da paginação (apenas abaixo da tabela, estilo unificado)
@@ -158,6 +156,8 @@ export function DataTable<TData, TValue>({
   globalSearchPlaceholder = 'Procurar por nome utente...',
   hideToolbarFilters = false,
   hideToolbar = false,
+  toolbarEndPrefix,
+  tableClassName,
 }: DataTableProps<TData, TValue>) {
   const [pageIndex, setPageIndex] = useState(initialPage - 1)
   const [pageSize, setPageSize] = useState(initialPageSize)
@@ -180,6 +180,8 @@ export function DataTable<TData, TValue>({
   const [activeFiltersCount, setActiveFiltersCount] = useState(0)
   const location = useLocation()
   const navigate = useNavigate()
+  const listagemHeader = useListagemPageHeader()
+  const closeListagemLikeTabBar = useCloseCurrentWindowLikeTabBar()
 
   // Fechar modal de filtros quando a rota mudar para não bloquear navegação/foco
   useEffect(() => {
@@ -399,46 +401,81 @@ export function DataTable<TData, TValue>({
     return activeFiltersCount
   }
 
+  const toolbarNode = (
+    <DataTableToolbar
+      onFilterClick={() => setIsFilterModalOpen(true)}
+      activeFiltersCount={getActiveFiltersCount()}
+      printOptions={printOptions}
+      toolbarActions={toolbarActions}
+      expandableSearch={expandableSearch}
+      searchExpanded={isSearchExpanded}
+      onSearchExpandToggle={() => setIsSearchExpanded((v) => !v)}
+      globalSearchValue={globalSearchValue}
+      onGlobalSearchChange={(value) => {
+        if (!globalSearchColumnId) return
+
+        const column = table.getColumn(globalSearchColumnId)
+
+        if (value === '') {
+          column?.setFilterValue(undefined)
+          const next = pendingColumnFilters.filter(
+            (f) => f.id !== globalSearchColumnId
+          )
+          setPendingColumnFilters(next)
+          handleApplyFilters(next)
+          return
+        }
+
+        column?.setFilterValue(value)
+        const rest = pendingColumnFilters.filter(
+          (f) => f.id !== globalSearchColumnId
+        )
+        const next = [...rest, { id: globalSearchColumnId, value }]
+        setPendingColumnFilters(next)
+        handleApplyFilters(next)
+      }}
+      globalSearchPlaceholder={globalSearchPlaceholder}
+      hideToolbarFilters={hideToolbarFilters}
+      toolbarEndPrefix={toolbarEndPrefix}
+    />
+  )
+
   return (
-    <div className='flex flex-col space-y-4'>
-      {!hideToolbar && (
-        <DataTableToolbar
-          onFilterClick={() => setIsFilterModalOpen(true)}
-          activeFiltersCount={getActiveFiltersCount()}
-          printOptions={printOptions}
-          toolbarActions={toolbarActions}
-          expandableSearch={expandableSearch}
-          searchExpanded={isSearchExpanded}
-          onSearchExpandToggle={() => setIsSearchExpanded((v) => !v)}
-          globalSearchValue={globalSearchValue}
-          onGlobalSearchChange={(value) => {
-            if (!globalSearchColumnId) return
-
-            const column = table.getColumn(globalSearchColumnId)
-
-            if (value === '') {
-              // Limpar pesquisa global: remover filtro e voltar a mostrar todos
-              column?.setFilterValue(undefined)
-              const next = pendingColumnFilters.filter(
-                (f) => f.id !== globalSearchColumnId
-              )
-              setPendingColumnFilters(next)
-              handleApplyFilters(next)
-              return
-            }
-
-            column?.setFilterValue(value)
-            const rest = pendingColumnFilters.filter(
-              (f) => f.id !== globalSearchColumnId
-            )
-            const next = [...rest, { id: globalSearchColumnId, value }]
-            setPendingColumnFilters(next)
-            handleApplyFilters(next)
-          }}
-          globalSearchPlaceholder={globalSearchPlaceholder}
-          hideToolbarFilters={hideToolbarFilters}
-        />
-      )}
+    <div className='flex flex-col space-y-2'>
+      {!hideToolbar &&
+        (listagemHeader ? (
+          <div className='flex flex-nowrap items-center gap-x-3 overflow-x-auto border-b border-border/70 pb-3'>
+            <div className='flex min-h-8 min-w-0 max-w-[min(55vw,22rem)] flex-shrink-0 items-center gap-2'>
+              {listagemHeader.showBackButton !== false ? (
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='icon'
+                  className='h-8 w-8 shrink-0'
+                  onClick={() =>
+                    (listagemHeader.onBack ?? closeListagemLikeTabBar)()
+                  }
+                  title='Voltar'
+                >
+                  <ChevronLeft className='h-5 w-5' aria-hidden />
+                </Button>
+              ) : null}
+              <h2 className='truncate text-base font-semibold leading-snug tracking-tight text-foreground sm:text-lg'>
+                {listagemHeader.title}
+              </h2>
+            </div>
+            {listagemHeader.headerTrailing ? (
+              <div className='flex shrink-0 flex-nowrap items-center gap-2'>
+                {listagemHeader.headerTrailing}
+              </div>
+            ) : null}
+            <div className='flex min-w-0 min-h-8 flex-1 flex-nowrap items-center justify-end gap-2 overflow-x-auto'>
+              {toolbarNode}
+            </div>
+          </div>
+        ) : (
+          toolbarNode
+        ))}
 
       {expandableSearch && isSearchExpanded && (
         <div className='rounded-md border bg-muted/60 p-4'>
@@ -488,114 +525,108 @@ export function DataTable<TData, TValue>({
         FilterControls={FilterControls}
       />
 
-      <div className='flex flex-col gap-4 md:flex-row'>
-        <div className='relative flex-1 rounded-md border bg-muted/60 p-2'>
-          {isLoading && (
-            <div
-              className='absolute inset-0 z-50 flex items-center justify-center rounded-md bg-background/80 backdrop-blur-sm pointer-events-none'
-              aria-hidden
-            >
-              <LoadingSpinner
-                size='sm'
-                title='A filtrar...'
-                description='Por favor aguarde'
-              />
-            </div>
-          )}
-          <ScrollArea className='h-[calc(100vh-500px)] rounded-md border md:h-[calc(100vh-400px)]'>
-            <div>
-              <Table key={JSON.stringify(columnVisibility)}>
+      <div className='flex flex-col gap-2 md:flex-row md:gap-3'>
+        <div className='relative flex-1'>
+          <div className='rounded-none border border-border p-1 sm:p-1.5'>
+            <div className='relative overflow-hidden rounded-none bg-white'>
+            {isLoading && (
+              <div
+                className='absolute inset-0 z-50 flex items-center justify-center rounded-none bg-background/80 backdrop-blur-sm pointer-events-none'
+                aria-hidden
+              >
+                <LoadingSpinner
+                  size='sm'
+                  title='A filtrar...'
+                  description='Por favor aguarde'
+                />
+              </div>
+            )}
+            <ScrollArea className='h-[calc(100vh-500px)] border-0 md:h-[calc(100vh-400px)]'>
+              <div className='min-w-0 overflow-hidden'>
+              <Table
+                key={JSON.stringify(columnVisibility)}
+                className={cn(
+                  'border-separate border-spacing-0',
+                  tableClassName,
+                )}
+              >
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id} className='hover:bg-muted'>
                       {headerGroup.headers
                         .filter((header) => header.column.getIsVisible())
-                        .map((header) => (
+                        .map((header, idx, arr) => {
+                          const align = (
+                            header.column
+                              .columnDef as DataTableColumnDef<TData>
+                          ).meta?.align
+                          const isCenterOrDefault =
+                            align === 'center' || align === undefined
+                          const isFirstVisible = idx === 0
+                          const isLastVisible = idx === arr.length - 1
+                          const headerWidth = (
+                            header.column
+                              .columnDef as DataTableColumnDef<TData>
+                          ).meta?.width
+                          return (
                         <TableHead
                           key={header.id}
                           className={cn(
-                            'h-12 font-semibold text-muted-foreground hover:text-foreground',
-                            (
-                              header.column
-                                .columnDef as DataTableColumnDef<TData>
-                            ).meta?.align === 'center' && 'text-center',
-                            (
-                              header.column
-                                .columnDef as DataTableColumnDef<TData>
-                            ).meta?.align === 'right' && 'text-right',
-                            (
-                              header.column
-                                .columnDef as DataTableColumnDef<TData>
-                            ).meta?.align === 'left' && 'text-left'
+                            'h-12 font-semibold text-foreground/90 hover:text-foreground',
+                            align === 'right' && 'text-right',
+                            isCenterOrDefault && 'text-center',
+                            headerWidth,
+                            isFirstVisible && 'rounded-tl-sm',
+                            isLastVisible && 'rounded-tr-sm'
                           )}
                         >
                           {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <div
-                                  className={cn(
-                                    'flex items-center gap-2 cursor-pointer select-none',
-                                    (
-                                      header.column
-                                        .columnDef as DataTableColumnDef<TData>
-                                    ).meta?.align === 'center' &&
-                                      'justify-center',
-                                    (
-                                      header.column
-                                        .columnDef as DataTableColumnDef<TData>
-                                    ).meta?.align === 'right' && 'justify-end'
-                                  )}
-                                >
+                            <button
+                              type='button'
+                              className={cn(
+                                'flex min-w-0 w-full cursor-pointer select-none items-center bg-transparent p-0 font-semibold text-inherit hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                                align === 'right' && 'justify-end',
+                                isCenterOrDefault && 'justify-center'
+                              )}
+                              title='Clique: ascendente · Novo clique: descendente'
+                              aria-sort={
+                                header.column.getIsSorted() === 'asc'
+                                  ? 'ascending'
+                                  : header.column.getIsSorted() === 'desc'
+                                    ? 'descending'
+                                    : 'none'
+                              }
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                if (header.column.getIsSorted() === 'asc') {
+                                  header.column.toggleSorting(true)
+                                } else {
+                                  header.column.toggleSorting(false)
+                                }
+                              }}
+                            >
+                              {isCenterOrDefault ? (
+                                <span className='min-w-0 truncate'>
                                   {flexRender(
                                     header.column.columnDef.header,
                                     header.getContext()
                                   )}
-                                  <div className='w-4'>
-                                    {header.column.getIsSorted() === 'asc' && (
-                                      <ArrowUpIcon className='h-4 w-4' />
-                                    )}
-                                    {header.column.getIsSorted() === 'desc' && (
-                                      <ArrowDownIcon className='h-4 w-4' />
-                                    )}
-                                    {!header.column.getIsSorted() && (
-                                      <ArrowUpDown className='h-4 w-4 opacity-50' />
-                                    )}
-                                  </div>
-                                </div>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align='start'>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    header.column.toggleSorting(false)
-                                  }
-                                  className='gap-2'
-                                >
-                                  <ArrowUpIcon className='h-3.5 w-3.5' />
-                                  Asc
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    header.column.toggleSorting(true)
-                                  }
-                                  className='gap-2'
-                                >
-                                  <ArrowDownIcon className='h-3.5 w-3.5' />
-                                  Desc
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                                </span>
+                              ) : (
+                                flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )
+                              )}
+                            </button>
                           ) : (
                             <div
                               className={cn(
-                                'flex items-center gap-2',
-                                (
-                                  header.column
-                                    .columnDef as DataTableColumnDef<TData>
-                                ).meta?.align === 'center' && 'justify-center',
-                                (
-                                  header.column
-                                    .columnDef as DataTableColumnDef<TData>
-                                ).meta?.align === 'right' && 'justify-end'
+                                'flex min-w-0 w-full items-center',
+                                align === 'right' &&
+                                  'justify-end gap-2',
+                                isCenterOrDefault &&
+                                  'justify-center gap-2'
                               )}
                             >
                               {flexRender(
@@ -605,7 +636,8 @@ export function DataTable<TData, TValue>({
                             </div>
                           )}
                         </TableHead>
-                      ))}
+                          )
+                        })}
                     </TableRow>
                   ))}
                 </TableHeader>
@@ -643,7 +675,15 @@ export function DataTable<TData, TValue>({
                           }
                         }}
                       >
-                        {row.getVisibleCells().map((cell) => (
+                        {row.getVisibleCells().map((cell) => {
+                          const cellAlign = (
+                            cell.column
+                              .columnDef as DataTableColumnDef<TData>
+                          ).meta?.align
+                          const cellCenterOrDefault =
+                            cellAlign === 'center' || cellAlign === undefined
+
+                          return (
                           <TableCell
                             key={cell.id}
                             className={cn(
@@ -651,18 +691,8 @@ export function DataTable<TData, TValue>({
                                 cell.column
                                   .columnDef as DataTableColumnDef<TData>
                               ).meta?.width,
-                              (
-                                cell.column
-                                  .columnDef as DataTableColumnDef<TData>
-                              ).meta?.align === 'center' && 'text-center',
-                              (
-                                cell.column
-                                  .columnDef as DataTableColumnDef<TData>
-                              ).meta?.align === 'right' && 'text-right',
-                              (
-                                cell.column
-                                  .columnDef as DataTableColumnDef<TData>
-                              ).meta?.align === 'left' && 'text-left'
+                              cellAlign === 'right' && 'text-right',
+                              cellCenterOrDefault && 'text-center'
                             )}
                           >
                             {flexRender(
@@ -670,7 +700,8 @@ export function DataTable<TData, TValue>({
                               cell.getContext()
                             )}
                           </TableCell>
-                        ))}
+                          )
+                        })}
                       </TableRow>
                     ))
                   ) : (
@@ -685,13 +716,13 @@ export function DataTable<TData, TValue>({
                   )}
                 </TableBody>
               </Table>
-            </div>
+              </div>
             <ScrollBar orientation='horizontal' />
           </ScrollArea>
 
           {/* Paginação apenas abaixo da tabela: Mostrar X registos, Página X de N, Encontrados X registos */}
-          <div className='mt-2 flex flex-wrap items-center gap-4 py-4 text-sm text-muted-foreground sm:flex-row'>
-            <span className='flex items-center gap-2'>
+          <div className='flex flex-wrap items-center gap-x-3 gap-y-1 rounded-b-none border-t border-border/70 bg-muted/20 px-2 py-1.5 text-sm leading-tight text-muted-foreground sm:flex-row sm:px-3'>
+            <span className='flex items-center gap-1.5'>
               {ptPTTranslations.mostrar}
               <Select
                 value={`${table.getState().pagination.pageSize}`}
@@ -700,7 +731,7 @@ export function DataTable<TData, TValue>({
                   table.setPageSize(newSize)
                 }}
               >
-                <SelectTrigger className='h-8 w-[5rem]'>
+                <SelectTrigger className='h-7 w-[5rem]'>
                   <SelectValue
                     placeholder={table.getState().pagination.pageSize}
                   />
@@ -724,11 +755,11 @@ export function DataTable<TData, TValue>({
               {ptPTTranslations.encontrados}{' '}
               {totalRows ?? table.getFilteredRowModel().rows.length} {ptPTTranslations.registos}
             </span>
-            <div className='flex items-center space-x-2'>
+            <div className='flex items-center gap-1'>
                 <Button
                   aria-label={ptPTTranslations.goToFirstPage}
                   variant='outline'
-                  className='hidden h-8 w-8 p-0 lg:flex'
+                  className='hidden h-7 w-7 p-0 lg:flex sm:h-8 sm:w-8'
                   onClick={() => table.setPageIndex(0)}
                   disabled={!table.getCanPreviousPage()}
                 >
@@ -737,7 +768,7 @@ export function DataTable<TData, TValue>({
                 <Button
                   aria-label={ptPTTranslations.goToPreviousPage}
                   variant='outline'
-                  className='h-8 w-8 p-0'
+                  className='h-7 w-7 p-0 sm:h-8 sm:w-8'
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
                 >
@@ -746,7 +777,7 @@ export function DataTable<TData, TValue>({
                 <Button
                   aria-label={ptPTTranslations.goToNextPage}
                   variant='outline'
-                  className='h-8 w-8 p-0'
+                  className='h-7 w-7 p-0 sm:h-8 sm:w-8'
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
                 >
@@ -755,7 +786,7 @@ export function DataTable<TData, TValue>({
                 <Button
                   aria-label={ptPTTranslations.goToLastPage}
                   variant='outline'
-                  className='hidden h-8 w-8 p-0 lg:flex'
+                  className='hidden h-7 w-7 p-0 lg:flex sm:h-8 sm:w-8'
                   onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                   disabled={!table.getCanNextPage()}
                 >
@@ -765,6 +796,8 @@ export function DataTable<TData, TValue>({
                   />
                 </Button>
             </div>
+          </div>
+          </div>
           </div>
         </div>
       </div>

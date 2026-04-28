@@ -5,6 +5,7 @@ import {
   columns,
   getColumnsWithViewCallback,
 } from './mapas-body-chart-table.columns'
+import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 
 type FilterControlsComponent = React.ComponentType<{
   table: any
@@ -34,6 +35,7 @@ export function MapasBodyChartTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  rowActionPermissions,
 }: {
   data: MapaBodyChartTableDTO[]
   isLoading: boolean
@@ -55,9 +57,15 @@ export function MapasBodyChartTable({
   onOpenView?: (data: MapaBodyChartTableDTO) => void
   onOpenEdit?: (data: MapaBodyChartTableDTO) => void
   onOpenDelete?: (data: MapaBodyChartTableDTO) => void
+  rowActionPermissions?: AreaComumListRowActionPermissions
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete)
+    ? getColumnsWithViewCallback(
+        onOpenView,
+        onOpenEdit,
+        onOpenDelete,
+        rowActionPermissions
+      )
     : columns
 
   return (

@@ -139,12 +139,12 @@ export function AnamneseOrtodonticaATMTab({
         ATM - Articulação Temporomandibular
       </h3>
 
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4'>
         <div className='space-y-3'>
           <label className='flex flex-col gap-1 text-sm'>
             Palpação
             <Textarea
-              className='min-h-[40px]'
+              className='min-h-[72px]'
               value={form.palpacao ?? ''}
               onChange={(e) => handleTextChange('palpacao', e.target.value)}
             />
@@ -153,7 +153,7 @@ export function AnamneseOrtodonticaATMTab({
           <label className='flex flex-col gap-1 text-sm'>
             RC - Relação Cêntrica / OC - Oclusão Cêntrica
             <Textarea
-              className='min-h-[40px]'
+              className='min-h-[72px]'
               value={form.relacaoCentrica ?? ''}
               onChange={(e) => handleTextChange('relacaoCentrica', e.target.value)}
             />
@@ -162,7 +162,7 @@ export function AnamneseOrtodonticaATMTab({
           <label className='flex flex-col gap-1 text-sm'>
             Lateralidade Esquerda
             <Textarea
-              className='min-h-[40px]'
+              className='min-h-[72px]'
               value={form.lateralidadeEsquerda ?? ''}
               onChange={(e) =>
                 handleTextChange('lateralidadeEsquerda', e.target.value)
@@ -173,18 +173,20 @@ export function AnamneseOrtodonticaATMTab({
           <label className='flex flex-col gap-1 text-sm'>
             Lateralidade Direita
             <Textarea
-              className='min-h-[40px]'
+              className='min-h-[72px]'
               value={form.lateralidadeDireita ?? ''}
               onChange={(e) =>
                 handleTextChange('lateralidadeDireita', e.target.value)
               }
             />
           </label>
+        </div>
 
+        <div className='space-y-3'>
           <label className='flex flex-col gap-1 text-sm'>
             Protrusão
             <Textarea
-              className='min-h-[40px]'
+              className='min-h-[72px]'
               value={form.protrusao ?? ''}
               onChange={(e) => handleTextChange('protrusao', e.target.value)}
             />
@@ -193,7 +195,7 @@ export function AnamneseOrtodonticaATMTab({
           <label className='flex flex-col gap-1 text-sm'>
             Músculos Mastigatórios
             <Textarea
-              className='min-h-[40px]'
+              className='min-h-[72px]'
               value={form.musculosMastigatorios ?? ''}
               onChange={(e) =>
                 handleTextChange('musculosMastigatorios', e.target.value)
@@ -204,7 +206,7 @@ export function AnamneseOrtodonticaATMTab({
           <label className='flex flex-col gap-1 text-sm'>
             Músculos Infra-Hióideos
             <Textarea
-              className='min-h-[40px]'
+              className='min-h-[72px]'
               value={form.musculosInfra ?? ''}
               onChange={(e) => handleTextChange('musculosInfra', e.target.value)}
             />
@@ -213,23 +215,21 @@ export function AnamneseOrtodonticaATMTab({
           <label className='flex flex-col gap-1 text-sm'>
             Músculos Supra-Hióideos
             <Textarea
-              className='min-h-[40px]'
+              className='min-h-[72px]'
               value={form.musculosSupra ?? ''}
               onChange={(e) => handleTextChange('musculosSupra', e.target.value)}
             />
           </label>
         </div>
 
-        <div className='space-y-3'>
-          <label className='flex flex-col gap-1 text-sm'>
-            Observações
-            <Textarea
-              className='min-h-[200px]'
-              value={form.obs ?? ''}
-              onChange={(e) => handleTextChange('obs', e.target.value)}
-            />
-          </label>
-        </div>
+        <label className='flex flex-col gap-1 text-sm md:col-span-2'>
+          Observações
+          <Textarea
+            className='min-h-[120px]'
+            value={form.obs ?? ''}
+            onChange={(e) => handleTextChange('obs', e.target.value)}
+          />
+        </label>
       </div>
 
       <fieldset className='rounded-lg border bg-card p-4'>

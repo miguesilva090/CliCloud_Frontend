@@ -17,6 +17,21 @@ export const useUtentesLight = (keyword = '') =>
 
 const LISTAGEM_PATH = '/area-comum/tabelas/entidades/utentes'
 
+/** Ids aceites pelo backend (`Utente` / Entidade); morada/localidade/telemóvel são calculados na UI — não são propriedades escalar para `OrderBy`. */
+export const UTENTE_LIST_ALLOWED_SORT_IDS = new Set([
+  'nome',
+  'numeroContribuinte',
+  'numeroUtente',
+])
+
+export function sanitizeUtenteListSorting(
+  sorting: Array<{ id: string; desc: boolean }> | null | undefined
+): Array<{ id: string; desc: boolean }> | undefined {
+  if (sorting == null || sorting.length === 0) return undefined
+  const ok = sorting.filter((s) => UTENTE_LIST_ALLOWED_SORT_IDS.has(s.id))
+  return ok.length > 0 ? ok : undefined
+}
+
 export const useGetUtente = (id: string) => {
   return useQuery({
     queryKey: ['utente', id],
@@ -34,7 +49,7 @@ export const useGetUtentesPaginated = (
   const params: UtenteTableFilterRequest = {
     pageNumber,
     pageSize: pageLimit,
-    sorting: sorting ?? undefined,
+    sorting: sanitizeUtenteListSorting(sorting),
     filters: (filters ?? []).filter((f) => f.value),
   }
 

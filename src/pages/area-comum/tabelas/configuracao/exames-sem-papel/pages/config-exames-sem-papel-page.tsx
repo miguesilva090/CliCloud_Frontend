@@ -3,11 +3,11 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Eye, EyeOff } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { AreaComumDashboardCard } from '@/components/shared/area-comum-dashboard-card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { ConfigPageCardTitleRow } from '@/components/shared/config-page-card-title-row'
+import { ConfigPageCardActions } from '@/components/shared/config-page-card-title-row'
 import { modules } from '@/config/modules'
 import { useConfigPageEditMode } from '@/hooks/use-config-page-edit-mode'
 import { toast } from '@/utils/toast-utils'
@@ -200,11 +200,20 @@ export function ConfigExamesSemPapelPage() {
         <>
         <PageHead title='Configuracao Exames Sem Papel | CliCloud' />
         <DashboardPageContainer>
-            <div className='space-y-4'>
-                <Card>
-                    <CardHeader className='space-y-0 pb-2'>
-                        <ConfigPageCardTitleRow
-                            title='Configuração Exames Sem Papel'
+            <AreaComumDashboardCard
+                title='Configuração Exames Sem Papel'
+                contentClassName='space-y-6'
+                headerTrailing={
+                    <>
+                        <Button type='button' variant='outline' onClick={() => setShowPasswords((v) => !v)}>
+                            {showPasswords ? (
+                                <EyeOff className='mr-2 h-4 w-4' />
+                            ) : (
+                                <Eye className='mr-2 h-4 w-4' />
+                            )}
+                            {showPasswords ? 'Ocultar passwords' : 'Mostrar passwords'}
+                        </Button>
+                        <ConfigPageCardActions
                             canChange={canChange}
                             isEditing={isEditing}
                             onStartEdit={startEditing}
@@ -212,20 +221,10 @@ export function ConfigExamesSemPapelPage() {
                                 cancelEditing()
                                 void configQuery.refetch()
                             }}
-                            trailing={
-                                <Button type='button' variant='outline' onClick={() => setShowPasswords((v) => !v)}>
-                                    {showPasswords ? (
-                                        <EyeOff className='mr-2 h-4 w-4' />
-                                    ) : (
-                                        <Eye className='mr-2 h-4 w-4' />
-                                    )}
-                                    {showPasswords ? 'Ocultar passwords' : 'Mostrar passwords'}
-                                </Button>
-                            }
                         />
-                    </CardHeader>
-
-                    <CardContent className='space-y-6'>
+                    </>
+                }
+            >
                         {configQuery.isLoading ? (
                             <p className='text-sm text-muted-foreground'>A carregar configurações...</p>
                         ) : null}
@@ -236,11 +235,7 @@ export function ConfigExamesSemPapelPage() {
                         ): null}
                         
                         <section className='space-y-3'>
-                            <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
-                                <div className='space-y-1'>
-                                    <Label>Código</Label>
-                                    <Input value='1' disabled />
-                                </div>
+                            <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
                                 <div className='space-y-1'>
                                     <Label htmlFor='codigo-entidade'>Código Entidade</Label>
                                     <Input
@@ -296,8 +291,10 @@ export function ConfigExamesSemPapelPage() {
                                 </div>
                                 <div className='space-y-1'>
                                     <Label>Consulta Cancelados</Label>
-                                    <Input 
+                                    <Input
                                         value={form.consultaCancelados}
+                                        readOnly={formLocked}
+                                        disabled={fieldDisabled}
                                         onChange={(e) => handleChange('consultaCancelados', e.target.value)}
                                     />
                                 </div>
@@ -435,9 +432,7 @@ export function ConfigExamesSemPapelPage() {
                                 {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
                             </Button>
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
+            </AreaComumDashboardCard>
         </DashboardPageContainer>
         </>
     )

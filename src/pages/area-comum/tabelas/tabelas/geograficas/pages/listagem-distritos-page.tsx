@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {} from 'react-router-dom'
-import { Plus, List, RotateCw, RefreshCw, X } from 'lucide-react'
+import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import {
   useGetDistritosPaginated,
   usePrefetchAdjacentDistritos} from '@/pages/base/distritos/queries/distritos-queries'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { DistritosListagemTable } from '@/pages/base/distritos/components/distritos-table/distritos-listagem-table'
@@ -15,7 +16,7 @@ import { ListagemDistritosFilterControls } from '../components/listagem-distrito
 import { DistritoViewCreateModal } from '../modals/distrito-view-create-modal'
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { DistritoTableDTO } from '@/types/dtos/base/distritos.dtos'
-import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
 
@@ -25,7 +26,6 @@ type DistritoModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemDistritosPage() {
   const { canAdd } = useAreaComumEntityListPermissions(LISTAGEM_DISTRITO_PERM_ID)
-  const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<DistritoModalMode>('view')
@@ -93,34 +93,15 @@ export function ListagemDistritosPage() {
     <>
       <PageHead title='Listagem de Distritos | Geográficas | Tabelas | Área Comum | CliCloud' />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>Listagem de Distritos</h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
+        <AreaComumListagemPageShell
+            title='Listagem de Distritos'
+            onRefresh={() => {
                 handleFiltersChange([])
                 handlePaginationChange(1, pageSize)
                 queryClient.invalidateQueries({
                   queryKey: ['distritos-paginated']})
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={closeWindowTab}
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+            }}
+        >
 
         {isError ? (
           <Alert variant='destructive' className='mb-4'>
@@ -169,7 +150,8 @@ export function ListagemDistritosPage() {
             queryClient.invalidateQueries({ queryKey: ['distritos-paginated'] })
           }}
         />
-      </DashboardPageContainer>
+        </AreaComumListagemPageShell>
+        </DashboardPageContainer>
     </>
   )
 }

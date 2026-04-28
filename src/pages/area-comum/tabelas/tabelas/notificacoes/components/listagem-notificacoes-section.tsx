@@ -197,6 +197,8 @@ export function ListagemNotificacoesSection({ listMode }: { listMode: number }) 
         open={viewOpen}
         onOpenChange={setViewOpen}
         notificacaoId={viewId}
+        listMode={listMode}
+        onMarkedReadInvalidate={invalidate}
       />
       <NotificacaoCreateModal
         open={createOpen}

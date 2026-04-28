@@ -60,6 +60,8 @@ export interface TecnicoTableDTO {
 export interface TecnicoLightDTO {
   id: string
   nome?: string | null
+  /** GUID da conta na plataforma — necessário para notificações a utilizadores. */
+  idUtilizador?: string | null
 }
 
 export interface TecnicoDTO {

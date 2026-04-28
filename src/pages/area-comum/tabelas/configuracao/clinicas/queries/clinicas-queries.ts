@@ -124,6 +124,37 @@ export const useUpdateClinica = (id: string) => {
   })
 }
 
+export const useCreateClinica = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: UpdateClinicaRequest) =>
+      ClinicaService('tabelas').createClinica(payload),
+    onMutate: () => {
+      toast.info('A criar clínica...')
+    },
+    onSuccess: async (response) => {
+      const info = response.info as { status?: number; data?: string }
+
+      if (info?.status === ResponseStatus.Success && info.data) {
+        toast.success('Clínica criada com sucesso')
+        await queryClient.invalidateQueries({ queryKey: ['clinicas-paginated'] })
+        return
+      }
+
+      const msg =
+        (response.info as { messages?: Record<string, string[]> })?.messages
+          ?.['$']?.[0] ??
+        'Falha ao criar clínica'
+      toast.error(msg)
+      return undefined
+    },
+    onError: (error: unknown) => {
+      toast.error(getValidationMessage(error))
+    },
+  })
+}
+
 export const useSetDefaultClinica = () => {
   const queryClient = useQueryClient()
 

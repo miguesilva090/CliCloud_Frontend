@@ -112,6 +112,7 @@ export interface ConsultaTableDTO {
   horaFim?: string | null
   sala?: string | null
   utenteId?: string | null
+  utenteNumero?: string | null
   utenteNome?: string | null
   medicoId?: string | null
   medicoNome?: string | null

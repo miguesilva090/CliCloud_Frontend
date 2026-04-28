@@ -30,17 +30,20 @@ export function createAreaComumListActionsColumnDef<T>(
   const { canView, canChange, canDelete } =
     mergeRowActionPermissions(rowActionPermissions)
 
+  /** AuthDel → `canDelete` em `rowActionPermissions` (ex.: hook `useAreaComumEntityListPermissions`). */
   const showDelete =
     !omitDelete && canDelete && typeof onOpenDelete === 'function'
 
   return {
     id: 'actions',
-    header: () => <div className='text-right w-full pr-5'>Opções</div>,
+    header: () => (
+      <div className='w-full pr-5 text-right'>Opções</div>
+    ),
     cell: ({ row }) => {
       const data = row.original
       const locked = isRowActionsLocked?.(data) ?? false
       return (
-        <div className='flex items-center justify-end gap-1'>
+        <div className='flex w-full items-center justify-end gap-1'>
           {canView ? (
             <Button
               type='button'

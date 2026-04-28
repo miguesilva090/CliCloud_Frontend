@@ -5,6 +5,8 @@ export interface ConsultaTableDTO {
   horaFim?: string | null
   sala?: string | null
   utenteId?: string | null
+  /** Número de utente (clínico); preferir em listagens em vez do GUID `utenteId`. */
+  utenteNumero?: string | null
   utenteNome?: string | null
   organismoId?: string | null
   organismoNome?: string | null

@@ -31,7 +31,7 @@ function ListagemMedicoRowActions({
   const del = useDeleteMedico({ onSuccessNavigateTo: LISTAGEM_RETURN_PATH })
 
   return (
-    <div className='flex items-center justify-end gap-1'>
+    <div className='flex w-full items-center justify-end gap-1'>
       {canView ? (
         <Button
           type='button'
@@ -126,7 +126,7 @@ export const listagemMedicosColumns: Array<
       <MedicoFotoAvatar row={row.original} />
     ),
     enableSorting: false,
-    meta: { align: 'center' as const, width: '96px' },
+    meta: { align: 'center' as const, width: 'w-24 min-w-[96px]' },
   },
   {
     accessorKey: 'nome',
@@ -135,44 +135,49 @@ export const listagemMedicosColumns: Array<
       const nome = row.original.nome?.trim() || '—'
       return <span className='truncate'>{nome}</span>
     },
-    meta: { align: 'left' },
+    meta: { align: 'left' as const },
   },
   {
     id: 'codigoPostal',
     header: 'Código Postal',
+    enableSorting: false,
     cell: ({ row }: CellContext<MedicoTableDTO, unknown>) => {
       const cp = row.original.codigoPostal
       if (!cp) return '—'
       if (cp.localidade) return `${cp.codigo ?? ''} ${cp.localidade}`.trim()
       return cp.codigo ?? '—'
     },
-    meta: { align: 'left' },
+    meta: { align: 'left' as const },
   },
   {
     accessorKey: 'especialidadeNome',
     header: 'Especialidade',
+    enableSorting: false,
     cell: ({ row }: CellContext<MedicoTableDTO, unknown>) =>
       row.original.especialidadeNome || '—',
-    meta: { align: 'left' },
+    meta: { align: 'left' as const },
   },
   {
     id: 'estado',
     header: 'Estado',
+    enableSorting: false,
     cell: ({ row }: CellContext<MedicoTableDTO, unknown>) => {
       const status = row.original.status
       if (status == null) return '—'
       return status === 1 ? 'Ativo' : 'Inativo'
     },
-    meta: { align: 'left', width: '90px' },
+    meta: { align: 'left' as const, width: 'min-w-[90px]' },
   },
   {
     id: 'acoes',
-    header: () => <div className='w-full pr-5 text-right'>Ações</div>,
+    header: () => (
+      <div className='w-full pr-5 text-right'>Opções</div>
+    ),
     cell: ({ row }: CellContext<MedicoTableDTO, unknown>) => (
       <ListagemMedicoRowActions id={row.original.id} nome={row.original.nome} />
     ),
     enableSorting: false,
-    meta: { align: 'right' },
+    meta: { align: 'right' as const },
   },
 ]
 

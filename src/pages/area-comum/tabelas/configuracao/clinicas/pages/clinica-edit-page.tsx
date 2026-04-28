@@ -27,6 +27,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
 import { toast } from '@/utils/toast-utils'
+import { ResponseStatus } from '@/types/api/responses'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { AtualizarConfiguracaoTratamentosRequest } from '@/types/dtos/core/configuracao-tratamentos.dtos'
 import { MoedaService } from '@/lib/services/moedas/moeda-service'
@@ -56,6 +57,7 @@ import {
   clinicaEditSchema,
 } from '../utils/clinica-edit-form'
 import {
+  useCreateClinica,
   useGetClinica,
   useUpdateClinica,
 } from '../queries/clinicas-queries'
@@ -84,33 +86,57 @@ export function ClinicaEditPage() {
     isSessionClinicaEditRoute || location.pathname.endsWith('/editar')
   const isReadOnly = !isEditMode
 
+  /** Nova clínica — mesmo formulário que edição; POST cria registo completo. */
+  const isCreateMode =
+    id === 'novo' && !isSessionClinicaEditRoute && location.pathname.endsWith('/editar')
+
   const currentClinicaQuery = useGetClinicaCurrent({
     enabled: isSessionClinicaEditRoute,
   })
   const byIdClinicaQuery = useGetClinica(id, {
-    enabled: !isSessionClinicaEditRoute && !!id,
+    enabled:
+      !isSessionClinicaEditRoute &&
+      !!id &&
+      id !== 'novo',
   })
 
-  const isLoading = isSessionClinicaEditRoute
-    ? currentClinicaQuery.isLoading
-    : byIdClinicaQuery.isLoading
-  const isError = isSessionClinicaEditRoute
-    ? currentClinicaQuery.isError
-    : byIdClinicaQuery.isError
+  const isLoading =
+    isCreateMode
+      ? false
+      : isSessionClinicaEditRoute
+        ? currentClinicaQuery.isLoading
+        : byIdClinicaQuery.isLoading
+
+  const isError =
+    isCreateMode ? false :
+    isSessionClinicaEditRoute ? currentClinicaQuery.isError :
+    byIdClinicaQuery.isError
 
   const clinica = (
-    isSessionClinicaEditRoute
-      ? currentClinicaQuery.data
-      : byIdClinicaQuery.data
+    isCreateMode
+      ? undefined
+      : isSessionClinicaEditRoute
+        ? currentClinicaQuery.data
+        : byIdClinicaQuery.data
   )?.info?.data
 
   const updateByIdMutation = useUpdateClinica(
-    isSessionClinicaEditRoute ? '' : id,
+    isSessionClinicaEditRoute
+      ? ''
+      : isCreateMode
+        ? '00000000-0000-0000-0000-000000000001'
+        : id,
   )
   const updateCurrentMutation = useUpdateClinicaCurrent()
+  const createClinicaMutation = useCreateClinica()
+
   const updatePending = isSessionClinicaEditRoute
     ? updateCurrentMutation.isPending
     : updateByIdMutation.isPending
+
+  const createPending = createClinicaMutation.isPending
+
+  const isSaving = updatePending || createPending
 
   const [tratamentosPayload, setTratamentosPayload] = useState<
     AtualizarConfiguracaoTratamentosRequest | null
@@ -119,17 +145,17 @@ export function ClinicaEditPage() {
   const moedasQuery = useQuery({
     queryKey: ['moedas-light', 'clinica-form'],
     queryFn: () => MoedaService().getMoedasLight(''),
-    enabled: !!clinica,
+    enabled: isCreateMode || !!clinica,
   })
   const motivosIsencaoQuery = useQuery({
     queryKey: ['motivos-isencao-light', 'clinica-form'],
     queryFn: () => MotivoIsencaoService().getMotivosIsencaoLight(''),
-    enabled: !!clinica,
+    enabled: isCreateMode || !!clinica,
   })
   const taxasIvaQuery = useQuery({
     queryKey: ['taxas-iva-light', 'clinica-form'],
     queryFn: () => TaxaIvaService().getTaxasIvaLight(''),
-    enabled: !!clinica,
+    enabled: isCreateMode || !!clinica,
   })
   const codigosPostaisQuery = useGetCodigosPostaisSelect('')
   const moedas = moedasQuery.data?.info?.data ?? []
@@ -237,12 +263,16 @@ export function ClinicaEditPage() {
   }, [motivosIsencao, motivoIsencaoWatch])
 
   useEffect(() => {
+    if (isCreateMode) {
+      form.reset(clinicaEditDefaultValues)
+      return
+    }
     if (!clinica) return
     form.reset(mapClinicaToClinicaEditFormValues(clinica))
-  }, [clinica, form])
+  }, [isCreateMode, clinica, form])
 
   useEffect(() => {
-    if (!clinica) return
+    if (isCreateMode || !clinica) return
     const urlFotoAtual = clinica.urlFoto ?? ''
     if ((form.getValues('urlFoto') ?? '') !== urlFotoAtual) {
       form.setValue('urlFoto', urlFotoAtual, {
@@ -251,9 +281,10 @@ export function ClinicaEditPage() {
         shouldValidate: false,
       })
     }
-  }, [clinica?.id, clinica?.urlFoto, location.key, form, clinica])
+  }, [isCreateMode, clinica?.id, clinica?.urlFoto, location.key, form, clinica])
 
-  const canSave = !isReadOnly && !!clinica && !updatePending
+  const canSave =
+    !isReadOnly && (isCreateMode || !!clinica) && !isSaving
 
   const onInvalidSubmit = toastFirstValidationMessage
 
@@ -265,14 +296,23 @@ export function ClinicaEditPage() {
   }
 
   const onSubmit = async (values: ClinicaEditFormValues) => {
-    if (!clinica) return
     if (isReadOnly) return
+    if (!isCreateMode && !clinica) return
 
     try {
       const payload: any = {
-        ...buildUpdateClinicaPayload(values, clinica),
+        ...buildUpdateClinicaPayload(values, clinica ?? null),
         ...(tratamentosPayload ?? {}),
         gravarConfiguracaoTratamentos: tratamentosPayload ? true : null,
+      }
+
+      if (isCreateMode) {
+        const response = await createClinicaMutation.mutateAsync(payload)
+        const info = response.info as { status?: number; data?: string }
+        if (info?.status === ResponseStatus.Success && info.data) {
+          navigate(`${LISTAGEM_PATH}/${info.data}/editar`, { replace: true })
+        }
+        return
       }
 
       if (isSessionClinicaEditRoute) {
@@ -285,18 +325,22 @@ export function ClinicaEditPage() {
     }
   }
 
-  const headerTitle = isSessionClinicaEditRoute
-    ? 'Configuração da Clínica'
-    : isReadOnly
-      ? 'Ver Clínica'
-      : 'Editar Clínica'
+  const headerTitle = isCreateMode
+    ? 'Nova clínica'
+    : isSessionClinicaEditRoute
+      ? 'Configuração da Clínica'
+      : isReadOnly
+        ? 'Ver Clínica'
+        : 'Editar Clínica'
 
   const title =
-    clinica?.nome && isSessionClinicaEditRoute
-      ? `Configuração da Clínica — ${clinica.nome}`
-      : clinica?.nome
-        ? `${isReadOnly ? 'Ver' : 'Editar'}: ${clinica.nome}`
-        : headerTitle
+    isCreateMode
+      ? 'Nova clínica'
+      : clinica?.nome && isSessionClinicaEditRoute
+        ? `Configuração da Clínica — ${clinica.nome}`
+        : clinica?.nome
+          ? `${isReadOnly ? 'Ver' : 'Editar'}: ${clinica.nome}`
+          : headerTitle
 
   const handleVoltar = () => {
     if (isSessionClinicaEditRoute) {
@@ -349,7 +393,7 @@ export function ClinicaEditPage() {
             <div className='px-4 py-12 text-center text-muted-foreground'>
               Não foi possível carregar a clínica.
             </div>
-          ) : !clinica ? (
+          ) : !clinica && !isCreateMode ? (
             <div className='px-4 py-12 text-center text-muted-foreground'>
               Clínica não encontrada.
             </div>
@@ -368,7 +412,7 @@ export function ClinicaEditPage() {
                       size='sm'
                       className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
                     >
-                      {updatePending ? 'A guardar...' : 'Guardar'}
+                      {isSaving ? 'A guardar...' : 'Guardar'}
                     </Button>
                   </div>
                 ) : null}
@@ -383,7 +427,7 @@ export function ClinicaEditPage() {
                         <FormControl>
                           <Input
                             placeholder='Designação'
-                            readOnly={isReadOnly || updatePending}
+                            readOnly={isReadOnly || isSaving}
                             {...field}
                             value={field.value ?? ''}
                           />
@@ -468,7 +512,7 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='Nome comercial'
-                              readOnly={isReadOnly || updatePending}
+                              readOnly={isReadOnly || isSaving}
                               {...field}
                               value={field.value ?? ''}
                             />
@@ -487,7 +531,7 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='Abreviatura'
-                              readOnly={isReadOnly || updatePending}
+                              readOnly={isReadOnly || isSaving}
                               {...field}
                               value={field.value ?? ''}
                             />
@@ -506,7 +550,7 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='Sucursal'
-                              readOnly={isReadOnly || updatePending}
+                              readOnly={isReadOnly || isSaving}
                               {...field}
                               value={field.value ?? ''}
                             />
@@ -525,7 +569,7 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='Observações'
-                              readOnly={isReadOnly || updatePending}
+                              readOnly={isReadOnly || isSaving}
                               {...field}
                               value={field.value ?? ''}
                             />
@@ -545,7 +589,7 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='Morada'
-                              readOnly={isReadOnly || updatePending}
+                              readOnly={isReadOnly || isSaving}
                               {...field}
                               value={field.value ?? ''}
                             />
@@ -579,7 +623,7 @@ export function ClinicaEditPage() {
                                 placeholder='Pesquisar código postal…'
                                 searchPlaceholder='Filtrar por código ou localidade…'
                                 emptyText='Sem códigos postais.'
-                                disabled={isReadOnly || updatePending}
+                                disabled={isReadOnly || isSaving}
                                 searchValue={cpComboboxSearch}
                                 onSearchValueChange={setCpComboboxSearch}
                               />
@@ -591,7 +635,7 @@ export function ClinicaEditPage() {
                                 size='icon'
                                 className='shrink-0 h-8 w-8'
                                 title='Novo código postal'
-                                disabled={updatePending}
+                                disabled={isSaving}
                                 onClick={() => setModalCodigoPostalOpen(true)}
                               >
                                 <Plus className='h-4 w-4' />
@@ -612,7 +656,7 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='Localidade'
-                              readOnly={isReadOnly || updatePending}
+                              readOnly={isReadOnly || isSaving}
                               {...field}
                               value={field.value ?? ''}
                             />
@@ -631,7 +675,7 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='351'
-                              readOnly={isReadOnly || updatePending}
+                              readOnly={isReadOnly || isSaving}
                               {...field}
                               value={field.value ?? ''}
                             />
@@ -650,7 +694,7 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='Telefone'
-                              readOnly={isReadOnly || updatePending}
+                              readOnly={isReadOnly || isSaving}
                               {...field}
                               value={field.value ?? ''}
                             />
@@ -669,7 +713,7 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='Telemovel'
-                              readOnly={isReadOnly || updatePending}
+                              readOnly={isReadOnly || isSaving}
                               {...field}
                               value={field.value ?? ''}
                             />
@@ -688,7 +732,7 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='Fax'
-                              readOnly={isReadOnly || updatePending}
+                              readOnly={isReadOnly || isSaving}
                               {...field}
                               value={field.value ?? ''}
                             />
@@ -707,7 +751,7 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='Email'
-                              readOnly={isReadOnly || updatePending}
+                              readOnly={isReadOnly || isSaving}
                               {...field}
                               value={field.value ?? ''}
                             />
@@ -726,7 +770,7 @@ export function ClinicaEditPage() {
                           <FormControl>
                             <Input
                               placeholder='Web'
-                              readOnly={isReadOnly || updatePending}
+                              readOnly={isReadOnly || isSaving}
                               {...field}
                               value={field.value ?? ''}
                             />
@@ -767,7 +811,7 @@ export function ClinicaEditPage() {
                               actionButtonShowLabel={false}
                               showFileTypesHint
                               showRemoveButtonAlways={!isReadOnly}
-                              disabled={isReadOnly || updatePending}
+                              disabled={isReadOnly || isSaving}
                               rootClassName='border-solid border-[#2aa89a] bg-background/0 backdrop-blur-0 w-[260px] max-w-[260px] h-[170px]'
                               actionButtonClassName='bg-[#2aa89a] text-white hover:bg-[#239b8f]'
                               placeholderIcon={<Building2 className='h-10 w-10 text-muted-foreground/40' />}
@@ -796,7 +840,7 @@ export function ClinicaEditPage() {
                               disabled={
                                 moedasQuery.isLoading ||
                                 isReadOnly ||
-                                updatePending
+                                isSaving
                               }
                             >
                               <FormControl>
@@ -830,7 +874,7 @@ export function ClinicaEditPage() {
                             <FormControl>
                               <Input
                                 placeholder='Nr. Contribuinte'
-                                readOnly={isReadOnly || updatePending}
+                                readOnly={isReadOnly || isSaving}
                                 {...field}
                                 value={field.value ?? ''}
                               />
@@ -849,7 +893,7 @@ export function ClinicaEditPage() {
                             <FormControl>
                               <Input
                                 placeholder='NIB'
-                                readOnly={isReadOnly || updatePending}
+                                readOnly={isReadOnly || isSaving}
                                 {...field}
                                 value={field.value ?? ''}
                               />
@@ -868,7 +912,7 @@ export function ClinicaEditPage() {
                             <FormControl>
                               <Input
                                 placeholder='Atividade'
-                                readOnly={isReadOnly || updatePending}
+                                readOnly={isReadOnly || isSaving}
                                 {...field}
                                 value={field.value ?? ''}
                               />
@@ -887,7 +931,7 @@ export function ClinicaEditPage() {
                             <FormControl>
                               <Input
                                 placeholder='R. Comercial'
-                                readOnly={isReadOnly || updatePending}
+                                readOnly={isReadOnly || isSaving}
                                 {...field}
                                 value={field.value ?? ''}
                               />
@@ -908,7 +952,7 @@ export function ClinicaEditPage() {
                                 type='number'
                                 step='0.01'
                                 placeholder='Cap. Social'
-                                readOnly={isReadOnly || updatePending}
+                                readOnly={isReadOnly || isSaving}
                                 {...field}
                                 value={field.value ?? ''}
                               />
@@ -927,7 +971,7 @@ export function ClinicaEditPage() {
                             <FormControl>
                               <Input
                                 placeholder='CAE'
-                                readOnly={isReadOnly || updatePending}
+                                readOnly={isReadOnly || isSaving}
                                 {...field}
                                 value={field.value ?? ''}
                               />
@@ -953,7 +997,7 @@ export function ClinicaEditPage() {
                                 )
                                 form.setValue('tipo', regimeIva, { shouldDirty: true })
                               }}
-                              disabled={isReadOnly || updatePending}
+                              disabled={isReadOnly || isSaving}
                               >
                                 <FormControl>
                                   <SelectTrigger className='data-[placeholder]:text-muted-foreground'>
@@ -982,7 +1026,7 @@ export function ClinicaEditPage() {
                                 <Input
                                   className='w-full max-w-[600px]'
                                   placeholder='Sistema de IVA'
-                                  readOnly={isReadOnly || updatePending}
+                                  readOnly={isReadOnly || isSaving}
                                   {...field}
                                   value={field.value ?? tipoWatch ?? ''}
                                 />
@@ -1010,7 +1054,7 @@ export function ClinicaEditPage() {
                                       { shouldDirty: true },
                                     )
                                   }}
-                                  disabled={isReadOnly || updatePending}
+                                  disabled={isReadOnly || isSaving}
                                 />
                                 <label
                                   htmlFor='clinica-iva-isento'
@@ -1034,7 +1078,7 @@ export function ClinicaEditPage() {
                             <FormControl>
                               <Input
                                 placeholder='Portaria'
-                                readOnly={isReadOnly || updatePending}
+                                readOnly={isReadOnly || isSaving}
                                 {...field}
                                 value={field.value ?? ''}
                               />
@@ -1053,7 +1097,7 @@ export function ClinicaEditPage() {
                             <FormControl>
                               <Input
                                 placeholder='Despacho'
-                                readOnly={isReadOnly || updatePending}
+                                readOnly={isReadOnly || isSaving}
                                 {...field}
                                 value={field.value ?? ''}
                               />
@@ -1072,7 +1116,7 @@ export function ClinicaEditPage() {
                             <FormControl>
                               <Input
                                 placeholder='Nota de Crédito'
-                                readOnly={isReadOnly || updatePending}
+                                readOnly={isReadOnly || isSaving}
                                 {...field}
                                 value={field.value ?? ''}
                               />
@@ -1101,7 +1145,7 @@ export function ClinicaEditPage() {
                                   <RadioGroup
                                     value={field.value ?? ''}
                                     onValueChange={field.onChange}
-                                    disabled={isReadOnly || updatePending}
+                                    disabled={isReadOnly || isSaving}
                                   >
                                     <div className='flex gap-6'>
                                       <FormItem className='flex items-center space-x-2 space-y-0'>
@@ -1142,7 +1186,7 @@ export function ClinicaEditPage() {
                                   <Switch
                                     checked={field.value}
                                     onCheckedChange={field.onChange}
-                                    disabled={isReadOnly || updatePending}
+                                    disabled={isReadOnly || isSaving}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1162,7 +1206,7 @@ export function ClinicaEditPage() {
                                     className='!mt-2'
                                     checked={field.value}
                                     onCheckedChange={field.onChange}
-                                    disabled={isReadOnly || updatePending}
+                                    disabled={isReadOnly || isSaving}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1187,7 +1231,7 @@ export function ClinicaEditPage() {
                                   <Switch
                                     checked={field.value}
                                     onCheckedChange={field.onChange}
-                                    disabled={isReadOnly || updatePending}
+                                    disabled={isReadOnly || isSaving}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1206,7 +1250,7 @@ export function ClinicaEditPage() {
                                   <RadioGroup
                                     value={field.value ?? ''}
                                     onValueChange={field.onChange}
-                                    disabled={isReadOnly || updatePending}
+                                    disabled={isReadOnly || isSaving}
                                   >
                                     <div className='flex flex-wrap gap-x-4 gap-y-2'>
                                       {[
@@ -1258,7 +1302,7 @@ export function ClinicaEditPage() {
                                   <Switch
                                     checked={field.value}
                                     onCheckedChange={field.onChange}
-                                    disabled={isReadOnly || updatePending}
+                                    disabled={isReadOnly || isSaving}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1292,7 +1336,7 @@ export function ClinicaEditPage() {
                                     <FormItem className='!space-y-0'>
                                       <FormControl>
                                         <Input
-                                          readOnly={isReadOnly || updatePending}
+                                          readOnly={isReadOnly || isSaving}
                                           {...field}
                                           value={field.value ?? ''}
                                           className={
@@ -1327,7 +1371,7 @@ export function ClinicaEditPage() {
                                   <RadioGroup
                                     value={field.value ?? ''}
                                     onValueChange={field.onChange}
-                                    disabled={isReadOnly || updatePending}
+                                    disabled={isReadOnly || isSaving}
                                   >
                                     <div className='flex gap-4'>
                                       <FormItem className='flex items-center space-x-2 space-y-0'>
@@ -1373,7 +1417,7 @@ export function ClinicaEditPage() {
                                   <Input
                                     type='number'
                                     placeholder='Valor'
-                                    readOnly={isReadOnly || updatePending}
+                                    readOnly={isReadOnly || isSaving}
                                     {...field}
                                     value={field.value ?? ''}
                                   />
@@ -1398,7 +1442,7 @@ export function ClinicaEditPage() {
                                   <FormControl>
                                     <Input
                                       placeholder='Utilizador'
-                                      readOnly={isReadOnly || updatePending}
+                                      readOnly={isReadOnly || isSaving}
                                       {...field}
                                       value={field.value ?? ''}
                                     />
@@ -1416,7 +1460,7 @@ export function ClinicaEditPage() {
                                   <FormControl>
                                     <Input
                                       placeholder='Password'
-                                      readOnly={isReadOnly || updatePending}
+                                      readOnly={isReadOnly || isSaving}
                                       type='password'
                                       {...field}
                                       value={field.value ?? ''}
@@ -1441,7 +1485,7 @@ export function ClinicaEditPage() {
                                   disabled={
                                     motivosIsencaoQuery.isLoading ||
                                     isReadOnly ||
-                                    updatePending
+                                    isSaving
                                   }
                                 >
                                   <FormControl>
@@ -1474,7 +1518,7 @@ export function ClinicaEditPage() {
                                 <FormControl>
                                   <Input
                                     placeholder='Código'
-                                    readOnly={isReadOnly || updatePending}
+                                    readOnly={isReadOnly || isSaving}
                                     {...field}
                                     value={field.value ?? ''}
                                   />
@@ -1490,7 +1534,7 @@ export function ClinicaEditPage() {
                   <TabsContent value='outros-parametros-geral'>
                     <TabOutrosParametrosClinica
                       form={form}
-                      disabled={isReadOnly || updatePending}
+                      disabled={isReadOnly || isSaving}
                       onTratamentosPayloadChange={setTratamentosPayload}
                       configuracaoTratamentos={
                         clinica
@@ -1503,7 +1547,7 @@ export function ClinicaEditPage() {
                   <TabsContent value='fiscal-contas-regras'>
                     <TabOutrosParametrosClinica
                       form={form}
-                      disabled={isReadOnly || updatePending}
+                      disabled={isReadOnly || isSaving}
                       visibleSections={[
                         'descarga',
                         'valorart',
@@ -1520,7 +1564,7 @@ export function ClinicaEditPage() {
                   <TabsContent value='fiscal-exportacao'>
                     <TabOutrosParametrosClinica
                       form={form}
-                      disabled={isReadOnly || updatePending}
+                      disabled={isReadOnly || isSaving}
                       visibleSections={['exportacao']}
                       configuracaoTratamentos={
                         clinica
@@ -1533,7 +1577,7 @@ export function ClinicaEditPage() {
                   <TabsContent value='operacao-stocks'>
                     <TabOutrosParametrosClinica
                       form={form}
-                      disabled={isReadOnly || updatePending}
+                      disabled={isReadOnly || isSaving}
                       visibleSections={['descarga', 'valorart', 'stocks']}
                       configuracaoTratamentos={
                         clinica
@@ -1546,7 +1590,7 @@ export function ClinicaEditPage() {
                   <TabsContent value='atendimento-prescricao'>
                     <TabOutrosParametrosClinica
                       form={form}
-                      disabled={isReadOnly || updatePending}
+                      disabled={isReadOnly || isSaving}
                       visibleSections={['artigos', 'receitas', 'atestados']}
                       configuracaoTratamentos={
                         clinica
@@ -1559,7 +1603,7 @@ export function ClinicaEditPage() {
                   <TabsContent value='atendimento-processo'>
                     <TabOutrosParametrosClinica
                       form={form}
-                      disabled={isReadOnly || updatePending}
+                      disabled={isReadOnly || isSaving}
                       visibleSections={['modulosCid']}
                       configuracaoTratamentos={
                         clinica
@@ -1572,7 +1616,7 @@ export function ClinicaEditPage() {
                   <TabsContent value='atendimento-documentos'>
                     <TabOutrosParametrosClinica
                       form={form}
-                      disabled={isReadOnly || updatePending}
+                      disabled={isReadOnly || isSaving}
                       visibleSections={['diretoriaDocumentos']}
                       configuracaoTratamentos={
                         clinica
@@ -1585,7 +1629,7 @@ export function ClinicaEditPage() {
                   <TabsContent value='comunicacao-envio-email'>
                     <TabOutrosParametrosClinica
                       form={form}
-                      disabled={isReadOnly || updatePending}
+                      disabled={isReadOnly || isSaving}
                       visibleSections={['labels', 'envioEmail', 'kqueue']}
                       configuracaoTratamentos={
                         clinica
@@ -1596,7 +1640,7 @@ export function ClinicaEditPage() {
                   </TabsContent>
 
                   <TabsContent value='geral-horario'>
-                    <TabHorarioClinica form={form} disabled={isReadOnly || updatePending} />
+                    <TabHorarioClinica form={form} disabled={isReadOnly || isSaving} />
                   </TabsContent>
 
                 </Tabs>

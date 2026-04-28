@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Plus, List, RotateCw, RefreshCw, X } from 'lucide-react'
+import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
@@ -28,7 +29,7 @@ import {
 } from '../queries/listagem-medicos-externos-queries'
 import { MedicoExternoService } from '@/lib/services/saude/medico-externo-service'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { useCloseCurrentWindowLikeTabBar, openEntityEditInApp, openPathInApp } from '@/utils/window-utils'
+import { openEntityEditInApp, openPathInApp } from '@/utils/window-utils'
 import { ResponseStatus } from '@/types/api/responses'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
@@ -38,7 +39,6 @@ const medicosExternosPermId = modules.areaComum.permissions.medicosExternos.id
 
 export function ListagemMedicosExternosPage() {
   const navigate = useNavigate()
-  const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)
   const { canView, canAdd, canChange, canDelete } =
@@ -158,35 +158,16 @@ export function ListagemMedicosExternosPage() {
     <>
       <PageHead title='Médicos Externos | Entidades | Tabelas | CliCloud' />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>Médicos Externos</h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
+        <AreaComumListagemPageShell
+            title='Médicos Externos'
+            onRefresh={() => {
                 handleFiltersChange([])
                 handlePaginationChange(1, pageSize)
                 queryClient.invalidateQueries({
                   queryKey: ['medicos-externos-paginated'],
                 })
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={closeWindowTab}
-              title='Voltar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+            }}
+        >
 
         {isError ? (
           <Alert variant='destructive' className='mb-4'>
@@ -280,7 +261,8 @@ export function ListagemMedicosExternosPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </DashboardPageContainer>
+        </AreaComumListagemPageShell>
+        </DashboardPageContainer>
     </>
   )
 }

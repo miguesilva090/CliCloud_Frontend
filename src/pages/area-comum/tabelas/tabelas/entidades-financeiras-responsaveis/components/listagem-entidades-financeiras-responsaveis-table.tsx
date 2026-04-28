@@ -33,6 +33,7 @@ export function ListagemEntidadesFinanceirasTable({
   hiddenColumns,
   onOpenView,
   onOpenEdit,
+  onOpenDelete,
   canView,
   canChange,
   canDelete,
@@ -56,12 +57,13 @@ export function ListagemEntidadesFinanceirasTable({
   hiddenColumns?: string[]
   onOpenView?: (data: EntidadeFinanceiraTableDTO) => void
   onOpenEdit?: (data: EntidadeFinanceiraTableDTO) => void
+  onOpenDelete?: (data: EntidadeFinanceiraTableDTO) => void
   canView?: boolean
   canChange?: boolean
   canDelete?: boolean
 }) {
   const tableColumns = onOpenView
-    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, undefined, {
+    ? getColumnsWithViewCallback(onOpenView, onOpenEdit, onOpenDelete, {
         canView,
         canChange,
         canDelete,

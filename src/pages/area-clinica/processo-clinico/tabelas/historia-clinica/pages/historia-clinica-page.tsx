@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { pt } from 'date-fns/locale'
-import { RefreshCw } from 'lucide-react'
+import { RotateCw } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
+import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
+import { DataTable } from '@/components/shared/data-table'
+import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -16,19 +19,63 @@ import {
 } from '../queries/historia-clinica-queries'
 import type { HistoriaClinicaTableDTO } from '@/types/dtos/saude/historia-clinica.dtos'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@/components/ui/alert'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useGetUtente, useUtentesLight } from '@/pages/utentes/queries/utentes-queries'
 import { useDebounce } from 'use-debounce'
 
 const DEFAULT_FILTERS: Array<{ id: string; value: string }> = []
+const HistoriaClinicaFilterControls = () => null
+
+const columns: DataTableColumnDef<HistoriaClinicaTableDTO>[] = [
+  {
+    accessorKey: 'data',
+    header: 'Data',
+    cell: ({ row }) => {
+      const value = row.original.data
+      return value ? format(new Date(value), 'dd/MM/yyyy') : '-'
+    },
+    meta: { align: 'left', width: 'w-[120px]' },
+  },
+  {
+    accessorKey: 'utenteNome',
+    header: 'Utente',
+    cell: ({ row }) => row.original.utenteNome ?? '-',
+    meta: { align: 'left', width: 'w-[190px]' },
+  },
+  {
+    accessorKey: 'medicoNome',
+    header: 'Médico',
+    cell: ({ row }) => row.original.medicoNome ?? '-',
+    meta: { align: 'left', width: 'w-[190px]' },
+  },
+  {
+    accessorKey: 'especialidadeNome',
+    header: 'Especialidade',
+    cell: ({ row }) => row.original.especialidadeNome ?? '-',
+    meta: { align: 'left', width: 'w-[170px]' },
+  },
+  {
+    accessorKey: 'obs',
+    header: 'História Clínica',
+    cell: ({ row }) => (
+      <span className='line-clamp-2 break-words' title={row.original.obs ?? '-'}>
+        {row.original.obs ?? '-'}
+      </span>
+    ),
+    meta: { align: 'left' },
+  },
+  {
+    accessorKey: 'inativo',
+    header: 'Inativo',
+    cell: ({ row }) => (row.original.inativo ? 'Sim' : 'Não'),
+    meta: { align: 'center', width: 'w-[90px]' },
+  },
+]
 
 function buildFilters(
   selectedDate: Date | null
@@ -68,6 +115,7 @@ export function HistoriaClinicaPage() {
     error,
     page,
     pageSize,
+    filters,
     handleFiltersChange,
     handlePaginationChange,
   } = usePageData({
@@ -135,141 +183,77 @@ export function HistoriaClinicaPage() {
 
   return (
     <>
-      <PageHead title='CliCloud' />
+      <PageHead title='História Clínica | CliCloud' />
       <DashboardPageContainer>
-        <div className='flex flex-col gap-4'>
-          <div className='flex flex-wrap items-center justify-between gap-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-            <h1 className='text-lg font-semibold'>História Clínica</h1>
-            <div className='flex items-center gap-2'>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => setUtenteModalOpen(true)}
-              >
-                Escolher Utente
-              </Button>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant='outline'
-                    className={cn(
-                      'min-w-[220px] justify-start text-left font-normal'
-                    )}
-                  >
-                    {selectedDate
-                      ? format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })
-                      : 'Todas as datas'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className='w-auto p-0' align='start'>
-                  <Calendar
-                    mode='single'
-                    selected={selectedDate ?? undefined}
-                    onSelect={(d) => setSelectedDate(d ?? null)}
-                    locale={pt}
-                  />
-                </PopoverContent>
-              </Popover>
-              {selectedDate && (
-                <Button variant='outline' size='sm' onClick={clearDate}>
-                  Limpar data
-                </Button>
-              )}
-              <Button
-                variant='ghost'
-                size='icon'
-                className='h-8 w-8'
-                onClick={refresh}
-                title='Atualizar'
-              >
-                <RefreshCw className='h-4 w-4' />
-              </Button>
-            </div>
-          </div>
-
+        <AreaComumListagemPageShell title='História Clínica'>
           {isError ? (
-            <div className='rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive'>
-              {errorMessage || 'Erro ao carregar história clínica.'}
-            </div>
-          ) : (
-            <div className='rounded-b-lg border border-t-0 bg-card'>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className='w-[120px]'>Data</TableHead>
-                    <TableHead>Utente</TableHead>
-                    <TableHead>Médico</TableHead>
-                    <TableHead>Especialidade</TableHead>
-                    <TableHead className='w-[80px] text-center'>Inativo</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        className='py-8 text-center text-muted-foreground'
-                      >
-                        A carregar...
-                      </TableCell>
-                    </TableRow>
-                  ) : historias.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        className='py-8 text-center text-muted-foreground'
-                      >
-                        {selectedDate
-                          ? 'Nenhuma entrada de história clínica nesta data.'
-                          : 'Nenhuma entrada de história clínica.'}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    historias.map((row) => (
-                      <TableRow key={row.id}>
-                        <TableCell>
-                          {row.data
-                            ? format(new Date(row.data), 'dd/MM/yyyy')
-                            : '-'}
-                        </TableCell>
-                        <TableCell>{row.utenteNome ?? '-'}</TableCell>
-                        <TableCell>{row.medicoNome ?? '-'}</TableCell>
-                        <TableCell>{row.especialidadeNome ?? '-'}</TableCell>
-                        <TableCell className='text-center'>
-                          {row.inativo ? 'Sim' : 'Não'}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-              <div className='flex items-center justify-between border-t px-4 py-2 text-sm text-muted-foreground'>
-                <span>
-                  Página {page} de {pageCount || 1} | Mostrar {pageSize} registos | Encontrados{' '}
-                  {totalRows} registos
-                </span>
-                <div className='flex gap-2'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    disabled={page <= 1}
-                    onClick={() => handlePaginationChange(page - 1, pageSize)}
-                  >
-                    Anterior
+            <Alert variant='destructive' className='mb-4'>
+              <AlertTitle>Falha ao carregar história clínica</AlertTitle>
+              <AlertDescription>
+                {errorMessage || 'Ocorreu um erro ao pedir a lista da história clínica.'}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+
+          <DataTable
+            columns={columns}
+            data={historias}
+            pageCount={pageCount}
+            totalRows={totalRows}
+            initialPage={page}
+            initialPageSize={pageSize}
+            initialFilters={filters}
+            onPaginationChange={handlePaginationChange}
+            onFiltersChange={handleFiltersChange}
+            FilterControls={HistoriaClinicaFilterControls}
+            hiddenColumns={[]}
+            hideToolbarFilters
+            isLoading={isLoading}
+            tableClassName='table-fixed min-w-[980px]'
+            toolbarEndPrefix={
+              <>
+                <Button variant='outline' size='sm' onClick={() => setUtenteModalOpen(true)}>
+                  Escolher Utente
+                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant='outline'
+                      className={cn(
+                        'h-8 min-w-[220px] justify-start text-left font-normal'
+                      )}
+                    >
+                      {selectedDate
+                        ? format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })
+                        : 'Todas as datas'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className='w-auto p-0' align='start'>
+                    <Calendar
+                      mode='single'
+                      selected={selectedDate ?? undefined}
+                      onSelect={(d) => setSelectedDate(d ?? null)}
+                      locale={pt}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {selectedDate ? (
+                  <Button variant='outline' size='sm' onClick={clearDate}>
+                    Limpar data
                   </Button>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    disabled={page >= pageCount}
-                    onClick={() => handlePaginationChange(page + 1, pageSize)}
-                  >
-                    Seguinte
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+                ) : null}
+              </>
+            }
+            toolbarActions={[
+              {
+                label: 'Atualizar',
+                icon: <RotateCw className='h-4 w-4' />,
+                onClick: refresh,
+                variant: 'outline',
+              },
+            ]}
+          />
+        </AreaComumListagemPageShell>
       </DashboardPageContainer>
 
       <Dialog open={utenteModalOpen} onOpenChange={setUtenteModalOpen}>

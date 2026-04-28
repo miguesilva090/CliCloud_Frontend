@@ -305,9 +305,7 @@ export function HeaderNav() {
                                 (nested) =>
                                   location.pathname === nested.href ||
                                   location.pathname.startsWith(`${nested.href}/`)
-                              ) ||
-                              location.pathname === subItem.href ||
-                              location.pathname.startsWith(`${subItem.href}/`)
+                              )
                             : isItemActive(subItem.href)
 
                         if (subItem.dropdown?.length && nestedFromDropdown.length === 0) {
