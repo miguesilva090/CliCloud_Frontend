@@ -48,6 +48,22 @@ export function RuasPage() {
             link: '/utilitarios/tabelas/geograficas',
           },
           {
+            title: 'Países',
+            link: '/utilitarios/tabelas/geograficas/paises',
+          },
+          {
+            title: 'Distritos',
+            link: '/utilitarios/tabelas/geograficas/distritos',
+          },
+          {
+            title: 'Concelhos',
+            link: '/utilitarios/tabelas/geograficas/concelhos',
+          },
+          {
+            title: 'Freguesias',
+            link: '/utilitarios/tabelas/geograficas/freguesias',
+          },
+          {
             title: 'Ruas',
             link: '/utilitarios/tabelas/geograficas/ruas',
           },

@@ -43,14 +43,6 @@ import {
   usePaisesLight,
   useRuasLight,
 } from '@/lib/services/utility/lookups/lookups-queries'
-import {
-  CreatePaisModal,
-  CreateDistritoModal,
-  CreateConcelhoModal,
-  CreateFreguesiaModal,
-  CreateCodigoPostalModal,
-  CreateRuaModal,
-} from '@/components/shared/address-quick-create'
 import { Plus } from 'lucide-react'
 import { ENTIDADE_TIPO } from '@/lib/entidade-tipo'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
@@ -174,12 +166,6 @@ export function UtenteCreatePage() {
   const navigate = useNavigate()
   const createUtente = useCreateUtente()
   const [activeTab, setActiveTab] = useState('dados-pessoais')
-  const [modalPais, setModalPais] = useState(false)
-  const [modalDistrito, setModalDistrito] = useState(false)
-  const [modalConcelho, setModalConcelho] = useState(false)
-  const [modalFreguesia, setModalFreguesia] = useState(false)
-  const [modalCodigoPostal, setModalCodigoPostal] = useState(false)
-  const [modalRua, setModalRua] = useState(false)
 
   const { onInvalid } = useFormValidationFeedback<FormValues>({
     setActiveTab,
@@ -203,21 +189,20 @@ export function UtenteCreatePage() {
   const [distritoQ, setDistritoQ] = useState('')
   const [concelhoQ, setConcelhoQ] = useState('')
   const [freguesiaQ, setFreguesiaQ] = useState('')
-  const [cpQ, setCpQ] = useState('')
   const [ruaQ, setRuaQ] = useState('')
 
   const [paisQD] = useDebounce(paisQ, 250)
   const [distritoQD] = useDebounce(distritoQ, 250)
   const [concelhoQD] = useDebounce(concelhoQ, 250)
   const [freguesiaQD] = useDebounce(freguesiaQ, 250)
-  const [cpQD] = useDebounce(cpQ, 250)
   const [ruaQD] = useDebounce(ruaQ, 250)
 
   const paises = usePaisesLight(paisQD)
   const distritos = useDistritosLight(distritoQD)
   const concelhos = useConcelhosLight(concelhoQD)
   const freguesias = useFreguesiasLight(freguesiaQD)
-  const codigosPostais = useCodigosPostaisLight(cpQD)
+  // Em "create", alinhamos com Luma: o Código Postal é inferido a partir da Rua.
+  const codigosPostais = useCodigosPostaisLight('')
   const ruas = useRuasLight(ruaQD)
   const estadosCivis = useEstadosCivisLight('')
   const gruposSanguineos = useGruposSanguineosLight('')
@@ -364,22 +349,26 @@ export function UtenteCreatePage() {
     }))
   }, [codigosPostais.data])
 
+  const codigoPostalDisplay = useMemo(() => {
+    const cpId =
+      codigoPostalIdMorada != null && codigoPostalIdMorada !== '' ? String(codigoPostalIdMorada) : ''
+    if (!cpId) return ''
+    const cp = cpItems.find((i) => i.value === cpId)
+    if (!cp) return cpId
+    return cp.secondary ? `${cp.label}– ${cp.secondary}` : cp.label
+  }, [cpItems, codigoPostalIdMorada])
+
   const ruaItems = useMemo(() => {
     const list = ruas.data?.info?.data ?? []
     const fregStr = freguesiaIdMorada != null && freguesiaIdMorada !== '' ? String(freguesiaIdMorada) : ''
-    const cpStr = codigoPostalIdMorada != null && codigoPostalIdMorada !== '' ? String(codigoPostalIdMorada) : ''
-    const filtered =
-      fregStr && cpStr
-        ? list.filter(
-            (r: { freguesiaId?: string | null; codigoPostalId?: string | null }) =>
-              String(r.freguesiaId ?? '') === fregStr && String(r.codigoPostalId ?? '') === cpStr
-          )
-        : list
-    return filtered.map((r: { id: string; nome?: string | null }) => ({
+    const filtered = fregStr ? list.filter((r: { freguesiaId?: string | null }) => String(r.freguesiaId ?? '') === fregStr) : list
+    return filtered.map((r: { id: string; nome?: string | null; codigoPostalId?: string | number | null; codigoPostalCodigo?: string | null }) => ({
       value: String(r.id ?? ''),
       label: r.nome || String(r.id ?? ''),
+      secondary: r.codigoPostalCodigo ? `CP ${r.codigoPostalCodigo}` : undefined,
+      codigoPostalId: r.codigoPostalId != null && r.codigoPostalId !== '' ? String(r.codigoPostalId) : '',
     }))
-  }, [ruas.data, freguesiaIdMorada, codigoPostalIdMorada])
+  }, [ruas.data, freguesiaIdMorada])
 
   const onSubmit = async (values: FormValues) => {
     let ruaId = values.ruaId?.trim() ?? ''
@@ -807,7 +796,12 @@ export function UtenteCreatePage() {
                               size='icon'
                               className='shrink-0 h-9 w-9'
                               title='Adicionar país'
-                              onClick={() => setModalPais(true)}
+                              onClick={() =>
+                                navigateManagedWindow(
+                                  navigate,
+                                  '/area-comum/tabelas/tabelas/geograficas/paises'
+                                )
+                              }
                             >
                               <Plus className='h-4 w-4' />
                             </Button>
@@ -854,7 +848,12 @@ export function UtenteCreatePage() {
                               size='icon'
                               className='shrink-0 h-9 w-9'
                               title='Adicionar distrito'
-                              onClick={() => setModalDistrito(true)}
+                              onClick={() =>
+                                navigateManagedWindow(
+                                  navigate,
+                                  '/area-comum/tabelas/tabelas/geograficas/distritos'
+                                )
+                              }
                             >
                               <Plus className='h-4 w-4' />
                             </Button>
@@ -900,7 +899,12 @@ export function UtenteCreatePage() {
                               size='icon'
                               className='shrink-0 h-9 w-9'
                               title='Adicionar concelho'
-                              onClick={() => setModalConcelho(true)}
+                              onClick={() =>
+                                navigateManagedWindow(
+                                  navigate,
+                                  '/area-comum/tabelas/tabelas/geograficas/concelhos'
+                                )
+                              }
                             >
                               <Plus className='h-4 w-4' />
                             </Button>
@@ -945,7 +949,12 @@ export function UtenteCreatePage() {
                               size='icon'
                               className='shrink-0 h-9 w-9'
                               title='Adicionar freguesia'
-                              onClick={() => setModalFreguesia(true)}
+                              onClick={() =>
+                                navigateManagedWindow(
+                                  navigate,
+                                  '/area-comum/tabelas/tabelas/geograficas/freguesias'
+                                )
+                              }
                             >
                               <Plus className='h-4 w-4' />
                             </Button>
@@ -958,27 +967,13 @@ export function UtenteCreatePage() {
                     <FormField
                       control={form.control}
                       name='codigoPostalId'
-                      render={({ field }) => (
+                      render={() => (
                         <FormItem>
-                          <FormLabel>Código Postal</FormLabel>
+                          <FormLabel>Código Postal *</FormLabel>
                           <div className='flex gap-1.5 w-full min-w-0'>
                             <div className='flex-1 min-w-0'>
                               <FormControl>
-                                <AsyncCombobox
-                                  className='h-9'
-                                  value={field.value != null && field.value !== '' ? String(field.value) : ''}
-                                  onChange={(v) => {
-                                    const next = v != null && v !== '' ? String(v) : ''
-                                    field.onChange(next)
-                                    form.clearErrors('codigoPostalId')
-                                  }}
-                                  items={cpItems}
-                                  isLoading={codigosPostais.isFetching}
-                                  placeholder='Selecionar código postal…'
-                                  searchPlaceholder='Pesquisar código postal…'
-                                  searchValue={cpQ}
-                                  onSearchValueChange={setCpQ}
-                                />
+                                <Input readOnly className='h-9' value={codigoPostalDisplay} />
                               </FormControl>
                             </div>
                             <Button
@@ -987,7 +982,12 @@ export function UtenteCreatePage() {
                               size='icon'
                               className='shrink-0 h-9 w-9'
                               title='Adicionar código postal'
-                              onClick={() => setModalCodigoPostal(true)}
+                              onClick={() =>
+                                navigateManagedWindow(
+                                  navigate,
+                                  '/area-comum/tabelas/tabelas/geograficas/codigospostais'
+                                )
+                              }
                             >
                               <Plus className='h-4 w-4' />
                             </Button>
@@ -1013,15 +1013,15 @@ export function UtenteCreatePage() {
                                     const next = v != null && v !== '' ? String(v) : ''
                                     field.onChange(next)
                                     form.clearErrors('ruaId')
-                                    const label = ruaItems.find((i) => i.value === next)?.label ?? ''
-                                    form.setValue('rua', label)
+                                    const selected = ruaItems.find((i) => i.value === next) as (typeof ruaItems)[number] | undefined
+                                    form.setValue('rua', selected?.label ?? '')
+                                    form.setValue('codigoPostalId', (selected as any)?.codigoPostalId ?? '')
+                                    form.clearErrors('codigoPostalId')
                                   }}
                                   items={ruaItems}
                                   isLoading={ruas.isFetching}
                                   placeholder={
-                                    freguesiaIdMorada && codigoPostalIdMorada
-                                      ? 'Selecionar rua…'
-                                      : 'Selecione freguesia e código postal'
+                                    freguesiaIdMorada ? 'Selecionar rua…' : 'Selecione primeiro a freguesia'
                                   }
                                   searchPlaceholder='Pesquisar rua…'
                                   searchValue={ruaQ}
@@ -1035,8 +1035,25 @@ export function UtenteCreatePage() {
                               size='icon'
                               className='shrink-0 h-9 w-9'
                               title='Adicionar rua'
-                              onClick={() => setModalRua(true)}
-                              disabled={!freguesiaIdMorada || !codigoPostalIdMorada}
+                              onClick={() => {
+                                const params = new URLSearchParams()
+                                const paisId = String(form.watch('paisId') ?? '').trim()
+                                const distritoId = String(form.watch('distritoId') ?? '').trim()
+                                const concelhoId = String(form.watch('concelhoId') ?? '').trim()
+                                const freguesiaId = String(form.watch('freguesiaId') ?? '').trim()
+                                const codigoPostalId = String(form.watch('codigoPostalId') ?? '').trim()
+                                if (paisId) params.set('paisId', paisId)
+                                if (distritoId) params.set('distritoId', distritoId)
+                                if (concelhoId) params.set('concelhoId', concelhoId)
+                                if (freguesiaId) params.set('freguesiaId', freguesiaId)
+                                if (codigoPostalId) params.set('codigoPostalId', codigoPostalId)
+                                const qs = params.toString()
+                                navigateManagedWindow(
+                                  navigate,
+                                  `/area-comum/tabelas/tabelas/geograficas/ruas${qs ? `?${qs}` : ''}`
+                                )
+                              }}
+                              disabled={!freguesiaIdMorada}
                             >
                               <Plus className='h-4 w-4' />
                             </Button>
@@ -1074,44 +1091,6 @@ export function UtenteCreatePage() {
                       )}
                     />
 
-                    <CreatePaisModal
-                      open={modalPais}
-                      onOpenChange={setModalPais}
-                      onSuccess={(newId) => form.setValue('paisId', newId)}
-                    />
-                    <CreateDistritoModal
-                      open={modalDistrito}
-                      onOpenChange={setModalDistrito}
-                      paisId={form.watch('paisId') ?? ''}
-                      onSuccess={(newId) => form.setValue('distritoId', newId)}
-                    />
-                    <CreateConcelhoModal
-                      open={modalConcelho}
-                      onOpenChange={setModalConcelho}
-                      distritoId={form.watch('distritoId') ?? ''}
-                      onSuccess={(newId) => form.setValue('concelhoId', newId)}
-                    />
-                    <CreateFreguesiaModal
-                      open={modalFreguesia}
-                      onOpenChange={setModalFreguesia}
-                      concelhoId={form.watch('concelhoId') ?? ''}
-                      onSuccess={(newId) => form.setValue('freguesiaId', newId)}
-                    />
-                    <CreateCodigoPostalModal
-                      open={modalCodigoPostal}
-                      onOpenChange={setModalCodigoPostal}
-                      onSuccess={(newId) => form.setValue('codigoPostalId', newId)}
-                    />
-                    <CreateRuaModal
-                      open={modalRua}
-                      onOpenChange={setModalRua}
-                      freguesiaId={String(form.watch('freguesiaId') ?? '').trim()}
-                      codigoPostalId={String(form.watch('codigoPostalId') ?? '').trim()}
-                      onSuccess={(newId) => {
-                        form.setValue('ruaId', newId)
-                        form.setValue('rua', '')
-                      }}
-                    />
                   </CardContent>
                 </Card>
               </TabsContent>

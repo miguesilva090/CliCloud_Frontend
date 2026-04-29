@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { RefreshCw, X, Search, Save } from 'lucide-react'
+import { Search, Save } from 'lucide-react'
+import { EntityFormPageHeader } from '@/components/shared/entity-form-page-header'
 import type { UtenteDTO } from '@/types/dtos/saude/utentes.dtos'
 import type { UtenteEditFormValues } from '../types/utente-edit-form-types'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
@@ -52,6 +53,7 @@ export function UtenteEditPage() {
   const queryClient = useQueryClient()
   const location = useLocation()
   const [searchParams] = useSearchParams()
+  const instanceId = searchParams.get('instanceId') ?? 'default'
   const isReadOnly = searchParams.get('mode') === 'view'
   const fromParam = searchParams.get('from')
   void fromParam
@@ -92,6 +94,63 @@ export function UtenteEditPage() {
     defaultValues: utenteEditDefaultValues,
     mode: 'onBlur',
   })
+
+  useEffect(() => {
+    if (!isCreate) return
+    const key = `utente-create-draft-${instanceId}`
+    const raw = sessionStorage.getItem(key)
+    if (!raw) return
+    try {
+      const draft = JSON.parse(raw) as Partial<UtenteEditFormValues>
+      form.reset({
+        ...utenteEditDefaultValues,
+        ...draft,
+      })
+    } catch {
+      // ignore invalid draft payload
+    }
+  }, [isCreate, instanceId, form])
+
+  useEffect(() => {
+    if (!isCreate) return
+    const key = `utente-create-draft-${instanceId}`
+    const subscription = form.watch((values) => {
+      sessionStorage.setItem(key, JSON.stringify(values))
+    })
+    return () => subscription.unsubscribe()
+  }, [isCreate, instanceId, form])
+
+  useEffect(() => {
+    if (!isCreate || !createUtente.isSuccess) return
+    const key = `utente-create-draft-${instanceId}`
+    sessionStorage.removeItem(key)
+  }, [isCreate, createUtente.isSuccess, instanceId])
+
+  useEffect(() => {
+    if (!isCreate) return
+
+    const refreshAddressLookups = () => {
+      queryClient.invalidateQueries({ queryKey: ['utility', 'pais', 'light'] })
+      queryClient.invalidateQueries({ queryKey: ['utility', 'distrito', 'light'] })
+      queryClient.invalidateQueries({ queryKey: ['utility', 'concelho', 'light'] })
+      queryClient.invalidateQueries({ queryKey: ['utility', 'freguesia', 'light'] })
+      queryClient.invalidateQueries({ queryKey: ['utility', 'codigo-postal', 'light'] })
+      queryClient.invalidateQueries({ queryKey: ['utility', 'rua', 'light'] })
+    }
+
+    const onFocus = () => refreshAddressLookups()
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshAddressLookups()
+    }
+
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [isCreate, queryClient])
 
   useEffect(() => {
     if (!utente) return
@@ -217,42 +276,35 @@ export function UtenteEditPage() {
     <>
       <PageHead title={`CliCloud`} />
       <DashboardPageContainer>
-        {/* Barra de título: Criar/Editar/Ver Utente + refresh + fechar (sem Código) */}
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>
-            {isCreate ? 'Criar Utente' : isReadOnly ? 'Ver Utente' : 'Editar Utente'}
-          </h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() =>
-                isCreate
-                  ? queryClient.invalidateQueries({ queryKey: ['utentes-paginated'] })
-                  : queryClient.invalidateQueries({ queryKey: ['utente', id] })
-              }
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => handleWindowClose(windowId, navigate, removeWindow)}
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+        <EntityFormPageHeader
+          title={isCreate ? 'Criar Utente' : isReadOnly ? 'Ver Utente' : 'Editar Utente'}
+          onBack={() => handleWindowClose(windowId, navigate, removeWindow)}
+          onRefresh={() =>
+            isCreate
+              ? queryClient.invalidateQueries({ queryKey: ['utentes-paginated'] })
+              : queryClient.invalidateQueries({ queryKey: ['utente', id] })
+          }
+          rightActions={
+            !isReadOnly ? (
+              <Button
+                type='submit'
+                form='utente-edit-form'
+                disabled={!canSave}
+                size='sm'
+                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              >
+                <Save className='h-4 w-4 mr-2' />
+                Gravar Utente
+              </Button>
+            ) : null
+          }
+        />
 
         {/* Conteúdo numa única “janela” ligada à barra de título (igual à Listagem de Utentes) */}
         <div className='rounded-b-lg border border-t-0 bg-background'>
           {isCreate ? (
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className='space-y-0'>
+              <form id='utente-edit-form' onSubmit={form.handleSubmit(onSubmit, onInvalid)} className='space-y-0'>
                 {/* Barra superior: Nome | (sem data de registo) | Botões */}
                 <div className='border-b bg-muted/30 px-4 py-4'>
                   <div className='flex flex-col sm:flex-row sm:items-end gap-4'>
@@ -282,10 +334,6 @@ export function UtenteEditPage() {
                       <Button type='button' variant='outline' size='sm' className='bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'>
                         <Search className='h-4 w-4 mr-2' />
                         Medicação Crónica
-                      </Button>
-                      <Button type='submit' disabled={!canSave} size='sm' className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>
-                        <Save className='h-4 w-4 mr-2' />
-                        Gravar Utente
                       </Button>
                     </div>
                   </div>
@@ -336,7 +384,7 @@ export function UtenteEditPage() {
             <div className='text-sm text-muted-foreground px-4 py-8'>Utente não encontrado.</div>
           ) : (
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className='space-y-0'>
+              <form id='utente-edit-form' onSubmit={form.handleSubmit(onSubmit, onInvalid)} className='space-y-0'>
                 {/* Barra superior: Nome | Data de Registo | Botões (canto direito) */}
                 <div className='border-b bg-muted/30 px-4 py-4'>
                   <div className='flex flex-col sm:flex-row sm:items-end gap-4'>
@@ -367,12 +415,6 @@ export function UtenteEditPage() {
                         <Search className='h-4 w-4 mr-2' />
                         Medicação Crónica
                       </Button>
-                      {!isReadOnly && (
-                        <Button type='submit' disabled={!canSave} size='sm' className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>
-                          <Save className='h-4 w-4 mr-2' />
-                          Gravar Utente
-                        </Button>
-                      )}
                     </div>
                   </div>
                 </div>

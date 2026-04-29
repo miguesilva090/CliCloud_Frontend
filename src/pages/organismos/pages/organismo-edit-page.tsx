@@ -9,7 +9,8 @@ import { PageHead } from '@/components/shared/page-head'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { RefreshCw, X, Save } from 'lucide-react'
+import { Save } from 'lucide-react'
+import { EntityFormPageHeader } from '@/components/shared/entity-form-page-header'
 import type { EntidadeContactoItem } from '@/types/dtos/saude/organismos.dtos'
 import type { OrganismoEditFormValues } from '../types/organismo-edit-form-types'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
@@ -262,57 +263,46 @@ export function OrganismoEditPage() {
     <>
       <PageHead title={`${title} | CliCloud`} />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>
-            {isCreate
+        <EntityFormPageHeader
+          title={
+            isCreate
               ? 'Criar Organismo'
               : isReadOnly
                 ? 'Ver Organismo'
-                : 'Editar Organismo'}
-          </h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
-                if (isCreate) {
-                  queryClient.invalidateQueries({ queryKey: ['organismos-paginated'] })
-                } else if (id) {
-                  queryClient.invalidateQueries({ queryKey: ['organismo', id] })
-                }
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => handleWindowClose(currentWindowId, navigate, removeWindow)}
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+                : 'Editar Organismo'
+          }
+          onBack={() => handleWindowClose(currentWindowId, navigate, removeWindow)}
+          onRefresh={() => {
+            if (isCreate) {
+              queryClient.invalidateQueries({ queryKey: ['organismos-paginated'] })
+            } else if (id) {
+              queryClient.invalidateQueries({ queryKey: ['organismo', id] })
+            }
+          }}
+          rightActions={
+            !isReadOnly ? (
+              <Button
+                type='submit'
+                form='organismo-edit-form'
+                disabled={!canSave}
+                size='sm'
+                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              >
+                <Save className='h-4 w-4 mr-2' />
+                Gravar Organismo
+              </Button>
+            ) : null
+          }
+        />
 
         <div className='rounded-b-lg border border-t-0 bg-background'>
           {isCreate ? (
             <Form {...form}>
               <form
+                id='organismo-edit-form'
                 onSubmit={handleSubmitSafe}
                 className='space-y-0'
               >
-                <div className='border-b bg-muted px-4 py-4'>
-                  <div className='flex flex-col sm:flex-row sm:items-end sm:justify-end gap-4'>
-                    <Button type='submit' disabled={!canSave} size='sm' className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>
-                      <Save className='h-4 w-4 mr-2' />
-                      Gravar Organismo
-                    </Button>
-                  </div>
-                </div>
                 <Tabs
                   value={activeTab}
                   onValueChange={setActiveTab}
@@ -350,18 +340,13 @@ export function OrganismoEditPage() {
           ) : (
             <Form {...form}>
               <form
+                id='organismo-edit-form'
                 onSubmit={handleSubmitSafe}
                 className='space-y-0'
               >
-                <div className='border-b bg-muted/30 px-4 py-4'>
-                  <div className='flex flex-col sm:flex-row sm:items-end sm:justify-end gap-4'>
-                    {!isReadOnly && (
-                      <Button type='submit' disabled={!canSave} size='sm' className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>
-                        <Save className='h-4 w-4 mr-2' />
-                        Gravar Organismo
-                      </Button>
-                    )}
-                    {isReadOnly && (
+                {isReadOnly && (
+                  <div className='border-b bg-muted/30 px-4 py-4'>
+                    <div className='flex flex-col sm:flex-row sm:items-end sm:justify-end gap-4'>
                       <Button
                         type='button'
                         variant='default'
@@ -374,9 +359,9 @@ export function OrganismoEditPage() {
                       >
                         Editar
                       </Button>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
                 <Tabs
                   value={activeTab}
                   onValueChange={setActiveTab}

@@ -58,6 +58,8 @@ export const useRuasLight = (keyword: string) =>
     queryFn: () => UtilityLookupsService('utility').getRuasLight(keyword),
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
   })
 
 export const useEstadosCivisLight = (keyword: string) =>

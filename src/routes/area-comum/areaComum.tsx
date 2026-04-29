@@ -333,6 +333,21 @@ const ListagemPaisesPage = lazy(() =>
       '@/pages/area-comum/tabelas/tabelas/geograficas/pages/listagem-codigospostais-page'
     ).then((m) => ({ default: m.ListagemCodigosPostaisPage }))
   )
+  const ListagemRuasPage = lazy(() =>
+    import(
+      '@/pages/area-comum/tabelas/tabelas/geograficas/pages/listagem-ruas-page'
+    ).then((m) => ({ default: m.ListagemRuasPage }))
+  )
+  const RuasCreatePage = lazy(() =>
+    import(
+      '@/pages/base/ruas/pages/ruas-create-page'
+    ).then((m) => ({ default: m.RuasCreatePage }))
+  )
+  const RuasUpdatePage = lazy(() =>
+    import(
+      '@/pages/base/ruas/pages/ruas-update-page'
+    ).then((m) => ({ default: m.RuasUpdatePage }))
+  )
   const ListagemBancosPage = lazy(() =>
     import(
       '@/pages/area-comum/tabelas/tabelas/bancos/pages/listagem-bancos-page'
@@ -868,6 +883,48 @@ export const areaComumRoutes = [
               ),
               manageWindow: true,
               windowName: `Atualizar ${areaComum?.permissions?.freguesias?.name}`,
+            },
+            {
+              path: 'area-comum/tabelas/tabelas/geograficas/ruas',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.ruas?.id}
+                  actionType={actionTypes.AuthVer}
+                >
+                  <ListagemRuasPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.ruas?.name,
+            },
+            {
+              path: 'area-comum/tabelas/tabelas/geograficas/ruas/create',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.ruas?.id}
+                  actionType={actionTypes.AuthAdd}
+                >
+                  <RuasCreatePage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: `Criar ${areaComum?.permissions?.ruas?.name}`,
+            },
+            {
+              path: 'area-comum/tabelas/tabelas/geograficas/ruas/update',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.ruas?.id}
+                  actionType={actionTypes.AuthChg}
+                >
+                  <RuasUpdatePage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: `Atualizar ${areaComum?.permissions?.ruas?.name}`,
             },
             {
               path: 'area-comum/tabelas/tabelas/tipos-entidades',

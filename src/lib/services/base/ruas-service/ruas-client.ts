@@ -22,7 +22,7 @@ export class RuasClient extends BaseApiClient {
   ): Promise<ResponseApi<PaginatedResponse<RuaTableDTO>>> {
     const cacheKey = this.getCacheKey(
       'POST',
-      '/client/base/ruas/paginated',
+      '/client/utility/Rua/paginated',
       params
     )
     return this.withCache(cacheKey, () =>
@@ -31,7 +31,7 @@ export class RuasClient extends BaseApiClient {
           const response = await this.httpClient.postRequest<
             PaginatedRequest,
             PaginatedResponse<RuaTableDTO>
-          >(state.URL, '/client/base/ruas/paginated', params)
+          >(state.URL, '/client/utility/Rua/paginated', params)
 
           if (!response.info) {
             console.error('Formato de resposta inválido:', response)
@@ -47,13 +47,13 @@ export class RuasClient extends BaseApiClient {
   }
 
   public async getRuas(): Promise<ResponseApi<GSResponse<RuaDTO[]>>> {
-    const cacheKey = this.getCacheKey('GET', '/client/base/ruas')
+    const cacheKey = this.getCacheKey('GET', '/client/utility/Rua')
     return this.withCache(cacheKey, () =>
       this.withRetry(async () => {
         try {
           const response = await this.httpClient.getRequest<
             GSResponse<RuaDTO[]>
-          >(state.URL, '/client/base/ruas')
+          >(state.URL, '/client/utility/Rua')
 
           if (!response.info) {
             console.error('Formato de resposta inválido:', response)
@@ -72,8 +72,8 @@ export class RuasClient extends BaseApiClient {
     keyword?: string
   ): Promise<ResponseApi<GSResponse<RuaLightDTO[]>>> {
     const url = keyword
-      ? `/client/base/ruas/light?keyword=${encodeURIComponent(keyword)}`
-      : '/client/base/ruas/light'
+      ? `/client/utility/Rua/light?keyword=${encodeURIComponent(keyword)}`
+      : '/client/utility/Rua/light'
     const cacheKey = this.getCacheKey('GET', url)
     return this.withCache(cacheKey, () =>
       this.withRetry(async () => {
@@ -103,7 +103,7 @@ export class RuasClient extends BaseApiClient {
     filters?: Record<string, string>,
     sorting?: Array<{ id: string; desc: boolean }>
   ): Promise<ResponseApi<GSResponse<RuaTableDTO[]>>> {
-    const cacheKey = this.getCacheKey('POST', '/client/base/ruas/all', {
+    const cacheKey = this.getCacheKey('POST', '/client/utility/Rua/all', {
       filters,
       sorting,
     })
@@ -116,7 +116,7 @@ export class RuasClient extends BaseApiClient {
               sorting?: Array<{ id: string; desc: boolean }>
             },
             GSResponse<RuaTableDTO[]>
-          >(state.URL, '/client/base/ruas/all', { filters, sorting })
+          >(state.URL, '/client/utility/Rua/all', { filters, sorting })
 
           if (!response.info) {
             console.error('Formato de resposta inválido:', response)
@@ -132,13 +132,13 @@ export class RuasClient extends BaseApiClient {
   }
 
   public async getRua(id: string): Promise<ResponseApi<GSResponse<RuaDTO>>> {
-    const cacheKey = this.getCacheKey('GET', `/client/base/ruas/${id}`)
+    const cacheKey = this.getCacheKey('GET', `/client/utility/Rua/${id}`)
     return this.withCache(cacheKey, () =>
       this.withRetry(async () => {
         try {
           const response = await this.httpClient.getRequest<GSResponse<RuaDTO>>(
             state.URL,
-            `/client/base/ruas/${id}`
+            `/client/utility/Rua/${id}`
           )
 
           if (!response.info) {
@@ -162,7 +162,7 @@ export class RuasClient extends BaseApiClient {
         const response = await this.httpClient.postRequest<
           CreateRuaDTO,
           GSResponse<string>
-        >(state.URL, '/client/base/ruas', data)
+        >(state.URL, '/client/utility/Rua', data)
 
         return response
       } catch (error) {
@@ -188,7 +188,7 @@ export class RuasClient extends BaseApiClient {
         const response = await this.httpClient.putRequest<
           UpdateRuaDTO,
           GSResponse<string>
-        >(state.URL, `/client/base/ruas/${id}`, data)
+        >(state.URL, `/client/utility/Rua/${id}`, data)
 
         if (!response.info) {
           console.error('Formato de resposta inválido:', response)
@@ -207,7 +207,7 @@ export class RuasClient extends BaseApiClient {
       try {
         const response = await this.httpClient.deleteRequest<GSGenericResponse>(
           state.URL,
-          `/client/base/ruas/${id}`
+          `/client/utility/Rua/${id}`
         )
 
         if (!response.info) {
@@ -230,7 +230,7 @@ export class RuasClient extends BaseApiClient {
         const response = await this.httpClient.deleteRequestWithBody<
           { ids: string[] },
           GSGenericResponse
-        >(state.URL, '/client/base/ruas/bulk', { ids: ids })
+        >(state.URL, '/client/utility/Rua/bulk', { ids: ids })
 
         if (!response.info) {
           console.error('Formato de resposta inválido:', response)

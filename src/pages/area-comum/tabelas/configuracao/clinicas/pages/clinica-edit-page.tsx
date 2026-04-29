@@ -34,10 +34,8 @@ import { MoedaService } from '@/lib/services/moedas/moeda-service'
 import { MotivoIsencaoService } from '@/lib/services/taxas-iva/motivo-isencao-service'
 import { TaxaIvaService } from '@/lib/services/taxas-iva/taxa-iva-service'
 import { useGetCodigosPostaisSelect } from '@/pages/base/codigospostais/queries/codigospostais-queries'
-import { CreateCodigoPostalModal } from '@/components/shared/address-quick-create'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { ImageUploader } from '@/components/shared/image-uploader'
-import { CodigosPostaisService } from '@/lib/services/base/codigospostais-service'
 import {
   useCloseCurrentWindowLikeTabBar,
   navigateManagedWindow,
@@ -163,7 +161,6 @@ export function ClinicaEditPage() {
   const taxasIva = taxasIvaQuery.data?.info?.data ?? []
   const codigosPostais = codigosPostaisQuery.data ?? []
 
-  const [modalCodigoPostalOpen, setModalCodigoPostalOpen] = useState(false)
   const [cpComboboxSearch, setCpComboboxSearch] = useState('')
 
   type MainTabKey =
@@ -636,7 +633,12 @@ export function ClinicaEditPage() {
                                 className='shrink-0 h-8 w-8'
                                 title='Novo código postal'
                                 disabled={isSaving}
-                                onClick={() => setModalCodigoPostalOpen(true)}
+                                onClick={() =>
+                                  navigateManagedWindow(
+                                    navigate,
+                                    '/area-comum/tabelas/tabelas/geograficas/codigospostais'
+                                  )
+                                }
                               >
                                 <Plus className='h-4 w-4' />
                               </Button>
@@ -1648,31 +1650,6 @@ export function ClinicaEditPage() {
             </Form>
           )}
         </div>
-
-        <CreateCodigoPostalModal
-          open={modalCodigoPostalOpen}
-          onOpenChange={setModalCodigoPostalOpen}
-          onSuccess={async (newId) => {
-            await queryClient.invalidateQueries({
-              queryKey: ['codigospostais-select'],
-            })
-            try {
-              const res =
-                await CodigosPostaisService('codigospostais').getCodigoPostal(
-                  newId,
-                )
-              const d = res.info?.data
-              if (d) {
-                form.setValue('ccPostal', d.codigo)
-                form.setValue('localidade', d.localidade ?? '')
-              }
-            } catch {
-              toast.info(
-                'Código postal criado. Selecione-o na lista quando aparecer.',
-              )
-            }
-          }}
-        />
       </DashboardPageContainer>
     </>
   )

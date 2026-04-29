@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { UseFormReturn } from 'react-hook-form'
 import {
   FormControl,
@@ -8,18 +8,13 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import type { FuncionarioEditFormValues } from '../types/funcionario-edit-form-types'
 import { useCodigosPostaisLight } from '@/lib/services/utility/lookups/lookups-queries'
-import { CreateCodigoPostalModal } from '@/components/shared/address-quick-create'
+import { RuaSelectInferCodigoPostal } from '@/components/shared/address-quick-create/RuaSelectInferCodigoPostal'
+import { useWindowsStore } from '@/stores/use-windows-store'
+import { openPathInApp } from '@/utils/window-utils'
 
 export function TabFuncionarioIdentificacao({
   form,
@@ -28,7 +23,8 @@ export function TabFuncionarioIdentificacao({
   form: UseFormReturn<FuncionarioEditFormValues>
   readOnly?: boolean
 }) {
-  const [modalCodigoPostal, setModalCodigoPostal] = useState(false)
+  const navigate = useNavigate()
+  const addWindow = useWindowsStore((s) => s.addWindow)
 
   const codigosPostaisQuery = useCodigosPostaisLight('')
   const codigosPostais = codigosPostaisQuery.data?.info?.data ?? []
@@ -184,47 +180,12 @@ export function TabFuncionarioIdentificacao({
           <FormField
             control={form.control}
             name='rua'
-            render={({ field }) => (
+            render={() => (
               <FormItem>
                 <FormLabel>Rua</FormLabel>
-                <FormControl>
-                  <Input
-                    className='h-7'
-                    placeholder='Ex.: Rua das Flores'
-                    readOnly={readOnly}
-                    {...field}
-                    value={field.value ?? ''}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name='codigoPostalId'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Código Postal</FormLabel>
                 <div className='flex gap-1.5'>
                   <FormControl>
-                    <Select
-                      value={field.value ?? ''}
-                      onValueChange={field.onChange}
-                      disabled={codigosPostaisQuery.isLoading || readOnly}
-                    >
-                      <SelectTrigger className='h-7 w-full min-w-0'>
-                        <SelectValue placeholder='Selecionar código postal...' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {codigosPostais.map((cp) => (
-                          <SelectItem key={cp.id} value={cp.id}>
-                            {cp.codigo ?? cp.id}{' '}
-                            {cp.localidade ? `– ${cp.localidade}` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <RuaSelectInferCodigoPostal form={form as any} readOnly={readOnly} />
                   </FormControl>
                   {!readOnly && (
                     <Button
@@ -232,8 +193,15 @@ export function TabFuncionarioIdentificacao({
                       variant='outline'
                       size='icon'
                       className='shrink-0 h-7 w-7'
-                      title='Adicionar código postal'
-                      onClick={() => setModalCodigoPostal(true)}
+                      title='Adicionar rua'
+                      onClick={() =>
+                        openPathInApp(
+                          navigate,
+                          addWindow,
+                          '/area-comum/tabelas/tabelas/geograficas/ruas',
+                          'Ruas',
+                        )
+                      }
                     >
                       <Plus className='h-3.5 w-3.5' />
                     </Button>
@@ -243,19 +211,49 @@ export function TabFuncionarioIdentificacao({
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name='codigoPostalId'
+            render={({ field }) => {
+              const cp = codigosPostais.find((x) => x.id === field.value)
+              const display = cp 
+                ? `${cp.codigo ?? cp.id}${cp.localidade ? ` - ${cp.localidade}` : ''}`
+                : ''
+
+            return (
+              <FormItem>
+                <FormLabel>Código Postal *</FormLabel>
+                <div className='flex gap-1.5'>
+                  <FormControl>
+                    <Input className='h-7 bg-muted' readOnly value={display} />
+                  </FormControl>
+                  {!readOnly && (
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='icon'
+                      className='shrink-0 h-7 w-7'
+                      title='Adicionar código postal'
+                      onClick={() =>
+                        openPathInApp(
+                          navigate,
+                          addWindow,
+                          '/area-comum/tabelas/tabelas/geograficas/codigospostais',
+                          'Códigos Postais',
+                        )
+                      }
+                    >
+                      <Plus className='h-3.5 w-3.5' />
+                    </Button>
+                  )}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )
+            }}
+          />
         </div>
       </section>
-
-      {!readOnly && (
-        <CreateCodigoPostalModal
-          open={modalCodigoPostal}
-          onOpenChange={setModalCodigoPostal}
-          onSuccess={(newId) => {
-            form.setValue('codigoPostalId', newId)
-            codigosPostaisQuery.refetch()
-          }}
-        />
-      )}
     </div>
   )
 }

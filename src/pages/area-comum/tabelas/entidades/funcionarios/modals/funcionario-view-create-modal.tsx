@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { FuncionarioTableDTO } from '@/types/dtos/saude/funcionarios.dtos'
 import {
   Dialog,
@@ -21,12 +22,13 @@ import {
 import { Plus } from 'lucide-react'
 import { toast } from '@/utils/toast-utils'
 import { useCodigosPostaisLight } from '@/lib/services/utility/lookups/lookups-queries'
-import { CreateCodigoPostalModal } from '@/components/shared/address-quick-create'
 import { FuncionarioService } from '@/lib/services/saude/funcionario-service'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
 import { ResponseStatus } from '@/types/api/responses'
 import { ENTIDADE_TIPO } from '@/lib/entidade-tipo'
 import type { FuncionarioDTO } from '@/types/dtos/saude/funcionarios.dtos'
+import { useWindowsStore } from '@/stores/use-windows-store'
+import { openPathInApp } from '@/utils/window-utils'
 
 /** EntidadeTipo.Funcionario = 5 */
 const TIPO_ENTIDADE_FUNCIONARIO = ENTIDADE_TIPO.Funcionario
@@ -80,7 +82,8 @@ export function FuncionarioViewCreateModal({
   const [fullData, setFullData] = useState<FuncionarioDTO | null>(null)
   const [loading, setLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [modalCodigoPostal, setModalCodigoPostal] = useState(false)
+  const navigate = useNavigate()
+  const addWindow = useWindowsStore((s) => s.addWindow)
 
   const codigosPostaisQuery = useCodigosPostaisLight('')
   const codigosPostais = codigosPostaisQuery.data?.info?.data ?? []
@@ -337,7 +340,14 @@ export function FuncionarioViewCreateModal({
                     size='icon'
                     className='shrink-0 h-9 w-9'
                     title='Adicionar código postal'
-                    onClick={() => setModalCodigoPostal(true)}
+                    onClick={() =>
+                      openPathInApp(
+                        navigate,
+                        addWindow,
+                        '/area-comum/tabelas/tabelas/geograficas/codigospostais',
+                        'Códigos Postais',
+                      )
+                    }
                   >
                     <Plus className='h-4 w-4' />
                   </Button>
@@ -411,16 +421,6 @@ export function FuncionarioViewCreateModal({
               />
             </div>
           </div>
-        )}
-        {!isView && (
-          <CreateCodigoPostalModal
-            open={modalCodigoPostal}
-            onOpenChange={setModalCodigoPostal}
-            onSuccess={(newId) => {
-              setValues((prev) => ({ ...prev, codigoPostalId: newId }))
-              codigosPostaisQuery.refetch()
-            }}
-          />
         )}
         <DialogFooter>
           {isView ? (

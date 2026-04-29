@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { openPathInApp } from '@/utils/window-utils'
 import { fieldGap, inputClass, labelClass, selectTriggerClass, buttonIconClass } from './utente-edit-tabs-constants'
+import { RuaSelectInferCodigoPostal } from '@/components/shared/address-quick-create/RuaSelectInferCodigoPostal'
 
 const INDICATIVOS = [
   { value: '+351', label: 'Portugal (+351)' },
@@ -246,27 +247,22 @@ export function TabContactos({
         )}
       />
 
-      <FormField
+      <FormField 
         control={form.control}
         name='codigoPostalId'
-        render={({ field }) => (
+        render={({ field }) => {
+          const cp = codigosPostais.find((x) => x.id === field.value)
+          const display = cp 
+            ? `${cp.codigo ?? cp.id}${cp.localidade ? `- ${cp.localidade} ` : ''}`
+            : ''
+
+        return (
           <FormItem className={fieldGap}>
             <FormLabel className={labelClass}>Código Postal *</FormLabel>
             <div className='flex gap-1.5 w-full min-w-0'>
               <div className='flex-1 min-w-0'>
                 <FormControl>
-                  <Select value={field.value ?? ''} onValueChange={field.onChange} disabled={codigosPostaisQuery.isLoading}>
-                    <SelectTrigger className={selectTriggerClass}>
-                    <SelectValue placeholder='Selecionar código postal...' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {codigosPostais.map((cp) => (
-                      <SelectItem key={cp.id} value={cp.id}>
-                        {cp.codigo ?? cp.id} {cp.localidade ? `– ${cp.localidade}` : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                  </Select>
+                  <Input readOnly className={inputClass} value={display} />
                 </FormControl>
               </div>
               <Button
@@ -287,30 +283,22 @@ export function TabContactos({
                 <Plus className='h-3.5 w-3.5' />
               </Button>
             </div>
-            <FormMessage />
+              <FormMessage />
           </FormItem>
-        )}
+        )
+        }}
       />
 
-      <FormField
+      <FormField 
         control={form.control}
         name='rua'
-        render={({ field }) => (
+        render={() => (
           <FormItem className={fieldGap}>
-            <FormLabel className={labelClass}>Rua *</FormLabel>
+            <FormLabel className={labelClass}> Rua *</FormLabel>
             <div className='flex gap-1.5 w-full min-w-0'>
               <div className='flex-1 min-w-0'>
                 <FormControl>
-                  <Input
-                    className={inputClass}
-                  placeholder='Ex.: Rua das Flores (escrita livre)'
-                  {...field}
-                  value={field.value ?? ''}
-                  onChange={(e) => {
-                    field.onChange(e.target.value)
-                    form.setValue('ruaId', '')
-                  }}
-                />
+                  <RuaSelectInferCodigoPostal form={form as any} /> 
                 </FormControl>
               </div>
               <Button
@@ -318,15 +306,28 @@ export function TabContactos({
                 variant='outline'
                 size='icon'
                 className={buttonIconClass}
-                title='Criar nova rua na BD e selecionar'
-                onClick={() =>
+                title='Adicionar rua'
+                onClick={() => {
+                  const params = new URLSearchParams()
+                  const paisId = String(form.watch('paisId') ?? '').trim()
+                  const distritoId = String(form.watch('distritoId') ?? '').trim()
+                  const concelhoId = String(form.watch('concelhoId') ?? '').trim()
+                  const freguesiaId = String(form.watch('freguesiaId') ?? '').trim()
+                  const codigoPostalId = String(form.watch('codigoPostalId') ?? '').trim()
+                  if (paisId) params.set('paisId', paisId)
+                  if (distritoId) params.set('distritoId', distritoId)
+                  if (concelhoId) params.set('concelhoId', concelhoId)
+                  if (freguesiaId) params.set('freguesiaId', freguesiaId)
+                  if (codigoPostalId) params.set('codigoPostalId', codigoPostalId)
+                  const qs = params.toString()
                   openPathInApp(
                     navigate,
                     addWindow,
-                    '/area-comum/tabelas/tabelas/geograficas/ruas',
+                    `/area-comum/tabelas/tabelas/geograficas/ruas${qs ? `?${qs}` : ''}`,
                     'Ruas',
                   )
-                }
+                }}
+                disabled={!form.watch('freguesiaId')}
               >
                 <Plus className='h-3.5 w-3.5' />
               </Button>
@@ -335,6 +336,8 @@ export function TabContactos({
           </FormItem>
         )}
       />
+
+
           <FormField
             control={form.control}
             name='numeroPorta'

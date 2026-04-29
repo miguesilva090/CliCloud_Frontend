@@ -134,6 +134,8 @@ export function RuasTable({
             initialActiveFiltersCount={activeFiltersCount}
             FilterControls={RuasFilterControls}
             isLoading={isLoading}
+            globalSearchColumnId='nome'
+            globalSearchPlaceholder='Procurar por nome da rua...'
             toolbarActions={[
               {
                 label: 'Imprimir',

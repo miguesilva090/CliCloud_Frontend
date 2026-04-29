@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import type { MedicoEditFormValues } from '@/pages/medicos/types/medico-edit-form-types'
+import { RuaSelectInferCodigoPostal } from '@/components/shared/address-quick-create/RuaSelectInferCodigoPostal'
 import type { MedicoDTO } from '@/types/dtos/saude/medicos.dtos'
 import {
   usePaisesLight,
@@ -242,23 +243,18 @@ export function TabContactos({
           <FormField
             control={form.control}
             name='codigoPostalId'
-            render={({ field }) => (
+            render={({ field }) => {
+              const cp = codigosPostais.find((x) => x.id === field.value)
+              const display = cp
+                ? `${cp.codigo ?? cp.id}${cp.localidade ? `- ${cp.localidade}` : ''}`
+                : ''
+
+            return (
               <FormItem>
-                <FormLabel>Código Postal</FormLabel>
+                <FormLabel>Código Postal *</FormLabel>
                 <div className='flex gap-1.5'>
                   <FormControl>
-                    <Select value={field.value ?? ''} onValueChange={field.onChange} disabled={codigosPostaisQuery.isLoading}>
-                      <SelectTrigger className='h-7 w-full min-w-0'>
-                        <SelectValue placeholder='Selecionar código postal...' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {codigosPostais.map((cp) => (
-                          <SelectItem key={cp.id} value={cp.id}>
-                            {cp.codigo ?? cp.id} {cp.localidade ? `– ${cp.localidade}` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Input className='h-7 bg-muted' readOnly value={display} /> 
                   </FormControl>
                   <Button
                     type='button'
@@ -280,41 +276,34 @@ export function TabContactos({
                 </div>
                 <FormMessage />
               </FormItem>
-            )}
+            )
+            }}
           />
           <FormField
             control={form.control}
             name='rua'
-            render={({ field }) => (
+            render={() => (
               <FormItem>
                 <FormLabel>Rua / Morada</FormLabel>
                 <div className='flex gap-1.5'>
                   <FormControl>
-                    <Input
-                      className='h-7'
-                      placeholder='Ex.: Rua das Flores (escrita livre)'
-                      {...field}
-                      value={field.value ?? ''}
-                      onChange={(e) => {
-                        field.onChange(e.target.value)
-                        form.setValue('ruaId', undefined)
-                      }}
-                    />
+                    <RuaSelectInferCodigoPostal form={form as any} />
                   </FormControl>
                   <Button
                     type='button'
                     variant='outline'
                     size='icon'
                     className='shrink-0 h-7 w-7'
-                    title='Criar nova rua na BD e selecionar'
+                    title='Adicionar rua'
                     onClick={() =>
                       openPathInApp(
                         navigate,
                         addWindow,
-                        '/utilitarios/tabelas/geograficas/ruas',
+                        '/area-comum/tabelas/tabelas/geograficas/ruas',
                         'Ruas',
                       )
                     }
+                    disabled={!form.watch('freguesiaId')}
                   >
                     <Plus className='h-3.5 w-3.5' />
                   </Button>

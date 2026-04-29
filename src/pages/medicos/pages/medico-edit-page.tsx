@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { RefreshCw, X, Save } from 'lucide-react'
+import { Save } from 'lucide-react'
+import { EntityFormPageHeader } from '@/components/shared/entity-form-page-header'
 import type { MedicoDTO } from '@/types/dtos/saude/medicos.dtos'
 import type { MedicoEditFormValues } from '../types/medico-edit-form-types'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
@@ -219,43 +220,37 @@ export function MedicoEditPage() {
     <>
       <PageHead title={`CliCloud`} />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>
-            {isCreate ? 'Criar Médico' : isReadOnly ? 'Ver Médico' : 'Editar Médico'}
-          </h1>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => {
-                if (isCreate) {
-                  queryClient.invalidateQueries({ queryKey: ['medicos-paginated'] })
-                } else if (id) {
-                  queryClient.invalidateQueries({ queryKey: ['medico', id] })
-                  queryClient.invalidateQueries({ queryKey: ['horario-medico', id] })
-                }
-              }}
-              title='Atualizar'
-            >
-              <RefreshCw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => handleWindowClose(windowId, navigate, removeWindow)}
-              title='Fechar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
+        <EntityFormPageHeader
+          title={isCreate ? 'Criar Médico' : isReadOnly ? 'Ver Médico' : 'Editar Médico'}
+          onBack={() => handleWindowClose(windowId, navigate, removeWindow)}
+          onRefresh={() => {
+            if (isCreate) {
+              queryClient.invalidateQueries({ queryKey: ['medicos-paginated'] })
+            } else if (id) {
+              queryClient.invalidateQueries({ queryKey: ['medico', id] })
+              queryClient.invalidateQueries({ queryKey: ['horario-medico', id] })
+            }
+          }}
+          rightActions={
+            !isReadOnly ? (
+              <Button
+                type='submit'
+                form='medico-edit-form'
+                disabled={!canSave}
+                size='sm'
+                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              >
+                <Save className='h-4 w-4 mr-2' />
+                Gravar médico
+              </Button>
+            ) : null
+          }
+        />
 
         <div className='rounded-b-lg border border-t-0 bg-background'>
           {isCreate ? (
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className='space-y-0'>
+              <form id='medico-edit-form' onSubmit={form.handleSubmit(onSubmit, onInvalid)} className='space-y-0'>
                 <div className='border-b bg-muted/30 px-4 py-4'>
                   <div className='flex flex-col sm:flex-row sm:items-end gap-4'>
                     <FormField
@@ -279,14 +274,7 @@ export function MedicoEditPage() {
                       <FormLabel className='text-muted-foreground'>Data de Registo</FormLabel>
                       <Input readOnly value='—' className='h-7 w-full min-w-0 bg-muted cursor-not-allowed text-muted-foreground' />
                     </FormItem>
-                    <div className='flex gap-2 ml-auto shrink-0'>
-                      {!isReadOnly && (
-                        <Button type='submit' disabled={!canSave} size='sm' className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>
-                          <Save className='h-4 w-4 mr-2' />
-                          Gravar médico
-                        </Button>
-                      )}
-                    </div>
+                    <div className='flex gap-2 ml-auto shrink-0' />
                   </div>
                 </div>
 
@@ -328,7 +316,7 @@ export function MedicoEditPage() {
             <div className='text-sm text-muted-foreground px-4 py-8'>Médico não encontrado.</div>
           ) : (
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className='space-y-0'>
+              <form id='medico-edit-form' onSubmit={form.handleSubmit(onSubmit, onInvalid)} className='space-y-0'>
                 <div className='border-b bg-muted/30 px-4 py-4'>
                   <div className='flex flex-col sm:flex-row sm:items-end gap-4'>
                     <FormField
@@ -352,14 +340,7 @@ export function MedicoEditPage() {
                       <FormLabel className='text-muted-foreground'>Data de Registo</FormLabel>
                       <Input readOnly value={formatDate(medico.createdOn)} className='h-7 w-full min-w-0 bg-muted cursor-not-allowed text-muted-foreground' />
                     </FormItem>
-                    <div className='flex gap-2 ml-auto shrink-0'>
-                      {!isReadOnly && (
-                        <Button type='submit' disabled={!canSave} size='sm' className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>
-                          <Save className='h-4 w-4 mr-2' />
-                          Gravar médico
-                        </Button>
-                      )}
-                    </div>
+                    <div className='flex gap-2 ml-auto shrink-0' />
                   </div>
                 </div>
 
