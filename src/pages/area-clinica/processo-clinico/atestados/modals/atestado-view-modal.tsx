@@ -71,11 +71,25 @@ export function AtestadoViewModal({
   }, [open, rowData?.id])
 
   const data = detalhe ?? rowData
+  const nomeUtenteDisplay =
+    rowData?.nomeUtente ??
+    ((detalhe as AtestadoTableDTO | null)?.nomeUtente ?? null) ??
+    (data as AtestadoTableDTO | null)?.nomeUtente ??
+    data?.utenteId ??
+    '—'
+
+  const nomeMedicoDisplay =
+    rowData?.nomeMedico ??
+    ((detalhe as AtestadoTableDTO | null)?.nomeMedico ?? null) ??
+    (data as AtestadoTableDTO | null)?.nomeMedico ??
+    data?.medicoId ??
+    '—'
+
   const estadoEnvioText =
-    data?.estadoEnvio === 1 || data?.estadoEnvio === 2
-      ? 'Sim'
-      : data?.estadoEnvio === 0
-        ? 'Não'
+    data?.estadoEnvio === 1
+      ? 'Enviado'
+      : data?.estadoEnvio === 0 || data?.estadoEnvio === 2
+        ? 'Não enviado'
         : '—'
 
   return (
@@ -104,21 +118,11 @@ export function AtestadoViewModal({
             </div>
             <div className='grid gap-2'>
               <Label className='text-muted-foreground'>Utente</Label>
-              <p className='text-sm'>
-                {(data as AtestadoTableDTO).nomeUtente ??
-                  (data as AtestadoTableDTO).utenteId ??
-                  data.utenteId ??
-                  '—'}
-              </p>
+              <p className='text-sm'>{nomeUtenteDisplay}</p>
             </div>
             <div className='grid gap-2'>
               <Label className='text-muted-foreground'>Médico</Label>
-              <p className='text-sm'>
-                {(data as AtestadoTableDTO).nomeMedico ??
-                  (data as AtestadoTableDTO).medicoId ??
-                  data.medicoId ??
-                  '—'}
-              </p>
+              <p className='text-sm'>{nomeMedicoDisplay}</p>
             </div>
             <div className='grid gap-2'>
               <Label className='text-muted-foreground'>Estado envio</Label>

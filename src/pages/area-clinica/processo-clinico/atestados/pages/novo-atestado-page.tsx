@@ -71,6 +71,28 @@ const TIPO_DOC_OPTIONS = [
   { value: 'outro', label: 'Outro' },
 ]
 
+const mapSexoFromUtente = (
+  value: unknown
+): 'indefinido' | 'masculino' | 'feminino' => {
+  if (typeof value === 'number') {
+    if (value === 0) return 'masculino'
+    if (value === 1) return 'feminino'
+    return 'indefinido'
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    const sexoObj = value as { codigo?: string | null; descricao?: string | null }
+    const codigo = (sexoObj.codigo ?? '').trim().toUpperCase()
+    const descricao = (sexoObj.descricao ?? '').trim().toUpperCase()
+    const raw = `${codigo} ${descricao}`.trim()
+
+    if (raw.includes('MASCULINO') || raw === 'M') return 'masculino'
+    if (raw.includes('FEMININO') || raw === 'F') return 'feminino'
+  }
+
+  return 'indefinido'
+}
+
 /** Data do atestado: sempre a data de hoje, não editável */
 const dataAtestadoHoje = () => new Date()
 
@@ -119,10 +141,13 @@ export function NovoAtestadoPage() {
   /* Categorias e Restrições (aba Categorias/Restrições) */
   type CategoriaLinha = { id: string; codigoCarta: string; descricao: string; grupo?: number; apto?: boolean; aptoGrupo2?: boolean }
   type RestricaoLinha = { id: string; codigoRestricao: number; descricao: string; categorias?: string; anotacoes?: string }
+  type RestricaoAnteriorLinha = { id: string; codigoRestricao: number; descricao: string; anotacoes?: string }
   const [categoriasAtestado, setCategoriasAtestado] = useState<CategoriaLinha[]>([])
   const [restricoesAtestado, setRestricoesAtestado] = useState<RestricaoLinha[]>([])
+  const [restricoesAnterioresAtestado, setRestricoesAnterioresAtestado] = useState<RestricaoAnteriorLinha[]>([])
   const [selectedCategoriaId, setSelectedCategoriaId] = useState('')
   const [selectedRestricaoId, setSelectedRestricaoId] = useState('')
+  const [selectedRestricaoAnteriorId, setSelectedRestricaoAnteriorId] = useState('')
 
   /* Pesquisa para comboboxes geográficos (Morada) */
   const [paisQ, setPaisQ] = useState('')
@@ -166,6 +191,11 @@ export function NovoAtestadoPage() {
     const raw = (perfilNome ?? '').trim().toLowerCase()
     return raw.includes('medico') || raw.includes('médico')
   }, [perfilNome])
+  const medicoAtualTemCedula = useMemo(() => {
+    const carteira = ((medicoAtualData as { carteira?: string | null } | null)?.carteira ?? '').trim()
+    const digitos = carteira.replace(/\D/g, '')
+    return digitos.length > 0
+  }, [medicoAtualData])
   const paisesMorada = usePaisesLight(paisQD)
   const paisesNac = usePaisesLight(paisNacQD)
   const paisesNat = usePaisesLight(paisNatQD)
@@ -309,18 +339,7 @@ export function NovoAtestadoPage() {
     } else {
       setDataNascimento(undefined)
     }
-    const sexoMap: Record<number, 'indefinido' | 'masculino' | 'feminino'> = {
-      0: 'masculino',
-      1: 'feminino',
-      2: 'indefinido',
-    }
-    const sexoNum =
-      typeof u.sexo === 'number'
-        ? u.sexo
-        : (u.sexo as { id?: string } | null)?.id != null
-          ? Number((u.sexo as { id: string }).id)
-          : null
-    setSexo(sexoNum != null && sexoMap[sexoNum] ? sexoMap[sexoNum] : 'indefinido')
+    setSexo(mapSexoFromUtente(u.sexo))
     if (u.dataValidadeCartaoIdentificacao) {
       const d =
         typeof u.dataValidadeCartaoIdentificacao === 'string'
@@ -390,8 +409,10 @@ export function NovoAtestadoPage() {
     setFreguesiaNatQ('')
     setCategoriasAtestado([])
     setRestricoesAtestado([])
+    setRestricoesAnterioresAtestado([])
     setSelectedCategoriaId('')
     setSelectedRestricaoId('')
+    setSelectedRestricaoAnteriorId('')
   }
 
   const handleInserirCategoria = () => {
@@ -420,6 +441,31 @@ export function NovoAtestadoPage() {
 
   const handleRemoverRestricao = (id: string) => {
     setRestricoesAtestado((prev) => prev.filter((r) => r.id !== id))
+  }
+
+  const handleInserirRestricaoAnterior = () => {
+    if (!selectedRestricaoAnteriorId) return
+    const list = restricoesCC.data?.info?.data ?? []
+    const item = list.find((r: CartaConducaoRestricoesLightDTO) => r.id === selectedRestricaoAnteriorId)
+    if (!item) return
+    if (restricoesAnterioresAtestado.some((r) => r.id === item.id)) {
+      setSelectedRestricaoAnteriorId('')
+      return
+    }
+    setRestricoesAnterioresAtestado((prev) => [
+      ...prev,
+      {
+        id: item.id,
+        codigoRestricao: item.codigoRestricao,
+        descricao: item.descricao ?? '',
+        anotacoes: undefined,
+      },
+    ])
+    setSelectedRestricaoAnteriorId('')
+  }
+
+  const handleRemoverRestricaoAnterior = (id: string) => {
+    setRestricoesAnterioresAtestado((prev) => prev.filter((r) => r.id !== id))
   }
 
   const handleGuardar = () => {
@@ -456,7 +502,10 @@ export function NovoAtestadoPage() {
               anotacoes: (r as RestricaoLinha).anotacoes ?? null,
             }))
           : [],
-      restricoesAnteriores: [],
+      restricoesAnteriores: restricoesAnterioresAtestado.map((r) => ({
+        cartaConducaoRestricaoId: r.id,
+        anotacoes: r.anotacoes ?? null,
+      })),
     }
     createAtestado.mutate(payload, {
       onSuccess: (res) => {
@@ -468,7 +517,7 @@ export function NovoAtestadoPage() {
   }
 
   const handleAdicionarUtente = () => {
-    navigateManagedWindow(navigate, '/utentes/create')
+    navigateManagedWindow(navigate, '/utentes/novo')
   }
 
   return (
@@ -533,7 +582,14 @@ export function NovoAtestadoPage() {
                 size='default'
                 className='gap-2 bg-primary text-primary-foreground hover:bg-primary/90'
                 onClick={handleGuardar}
-                disabled={createAtestado.isPending || !utenteId || !medicoId || !clientId || !isPerfilMedico}
+                disabled={
+                  createAtestado.isPending ||
+                  !utenteId ||
+                  !medicoId ||
+                  !clientId ||
+                  !isPerfilMedico ||
+                  !medicoAtualTemCedula
+                }
               >
                 <CloudUpload className='h-4 w-4' />
                 Guardar/Comunicar Atestado
@@ -542,7 +598,12 @@ export function NovoAtestadoPage() {
           </div>
           {!isPerfilMedico ? (
             <p className='mb-3 text-xs text-destructive'>
-              O perfil autenticado ({perfilNome || 'N/D'}) não tem permissão para emitir atestados de carta de condução.
+              O perfil autenticado não tem permissão para emitir atestados de carta de condução.
+            </p>
+          ) : null}
+          {isPerfilMedico && !medicoAtualTemCedula ? (
+            <p className='mb-3 text-xs text-destructive'>
+              O médico autenticado não tem cédula/carteira configurada. Atualize o cadastro do médico para emitir e comunicar o atestado.
             </p>
           ) : null}
 
@@ -906,11 +967,11 @@ export function NovoAtestadoPage() {
                     <Table>
                       <TableHeader>
                         <TableRow className='border-b'>
-                          <TableHead className='h-8 text-xs font-medium'>Código</TableHead>
-                          <TableHead className='text-xs font-medium'>Categoria</TableHead>
-                          <TableHead className='text-xs font-medium'>Apto</TableHead>
-                          <TableHead className='text-xs font-medium'>Apto Grupo 2</TableHead>
-                          <TableHead className='text-right text-xs font-medium'>Opções</TableHead>
+                          <TableHead className='h-8 w-[110px] text-center text-xs font-medium'>Código</TableHead>
+                          <TableHead className='text-left text-xs font-medium'>Categoria</TableHead>
+                          <TableHead className='w-[100px] text-left text-xs font-medium'>Apto</TableHead>
+                          <TableHead className='w-[120px] text-left text-xs font-medium'>Apto Grupo 2</TableHead>
+                          <TableHead className='w-[96px] text-center text-xs font-medium'>Opções</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -923,11 +984,11 @@ export function NovoAtestadoPage() {
                         ) : (
                           categoriasAtestado.map((c: CategoriaLinha) => (
                             <TableRow key={c.id}>
-                              <TableCell className='text-xs'>{c.codigoCarta}</TableCell>
+                              <TableCell className='w-[110px] text-xs text-center'>{c.codigoCarta}</TableCell>
                               <TableCell className='text-xs'>{c.descricao}</TableCell>
-                              <TableCell className='text-xs'>—</TableCell>
-                              <TableCell className='text-xs'>—</TableCell>
-                              <TableCell className='text-right'>
+                              <TableCell className='w-[100px] text-xs'>—</TableCell>
+                              <TableCell className='w-[120px] text-xs'>—</TableCell>
+                              <TableCell className='w-[96px] text-right'>
                                 <Button type='button' size='sm' variant='ghost' className='h-7 text-xs text-destructive hover:text-destructive' onClick={() => handleRemoverCategoria(c.id)}>Remover</Button>
                               </TableCell>
                             </TableRow>
@@ -952,11 +1013,11 @@ export function NovoAtestadoPage() {
                     <Table>
                       <TableHeader>
                         <TableRow className='border-b'>
-                          <TableHead className='h-8 text-xs font-medium'>Código</TableHead>
-                          <TableHead className='text-xs font-medium'>Restrição</TableHead>
-                          <TableHead className='text-xs font-medium'>Categorias</TableHead>
-                          <TableHead className='text-xs font-medium'>Anotações</TableHead>
-                          <TableHead className='text-right text-xs font-medium'>Opções</TableHead>
+                          <TableHead className='h-8 w-[110px] text-center text-xs font-medium'>Código</TableHead>
+                          <TableHead className='text-left text-xs font-medium'>Restrição</TableHead>
+                          <TableHead className='w-[120px] text-left text-xs font-medium'>Categorias</TableHead>
+                          <TableHead className='w-[120px] text-left text-xs font-medium'>Anotações</TableHead>
+                          <TableHead className='w-[96px] text-center text-xs font-medium'>Opções</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -969,11 +1030,11 @@ export function NovoAtestadoPage() {
                         ) : (
                           restricoesAtestado.map((r: RestricaoLinha) => (
                             <TableRow key={r.id}>
-                              <TableCell className='text-xs'>{r.codigoRestricao}</TableCell>
+                              <TableCell className='w-[110px] text-xs text-center'>{r.codigoRestricao}</TableCell>
                               <TableCell className='text-xs'>{r.descricao}</TableCell>
-                              <TableCell className='text-xs'>—</TableCell>
-                              <TableCell className='text-xs'>—</TableCell>
-                              <TableCell className='text-right'>
+                              <TableCell className='w-[120px] text-xs'>—</TableCell>
+                              <TableCell className='w-[120px] text-xs'>—</TableCell>
+                              <TableCell className='w-[96px] text-right'>
                                 <Button type='button' size='sm' variant='ghost' className='h-7 text-xs text-destructive hover:text-destructive' onClick={() => handleRemoverRestricao(r.id)}>Remover</Button>
                               </TableCell>
                             </TableRow>
@@ -987,24 +1048,61 @@ export function NovoAtestadoPage() {
               <div>
                 <div className='mb-1.5 flex items-center justify-between'>
                   <h2 className='text-xs font-semibold uppercase tracking-wide text-primary'>Restrições Anteriores</h2>
-                  <Button size='sm' variant='default' className='h-8 gap-1 text-xs'><Plus className='h-3 w-3' /> Inserir</Button>
+                  <div className='flex flex-wrap items-center gap-2'>
+                    <Select value={selectedRestricaoAnteriorId} onValueChange={setSelectedRestricaoAnteriorId}>
+                      <SelectTrigger className='h-8 w-[220px]'><SelectValue placeholder='Selecionar restrição…' /></SelectTrigger>
+                      <SelectContent>
+                        {restricoesOptions.map((o: { value: string; label: string }) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size='sm'
+                      variant='default'
+                      className='h-8 gap-1 text-xs'
+                      onClick={handleInserirRestricaoAnterior}
+                      disabled={!selectedRestricaoAnteriorId}
+                    >
+                      <Plus className='h-3 w-3' /> Inserir
+                    </Button>
+                  </div>
                 </div>
                 <div className='rounded-md border'>
-                  <Table>
+                  <Table className='table-fixed'>
                     <TableHeader>
                       <TableRow className='border-b'>
-                        <TableHead className='h-8 text-xs font-medium'>Código</TableHead>
-                        <TableHead className='text-xs font-medium'>Restrição</TableHead>
-                        <TableHead className='text-xs font-medium'>Anotações</TableHead>
-                        <TableHead className='text-right text-xs font-medium'>Opções</TableHead>
+                        <TableHead className='h-8 w-[140px] whitespace-nowrap text-center text-xs font-medium'>Código Restrição</TableHead>
+                        <TableHead className='text-center text-xs font-medium'>Descrição</TableHead>
+                        <TableHead className='w-[520px] whitespace-nowrap text-center text-xs font-medium'>Anotação</TableHead>
+                        <TableHead className='w-[110px] whitespace-nowrap pr-3 text-center text-xs font-medium'>Opções</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      <TableRow>
-                        <TableCell colSpan={4} className='h-16 text-center text-xs text-muted-foreground'>
-                          Não existem dados a apresentar
-                        </TableCell>
-                      </TableRow>
+                      {restricoesAnterioresAtestado.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className='h-16 text-center text-xs text-muted-foreground'>
+                            Não existem dados a apresentar
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        restricoesAnterioresAtestado.map((r: RestricaoAnteriorLinha) => (
+                          <TableRow key={r.id}>
+                            <TableCell className='w-[140px] whitespace-nowrap text-xs text-center '>{r.codigoRestricao}</TableCell>
+                            <TableCell className='truncate text-center text-xs'>{r.descricao}</TableCell>
+                            <TableCell className='w-[220px] whitespace-nowrap text-center text-xs'>{r.anotacoes || '—'}</TableCell>
+                            <TableCell className='w-[110px] pr-3 text-right'>
+                              <Button
+                                type='button'
+                                size='sm'
+                                variant='ghost'
+                                className='h-7 text-xs text-destructive hover:text-destructive'
+                                onClick={() => handleRemoverRestricaoAnterior(r.id)}
+                              >
+                                Remover
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>

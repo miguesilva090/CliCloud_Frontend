@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Building2, Plus, X } from 'lucide-react'
+import { Building2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import {
@@ -26,13 +26,23 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
+import { AreaComumDashboardCard } from '@/components/shared/area-comum-dashboard-card'
 import { toast } from '@/utils/toast-utils'
 import { ResponseStatus } from '@/types/api/responses'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import type { AtualizarConfiguracaoTratamentosRequest } from '@/types/dtos/core/configuracao-tratamentos.dtos'
 import { MoedaService } from '@/lib/services/moedas/moeda-service'
 import { MotivoIsencaoService } from '@/lib/services/taxas-iva/motivo-isencao-service'
 import { TaxaIvaService } from '@/lib/services/taxas-iva/taxa-iva-service'
+import { ClinicaService } from '@/lib/services/core/clinica-service'
 import { useGetCodigosPostaisSelect } from '@/pages/base/codigospostais/queries/codigospostais-queries'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { ImageUploader } from '@/components/shared/image-uploader'
@@ -172,6 +182,8 @@ export function ClinicaEditPage() {
     | 'emails'
   const [mainTab, setMainTab] = useState<MainTabKey>('identificacao')
   const [subTab, setSubTab] = useState<string>('geral-identificacao')
+  const [confirmarAlteracaoModalOpen, setConfirmarAlteracaoModalOpen] =
+    useState(false)
   const toSelectValue = (v: unknown): string | undefined => {
     if (v === null || v === undefined) return undefined
     const s = String(v).trim()
@@ -340,48 +352,74 @@ export function ClinicaEditPage() {
           : headerTitle
 
   const handleVoltar = () => {
-    if (isSessionClinicaEditRoute) {
-      closeWindowTab()
-      return
+    closeWindowTab()
+  }
+
+  const handleAssociarClinica = async () => {
+    try {
+      const response = await ClinicaService('tabelas').getEstadoContextoClinica()
+      const estado = response.info.data
+
+      if (!estado?.requerSelecao && (estado?.clinicaAssociadaCount ?? 0) > 0) {
+        setConfirmarAlteracaoModalOpen(true)
+        return
+      }
+
+      window.dispatchEvent(new CustomEvent('clinica-selection-required'))
+    } catch {
+      // Em caso de falha a obter estado, mantém o fluxo manual disponível.
+      window.dispatchEvent(new CustomEvent('clinica-selection-required'))
     }
-    navigateManagedWindow(navigate, LISTAGEM_PATH)
   }
 
   return (
     <>
       <PageHead title={`${title} | CliCloud`} />
       <DashboardPageContainer>
-        <div className='flex items-center justify-between gap-4 mb-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <h1 className='text-lg font-semibold'>{headerTitle}</h1>
-          <div className='flex items-center gap-2'>
-            {isReadOnly && clinica && !isSessionClinicaEditRoute ? (
-              <Button
-                type='button'
-                variant='default'
-                onClick={() =>
-                  navigateManagedWindow(
-                    navigate,
-                    `${LISTAGEM_PATH}/${clinica.id}/editar`
-                  )
-                }
-              >
-                Editar
-              </Button>
-            ) : null}
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={handleVoltar}
-              title='Voltar'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
-
-        <div className='rounded-b-lg border border-t-0 bg-background px-4 py-4'>
+        <AreaComumDashboardCard
+          title={headerTitle}
+          onBack={handleVoltar}
+          headerTrailing={
+            <>
+              {isReadOnly && clinica && !isSessionClinicaEditRoute ? (
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={() =>
+                    navigateManagedWindow(
+                      navigate,
+                      `${LISTAGEM_PATH}/${clinica.id}/editar`
+                    )
+                  }
+                >
+                  Editar
+                </Button>
+              ) : null}
+              {!isReadOnly ? (
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  onClick={handleAssociarClinica}
+                >
+                  Associar Clinica
+                </Button>
+              ) : null}
+              {!isReadOnly ? (
+                <Button
+                  type='submit'
+                  form='clinica-edit-form'
+                  disabled={!canSave}
+                  size='sm'
+                  className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                >
+                  {isSaving ? 'A guardar...' : 'Guardar'}
+                </Button>
+              ) : null}
+            </>
+          }
+          contentClassName='px-4 py-4'
+        >
           {isLoading ? (
             <div className='px-4 py-12 text-center text-muted-foreground'>
               A carregar...
@@ -397,44 +435,10 @@ export function ClinicaEditPage() {
           ) : (
             <Form {...form}>
               <form
+                id='clinica-edit-form'
                 onSubmit={handleSubmitSafe}
                 className='space-y-4'
               >
-                {!isReadOnly ? (
-                  <div className='flex justify-end'>
-                    <Button
-                      type='button'
-                      disabled={!canSave}
-                      onClick={() => handleSubmitSafe()}
-                      size='sm'
-                      className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-                    >
-                      {isSaving ? 'A guardar...' : 'Guardar'}
-                    </Button>
-                  </div>
-                ) : null}
-
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <FormField
-                    control={form.control}
-                    name='nome'
-                    render={({ field }) => (
-                      <FormItem className='md:col-span-2'>
-                        <FormLabel>Designação</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder='Designação'
-                            readOnly={isReadOnly || isSaving}
-                            {...field}
-                            value={field.value ?? ''}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
                 <Tabs
                   value={subTab}
                   onValueChange={(v) => setSubTab(v)}
@@ -500,6 +504,25 @@ export function ClinicaEditPage() {
                   <div className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-4 items-start'>
                   <div className='order-2 lg:order-1'>
                   <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <FormField
+                      control={form.control}
+                      name='nome'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Designação</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder='Designação'
+                              readOnly={isReadOnly || isSaving}
+                              {...field}
+                              value={field.value ?? ''}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name='nomeComercial'
@@ -1649,8 +1672,43 @@ export function ClinicaEditPage() {
               </form>
             </Form>
           )}
-        </div>
+        </AreaComumDashboardCard>
       </DashboardPageContainer>
+
+      <Dialog
+        open={confirmarAlteracaoModalOpen}
+        onOpenChange={setConfirmarAlteracaoModalOpen}
+      >
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle>Alterar clínica associada</DialogTitle>
+            <DialogDescription>
+              Este utilizador já tem clínica associada. Pretende alterar a clínica
+              associada?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => setConfirmarAlteracaoModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type='button'
+              onClick={() => {
+                setConfirmarAlteracaoModalOpen(false)
+                window.dispatchEvent(
+                  new CustomEvent('clinica-selection-required')
+                )
+              }}
+            >
+              Alterar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

@@ -79,13 +79,16 @@ export class HttpClient {
   }
 
   protected getHeaders(data?: unknown) {
-    const { token } = useAuthStore.getState()
+    const { token, clientId } = useAuthStore.getState()
 
     const headers: Record<string, string> = {
       tenant: 'root',
       'Accept-Language': 'en-US',
       Authorization: `Bearer ${token}`,
       'X-API-Key': this.apiKey,
+    }
+    if (clientId) {
+      headers['X-Client-Id'] = clientId 
     }
 
     // Only set Content-Type for non-FormData requests
@@ -577,8 +580,24 @@ function handleErrorAxios(error: AxiosError, baseUrl?: string): never {
       )
     }
 
+    // Trigger global clinic selection flow when backend indicates missing clinic mapping
+    const errorBody = error.response?.data
+    const bodyText =
+      typeof errorBody === 'string'
+        ? errorBody
+        : typeof errorBody === 'object' && errorBody !== null && 'messages' in errorBody
+          ? JSON.stringify(errorBody)
+          : ''
+
+    if (
+      bodyText.toLowerCase().includes('sem clínica associada') ||
+      bodyText.toLowerCase().includes('sem clinica associada')
+    ) {
+      window.dispatchEvent(new CustomEvent('clinica-selection-required'))
+    }
+
     // Qualquer outro 4xx/5xx: passar o body para o cliente poder mostrar a mensagem (ex.: BadRequest(ex.Message) devolve string)
-    const body = error.response?.data
+    const body = errorBody
     throw new BaseApiError(
       error.message,
       error.response?.status,

@@ -127,5 +127,49 @@ export class ClinicaClient extends BaseApiClient {
       `${BASE}/autocomplete-selected?q=${query}`,
     )
   }
+
+  /**
+   * GET /client/core/ContextoClinica/disponiveis
+   */
+  public async getClinicasDisponiveisContexto(): Promise<
+    ResponseApi<GSResponse<Array<{ id: string; nome: string }>>>
+  > {
+    return this.httpClient.getRequest<GSResponse<Array<{ id: string; nome: string }>>>(
+      state.URL,
+      '/client/core/ContextoClinica/disponiveis'
+    )
+  }
+
+  /**
+   * POST /client/core/ContextoClinica/selecionar
+   */
+  public async selecionarClinicaContexto(clinicaId: string): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest<{ clinicaId: string }, GSResponse<string>>(
+      state.URL,
+      '/client/core/ContextoClinica/selecionar',
+      { clinicaId }
+    )
+  }
+
+  /**
+   * GET /client/core/ContextoClinica/estado
+   */
+  public async getEstadoContextoClinica(): Promise<
+    ResponseApi<
+      GSResponse<{
+        requerSelecao: boolean
+        clinicaAssociadaCount: number
+        clinicaDefaultId: string | null
+      }>
+    >
+  > {
+    return this.httpClient.getRequest<
+      GSResponse<{
+        requerSelecao: boolean
+        clinicaAssociadaCount: number
+        clinicaDefaultId: string | null
+      }>
+    >(state.URL, '/client/core/ContextoClinica/estado')
+  }
 }
 

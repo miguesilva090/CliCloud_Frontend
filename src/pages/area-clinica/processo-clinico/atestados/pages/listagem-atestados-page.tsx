@@ -109,12 +109,6 @@ export function ListagemAtestadosPage() {
     setViewModalOpen(true)
   }
 
-  const handleOpenEdit = (rowData: AtestadoTableDTO) => {
-    toast.info('A edição de atestados não está disponível. Utilize Ver para consultar os detalhes.')
-    setViewRowData(rowData)
-    setViewModalOpen(true)
-  }
-
   const handleOpenDelete = (rowData: AtestadoTableDTO) => {
     setItemToDelete(rowData)
     setDeleteDialogOpen(true)
@@ -176,11 +170,11 @@ export function ListagemAtestadosPage() {
             onFiltersChange={handleFiltersChange}
             onSortingChange={handleSortingChange}
             onOpenView={handleOpenView}
-            onOpenEdit={canChange ? handleOpenEdit : undefined}
+            onOpenEdit={undefined}
             onOpenDelete={canDelete ? handleOpenDelete : undefined}
             rowActionPermissions={{
               canView,
-              canChange,
+              canChange: false,
               canDelete,
             }}
             toolbarActions={toolbarActions}

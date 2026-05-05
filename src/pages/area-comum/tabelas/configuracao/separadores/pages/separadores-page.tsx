@@ -100,6 +100,7 @@ export function SeparadoresPage() {
       toast.success('Separador guardado com sucesso.')
       setDialogOpen(false)
       await queryClient.invalidateQueries({ queryKey: ['separadores'] })
+      await queryClient.invalidateQueries({ queryKey: ['separadores-ficha-clinica-visiveis']})
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : 'Falha ao guardar separador.'
@@ -180,6 +181,7 @@ export function SeparadoresPage() {
       setEspecialidadePickerOpen(false)
       setPickerSearch('')
       await refetchVinculos()
+      await queryClient.invalidateQueries({ queryKey: ['separadores-ficha-clinica-visiveis']})
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : 'Falha ao adicionar vínculo.'
@@ -195,6 +197,7 @@ export function SeparadoresPage() {
     onSuccess: async () => {
       toast.success('Vínculo removido com sucesso.')
       await refetchVinculos()
+      await queryClient.invalidateQueries({ queryKey: ['separadores-ficha-clinica-visiveis']})
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : 'Falha ao remover vínculo.'

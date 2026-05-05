@@ -6,10 +6,13 @@ import { useAuthStore } from '@/stores/auth-store'
 import { updateStorage } from '@/lib/services/update/update.service'
 import { isProduction } from '@/utils/env-utils'
 import { UpdateDialog } from '@/components/shared/update-dialog'
+import { SelecionarClinicaModal } from '@/components/shared/selecionar-clinica-modal'
+import { ClinicaService } from '@/lib/services/core/clinica-service'
 
 export default function App() {
   const [pendingUpdate, setPendingUpdate] = useState<UpdateInfo | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [clinicaModalOpen, setClinicaModalOpen] = useState(false)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
   useEffect(() => {
@@ -76,6 +79,24 @@ export default function App() {
     }
   }, [isAuthenticated])
 
+  useEffect(() => {
+    const validarContextoClinicaPosLogin = async () => {
+      if (!isAuthenticated) return
+
+      try {
+        const response = await ClinicaService('tabelas').getEstadoContextoClinica()
+        const estado = response.info.data
+        if (estado?.requerSelecao) {
+          setClinicaModalOpen(true)
+        }
+      } catch {
+        // Se houver erro transitório, o fallback por erro de negócio continua ativo no http-client.
+      }
+    }
+
+    validarContextoClinicaPosLogin()
+  }, [isAuthenticated])
+
   const handleDialogOpenChange = (open: boolean) => {
     setDialogOpen(open)
     if (!open) {
@@ -83,6 +104,26 @@ export default function App() {
       // so it can be shown again on the next relevant action if desired.
     }
   }
+
+  useEffect(() => {
+    const onClinicaSelectionRequired = () => {
+      if (useAuthStore.getState().isAuthenticated) {
+        setClinicaModalOpen(true)
+      }
+    }
+
+    window.addEventListener(
+      'clinica-selection-required',
+      onClinicaSelectionRequired
+    )
+
+    return () => {
+      window.removeEventListener(
+        'clinica-selection-required',
+        onClinicaSelectionRequired
+      )
+    }
+  }, [])
 
   return (
     <AppProvider>
@@ -94,6 +135,11 @@ export default function App() {
           onOpenChange={handleDialogOpenChange}
         />
       )}
+      <SelecionarClinicaModal
+        open={clinicaModalOpen}
+        onOpenChange={setClinicaModalOpen}
+        onClinicaSelecionada={() => window.location.reload()}
+      />
     </AppProvider>
   )
 }
