@@ -56,10 +56,7 @@ const smsPermId = modules.areaComum.permissions.configuracoesSms.id
 export function SmsConfigPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState<SmsConfigForm>(initialForm)
-  const [showArpooneUrl, setShowArpooneUrl] = useState(false)
-  const [showArpooneSender, setShowArpooneSender] = useState(false)
-  const [showArpooneOrganizationId, setShowArpooneOrganizationId] = useState(false)
-  const [showArpooneApiKey, setShowArpooneApiKey] = useState(false)
+  const [showSecrets, setShowSecrets] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [selectedConfig, setSelectedConfig] = useState<ConfiguracaoSmsAutomaticaDTO | null>(null)
   const [editAtivo, setEditAtivo] = useState(true)
@@ -287,18 +284,29 @@ export function SmsConfigPage() {
                   void automaticasQuery.refetch()
                 }}
                 trailing={
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={() =>
-                      navigateManagedWindow(
-                        navigate,
-                        '/area-comum/tabelas/configuracao/sms/historico?tipo=enviadas'
-                      )
-                    }
-                  >
-                    Histórico SMS
-                  </Button>
+                  <div className='flex items-center gap-2'>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      onClick={() => setShowSecrets((v) => !v)}
+                      disabled={formLocked || isBusy}
+                    >
+                      {showSecrets ? <EyeOff className='mr-2 h-4 w-4' /> : <Eye className='mr-2 h-4 w-4' />}
+                      {showSecrets ? 'Ocultar segredos' : 'Mostrar segredos'}
+                    </Button>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      onClick={() =>
+                        navigateManagedWindow(
+                          navigate,
+                          '/area-comum/tabelas/configuracao/sms/historico?tipo=enviadas'
+                        )
+                      }
+                    >
+                      Histórico SMS
+                    </Button>
+                  </div>
                 }
               />
             </CardHeader>
@@ -328,110 +336,54 @@ export function SmsConfigPage() {
               <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
                 <div className='space-y-1'>
                   <Label htmlFor='arpoone-url'>Arpoone URL</Label>
-                  <div className='relative'>
-                    <Input
-                      id='arpoone-url'
-                      type={showArpooneUrl ? 'text' : 'password'}
-                      value={form.arpooneUrl}
-                      onChange={(e) => handleChange('arpooneUrl', e.target.value)}
-                      placeholder='https://api.arpoone.com/...'
-                      readOnly={formLocked}
-                      disabled={formLocked || isBusy}
-                      className='pr-10'
-                    />
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='icon'
-                      className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
-                      onClick={() => setShowArpooneUrl((prev) => !prev)}
-                      disabled={formLocked || isBusy}
-                    >
-                      {showArpooneUrl ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
-                    </Button>
-                  </div>
+                  <Input
+                    id='arpoone-url'
+                    type={showSecrets ? 'text' : 'password'}
+                    value={form.arpooneUrl}
+                    onChange={(e) => handleChange('arpooneUrl', e.target.value)}
+                    placeholder='https://api.arpoone.com/...'
+                    readOnly={formLocked}
+                    disabled={formLocked || isBusy}
+                  />
                 </div>
 
                 <div className='space-y-1'>
                   <Label htmlFor='arpoone-sender'>Sender</Label>
-                  <div className='relative'>
-                    <Input
-                      id='arpoone-sender'
-                      type={showArpooneSender ? 'text' : 'password'}
-                      value={form.arpooneSender}
-                      onChange={(e) => handleChange('arpooneSender', e.target.value)}
-                      placeholder='CLICLOUD'
-                      readOnly={formLocked}
-                      disabled={formLocked || isBusy}
-                      className='pr-10'
-                    />
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='icon'
-                      className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
-                      onClick={() => setShowArpooneSender((prev) => !prev)}
-                      disabled={formLocked || isBusy}
-                    >
-                      {showArpooneSender ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
-                    </Button>
-                  </div>
+                  <Input
+                    id='arpoone-sender'
+                    type={showSecrets ? 'text' : 'password'}
+                    value={form.arpooneSender}
+                    onChange={(e) => handleChange('arpooneSender', e.target.value)}
+                    placeholder='CLICLOUD'
+                    readOnly={formLocked}
+                    disabled={formLocked || isBusy}
+                  />
                 </div>
 
                 <div className='space-y-1'>
                   <Label htmlFor='arpoone-org'>Organization ID (GUID)</Label>
-                  <div className='relative'>
-                    <Input
-                      id='arpoone-org'
-                      type={showArpooneOrganizationId ? 'text' : 'password'}
-                      value={form.arpooneOrganizationID}
-                      onChange={(e) => handleChange('arpooneOrganizationID', e.target.value)}
-                      placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-                      readOnly={formLocked}
-                      disabled={formLocked || isBusy}
-                      className='pr-10'
-                    />
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='icon'
-                      className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
-                      onClick={() => setShowArpooneOrganizationId((prev) => !prev)}
-                      disabled={formLocked || isBusy}
-                    >
-                      {showArpooneOrganizationId ? (
-                        <EyeOff className='h-4 w-4' />
-                      ) : (
-                        <Eye className='h-4 w-4' />
-                      )}
-                    </Button>
-                  </div>
+                  <Input
+                    id='arpoone-org'
+                    type={showSecrets ? 'text' : 'password'}
+                    value={form.arpooneOrganizationID}
+                    onChange={(e) => handleChange('arpooneOrganizationID', e.target.value)}
+                    placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+                    readOnly={formLocked}
+                    disabled={formLocked || isBusy}
+                  />
                 </div>
 
                 <div className='space-y-1'>
                   <Label htmlFor='arpoone-key'>API Key</Label>
-                  <div className='relative'>
-                    <Input
-                      id='arpoone-key'
-                      type={showArpooneApiKey ? 'text' : 'password'}
-                      value={form.arpooneApiKey}
-                      onChange={(e) => handleChange('arpooneApiKey', e.target.value)}
-                      placeholder='API Key'
-                      readOnly={formLocked}
-                      disabled={formLocked || isBusy}
-                      className='pr-10'
-                    />
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='icon'
-                      className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8'
-                      onClick={() => setShowArpooneApiKey((prev) => !prev)}
-                      disabled={formLocked || isBusy}
-                    >
-                      {showArpooneApiKey ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
-                    </Button>
-                  </div>
+                  <Input
+                    id='arpoone-key'
+                    type={showSecrets ? 'text' : 'password'}
+                    value={form.arpooneApiKey}
+                    onChange={(e) => handleChange('arpooneApiKey', e.target.value)}
+                    placeholder='API Key'
+                    readOnly={formLocked}
+                    disabled={formLocked || isBusy}
+                  />
                 </div>
               </div>
 

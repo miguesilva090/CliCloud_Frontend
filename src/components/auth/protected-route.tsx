@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '@/stores/auth-store'
+import { mergeUserInfoIntoAuth, useAuthStore } from '@/stores/auth-store'
 import { usePermissionsStore } from '@/stores/permissions-store'
 import { secureStorage } from '@/utils/secure-storage'
 import { clearAllWindowData } from '@/utils/window-utils'
@@ -67,6 +67,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
           authStore.setToken(response.data.token)
           authStore.setRefreshToken(response.data.refreshToken)
           authStore.setExpiryTime(response.data.expiryTime)
+          mergeUserInfoIntoAuth(response.data.user)
         }
       } catch (error) {
         console.error('Error during auth validation:', error)

@@ -116,7 +116,9 @@ export function FichaClinicaPage() {
       const api = res as unknown as { info?: { data?: SeparadorFichaClinicaDTO[] } }
       return (api.info?.data ?? []) as SeparadorFichaClinicaDTO[]
     },
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   })
 
   const visibleBaseList = useMemo(

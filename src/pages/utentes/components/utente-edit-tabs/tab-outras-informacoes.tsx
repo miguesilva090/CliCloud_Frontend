@@ -279,8 +279,19 @@ export function TabOutrasInformacoes({
           <div className={`${fieldGap} min-w-0 flex-1`}>
             <FormLabel className={labelClass}>Api</FormLabel>
             <div className='flex gap-1.5'>
-              <Input placeholder='User...' className={`${inputClass} flex-1 min-w-0 bg-muted/50`} />
-              <Input type='password' placeholder='Password' className={`${inputClass} flex-1 min-w-0 bg-muted/50`} />
+              <Input
+                placeholder='User...'
+                autoComplete='off'
+                name='utente-api-user'
+                className={`${inputClass} flex-1 min-w-0 bg-muted/50`}
+              />
+              <Input
+                type='password'
+                placeholder='Password'
+                autoComplete='new-password'
+                name='utente-api-password'
+                className={`${inputClass} flex-1 min-w-0 bg-muted/50`}
+              />
             </div>
           </div>
           <div className={`${fieldGap} min-w-0 flex-1`}>

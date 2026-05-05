@@ -22,6 +22,12 @@ export interface GSResponseToken {
    */
   uid?: string
   clinica_id?: string
+  /** Alguns tokens GSLP enviam o cliente da clínica nesta claim em vez de `clinica_id`. */
+  clienteId?: string
+  perfilId?: string
+  perfilNome?: string
+  profile_id?: string
+  profile_name?: string
   code?: string
   /**
    * Claims de versões anteriores (mantidas como opcionais para compatibilidade)
@@ -71,6 +77,8 @@ export interface TokenResponse {
     phoneNumber: string | null
     isActive: boolean
     clienteId: string
+    perfilId?: string | null
+    perfilNome?: string | null
   }
 }
 

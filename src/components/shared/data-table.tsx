@@ -528,7 +528,7 @@ export function DataTable<TData, TValue>({
       <div className='flex flex-col gap-2 md:flex-row md:gap-3'>
         <div className='relative flex-1'>
           <div className='rounded-none border border-border p-1 sm:p-1.5'>
-            <div className='relative overflow-hidden rounded-none bg-white'>
+            <div className='relative overflow-hidden rounded-none bg-background text-foreground'>
             {isLoading && (
               <div
                 className='absolute inset-0 z-50 flex items-center justify-center rounded-none bg-background/80 backdrop-blur-sm pointer-events-none'
@@ -643,12 +643,14 @@ export function DataTable<TData, TValue>({
                 </TableHeader>
                 <TableBody>
                   {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
+                    table.getRowModel().rows.map((row, rowIndex) => (
                       <TableRow
                         key={row.id}
                         data-state={row.getIsSelected() && 'selected'}
                         className={cn(
                           (baseRoute || onRowSelectionChange) && 'cursor-pointer',
+                          rowIndex % 2 === 0 ? 'bg-background' : 'bg-muted/20',
+                          'text-foreground hover:bg-muted/40',
                           row.getIsSelected() &&
                             'bg-primary/60 hover:bg-primary/70 text-primary-foreground'
                         )}

@@ -2,7 +2,7 @@ import axios, { type AxiosResponse, type AxiosError } from 'axios'
 import state from '@/states/state'
 import { ResponseApi } from '@/types/responses'
 import { ResponseStatus } from '@/types/api/responses'
-import { useAuthStore } from '@/stores/auth-store'
+import { mergeUserInfoIntoAuth, useAuthStore } from '@/stores/auth-store'
 import { useConnectionStatusStore } from '@/stores/connection-status-store'
 import { BaseApiError } from '@/lib/base-client'
 import { getRuntimeConfig } from '@/lib/config/runtime-config'
@@ -50,6 +50,7 @@ export class HttpClient {
           authStore.setToken(response.data.token)
           authStore.setRefreshToken(response.data.refreshToken)
           authStore.setExpiryTime(response.data.expiryTime)
+          mergeUserInfoIntoAuth(response.data.user)
 
           console.log('🔑 Token successfully refreshed')
           return true

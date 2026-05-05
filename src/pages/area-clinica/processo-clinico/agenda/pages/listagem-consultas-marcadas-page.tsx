@@ -292,9 +292,9 @@ export function ListagemConsultasMarcadasPage() {
 
   return (
     <>
-      <PageHead title='Consultas Marcadas | Agenda | Área Clínica | CliCloud' />
+      <PageHead title='Listagem de Consultas Marcadas | Agenda | Área Clínica | CliCloud' />
       <DashboardPageContainer>
-        <AreaComumListagemPageShell title='Consultas Marcadas'>
+        <AreaComumListagemPageShell title='Listagem de Consultas Marcadas'>
           {canView ? (
             <ConsultaMarcadaViewEditModal
               open={viewEditModalOpen}

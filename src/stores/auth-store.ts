@@ -1,4 +1,4 @@
-import { GSResponseToken } from '@/types/api/responses'
+import { GSResponseToken, type TokenResponse } from '@/types/api/responses'
 import { jwtDecode } from 'jwt-decode'
 import { create } from 'zustand'
 import { persist, StorageValue } from 'zustand/middleware'
@@ -16,6 +16,8 @@ interface AuthState {
   roleId: string
   clientId: string
   licencaId: string
+  perfilId: string
+  perfilNome: string
   permissions: Record<string, number>
   modules: string[]
   isLoaded: boolean
@@ -41,6 +43,8 @@ const initialState: AuthState = {
   roleId: '',
   clientId: '',
   licencaId: '',
+  perfilId: '',
+  perfilNome: '',
   permissions: {},
   modules: [],
   isLoaded: false,
@@ -97,9 +101,15 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             name,
             userId: decoded.uid || decoded.sub || '',
             roleId,
-            // No backend de saúde, `clinica_id` identifica o cliente/instância.
-            clientId: decoded.clinica_id || decoded.client_id || '',
+            // Instância clínica: JWT CliCloud (`clinica_id`) ou GSLP (`clienteId` na claim / `client_id`).
+            clientId:
+              decoded.clinica_id ||
+              decoded.client_id ||
+              decoded.clienteId ||
+              '',
             licencaId: decoded.license_id || '',
+            perfilId: decoded.perfilId || decoded.profile_id || '',
+            perfilNome: decoded.perfilNome || decoded.profile_name || '',
             isLoaded: true,
           })
         } catch (err) {
@@ -183,3 +193,29 @@ export const useAuthStore = create<AuthState & AuthActions>()(
     }
   )
 )
+
+/**
+ * Após `setToken`, o decode pode não trazer `clinica_id` (ex.: token GSLP).
+ * O objeto `user` do `/api/client-token` traz `clienteId` comum a todos os utilizadores da mesma licença/clínica.
+ */
+export function mergeUserInfoIntoAuth(user: TokenResponse['user'] | undefined): void {
+  if (!user) return
+
+  const r = user as Record<string, unknown>
+  const clienteId =
+    (typeof user.clienteId === 'string' && user.clienteId ? user.clienteId : '') ||
+    (typeof r['ClienteId'] === 'string' ? (r['ClienteId'] as string) : '')
+  const perfilId =
+    (typeof user.perfilId === 'string' && user.perfilId ? user.perfilId : '') ||
+    (typeof r['PerfilId'] === 'string' ? (r['PerfilId'] as string) : '')
+  const perfilNome =
+    (typeof user.perfilNome === 'string' && user.perfilNome ? user.perfilNome : '') ||
+    (typeof r['PerfilNome'] === 'string' ? (r['PerfilNome'] as string) : '')
+
+  const cur = useAuthStore.getState()
+  useAuthStore.setState({
+    clientId: clienteId || cur.clientId,
+    perfilId: perfilId || cur.perfilId,
+    perfilNome: perfilNome || cur.perfilNome,
+  })
+}

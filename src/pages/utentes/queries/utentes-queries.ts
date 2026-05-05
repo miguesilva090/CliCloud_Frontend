@@ -222,3 +222,5 @@ export const useDeleteUtente = (options?: { onSuccessNavigateTo?: string }) => {
   })
 }
 
+export * from './utente-rnu-queries'
+

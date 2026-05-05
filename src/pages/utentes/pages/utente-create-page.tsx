@@ -47,7 +47,13 @@ import { Plus } from 'lucide-react'
 import { ENTIDADE_TIPO } from '@/lib/entidade-tipo'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
 import type { CreateUtenteRequest } from '@/types/dtos/saude/utentes.dtos'
-import { useCreateUtente } from '../queries/utentes-queries'
+import { ResponseStatus } from '@/types/api/responses'
+import { toast } from '@/utils/toast-utils'
+import {
+  aplicarRnuNoFormulario,
+  useConsultarUtenteRnu,
+  useCreateUtente,
+} from '../queries/utentes-queries'
 import { useFormValidationFeedback } from '@/hooks/use-form-validation-feedback'
 import { TabSubsistemaSaude } from '../components/utente-edit-tabs/tab-subsistema-saude'
 import {
@@ -161,10 +167,18 @@ const schema = z.object({
 })
 
 type FormValues = z.infer<typeof schema>
+type RnuPrefillUtenteCreate = {
+  nome?: string
+  numeroUtente?: string
+  dataNascimento?: string
+  sexoCodigo?: string
+  paisNacionalidade?: string
+}
 
 export function UtenteCreatePage() {
   const navigate = useNavigate()
   const createUtente = useCreateUtente()
+  const consultarRnu = useConsultarUtenteRnu()
   const [activeTab, setActiveTab] = useState('dados-pessoais')
 
   const { onInvalid } = useFormValidationFeedback<FormValues>({
@@ -284,6 +298,33 @@ export function UtenteCreatePage() {
     control: form.control,
     name: 'entidadeContactos',
   })
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem('rnu-prefill-utente-create')
+    if (!raw) return
+
+    try {
+      const rnu = JSON.parse(raw) as RnuPrefillUtenteCreate
+      if (rnu.nome?.trim()) form.setValue('nome', rnu.nome.trim(), { shouldDirty: true })
+      if (rnu.numeroUtente?.trim()) form.setValue('numeroUtente', rnu.numeroUtente.trim(), { shouldDirty: true })
+      if (rnu.dataNascimento?.trim()) form.setValue('dataNascimento', rnu.dataNascimento.trim(), { shouldDirty: true })
+      if (rnu.paisNacionalidade?.trim()) form.setValue('nacionalidade', rnu.paisNacionalidade.trim(), { shouldDirty: true })
+
+      if (rnu.sexoCodigo?.trim()) {
+        const sexoMatch = sexosList.find((s) =>
+          (s.codigo ?? '').toString().trim().toUpperCase() === rnu.sexoCodigo!.trim().toUpperCase()
+          || (s.descricao ?? '').toString().trim().toUpperCase() === rnu.sexoCodigo!.trim().toUpperCase()
+        )
+        if (sexoMatch?.id) {
+          form.setValue('sexoId', sexoMatch.id, { shouldDirty: true })
+        }
+      }
+    } catch {
+      // Ignorar payload inválido
+    } finally {
+      sessionStorage.removeItem('rnu-prefill-utente-create')
+    }
+  }, [form, sexosList])
 
   const paisItems = useMemo(() => {
     const list = paises.data?.info?.data ?? []
@@ -453,6 +494,43 @@ export function UtenteCreatePage() {
     createUtente.mutate(payload)
   }
 
+  const onConsultarRnu = async () => {
+    const numeroSns = String(form.getValues('numeroUtente') ?? '').trim()
+    const numeroCartao = String(form.getValues('nDocMigrante') ?? '').trim()
+
+    if (!numeroSns && !numeroCartao) {
+      toast.error('Preencha Nº Utente (SNS) ou Nº doc. migrante para consultar o RNU', 'RNU')
+      return
+    }
+
+    try {
+      const info = await consultarRnu.mutateAsync({
+        numeroSns: numeroSns || null,
+        numeroCartao: numeroSns ? null : numeroCartao || null,
+        tipoCartao: numeroSns ? null : 'CNS',
+      })
+
+      if (info.status !== ResponseStatus.Success || !info.data) {
+        const msg =
+          info.messages?.['$']?.[0] ||
+          Object.values(info.messages || {})?.[0]?.[0] ||
+          'Não foi possível obter dados do RNU'
+        toast.error(msg, 'RNU')
+        return
+      }
+
+      aplicarRnuNoFormulario(
+        info.data,
+        (name, value, opts) => form.setValue(name as keyof FormValues, value as never, opts),
+        (name) => form.getValues(name as keyof FormValues),
+      )
+
+      toast.success('Dados do RNU aplicados ao formulário', 'RNU')
+    } catch {
+      // onError do mutation já mostra toast; evita Uncaught (in promise)
+    }
+  }
+
   return (
     <>
       <PageHead title='CliCloud' />
@@ -465,6 +543,14 @@ export function UtenteCreatePage() {
           <div className='flex items-center gap-2'>
             <Button variant='outline' onClick={() => navigateManagedWindow(navigate, '/utentes')}>
               Voltar
+            </Button>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={onConsultarRnu}
+              disabled={consultarRnu.isPending}
+            >
+              {consultarRnu.isPending ? 'A consultar RNU…' : 'Consultar RNU'}
             </Button>
             <Button
               onClick={() => handleSubmitSafe()}

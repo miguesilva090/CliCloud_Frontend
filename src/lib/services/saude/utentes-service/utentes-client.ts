@@ -138,6 +138,33 @@ export class UtentesClient extends BaseApiClient {
   }
 
   /**
+   * GET /client/utentes/Utente/numeroUtente/{numeroUtente}
+   */
+  public async getUtenteByNumeroUtente(
+    numeroUtente: string
+  ): Promise<ResponseApi<GSResponse<UtenteDTO>>> {
+    const url = `/client/utentes/Utente/numeroUtente/${encodeURIComponent(numeroUtente)}`
+    const cacheKey = this.getCacheKey('GET', url)
+
+    return this.withCache(cacheKey, () =>
+      this.withRetry(async () => {
+        try {
+          return await this.httpClient.getRequest<GSResponse<UtenteDTO>>(
+            state.URL,
+            url
+          )
+        } catch (error) {
+          throw new UtenteError(
+            'Falha ao obter utente por número de utente',
+            undefined,
+            error
+          )
+        }
+      })
+    )
+  }
+
+  /**
    * POST /client/utentes/Utente
    *
    * Cria um utente. O backend devolve `Response<Guid>` (envelope GSResponse<string> no frontend).

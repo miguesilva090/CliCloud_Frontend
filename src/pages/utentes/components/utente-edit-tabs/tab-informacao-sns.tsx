@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -38,6 +38,34 @@ export function TabInformacaoSNS({
   const medicosExternos = medicosExternosQuery.data?.info?.data ?? []
   const entidadesFinanceirasQuery = useGetEntidadesFinanceirasPaginated(1, 50, null, null)
   const entidadesFinanceiras = entidadesFinanceirasQuery.data?.info?.data ?? []
+  const condicaoSns = form.watch('condicaoSns')
+  const entidadeFinanceiraResponsavelId = form.watch('entidadeFinanceiraResponsavelId')
+
+  useEffect(() => {
+    // Fluxo RNU: quando a condição é SNS e ainda não há entidade selecionada,
+    // tenta selecionar automaticamente a entidade financeira "SNS".
+    if (condicaoSns !== 0) return
+    if (entidadeFinanceiraResponsavelId) return
+    if (entidadesFinanceiras.length === 0) return
+
+    const normalize = (value: string) =>
+      value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim()
+
+    const byAbreviatura = entidadesFinanceiras.find((e) => {
+      const abrev = normalize(e.abreviatura ?? '')
+      return abrev === 'sns'
+    })
+
+    if (byAbreviatura?.id) {
+      form.setValue('entidadeFinanceiraResponsavelId', byAbreviatura.id, {
+        shouldDirty: true,
+      })
+    }
+  }, [condicaoSns, entidadeFinanceiraResponsavelId, entidadesFinanceiras, form])
 
   const centrosSaudeComUtente = useMemo(() => {
     const list = centrosSaude

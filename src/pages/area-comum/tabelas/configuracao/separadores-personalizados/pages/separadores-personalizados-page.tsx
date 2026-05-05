@@ -236,6 +236,7 @@ export function SeparadoresPersonalizadosPage() {
       toast.success('Separador personalizado guardado com sucesso.')
       setDialogOpen(false)
       await queryClient.invalidateQueries({ queryKey: ['separadores-personalizados'] })
+      await queryClient.invalidateQueries({ queryKey: ['separadores-ficha-clinica-visiveis']})
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : 'Falha ao guardar separador personalizado.'
@@ -255,6 +256,7 @@ export function SeparadoresPersonalizadosPage() {
       toast.success('Separador(es) personalizado(s) eliminado(s) com sucesso.')
       setSelectedIds(new Set())
       await queryClient.invalidateQueries({ queryKey: ['separadores-personalizados'] })
+      await queryClient.invalidateQueries({ queryKey: ['separadores-ficha-clinica-visiveis']})
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : 'Falha ao eliminar separador(es) personalizado(s).'
@@ -277,6 +279,7 @@ export function SeparadoresPersonalizadosPage() {
     onSuccess: async () => {
       toast.success('Vínculo adicionado com sucesso.')
       await refetchVinculos()
+      await queryClient.invalidateQueries({ queryKey: ['separadores-ficha-clinica-visiveis']})
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : 'Falha ao adicionar vínculo.'
@@ -292,6 +295,7 @@ export function SeparadoresPersonalizadosPage() {
     onSuccess: async () => {
       toast.success('Vínculo removido com sucesso.')
       await refetchVinculos()
+      await queryClient.invalidateQueries({ queryKey: ['separadores-ficha-clinica-visiveis']})
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : 'Falha ao remover vínculo.'
@@ -374,6 +378,7 @@ export function SeparadoresPersonalizadosPage() {
       setDialogOpen(false)
       setPendingVinculos([])
       await queryClient.invalidateQueries({ queryKey: ['separadores-personalizados'] })
+      await queryClient.invalidateQueries({ queryKey: ['separadores-ficha-clinica-visiveis']})
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Falha ao guardar separador personalizado.'
       toast.error(message)

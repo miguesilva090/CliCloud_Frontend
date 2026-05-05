@@ -3,8 +3,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { openUtenteCreationInApp } from '@/utils/window-utils'
+import { UtentesService } from '@/lib/services/saude/utentes-service'
 import {
-  RefreshCw,
   CreditCard,
   MessageSquare,
   Plus,
@@ -14,7 +14,19 @@ import {
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { PageHead } from '@/components/shared/page-head'
+import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +39,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { usePageData } from '@/utils/page-data-utils'
 import {
+  useConsultarUtenteRnu,
   UTENTE_LIST_ALLOWED_SORT_IDS,
   useGetUtentesPaginated,
   usePrefetchAdjacentUtentes,
@@ -35,6 +48,7 @@ import {
 import { UtentesTable } from '@/pages/utentes/components/utentes-table/utentes-table'
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { UtenteTableDTO } from '@/types/dtos/saude/utentes.dtos'
+import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
@@ -50,6 +64,13 @@ export function ListagemUtentesPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<UtenteTableDTO | null>(null)
   const del = useDeleteUtente({ onSuccessNavigateTo: LISTAGEM_PATH })
+  const consultarRnu = useConsultarUtenteRnu()
+  const [rnuModalOpen, setRnuModalOpen] = useState(false)
+  const [rnuConfirmAddOpen, setRnuConfirmAddOpen] = useState(false)
+  const [rnuTipo, setRnuTipo] = useState<'sns' | 'cartao'>('sns')
+  const [rnuNumeroSns, setRnuNumeroSns] = useState('')
+  const [rnuNumeroCartao, setRnuNumeroCartao] = useState('')
+  const [rnuPayloadParaAdicionar, setRnuPayloadParaAdicionar] = useState<Record<string, unknown> | null>(null)
   const handleOpenDelete = (row: UtenteTableDTO) => {
     setItemToDelete(row)
     setDeleteDialogOpen(true)
@@ -63,6 +84,89 @@ export function ListagemUtentesPage() {
     } catch {
       toast.error('Falha ao eliminar utente.')
     }
+  }
+
+  const handleOpenRnuModal = () => {
+    setRnuTipo('sns')
+    setRnuNumeroSns('')
+    setRnuNumeroCartao('')
+    setRnuModalOpen(true)
+  }
+
+  const handleConsultarRnu = async () => {
+    const numeroSns = rnuNumeroSns.trim()
+    const numeroCartao = rnuNumeroCartao.trim()
+
+    if (rnuTipo === 'sns' && !numeroSns) {
+      toast.error('Introduza o Número de Utente', 'RNU')
+      return
+    }
+
+    if (rnuTipo === 'cartao' && !numeroCartao) {
+      toast.error('Introduza o Número do Cartão', 'RNU')
+      return
+    }
+
+    try {
+      const info = await consultarRnu.mutateAsync({
+        numeroSns: rnuTipo === 'sns' ? numeroSns : null,
+        numeroCartao: rnuTipo === 'cartao' ? numeroCartao : null,
+        tipoCartao: rnuTipo === 'cartao' ? 'CNS' : null,
+      })
+
+      if (info.status !== ResponseStatus.Success || !info.data) {
+        const msg =
+          info.messages?.['$']?.[0] ||
+          Object.values(info.messages || {})?.[0]?.[0] ||
+          'Falha ao consultar RNU'
+        toast.error(msg, 'RNU')
+        return
+      }
+
+      const nome = info.data.nomeCompleto || info.data.nomesProprios || 'Utente'
+      const numeroSnsEncontrado = (info.data.numeroSns ?? '').trim()
+      if (numeroSnsEncontrado) {
+        const existente = await UtentesService('utentes').getUtenteByNumeroUtente(numeroSnsEncontrado)
+        if (existente.info?.status === ResponseStatus.Success && existente.info?.data?.id) {
+          toast.success(`${nome} já existe na lista de utentes`, 'RNU')
+          setRnuModalOpen(false)
+          return
+        }
+      }
+
+      const entidadeResponsavelDescricao = info.data.entidadesResponsaveis?.[0]?.descricao ?? ''
+      const condicaoSns =
+        entidadeResponsavelDescricao.toLowerCase().includes('sns')
+          ? 0
+          : entidadeResponsavelDescricao.toLowerCase().includes('terceiro')
+            ? 1
+            : entidadeResponsavelDescricao
+              ? 2
+              : null
+
+      setRnuPayloadParaAdicionar({
+        nome: info.data.nomeCompleto ?? info.data.nomesProprios ?? '',
+        numeroUtente: info.data.numeroSns ?? '',
+        dataNascimento: info.data.dataNascimento ? String(info.data.dataNascimento).slice(0, 10) : '',
+        sexoCodigo: info.data.sexo ?? '',
+        paisNacionalidade: info.data.paisNacionalidade ?? '',
+        condicaoSns,
+        entidadeResponsavelCodigo: info.data.entidadesResponsaveis?.[0]?.codigo ?? '',
+        entidadeResponsavelDescricao,
+      })
+      setRnuModalOpen(false)
+      setRnuConfirmAddOpen(true)
+    } catch {
+      // onError do mutation já mostra toast; evita Uncaught (in promise)
+    }
+  }
+
+  const handleConfirmarAdicionarRnu = () => {
+    if (rnuPayloadParaAdicionar) {
+      sessionStorage.setItem('rnu-prefill-utente-create', JSON.stringify(rnuPayloadParaAdicionar))
+    }
+    setRnuConfirmAddOpen(false)
+    openUtenteCreationInApp(navigate, addWindow)
   }
 
   const {
@@ -106,7 +210,7 @@ export function ListagemUtentesPage() {
     {
       label: 'RNU',
       icon: null,
-      onClick: () => {},
+      onClick: handleOpenRnuModal,
       variant: 'outline',
     },
     {
@@ -219,6 +323,88 @@ export function ListagemUtentesPage() {
                 className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
               >
                 {del.isPending ? 'A eliminar...' : 'Eliminar'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        <Dialog open={rnuModalOpen} onOpenChange={setRnuModalOpen}>
+          <DialogContent className='sm:max-w-md'>
+            <DialogHeader>
+              <DialogTitle>Obter informação do RNU</DialogTitle>
+              <DialogDescription className='sr-only'>
+                Modal para consultar dados do utente no RNU por número SNS ou cartão.
+              </DialogDescription>
+            </DialogHeader>
+            <div className='space-y-4'>
+              <RadioGroup
+                value={rnuTipo}
+                onValueChange={(value) => setRnuTipo(value === 'cartao' ? 'cartao' : 'sns')}
+                className='flex items-center gap-6'
+              >
+                <div className='flex items-center gap-2'>
+                  <RadioGroupItem id='rnu-sns' value='sns' />
+                  <Label htmlFor='rnu-sns'>Nº SNS</Label>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <RadioGroupItem id='rnu-cartao' value='cartao' />
+                  <Label htmlFor='rnu-cartao'>Cartão</Label>
+                </div>
+              </RadioGroup>
+
+              {rnuTipo === 'sns' ? (
+                <div className='space-y-2'>
+                  <Label htmlFor='rnu-numero-sns'>Número de Utente</Label>
+                  <Input
+                    id='rnu-numero-sns'
+                    value={rnuNumeroSns}
+                    onChange={(e) => setRnuNumeroSns(e.target.value)}
+                    placeholder='Introduza o Número de Utente'
+                  />
+                </div>
+              ) : (
+                <div className='space-y-2'>
+                  <Label htmlFor='rnu-numero-cartao'>Número do Cartão</Label>
+                  <Input
+                    id='rnu-numero-cartao'
+                    value={rnuNumeroCartao}
+                    onChange={(e) => setRnuNumeroCartao(e.target.value)}
+                    placeholder='Introduza o Número do Cartão'
+                  />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => setRnuModalOpen(false)}
+                disabled={consultarRnu.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type='button'
+                onClick={handleConsultarRnu}
+                disabled={consultarRnu.isPending}
+              >
+                {consultarRnu.isPending ? 'A consultar...' : 'OK'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        <AlertDialog open={rnuConfirmAddOpen} onOpenChange={setRnuConfirmAddOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogDescription>
+                O utente não existe no formulário dos utentes.
+                <br />
+                Deseja inserir com a informação do RNU?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmarAdicionarRnu}>
+                Confirmar
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

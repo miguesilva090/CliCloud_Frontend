@@ -451,7 +451,7 @@ export const areaClinicaRoutes = [
       </LicenseGuard>
     ),
     manageWindow: true,
-    windowName: 'Listagem Consultas Marcadas',
+    windowName: 'Listagem de Consultas Marcadas',
   },
   {
     path: 'area-clinica/processo-clinico/agenda/mapa-consultas-marcadas',

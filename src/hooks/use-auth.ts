@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '@/stores/auth-store'
+import { mergeUserInfoIntoAuth, useAuthStore } from '@/stores/auth-store'
 import { usePermissionsStore } from '@/stores/permissions-store'
 import { authService } from '@/lib/services/auth/auth.service'
 import { toast } from '@/utils/toast-utils'
@@ -22,6 +22,7 @@ export function useLogin() {
         setToken(response.data.token)
         setRefreshToken(response.data.refreshToken)
         setExpiryTime(response.data.expiryTime)
+        mergeUserInfoIntoAuth(response.data.user)
 
         // Access control flow: hydrate permission stores when present.
         if (response.data.license) {

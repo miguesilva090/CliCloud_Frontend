@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { toast } from '@/utils/toast-utils'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -30,8 +30,19 @@ import { TabInformacaoSNS } from '../components/utente-edit-tabs/tab-informacao-
 import { TabOutrasInformacoes } from '../components/utente-edit-tabs/tab-outras-informacoes'
 import { TabAvisos } from '../components/utente-edit-tabs/tab-avisos'
 import { TabDocumentos } from '../components/utente-edit-tabs/tab-documentos'
+import { usePaisesLight, useSexosLight } from '@/lib/services/utility/lookups/lookups-queries'
 
 type FormFieldKey = Extract<keyof UtenteEditFormValues, string>
+type RnuPrefillPayload = {
+  nome?: string
+  numeroUtente?: string
+  dataNascimento?: string
+  sexoCodigo?: string
+  paisNacionalidade?: string
+  condicaoSns?: number | null
+  entidadeResponsavelCodigo?: string
+  entidadeResponsavelDescricao?: string
+}
 
 const formatDate = (value?: string | null) => {
   if (!value) return '—'
@@ -94,22 +105,96 @@ export function UtenteEditPage() {
     defaultValues: utenteEditDefaultValues,
     mode: 'onBlur',
   })
+  const [rnuPrefill, setRnuPrefill] = useState<RnuPrefillPayload | null>(null)
+  const sexos = useSexosLight('').data?.info?.data ?? []
+  const paises = usePaisesLight('').data?.info?.data ?? []
 
   useEffect(() => {
     if (!isCreate) return
     const key = `utente-create-draft-${instanceId}`
     const raw = sessionStorage.getItem(key)
-    if (!raw) return
-    try {
-      const draft = JSON.parse(raw) as Partial<UtenteEditFormValues>
-      form.reset({
-        ...utenteEditDefaultValues,
-        ...draft,
-      })
-    } catch {
-      // ignore invalid draft payload
+    const rnuRaw = sessionStorage.getItem('rnu-prefill-utente-create')
+    if (!raw && !rnuRaw) return
+
+    let draft: Partial<UtenteEditFormValues> = {}
+    let rnuPrefill: Partial<UtenteEditFormValues> = {}
+
+    if (raw) {
+      try {
+        draft = JSON.parse(raw) as Partial<UtenteEditFormValues>
+      } catch {
+        // ignore invalid draft payload
+      }
     }
+
+    if (rnuRaw) {
+      try {
+        const rnu = JSON.parse(rnuRaw) as RnuPrefillPayload
+        setRnuPrefill(rnu)
+        rnuPrefill = {
+          nome: rnu.nome?.trim() ?? '',
+          numeroUtente: rnu.numeroUtente?.trim() ?? '',
+          dataNascimento: rnu.dataNascimento?.trim() ?? '',
+          condicaoSns: rnu.condicaoSns ?? null,
+        }
+      } catch {
+        // ignore invalid RNU payload
+      } finally {
+        sessionStorage.removeItem('rnu-prefill-utente-create')
+      }
+    }
+
+    form.reset({
+      ...utenteEditDefaultValues,
+      ...draft,
+      ...rnuPrefill,
+    })
   }, [isCreate, instanceId, form])
+
+  useEffect(() => {
+    if (!isCreate || !rnuPrefill) return
+
+    const sexoCodigo = rnuPrefill.sexoCodigo?.trim().toUpperCase()
+    if (sexoCodigo && sexos.length === 0) return
+
+    if (sexoCodigo) {
+      const sexoMatch = sexos.find((s) => {
+        const codigo = ((s as { codigo?: string }).codigo ?? '').toString().trim().toUpperCase()
+        const descricao = (s.descricao ?? '').toString().trim().toUpperCase()
+        if (codigo === sexoCodigo || descricao === sexoCodigo) return true
+
+        // fallback para cenários comuns: M/F vs Masculino/Feminino
+        if (sexoCodigo === 'M' && (codigo.startsWith('M') || descricao.startsWith('M'))) return true
+        if (sexoCodigo === 'F' && (codigo.startsWith('F') || descricao.startsWith('F'))) return true
+        return false
+      })
+      if (sexoMatch?.id) {
+        form.setValue('sexoId', sexoMatch.id, { shouldDirty: true })
+      }
+    }
+
+    const paisNacionalidade = rnuPrefill.paisNacionalidade?.trim()
+    if (paisNacionalidade) {
+      const target = paisNacionalidade.toUpperCase()
+      const paisMatch = paises.find((p) =>
+        (p.codigo ?? '').toString().trim().toUpperCase() === target
+        || (p.nome ?? '').toString().trim().toUpperCase() === target
+        || (p.id ?? '').toString().trim().toUpperCase() === target
+      )
+      const nacionalidadeValue = paisMatch
+        ? (paisMatch.nome ?? paisMatch.codigo ?? String(paisMatch.id ?? ''))
+        : paisNacionalidade
+      if (nacionalidadeValue) {
+        form.setValue('nacionalidade', nacionalidadeValue, { shouldDirty: true })
+      }
+    }
+
+    if (rnuPrefill.condicaoSns != null) {
+      form.setValue('condicaoSns', rnuPrefill.condicaoSns, { shouldDirty: true })
+    }
+
+    setRnuPrefill(null)
+  }, [isCreate, rnuPrefill, sexos, paises, form])
 
   useEffect(() => {
     if (!isCreate) return

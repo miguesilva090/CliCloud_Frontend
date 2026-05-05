@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
+import { useNavigate } from 'react-router-dom'
 import {
   Brush,
   ChevronLeft,
   CloudUpload,
   Plus,
+  Search,
 } from 'lucide-react'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -28,7 +30,7 @@ import { DistritoViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geog
 import { ConcelhoViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/modals/concelho-view-create-modal'
 import { FreguesiaViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/modals/freguesia-view-create-modal'
 import { useGetUtente, useUtentesLight } from '@/pages/utentes/queries/utentes-queries'
-import { useMedicosLight } from '@/lib/services/saude/medicos-service/medicos-queries'
+import { MedicosService } from '@/lib/services/saude/medicos-service'
 import { useAuthStore } from '@/stores/auth-store'
 import { useCreateAtestado } from '../queries/atestados-queries'
 import { Button } from '@/components/ui/button'
@@ -53,7 +55,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { navigateManagedWindow, useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { ResponseStatus } from '@/types/api/responses'
+import { useConsultarUtenteRnu } from '@/pages/utentes/queries/utente-rnu-queries'
 
 const SEXO_OPTIONS = [
   { value: 'indefinido', label: 'Indefinido' },
@@ -73,6 +77,8 @@ const dataAtestadoHoje = () => new Date()
 type GeoModalType = 'pais' | 'distrito' | 'concelho' | 'freguesia' | null
 
 export function NovoAtestadoPage() {
+  const perfilNome = useAuthStore((s) => s.perfilNome)
+  const navigate = useNavigate()
   const clientId = useAuthStore((s) => s.clientId)
   const queryClient = useQueryClient()
   const closeLikeTabBar = useCloseCurrentWindowLikeTabBar()
@@ -84,15 +90,14 @@ export function NovoAtestadoPage() {
   const [utenteId, setUtenteId] = useState('')
   const [medicoId, setMedicoId] = useState('')
   const [utenteSearch, setUtenteSearch] = useState('')
-  const [medicoSearch, setMedicoSearch] = useState('')
   const [numeroAtestado, setNumeroAtestado] = useState('')
   const [dataAtestado, setDataAtestado] = useState<Date | undefined>(dataAtestadoHoje)
   const [tipoUtente, setTipoUtente] = useState<'rnu' | 'cc'>('rnu')
   const [numeroUtente, setNumeroUtente] = useState('')
+  const [numeroUtenteError, setNumeroUtenteError] = useState(false)
   const [sexo, setSexo] = useState('indefinido')
   const [tipoDoc, setTipoDoc] = useState('')
   const [numeroBiCc, setNumeroBiCc] = useState('')
-  const [nomeUtente, setNomeUtente] = useState('')
   const [dataNascimento, setDataNascimento] = useState<Date | undefined>()
   const [nif, setNif] = useState('')
   const [numCartaConducao, setNumCartaConducao] = useState('')
@@ -133,7 +138,6 @@ export function NovoAtestadoPage() {
   const [freguesiaNatQ, setFreguesiaNatQ] = useState('')
 
   const [utenteSearchD] = useDebounce(utenteSearch, 250)
-  const [medicoSearchD] = useDebounce(medicoSearch, 250)
   const [paisQD] = useDebounce(paisQ, 250)
   const [distritoQD] = useDebounce(distritoQ, 250)
   const [concelhoQD] = useDebounce(concelhoQ, 250)
@@ -147,7 +151,21 @@ export function NovoAtestadoPage() {
 
   const utentesLight = useUtentesLight(utenteSearchD)
   const utenteDetalhe = useGetUtente(utenteId)
-  const medicosLight = useMedicosLight(medicoSearchD)
+  const { data: medicoAtualData } = useQuery({
+    queryKey: ['medico-atual', 'novo-atestado'],
+    queryFn: async () => {
+      const res = await MedicosService('processo-clinico').getCurrentMedico()
+      return res.info?.data ?? null
+    },
+    /** Após criar/editar médico noutro ecrã, evitar ficar com cache vazio durante minutos. */
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+  })
+  const isPerfilMedico = useMemo(() => {
+    const raw = (perfilNome ?? '').trim().toLowerCase()
+    return raw.includes('medico') || raw.includes('médico')
+  }, [perfilNome])
   const paisesMorada = usePaisesLight(paisQD)
   const paisesNac = usePaisesLight(paisNacQD)
   const paisesNat = usePaisesLight(paisNatQD)
@@ -161,6 +179,58 @@ export function NovoAtestadoPage() {
 
   const categoriasCC = useCartasConducaoLight('')
   const restricoesCC = useCartaConducaoRestricoesLight('')
+  const consultarUtenteRnu = useConsultarUtenteRnu()
+
+  const handleConsultarUtenteRnu = async () => {
+    const valor = numeroUtente.trim()
+    if (!valor) {
+      if (tipoUtente === 'rnu') setNumeroUtenteError(true)
+      return
+    }
+
+    setNumeroUtenteError(false)
+
+    try {
+      const info = await consultarUtenteRnu.mutateAsync({
+        numeroSns: tipoUtente === 'rnu' ? valor : null,
+        numeroCartao: tipoUtente === 'cc' ? valor : null,
+        tipoCartao: tipoUtente === 'cc' ? 'CC' : null
+      })
+
+      if(info.status !== ResponseStatus.Success || !info.data) {
+        return
+      }
+
+      const r = info.data
+      setNumeroUtente(r.numeroSns ?? valor)
+
+      if(r.dataNascimento) {
+        const d = new Date(r.dataNascimento)
+        if(!Number.isNaN(d.getTime())) setDataNascimento(d)
+      }
+
+      const sx = (r.sexo ?? '').toUpperCase()
+      if(sx === 'M' || sx === 'MASCULINO') setSexo('masculino')
+      else if (sx === 'F' || sx === 'FEMININO') setSexo('feminino')
+      else setSexo('indefinido')
+
+      const paisNacionalidadeRnu = (r.paisNacionalidade ?? '').trim()
+      if (paisNacionalidadeRnu) {
+        const normalized = paisNacionalidadeRnu.toUpperCase()
+        const paises = paisesNac.data?.info?.data ?? []
+        const match = paises.find((p) => {
+          const nome = (p.nome ?? '').trim().toUpperCase()
+          const codigo = (p.codigo ?? '').trim().toUpperCase()
+          return nome === normalized || codigo === normalized
+        })
+        if (match?.id) setPaisNacionalidade(match.id)
+      }
+    } catch {
+
+    }
+  }
+
+  
   const utenteItems = useMemo(() => {
     const list = utentesLight.data?.info?.data ?? []
     return list.map((u: { id: string; nome: string; numeroUtente?: string | null }) => ({
@@ -169,14 +239,6 @@ export function NovoAtestadoPage() {
       secondary: u.numeroUtente ? `Nº Utente: ${u.numeroUtente}` : undefined,
     }))
   }, [utentesLight.data])
-  const medicoItems = useMemo(() => {
-    const list = medicosLight.data?.info?.data ?? []
-    return list.map((m: { id: string; nome: string; especialidadeNome?: string | null }) => ({
-      value: m.id,
-      label: m.nome,
-      secondary: m.especialidadeNome ?? undefined,
-    }))
-  }, [medicosLight.data])
   const categoriasOptions = useMemo((): Array<{ value: string; label: string }> => {
     const list = categoriasCC.data?.info?.data ?? []
     return list.map((c: { id: string; codigoCarta?: string | null; descricao?: string | null }) => ({ value: c.id, label: [c.codigoCarta, c.descricao].filter(Boolean).join(' - ') || c.id }))
@@ -237,7 +299,6 @@ export function NovoAtestadoPage() {
   useEffect(() => {
     const u = utenteDetalhe.data?.info?.data
     if (!utenteId || !u || u.id !== utenteId) return
-    setNomeUtente(u.nome ?? '')
     setNumeroUtente(u.numeroUtente ?? '')
     setNif(u.numeroContribuinte ?? '')
     setNumeroBiCc(u.numeroCartaoIdentificacao ?? '')
@@ -284,11 +345,15 @@ export function NovoAtestadoPage() {
     setMorada(partesMorada.join(', ') || '')
   }, [utenteId, utenteDetalhe.data])
 
+  useEffect(() => {
+    const medico = medicoAtualData as { id?: string | null } | null
+    setMedicoId(medico?.id ?? '')
+  }, [medicoAtualData])
+
   const handleLimpar = () => {
     setUtenteId('')
-    setMedicoId('')
+    setMedicoId((medicoAtualData as { id?: string | null } | null)?.id ?? '')
     setUtenteSearch('')
-    setMedicoSearch('')
     setNumeroAtestado('')
     setDataAtestado(dataAtestadoHoje())
     setTipoUtente('rnu')
@@ -296,7 +361,6 @@ export function NovoAtestadoPage() {
     setSexo('indefinido')
     setTipoDoc('')
     setNumeroBiCc('')
-    setNomeUtente('')
     setDataNascimento(undefined)
     setNif('')
     setNumCartaConducao('')
@@ -403,6 +467,10 @@ export function NovoAtestadoPage() {
     })
   }
 
+  const handleAdicionarUtente = () => {
+    navigateManagedWindow(navigate, '/utentes/create')
+  }
+
   return (
     <>
       <PageHead title='Atestados - Carta de Condução | CliCloud' />
@@ -465,13 +533,18 @@ export function NovoAtestadoPage() {
                 size='default'
                 className='gap-2 bg-primary text-primary-foreground hover:bg-primary/90'
                 onClick={handleGuardar}
-                disabled={createAtestado.isPending || !utenteId || !medicoId || !clientId}
+                disabled={createAtestado.isPending || !utenteId || !medicoId || !clientId || !isPerfilMedico}
               >
                 <CloudUpload className='h-4 w-4' />
                 Guardar/Comunicar Atestado
               </Button>
             </div>
           </div>
+          {!isPerfilMedico ? (
+            <p className='mb-3 text-xs text-destructive'>
+              O perfil autenticado ({perfilNome || 'N/D'}) não tem permissão para emitir atestados de carta de condução.
+            </p>
+          ) : null}
 
           {/* Área do formulário */}
           <div className='flex flex-col [&_input]:bg-background [&_input]:h-8 [&_textarea]:bg-background [&_textarea]:min-h-[4rem] [&_[role=combobox]]:bg-background'>
@@ -496,38 +569,18 @@ export function NovoAtestadoPage() {
                 <h2 className='mb-2 text-xs font-semibold uppercase tracking-wide text-foreground'>Dados do Utente</h2>
                 <div className='grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3'>
                   <div className='space-y-1'>
-                    <Label className='text-xs'>Utente (*)</Label>
-                    <AsyncCombobox
-                      value={utenteId}
-                      onChange={setUtenteId}
-                      items={utenteItems}
-                      isLoading={utentesLight.isFetching}
-                      placeholder='Selecionar utente…'
-                      searchPlaceholder='Pesquisar utente (nome, nº)…'
-                      searchValue={utenteSearch}
-                      onSearchValueChange={setUtenteSearch}
-                    />
-                  </div>
-                  <div className='space-y-1'>
-                    <Label className='text-xs'>Médico (*)</Label>
-                    <AsyncCombobox
-                      value={medicoId}
-                      onChange={setMedicoId}
-                      items={medicoItems}
-                      isLoading={medicosLight.isFetching}
-                      placeholder='Selecionar médico…'
-                      searchPlaceholder='Pesquisar médico…'
-                      searchValue={medicoSearch}
-                      onSearchValueChange={setMedicoSearch}
-                    />
-                  </div>
-                  <div className='space-y-1'>
                     <Label className='text-xs'>Nº Utente (SNS)</Label>
                     <div className='flex gap-2'>
                       <ToggleGroup
                         type='single'
                         value={tipoUtente}
-                        onValueChange={(v) => v && setTipoUtente(v as 'rnu' | 'cc')}
+                        onValueChange={(v) => {
+                          if (!v) return
+                          const next = v as 'rnu' | 'cc'
+                          setTipoUtente(next)
+                          if (next === 'rnu' && !numeroUtente.trim()) setNumeroUtenteError(true)
+                          else setNumeroUtenteError(false)
+                        }}
                         size='sm'
                         className='shrink-0'
                       >
@@ -536,14 +589,52 @@ export function NovoAtestadoPage() {
                         </ToggleGroupItem>
                         <ToggleGroupItem value='cc'>CC</ToggleGroupItem>
                       </ToggleGroup>
-                      <Input placeholder='Nº Utente' value={numeroUtente} onChange={(e) => setNumeroUtente(e.target.value)} className='h-8 flex-1 min-w-0' />
+                      <Input
+                        placeholder='Nº Utente'
+                        value={numeroUtente}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setNumeroUtente(value)
+                          if (value.trim()) setNumeroUtenteError(false)
+                        }}
+                        className={`h-8 flex-1 min-w-0 ${numeroUtenteError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                      />
+                      <Button
+                        type='button'
+                        size='icon'
+                        variant='outline'
+                        className='h-8 w-8 shrink-0'
+                        onClick={handleConsultarUtenteRnu}
+                        disabled={consultarUtenteRnu.isPending || !numeroUtente.trim()}
+                        title={consultarUtenteRnu.isPending ? 'A consultar...' : 'Consultar RNU/CC'}
+                      >
+                        <Search className='h-3.5 w-3.5' />
+                      </Button>
                     </div>
                   </div>
                   <div className='space-y-1'>
                     <Label className='text-xs'>Nome Utente (*)</Label>
                     <div className='flex gap-1'>
-                      <Input placeholder='Nome...' value={nomeUtente} onChange={(e) => setNomeUtente(e.target.value)} className='h-8 flex-1 min-w-0' />
-                      <Button type='button' size='icon' variant='default' className='h-8 w-8 shrink-0'><Plus className='h-3.5 w-3.5' /></Button>
+                      <AsyncCombobox
+                        value={utenteId}
+                        onChange={setUtenteId}
+                        items={utenteItems}
+                        isLoading={utentesLight.isFetching}
+                        placeholder='Selecionar utente...'
+                        searchPlaceholder='Pesquisar utente (nome, nº)...'
+                        searchValue={utenteSearch}
+                        onSearchValueChange={setUtenteSearch}
+                      />
+                      <Button
+                        type='button'
+                        size='icon'
+                        variant='default'
+                        className='h-8 w-8 shrink-0'
+                        onClick={handleAdicionarUtente}
+                        title='Adicionar novo utente'
+                      >
+                        <Plus className='h-3.5 w-3.5' />
+                      </Button>
                     </div>
                   </div>
                   <div className='space-y-1'>

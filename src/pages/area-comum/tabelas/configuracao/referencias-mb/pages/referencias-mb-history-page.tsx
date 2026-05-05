@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Eye, FileText, Trash2, Check, ArrowLeft } from 'lucide-react'
+import { Eye, FileText, Trash2, Check, ChevronLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { navigateManagedWindow } from '@/utils/window-utils'
+import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
 import { Button } from '@/components/ui/button'
@@ -23,6 +23,7 @@ function formatDate(value?: string | null) {
 
 export function ReferenciasMbHistoryPage() {
   const navigate = useNavigate()
+  const closeWindowTab = useCloseCurrentWindowLikeTabBar()
   const [selectedRow, setSelectedRow] = useState<any | null>(null)
   const [obsModalOpen, setObsModalOpen] = useState(false)
   const [obsMode, setObsMode] = useState<'observacao' | 'anular'>('observacao')
@@ -87,22 +88,18 @@ export function ReferenciasMbHistoryPage() {
       <PageHead title='Histórico Referências MB | CliCloud' />
       <DashboardPageContainer>
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between'>
-            <CardTitle>Histórico de Referências MB</CardTitle>
+          <CardHeader className='flex flex-row items-center gap-2'>
             <Button
-              variant='outline'
-              size='sm'
+              type='button'
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8 shrink-0'
               title='Voltar'
-              onClick={() =>
-                navigateManagedWindow(
-                  navigate,
-                  '/area-comum/tabelas/configuracao/referencias-mb'
-                )
-              }
+              onClick={closeWindowTab}
             >
-              <ArrowLeft className='mr-2 h-4 w-4' />
-              Voltar
+              <ChevronLeft className='h-5 w-5' />
             </Button>
+            <CardTitle>Histórico de Referências MB</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
