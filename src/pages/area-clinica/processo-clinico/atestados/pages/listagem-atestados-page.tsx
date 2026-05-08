@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { List, RotateCw, FilePlus } from 'lucide-react'
+import { AlertTriangle, List, RotateCw, Send, FilePlus } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,6 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 import { toast } from '@/utils/toast-utils'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
@@ -22,7 +23,10 @@ import type { DataTableAction } from '@/components/shared/data-table'
 import { usePageData } from '@/utils/page-data-utils'
 import {
   useGetAtestadosPaginated,
+  useObterErroComunicacao,
   usePrefetchAdjacentAtestados,
+  useReenviarAtestadoOffline,
+  useReenviarPendentesOffline,
 } from '../queries/atestados-queries'
 import { AtestadosTable } from '../components/atestados-table/atestados-table'
 import { AtestadoViewModal } from '../modals/atestado-view-modal'
@@ -42,9 +46,11 @@ export function ListagemAtestadosPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<AtestadoTableDTO | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [erroDialogOpen, setErroDialogOpen] = useState(false)
+  const [erroComunicacao, setErroComunicacao] = useState<string | null>(null)
   const atestadosPermissionId =
     modules.areaClinica.permissions.listagemAtestadosCartaConducao.id
-  const { canView, canAdd, canChange, canDelete } =
+  const { canView, canAdd, canDelete } =
     useAreaComumEntityListPermissions(atestadosPermissionId)
 
   const {
@@ -69,6 +75,9 @@ export function ListagemAtestadosPage() {
   const totalRows = data?.info?.totalCount ?? 0
   const errorMessage =
     error instanceof Error ? error.message : error ? String(error) : ''
+  const reenviarPendentesOffline = useReenviarPendentesOffline()
+  const reenviarAtestadoOffline = useReenviarAtestadoOffline()
+  const obterErroComunicacao = useObterErroComunicacao()
 
   const toolbarActions: DataTableAction[] = [
     ...(canAdd
@@ -93,6 +102,12 @@ export function ListagemAtestadosPage() {
       variant: 'outline',
     },
     {
+      label: 'Reenviar Pendentes',
+      icon: <RotateCw className='h-4 w-4' />,
+      onClick: () => reenviarPendentesOffline.mutate(),
+      variant: 'outline',
+    },
+    {
       label: 'Atualizar',
       icon: <RotateCw className='h-4 w-4' />,
       onClick: () => {
@@ -112,6 +127,28 @@ export function ListagemAtestadosPage() {
   const handleOpenDelete = (rowData: AtestadoTableDTO) => {
     setItemToDelete(rowData)
     setDeleteDialogOpen(true)
+  }
+
+  const handleReenviarOffline = (rowData: AtestadoTableDTO) => {
+    if (!rowData.id) return
+    reenviarAtestadoOffline.mutate(rowData.id)
+  }
+
+  const handleVerErroComunicacao = async (rowData: AtestadoTableDTO) => {
+    if (!rowData.id) return
+    try {
+      const response = await obterErroComunicacao.mutateAsync(rowData.id)
+      if (response.info?.status === ResponseStatus.Success) {
+        const msg = response.info?.data ?? 'Sem detalhe de erro disponível.'
+        setErroComunicacao(msg)
+        setErroDialogOpen(true)
+        return
+      }
+      const firstError = response.info?.messages?.['$']?.[0] ?? 'Falha ao obter erro de comunicação.'
+      toast.error(firstError)
+    } catch {
+      toast.error('Falha ao obter erro de comunicação.')
+    }
   }
 
   const handleConfirmDelete = async () => {
@@ -172,6 +209,37 @@ export function ListagemAtestadosPage() {
             onOpenView={handleOpenView}
             onOpenEdit={undefined}
             onOpenDelete={canDelete ? handleOpenDelete : undefined}
+            renderExtraActions={(rowData) => {
+              const isEnviado = rowData.estadoEnvio === 1
+              return (
+                <>
+                  {!isEnviado ? (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8'
+                      onClick={() => handleReenviarOffline(rowData)}
+                      title='Reenviar Offline'
+                    >
+                      <Send className='h-4 w-4' />
+                    </Button>
+                  ) : null}
+                  {rowData.estadoEnvio === 2 ? (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8 text-amber-600 hover:text-amber-700'
+                      onClick={() => handleVerErroComunicacao(rowData)}
+                      title='Ver erro de comunicação'
+                    >
+                      <AlertTriangle className='h-4 w-4' />
+                    </Button>
+                  ) : null}
+                </>
+              )
+            }}
             rowActionPermissions={{
               canView,
               canChange: false,
@@ -216,6 +284,22 @@ export function ListagemAtestadosPage() {
                 className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
               >
                 {isDeleting ? 'A eliminar...' : 'Eliminar'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={erroDialogOpen} onOpenChange={setErroDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Erro de comunicação SPMS</AlertDialogTitle>
+              <AlertDialogDescription>
+                {erroComunicacao ?? 'Sem detalhe de erro disponível.'}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => setErroDialogOpen(false)}>
+                Fechar
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

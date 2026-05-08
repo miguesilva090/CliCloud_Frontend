@@ -51,22 +51,27 @@ export const roleMenuItems = {
       href: '/area-administrativa',
       icon: 'folderOpen',
       label: 'Área Administrativa',
-
       items: [
         {
-          title: 'reports-list',
-          href: '/reports',
-          icon: 'fileText',
-          label: 'Lista de Relatórios',
-          funcionalidadeId: modules.reports.permissions.reportsList.id,
+          title: 'administrativa-consultas',
+          href: '/area-administrativa/consultas',
+          icon: 'user',
+          label: 'Consultas',
+          funcionalidadeId: modules.areaComum.permissions.tabelas.id,
         },
         {
-          title: 'report-designer',
-          href: '/reports/designer?newReport=true',
-          icon: 'fileText',
-          label: 'Report Designer',
-          funcionalidadeId: modules.reports.permissions.reportDesigner.id,
-          openInNewTab: true,
+          title: 'administrativa-tratamentos',
+          href: '/area-administrativa/tratamentos',
+          icon: 'wheelchair',
+          label: 'Tratamentos',
+          funcionalidadeId: modules.areaComum.permissions.tabelas.id,
+        },
+        {
+          title: 'administrativa-modalidades',
+          href: '/area-administrativa/modalidades',
+          icon: 'dumbbell',
+          label: 'Modalidades',
+          funcionalidadeId: modules.areaComum.permissions.tabelas.id,
         },
       ],
     },
@@ -97,7 +102,7 @@ export const roleMenuItems = {
       items: [
         {
           title: 'tabelas',
-          href: '/area-comum',
+          href: '/area-comum/tabelas',
           icon: 'list',
           label: 'Tabelas',
           funcionalidadeId: modules.areaComum.permissions.tabelas.id,
@@ -131,6 +136,187 @@ export const roleMenuItems = {
 
 export const roleHeaderMenus = {
   client: {
+    'area-administrativa': [
+      {
+        label: 'Marcações',
+        href: '/area-administrativa',
+        funcionalidadeId: modules.areaComum.permissions.tabelas.id,
+        items: [
+          {
+            label: 'Consultas Marcadas',
+            href: '/area-clinica/processo-clinico/agenda/consultas-marcadas',
+            funcionalidadeId: modules.areaClinica.permissions.consultasMarcadas.id,
+          },
+          {
+            label: 'Listagem Consultas Marcadas',
+            href: '/area-clinica/processo-clinico/agenda/listagem-consultas-marcadas',
+            funcionalidadeId: modules.areaClinica.permissions.listagemConsultasMarcadas.id,
+          },
+        ],
+      },
+      {
+        label: 'Consultas Diárias',
+        href: '/area-administrativa',
+        funcionalidadeId: modules.areaComum.permissions.tabelas.id,
+        items: [
+          {
+            label: 'Consultas do Dia',
+            href: '/area-clinica/processo-clinico/atendimento/consultas-do-dia',
+            funcionalidadeId: modules.areaClinica.permissions.consultasDoDia.id,
+          },
+          {
+            label: 'Ficha Clínica',
+            href: '/area-clinica/processo-clinico/atendimento/ficha-clinica',
+            funcionalidadeId: modules.areaClinica.permissions.fichaClinica.id,
+          },
+        ],
+      },
+      {
+        label: 'Credenciais S.N.S.',
+        href: '/area-administrativa',
+        funcionalidadeId: modules.areaComum.permissions.configuracoesWebservices.id,
+        items: [
+          {
+            label: 'Configuração WebServices',
+            href: '/area-comum/tabelas/configuracao/webservices',
+            funcionalidadeId: modules.areaComum.permissions.configuracoesWebservices.id,
+          },
+          {
+            label: 'Configuração Exames Sem Papel',
+            href: '/area-comum/tabelas/configuracao/exames-sem-papel',
+            funcionalidadeId: modules.areaComum.permissions.configuracoesExamesSemPapel.id,
+          },
+        ],
+      },
+      {
+        label: 'Sinistrados',
+        href: '/area-administrativa',
+        funcionalidadeId: modules.areaComum.permissions.sinistrados.id,
+        funcionalidadeFallbackIds: [
+          modules.areaComum.permissions.entidades.id,
+          modules.areaComum.permissions.tabelas.id,
+        ],
+        items: [
+          {
+            label: 'Registos',
+            href: '/area-administrativa/consultas/sinistrados',
+            funcionalidadeId: modules.areaComum.permissions.sinistrados.id,
+            funcionalidadeFallbackIds: [
+              modules.areaComum.permissions.entidades.id,
+              modules.areaComum.permissions.tabelas.id,
+            ],
+          },
+        ],
+      },
+      {
+        label: 'Histórico',
+        href: '/area-administrativa',
+        funcionalidadeId: modules.areaClinica.permissions.historico.id,
+        items: [
+          {
+            label: 'Consultas Efetuadas',
+            href: '/area-clinica/processo-clinico/historico/consultas-efetuadas',
+            funcionalidadeId: modules.areaClinica.permissions.consultasEfetuadas.id,
+          },
+          {
+            label: 'Listagem Consultas Efetuadas',
+            href: '/area-clinica/processo-clinico/historico/listagem-consultas-efetuadas',
+            funcionalidadeId: modules.areaClinica.permissions.listagemConsultasEfetuadas.id,
+          },
+        ],
+      },
+      {
+        label: 'Mapas',
+        href: '/area-administrativa',
+        funcionalidadeId: modules.areaClinica.permissions.mapaConsultasMarcadas.id,
+        items: [
+          {
+            label: 'Mapa Consultas Marcadas',
+            href: '/area-clinica/processo-clinico/agenda/mapa-consultas-marcadas',
+            funcionalidadeId: modules.areaClinica.permissions.mapaConsultasMarcadas.id,
+          },
+          {
+            label: 'Mapa Consultas Efetuadas',
+            href: '/area-clinica/processo-clinico/historico/mapa-consultas-efetuadas',
+            funcionalidadeId: modules.areaClinica.permissions.mapaConsultasEfetuadas.id,
+          },
+        ],
+      },
+      {
+        label: 'Entidades',
+        href: '/area-administrativa',
+        funcionalidadeId: modules.areaComum.permissions.entidades.id,
+        items: [
+          {
+            label: 'Médicos',
+            href: '/area-administrativa/entidades/medicos',
+            funcionalidadeId: modules.areaComum.permissions.medicos.id,
+          },
+          {
+            label: 'Fornecedores',
+            href: '/area-administrativa/entidades/fornecedores',
+            funcionalidadeId: modules.areaComum.permissions.fornecedores.id,
+          },
+          {
+            label: 'Funcionarios',
+            href: '/area-administrativa/entidades/funcionarios',
+            funcionalidadeId: modules.areaComum.permissions.funcionarios.id,
+          },
+        ],
+      },
+      {
+        label: 'Tabelas',
+        href: '/area-administrativa',
+        funcionalidadeId: modules.areaComum.permissions.tabelas.id,
+        items: [
+          {
+            label: 'Salas',
+            href: '/area-administrativa/tabelas/salas',
+            funcionalidadeId: modules.areaComum.permissions.tabelas.id,
+          },
+          {
+            label: 'Serviços',
+            href: '/area-administrativa/tabelas/servicos',
+            funcionalidadeId: modules.areaComum.permissions.tabelaServicos.id,
+          },
+          {
+            label: 'Subsistemas de Serviços',
+            href: '/area-administrativa/tabelas/subsistemas-servicos',
+            funcionalidadeId: modules.areaComum.permissions.subsistemasServicos.id,
+          },
+          {
+            label: 'Doenças',
+            href: '/area-administrativa/tabelas/doencas',
+            funcionalidadeId: modules.areaComum.permissions.doencas.id,
+          },
+          {
+            label: 'Margem de Médicos',
+            href: '/area-administrativa/tabelas/margem-medicos',
+            funcionalidadeId: modules.areaComum.permissions.margemMedicos.id,
+          },
+          {
+            label: 'Tipos de Carta',
+            href: '/area-administrativa/tabelas/tipos-carta',
+            funcionalidadeId: modules.areaComum.permissions.tabelas.id,
+          },
+          {
+            label: 'Tipos de Consultas',
+            href: '/area-administrativa/tabelas/tipos-consultas',
+            funcionalidadeId: modules.areaComum.permissions.tiposConsultas.id,
+          },
+          {
+            label: 'Prioridades',
+            href: '/area-administrativa/tabelas/prioridades',
+            funcionalidadeId: modules.areaComum.permissions.prioridades.id,
+          },
+          {
+            label: 'Motivos de Consulta',
+            href: '/area-administrativa/tabelas/motivos-consulta',
+            funcionalidadeId: modules.areaComum.permissions.tabelas.id,
+          },
+        ],
+      },
+    ],
     'processo-clinico': [
       {
         label: 'Atendimento ao Utente',
@@ -462,6 +648,7 @@ export const roleHeaderMenus = {
           { label: 'Graus de Alergia', href: '/area-comum/tabelas/consultas/graus-alergia', icon: 'warning', funcionalidadeId: modules.areaComum.permissions.grausAlergia.id },
           { label: 'Doenças', href: '/area-comum/tabelas/consultas/doencas', icon: 'activity', funcionalidadeId: modules.areaComum.permissions.doencas.id },
           { label: 'Tipos de Consultas', href: '/area-comum/tabelas/consultas/tipos-consultas', icon: 'list', funcionalidadeId: modules.areaComum.permissions.tiposConsultas.id },
+          { label: 'Estado de Sinistro', href: '/area-comum/tabelas/consultas/estado-sinistro', icon: 'list', funcionalidadeId: modules.areaComum.permissions.estadoSinistro.id },
         ],
       },
       {

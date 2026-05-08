@@ -2,6 +2,7 @@ import { useEffect, Suspense, memo, useState, useRef } from 'react'
 import { utilitariosRoutes } from '@/routes/base/utilitarios-routes'
 import { areaClinicaRoutes } from '@/routes/area-clinica/areaClinica'
 import { reportsRoutes } from '@/routes/reports/reports-routes'
+import { areaAdministrativaRoutes } from '@/routes/area-administrativa/areaAdministrativa'
 import { X, ChevronLeft, ChevronRight, XCircle } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useMapStore } from '@/stores/use-map-store'
@@ -14,6 +15,7 @@ import {
   getParentWindowInfo as getParentWindowInfoUtil,
   generateInstanceId,
   shouldManageWindow,
+  getContextualHomePath,
 } from '@/utils/window-utils'
 import { useSidebar } from '@/hooks/use-sidebar'
 import { Button } from '@/components/ui/button'
@@ -364,7 +366,12 @@ export function WindowManager({ children }: WindowManagerProps) {
   // Rotas declaradas com manageWindow + áreas geridas por shouldManageWindow (Área Comum, Processo Clínico, utentes, etc.)
   const findRouteWithManageWindow = (pathname: string) => {
     const normalized = pathname.replace(/^\//, '')
-    const allRoutes = [...utilitariosRoutes, ...reportsRoutes, ...areaClinicaRoutes]
+    const allRoutes = [
+      ...utilitariosRoutes,
+      ...reportsRoutes,
+      ...areaClinicaRoutes,
+      ...areaAdministrativaRoutes,
+    ]
 
     const matchingRoute = allRoutes.find(
       (route) => route.path === normalized && route.manageWindow
@@ -378,6 +385,10 @@ export function WindowManager({ children }: WindowManagerProps) {
 
     if (pathname === '/area-clinica/processo-clinico') return null
     if (pathname === '/area-comum/tabelas') return null
+    if (pathname === '/area-administrativa') return null
+    if (pathname === '/area-administrativa/consultas') return null
+    if (pathname === '/area-administrativa/tratamentos') return null
+    if (pathname === '/area-administrativa/modalidades') return null
 
     if (shouldManageWindow(pathname)) {
       const segments = pathname.split('/').filter(Boolean)
@@ -604,7 +615,7 @@ export function WindowManager({ children }: WindowManagerProps) {
         const fullPathToShow = `${lastWindow.path}?${searchParams.toString()}`
         navigate(fullPathToShow)
       } else {
-        navigate('/')
+        navigate(getContextualHomePath(windowPath))
       }
     }
   }
@@ -657,7 +668,7 @@ export function WindowManager({ children }: WindowManagerProps) {
     cleanupWindowForms('*')
 
     // Navigate to home
-    navigate('/')
+    navigate(getContextualHomePath(location.pathname))
   }
 
   // Cleanup animation frames on unmount

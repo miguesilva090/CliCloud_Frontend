@@ -30,6 +30,7 @@ export function AtestadosTable({
   onOpenView,
   onOpenEdit,
   onOpenDelete,
+  renderExtraActions,
   rowActionPermissions,
   toolbarActions,
   globalSearchColumnId,
@@ -49,6 +50,7 @@ export function AtestadosTable({
   onOpenView?: (data: AtestadoTableDTO) => void
   onOpenEdit?: (data: AtestadoTableDTO) => void
   onOpenDelete?: (data: AtestadoTableDTO) => void
+  renderExtraActions?: (data: AtestadoTableDTO) => React.ReactNode
   rowActionPermissions?: AreaComumListRowActionPermissions
   toolbarActions?: React.ComponentProps<typeof DataTable>['toolbarActions']
   globalSearchColumnId?: string
@@ -60,7 +62,8 @@ export function AtestadosTable({
           onOpenView,
           onOpenEdit,
           onOpenDelete,
-          rowActionPermissions
+          rowActionPermissions,
+          renderExtraActions
         )
       : columns
 

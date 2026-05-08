@@ -495,6 +495,13 @@ const ListagemPaisesPage = lazy(() =>
       })
     )
   )
+  const ListagemEstadoSinistroPage = lazy(() =>
+    import('@/pages/area-comum/tabelas/consultas/estado-sinistro/pages/listagem-estado-sinistro-page').then(
+      (m) => ({
+        default: m.ListagemEstadoSinistroPage,
+      })
+    )
+  )
   const ListagemLocaisTratamentoPage = lazy(() =>
     import('@/pages/area-comum/tabelas/tratamentos/locais-tratamento/pages/listagem-locais-tratamento-page').then(
       (m) => ({
@@ -1382,6 +1389,20 @@ export const areaComumRoutes = [
               ),
               manageWindow: true,
               windowName: areaComum?.permissions?.margemMedicos?.name,
+            },
+            {
+              path: 'area-comum/tabelas/consultas/estado-sinistro',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.estadoSinistro?.id}
+                  actionType={actionTypes.AuthVer}
+                >
+                  <ListagemEstadoSinistroPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.estadoSinistro?.name,
             },
             {
               path: 'area-comum/tabelas/tratamentos/locais-tratamento',

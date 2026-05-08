@@ -59,15 +59,13 @@ export const HeaderNavProvider: React.FC<{ children: React.ReactNode }> = ({
       if (item.items) {
         for (const subItem of item.items) {
           if (pathname.startsWith(subItem.href)) {
-            if (
-              (subItem.dropdown && subItem.dropdown.length > 0) ||
-              (subItem.href && pathname === subItem.href)
-            ) {
-              return {
-                label: subItem.label,
-                href: subItem.href,
-                items: [subItem],
-              }
+            // Keep the full parent group visible in header secondary nav.
+            // This avoids collapsing groups like "Sinistrados" to a single item
+            // (e.g. only "Registos") when navigating inside one child route.
+            return {
+              label: item.label,
+              href: item.href,
+              items: item.items,
             }
           }
         }
@@ -93,6 +91,21 @@ export const HeaderNavProvider: React.FC<{ children: React.ReactNode }> = ({
       // Área Clínica: em /area-clinica (ou antes do redirect) mostrar submenu Processo Clínico, como na área-comum
       if (pathname === '/area-clinica' || pathname.startsWith('/area-clinica/processo-clinico')) {
         return 'processo-clinico'
+      }
+
+      // Área Administrativa: manter sempre o header próprio da área,
+      // mesmo quando estamos em subsecções como /consultas, /tratamentos, /modalidades.
+      if (pathname.startsWith('/area-administrativa')) {
+        return 'area-administrativa'
+      }
+
+      // Sinistrados pertence ao contexto funcional de Área Administrativa > Consultas.
+      if (
+        pathname.startsWith('/area-administrativa/consultas/sinistrados') ||
+        pathname.startsWith('/area-administrativa/consultas/historico-sinistrados') ||
+        pathname.startsWith('/area-comum/tabelas/consultas/estado-sinistro')
+      ) {
+        return 'area-administrativa'
       }
 
       // First check nested items and pick the most specific match

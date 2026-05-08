@@ -69,4 +69,33 @@ export class AtestadosClient extends BaseApiClient {
       `${BASE}/Atestado/${id}`
     )
   }
+
+  public async reenviarAtestadoOffline(
+    id: string
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest<undefined, GSResponse<string>>(
+      state.URL,
+      `${BASE}/Atestado/${id}/reenviar-offline`,
+      undefined
+    )
+  }
+
+  public async reenviarPendentesOffline(): Promise<
+    ResponseApi<GSResponse<number>>
+  > {
+    return this.httpClient.postRequest<undefined, GSResponse<number>>(
+      state.URL,
+      `${BASE}/Atestado/reenviar-pendentes-offline`,
+      undefined
+    )
+  }
+
+  public async obterErroComunicacao(
+    id: string
+  ): Promise<ResponseApi<GSResponse<string | null>>> {
+    return this.httpClient.getRequest<GSResponse<string | null>>(
+      state.URL,
+      `${BASE}/Atestado/${id}/erro-comunicacao`
+    )
+  }
 }

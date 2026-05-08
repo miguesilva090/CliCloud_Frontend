@@ -13,6 +13,7 @@ export interface AtestadoDTO {
   numeroSPMS?: string | null
   estadoEnvio: number
   dataEnvio?: string | null
+  mensagemErro?: string | null
   observacoes?: string | null
   numeroSNS?: string | null
   createdOn: string
@@ -31,6 +32,7 @@ export interface AtestadoTableDTO {
   numeroSPMS?: string | null
   estadoEnvio: number
   dataEnvio?: string | null
+  mensagemErro?: string | null
   observacoes?: string | null
   numeroSNS?: string | null
   createdOn: string

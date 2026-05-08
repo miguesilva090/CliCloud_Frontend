@@ -58,6 +58,25 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
       parentHref?: string
     }
   ) => {
+    const isSinistradosAdministrativeContext =
+      location.pathname.startsWith('/area-administrativa/consultas/sinistrados') ||
+      location.pathname.startsWith('/area-administrativa/consultas/historico-sinistrados') ||
+      location.pathname.startsWith('/area-comum/tabelas/consultas/estado-sinistro')
+
+    const isAreaAdministrativaConsultasContext =
+      itemHref === '/area-administrativa/consultas' &&
+      (
+        (location.pathname.startsWith('/area-administrativa/') &&
+          !location.pathname.startsWith('/area-administrativa/tratamentos') &&
+          !location.pathname.startsWith('/area-administrativa/modalidades')) ||
+        isSinistradosAdministrativeContext
+      )
+
+    // Sinistrados é navegação da Área Administrativa (Consultas).
+    if (itemHref === '/area-comum' && isSinistradosAdministrativeContext) {
+      return false
+    }
+
     const isExactMatch = location.pathname === itemHref
     const isSameHrefAsParent =
       !!options?.parentHref && options.parentHref === itemHref
@@ -69,7 +88,12 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
         location.pathname.startsWith(item.href + '/')
     )
 
-    return isExactMatch || isNestedMatch || isChildActive
+    return (
+      isExactMatch ||
+      isNestedMatch ||
+      isChildActive ||
+      isAreaAdministrativaConsultasContext
+    )
   }
 
   const handleLinkClick = (
@@ -115,6 +139,7 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
     const hasSubItems = item.items && item.items.length > 0
     const menuId = `${item.title}-${depth}`
     const isExpanded = expandedMenus[menuId]
+    const isActive = isItemActive(item.title, item.href, item.items, { parentHref })
 
     return (
       <div
@@ -136,8 +161,7 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
               }}
               className={cn(
                 'sidebar-link relative',
-                isItemActive(item.title, item.href, item.items, { parentHref }) &&
-                  'active',
+                isActive && 'active',
                 isMinimized && 'justify-center px-0',
                 item.underDevelopment && 'cursor-not-allowed opacity-75'
               )}
@@ -160,7 +184,8 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
               {!isMinimized && (
                 <ChevronRight
                   className={cn(
-                    'mr-2 h-4 w-4 transition-transform text-primary',
+                    'mr-2 h-4 w-4 transition-transform',
+                    isActive ? 'text-primary-foreground' : 'text-primary',
                     isExpanded && 'rotate-90'
                   )}
                 />

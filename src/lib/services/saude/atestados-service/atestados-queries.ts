@@ -52,6 +52,57 @@ export function useCreateAtestado() {
   })
 }
 
+export function useReenviarAtestadoOffline() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => AtestadosService('saude').reenviarAtestadoOffline(id),
+    onSuccess: (response) => {
+      const info = response.info
+      if (info.status === ResponseStatus.Success) {
+        toast.success('Atestado reenviado com sucesso.')
+      } else {
+        const firstError =
+          info.messages?.['$']?.[0] ||
+          Object.values(info.messages || {})?.[0]?.[0] ||
+          'Falha ao reenviar atestado.'
+        toast.error(firstError)
+      }
+      queryClient.invalidateQueries({ queryKey: ['atestados-paginated'] })
+    },
+    onError: () => toast.error('Falha ao reenviar atestado.'),
+  })
+}
+
+export function useReenviarPendentesOffline() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () => AtestadosService('saude').reenviarPendentesOffline(),
+    onSuccess: (response) => {
+      const info = response.info
+      if (info.status === ResponseStatus.Success) {
+        const count = info.data ?? 0
+        toast.success(`Reenvio concluído. ${count} atestado(s) enviados.`)
+      } else {
+        const firstError =
+          info.messages?.['$']?.[0] ||
+          Object.values(info.messages || {})?.[0]?.[0] ||
+          'Falha ao reenviar pendentes.'
+        toast.error(firstError)
+      }
+      queryClient.invalidateQueries({ queryKey: ['atestados-paginated'] })
+    },
+    onError: () => toast.error('Falha ao reenviar pendentes.'),
+  })
+}
+
+export function useObterErroComunicacao() {
+  return useMutation({
+    mutationFn: (id: string) => AtestadosService('saude').obterErroComunicacao(id),
+  })
+}
+
 export function usePrefetchAdjacentAtestados(
   page: number,
   pageSize: number,

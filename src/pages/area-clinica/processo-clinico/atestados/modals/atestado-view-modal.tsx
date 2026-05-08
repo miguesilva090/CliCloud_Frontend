@@ -54,6 +54,7 @@ export function AtestadoViewModal({
               numeroSPMS: toStr(d.numeroSPMS ?? d.NumeroSPMS),
               estadoEnvio: (d.estadoEnvio ?? d.EstadoEnvio ?? rowData.estadoEnvio) as number,
               dataEnvio: toStr(d.dataEnvio ?? d.DataEnvio),
+              mensagemErro: toStr(d.mensagemErro ?? d.MensagemErro ?? rowData.mensagemErro),
               observacoes: toStr(d.observacoes ?? d.Observacoes),
               numeroSNS: toStr(d.numeroSNS ?? d.NumeroSNS),
               createdOn: (d.createdOn ?? d.CreatedOn ?? '') as string,
@@ -88,8 +89,10 @@ export function AtestadoViewModal({
   const estadoEnvioText =
     data?.estadoEnvio === 1
       ? 'Enviado'
-      : data?.estadoEnvio === 0 || data?.estadoEnvio === 2
-        ? 'Não enviado'
+      : data?.estadoEnvio === 0
+        ? 'Pendente'
+        : data?.estadoEnvio === 2
+          ? 'Erro'
         : '—'
 
   return (
@@ -132,6 +135,12 @@ export function AtestadoViewModal({
               <div className='grid gap-2'>
                 <Label className='text-muted-foreground'>Observações</Label>
                 <p className='text-sm'>{detalhe.observacoes}</p>
+              </div>
+            ) : null}
+            {detalhe?.mensagemErro ? (
+              <div className='grid gap-2'>
+                <Label className='text-muted-foreground'>Erro comunicação</Label>
+                <p className='text-sm text-destructive'>{detalhe.mensagemErro}</p>
               </div>
             ) : null}
           </div>

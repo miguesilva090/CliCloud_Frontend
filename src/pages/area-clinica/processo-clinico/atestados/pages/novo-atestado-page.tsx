@@ -3,11 +3,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
 import { useNavigate } from 'react-router-dom'
 import {
+  Check,
   Brush,
   ChevronLeft,
   CloudUpload,
   Plus,
   Search,
+  X,
 } from 'lucide-react'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -59,6 +61,9 @@ import { navigateManagedWindow, useCloseCurrentWindowLikeTabBar } from '@/utils/
 import { ResponseStatus } from '@/types/api/responses'
 import { useConsultarUtenteRnu } from '@/pages/utentes/queries/utente-rnu-queries'
 
+import { toast } from '@/utils/toast-utils'
+import { CATEGORIAS_GRUPO2, formatRestricaoDisplay, isRestricaoPermitidaNaCategoria, normalizeRestricaoCodigo, requiresAnotacao } from '../utils/atestado-clinica-regras'
+
 const SEXO_OPTIONS = [
   { value: 'indefinido', label: 'Indefinido' },
   { value: 'masculino', label: 'Masculino' },
@@ -70,6 +75,7 @@ const TIPO_DOC_OPTIONS = [
   { value: 'cc', label: 'Cartão de Cidadão' },
   { value: 'outro', label: 'Outro' },
 ]
+const CATEGORIAS_EXCECAO_B_BE = new Set(['B', 'BE'])
 
 const mapSexoFromUtente = (
   value: unknown
@@ -139,8 +145,22 @@ export function NovoAtestadoPage() {
   const [observacoes, setObservacoes] = useState('')
 
   /* Categorias e Restrições (aba Categorias/Restrições) */
-  type CategoriaLinha = { id: string; codigoCarta: string; descricao: string; grupo?: number; apto?: boolean; aptoGrupo2?: boolean }
-  type RestricaoLinha = { id: string; codigoRestricao: number; descricao: string; categorias?: string; anotacoes?: string }
+  type CategoriaLinha = {
+    id: string
+    codigoCarta: string
+    descricao: string
+    grupo?: number
+    apto: number
+    aptoGrupo2: number
+  }
+  type RestricaoLinha = {
+    id: string
+    codigoRestricao: number
+    descricao: string
+    categoriaId: string
+    categoriaCodigo: string
+    anotacoes?: string
+  }
   type RestricaoAnteriorLinha = { id: string; codigoRestricao: number; descricao: string; anotacoes?: string }
   const [categoriasAtestado, setCategoriasAtestado] = useState<CategoriaLinha[]>([])
   const [restricoesAtestado, setRestricoesAtestado] = useState<RestricaoLinha[]>([])
@@ -148,6 +168,8 @@ export function NovoAtestadoPage() {
   const [selectedCategoriaId, setSelectedCategoriaId] = useState('')
   const [selectedRestricaoId, setSelectedRestricaoId] = useState('')
   const [selectedRestricaoAnteriorId, setSelectedRestricaoAnteriorId] = useState('')
+
+  const isCategoriaExcecaoBBe = (codigoCarta: string) => CATEGORIAS_EXCECAO_B_BE.has((codigoCarta ?? '').trim().toUpperCase())
 
   /* Pesquisa para comboboxes geográficos (Morada) */
   const [paisQ, setPaisQ] = useState('')
@@ -275,8 +297,31 @@ export function NovoAtestadoPage() {
   }, [categoriasCC.data])
   const restricoesOptions = useMemo((): Array<{ value: string; label: string }> => {
     const list = restricoesCC.data?.info?.data ?? []
-    return list.map((r: { id: string; codigoRestricao: number; descricao?: string | null }) => ({ value: r.id, label: [r.codigoRestricao, r.descricao].filter(Boolean).join(' - ') || r.id }))
+    return list.map((r: { id: string; codigoRestricao: number; descricao?: string | null }) => ({ value: r.id, label: formatRestricaoDisplay(r.codigoRestricao, r.descricao) || r.id }))
   }, [restricoesCC.data])
+  const categoriaContextoRestricao = useMemo(() => {
+    if (selectedCategoriaId) {
+      const bySelected = categoriasAtestado.find((c) => c.id === selectedCategoriaId)
+      if (bySelected) return bySelected
+    }
+    return categoriasAtestado[0] ?? null
+  }, [selectedCategoriaId, categoriasAtestado])
+  const restricoesFilteredOptions = useMemo(() => {
+    const categoria = categoriaContextoRestricao
+    if (!categoria) return []
+    const list = restricoesCC.data?.info?.data ?? []
+    return list
+      .filter((r: { codigoRestricao: number }) =>
+        isRestricaoPermitidaNaCategoria(
+          categoria.codigoCarta,
+          normalizeRestricaoCodigo(r.codigoRestricao)
+        )
+      )
+      .map((r: { id: string; codigoRestricao: number; descricao?: string | null }) => ({
+        value: r.id,
+        label: formatRestricaoDisplay(r.codigoRestricao, r.descricao) || r.id,
+      }))
+  }, [categoriaContextoRestricao, restricoesCC.data])
 
   const paisItems = useMemo(() => {
     const list = paisesMorada.data?.info?.data ?? []
@@ -419,28 +464,80 @@ export function NovoAtestadoPage() {
     if (!selectedCategoriaId) return
     const list = categoriasCC.data?.info?.data ?? []
     const item = list.find((c: CartaConducaoLightDTO) => c.id === selectedCategoriaId)
-    if (item) {
-      setCategoriasAtestado((prev) => [...prev, { id: item.id, codigoCarta: item.codigoCarta ?? '', descricao: item.descricao ?? '', grupo: item.grupo, apto: undefined, aptoGrupo2: undefined }])
+    if (!item) return
+    if (categoriasAtestado.some((c) => c.id === item.id)) {
+      toast.error('Categoria já inserida.')
       setSelectedCategoriaId('')
+      return
     }
+
+    const codigo = item.codigoCarta ?? ''
+    const isGrupo2 = CATEGORIAS_GRUPO2.has(codigo)
+    setCategoriasAtestado((prev) => [
+      ...prev,
+      {
+        id: item.id,
+        codigoCarta: codigo,
+        descricao: item.descricao ?? '',
+        grupo: item.grupo,
+        apto: isGrupo2 ? 0 : 1,
+        aptoGrupo2: isGrupo2 ? 1 : 0,
+      },
+    ])
+    setSelectedCategoriaId('')
   }
 
   const handleRemoverCategoria = (id: string) => {
     setCategoriasAtestado((prev) => prev.filter((c) => c.id !== id))
+    setRestricoesAtestado((prev) => prev.filter((r) => r.categoriaId !== id))
   }
 
   const handleInserirRestricao = () => {
     if (!selectedRestricaoId) return
+    if (categoriasAtestado.length === 0) {
+      toast.error('Insira pelo menos uma categoria antes de adicionar restrições.')
+      return
+    }
     const list = restricoesCC.data?.info?.data ?? []
     const item = list.find((r: CartaConducaoRestricoesLightDTO) => r.id === selectedRestricaoId)
-    if (item) {
-      setRestricoesAtestado((prev) => [...prev, { id: item.id, codigoRestricao: item.codigoRestricao, descricao: item.descricao ?? '', categorias: undefined, anotacoes: undefined }])
-      setSelectedRestricaoId('')
+    if (!item) return
+
+    const categoriaTarget = categoriaContextoRestricao
+    if (!categoriaTarget) {
+      toast.error('Categoria inválida para a restrição.')
+      return
     }
+    const codigoRestr = normalizeRestricaoCodigo(item.codigoRestricao)
+    if (!isRestricaoPermitidaNaCategoria(categoriaTarget.codigoCarta, codigoRestr)) {
+      toast.error(`Restrição ${codigoRestr} não permitida para categoria ${categoriaTarget.codigoCarta}.`)
+      return
+    }
+
+    if (
+      restricoesAtestado.some(
+        (r) => r.id === item.id && r.categoriaId === categoriaTarget.id
+      )
+    ) {
+      toast.error('Restrição já inserida para esta categoria.')
+      return
+    }
+
+    setRestricoesAtestado((prev) => [
+      ...prev,
+      {
+        id: item.id,
+        codigoRestricao: item.codigoRestricao,
+        descricao: item.descricao ?? '',
+        categoriaId: categoriaTarget.id,
+        categoriaCodigo: categoriaTarget.codigoCarta,
+        anotacoes: undefined,
+      },
+    ])
+    setSelectedRestricaoId('')
   }
 
   const handleRemoverRestricao = (id: string) => {
-    setRestricoesAtestado((prev) => prev.filter((r) => r.id !== id))
+    setRestricoesAtestado((prev) => prev.filter((r) => `${r.id}-${r.categoriaId}` !== id))
   }
 
   const handleInserirRestricaoAnterior = () => {
@@ -472,10 +569,50 @@ export function NovoAtestadoPage() {
     if (!utenteId || !medicoId || !clientId) {
       return
     }
+
+    if (categoriasAtestado.length === 0) {
+      toast.error('É necessário selecionar pelo menos uma categoria.')
+      return
+    }
+
+    const hasRestricao50SemCompanhia = restricoesAtestado.some((r) => {
+      const code = normalizeRestricaoCodigo(r.codigoRestricao)
+      if (!code.startsWith('50')) return false
+      return !restricoesAtestado.some((s) => {
+        if (s.categoriaId !== r.categoriaId || s.id === r.id) return false
+        const n = parseInt(normalizeRestricaoCodigo(s.codigoRestricao).split('.')[0], 10)
+        return !Number.isNaN(n) && n >= 1 && n <= 44
+      })
+    })
+
+    if (hasRestricao50SemCompanhia) {
+      toast.error('A restrição 50.x deve estar acompanhada de uma restrição na gama 01..44 (mesma categoria).')
+      return
+    }
+
+    for (const r of restricoesAtestado) {
+      const code = normalizeRestricaoCodigo(r.codigoRestricao)
+      const rule = requiresAnotacao(code)
+      const anot = (r.anotacoes ?? '').trim()
+      if (rule.required && !anot) {
+        toast.error(`A restrição ${code} exige anotação obrigatória.`)
+        return
+      }
+    }
+
+    for (const r of restricoesAnterioresAtestado) {
+      const code = normalizeRestricaoCodigo(r.codigoRestricao)
+      const rule = requiresAnotacao(code)
+      const anot = (r.anotacoes ?? '').trim()
+      if (rule.required && !anot) {
+        toast.error(`A restrição anterior ${code} exige anotação obrigatória.`)
+        return
+      }
+    }
+
     const dataAtestadoStr = dataAtestado
       ? new Date(dataAtestado).toISOString().slice(0, 10)
       : new Date().toISOString().slice(0, 10)
-    const primeiraCategoriaId = categoriasAtestado[0]?.id
     const payload: CreateAtestadoRequest = {
       utenteId,
       medicoId,
@@ -485,23 +622,16 @@ export function NovoAtestadoPage() {
       numeroSPMS: undefined,
       observacoes: observacoes || null,
       numeroSNS: numeroUtente || null,
-      categorias: categoriasAtestado.map((c) => {
-        const aptoRaw = (c as unknown as { apto?: number }).apto
-        const aptoGrupo2Raw = (c as unknown as { aptoGrupo2?: number }).aptoGrupo2
-        return {
-          cartaConducaoId: c.id,
-          apto: typeof aptoRaw === 'number' ? aptoRaw : 1,
-          aptoGrupo2: typeof aptoGrupo2Raw === 'number' ? aptoGrupo2Raw : 0,
-        }
-      }),
-      restricoes:
-        primeiraCategoriaId != null
-          ? restricoesAtestado.map((r) => ({
-              cartaConducaoRestricaoId: r.id,
-              cartaConducaoId: primeiraCategoriaId,
-              anotacoes: (r as RestricaoLinha).anotacoes ?? null,
-            }))
-          : [],
+      categorias: categoriasAtestado.map((c) => ({
+        cartaConducaoId: c.id,
+        apto: c.apto,
+        aptoGrupo2: c.aptoGrupo2,
+      })),
+      restricoes: restricoesAtestado.map((r) => ({
+        cartaConducaoRestricaoId: r.id,
+        cartaConducaoId: r.categoriaId,
+        anotacoes: r.anotacoes ?? null,
+      })),
       restricoesAnteriores: restricoesAnterioresAtestado.map((r) => ({
         cartaConducaoRestricaoId: r.id,
         anotacoes: r.anotacoes ?? null,
@@ -986,8 +1116,58 @@ export function NovoAtestadoPage() {
                             <TableRow key={c.id}>
                               <TableCell className='w-[110px] text-xs text-center'>{c.codigoCarta}</TableCell>
                               <TableCell className='text-xs'>{c.descricao}</TableCell>
-                              <TableCell className='w-[100px] text-xs'>—</TableCell>
-                              <TableCell className='w-[120px] text-xs'>—</TableCell>
+                              <TableCell className='w-[100px] text-xs'>
+                                <Button
+                                  type='button'
+                                  size='icon'
+                                  variant='ghost'
+                                  className='h-7 w-7'
+                                  onClick={() =>
+                                    setCategoriasAtestado((prev) =>
+                                      prev.map((x) => {
+                                        if (x.id !== c.id) return x
+                                        const nextApto = x.apto === 1 ? 0 : 1
+                                        if (!isCategoriaExcecaoBBe(x.codigoCarta)) return { ...x, apto: nextApto }
+
+                                        // Regra legado B/BE: nunca manter (apto=0, aptoGrupo2=1).
+                                        if (nextApto === 1 && x.aptoGrupo2 === 1) {
+                                          return { ...x, apto: 1, aptoGrupo2: 0 }
+                                        }
+                                        return { ...x, apto: nextApto }
+                                      })
+                                    )
+                                  }
+                                  title={c.apto === 1 ? 'Apto' : 'Inapto'}
+                                >
+                                  {c.apto === 1 ? <Check className='h-4 w-4 text-emerald-600' /> : <X className='h-4 w-4 text-destructive' />}
+                                </Button>
+                              </TableCell>
+                              <TableCell className='w-[120px] text-xs'>
+                                <Button
+                                  type='button'
+                                  size='icon'
+                                  variant='ghost'
+                                  className='h-7 w-7'
+                                  onClick={() =>
+                                    setCategoriasAtestado((prev) =>
+                                      prev.map((x) => {
+                                        if (x.id !== c.id) return x
+                                        const nextAptoGrupo2 = x.aptoGrupo2 === 1 ? 0 : 1
+                                        if (!isCategoriaExcecaoBBe(x.codigoCarta)) return { ...x, aptoGrupo2: nextAptoGrupo2 }
+
+                                        // Regra legado B/BE: se grupo2 desce para 0 e apto já está 0, subir apto para 1.
+                                        if (nextAptoGrupo2 === 0 && x.apto !== 1) {
+                                          return { ...x, apto: 1, aptoGrupo2: 0 }
+                                        }
+                                        return { ...x, aptoGrupo2: nextAptoGrupo2 }
+                                      })
+                                    )
+                                  }
+                                  title={c.aptoGrupo2 === 1 ? 'Apto Grupo 2' : 'Inapto Grupo 2'}
+                                >
+                                  {c.aptoGrupo2 === 1 ? <Check className='h-4 w-4 text-emerald-600' /> : <X className='h-4 w-4 text-destructive' />}
+                                </Button>
+                              </TableCell>
                               <TableCell className='w-[96px] text-right'>
                                 <Button type='button' size='sm' variant='ghost' className='h-7 text-xs text-destructive hover:text-destructive' onClick={() => handleRemoverCategoria(c.id)}>Remover</Button>
                               </TableCell>
@@ -1004,7 +1184,7 @@ export function NovoAtestadoPage() {
                     <Select value={selectedRestricaoId} onValueChange={setSelectedRestricaoId}>
                       <SelectTrigger className='h-8 w-[200px]'><SelectValue placeholder='Selecionar restrição…' /></SelectTrigger>
                       <SelectContent>
-                        {restricoesOptions.map((o: { value: string; label: string }) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                        {restricoesFilteredOptions.map((o: { value: string; label: string }) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <Button size='sm' variant='default' className='h-8 gap-1 text-xs' onClick={handleInserirRestricao} disabled={!selectedRestricaoId}><Plus className='h-3 w-3' /> Inserir</Button>
@@ -1029,13 +1209,28 @@ export function NovoAtestadoPage() {
                           </TableRow>
                         ) : (
                           restricoesAtestado.map((r: RestricaoLinha) => (
-                            <TableRow key={r.id}>
-                              <TableCell className='w-[110px] text-xs text-center'>{r.codigoRestricao}</TableCell>
+                            <TableRow key={`${r.id}-${r.categoriaId}`}>
+                              <TableCell className='w-[110px] text-xs text-center'>{normalizeRestricaoCodigo(r.codigoRestricao)}</TableCell>
                               <TableCell className='text-xs'>{r.descricao}</TableCell>
-                              <TableCell className='w-[120px] text-xs'>—</TableCell>
-                              <TableCell className='w-[120px] text-xs'>—</TableCell>
+                              <TableCell className='w-[120px] text-xs'>{r.categoriaCodigo}</TableCell>
+                              <TableCell className='w-[220px] text-xs'>
+                                <Input
+                                  value={r.anotacoes ?? ''}
+                                  onChange={(e) =>
+                                    setRestricoesAtestado((prev) =>
+                                      prev.map((x) =>
+                                        x.id === r.id && x.categoriaId === r.categoriaId
+                                          ? { ...x, anotacoes: e.target.value }
+                                          : x
+                                      )
+                                    )
+                                  }
+                                  className='h-7'
+                                  placeholder='Anotação'
+                                />
+                              </TableCell>
                               <TableCell className='w-[96px] text-right'>
-                                <Button type='button' size='sm' variant='ghost' className='h-7 text-xs text-destructive hover:text-destructive' onClick={() => handleRemoverRestricao(r.id)}>Remover</Button>
+                                <Button type='button' size='sm' variant='ghost' className='h-7 text-xs text-destructive hover:text-destructive' onClick={() => handleRemoverRestricao(`${r.id}-${r.categoriaId}`)}>Remover</Button>
                               </TableCell>
                             </TableRow>
                           ))
@@ -1086,9 +1281,20 @@ export function NovoAtestadoPage() {
                       ) : (
                         restricoesAnterioresAtestado.map((r: RestricaoAnteriorLinha) => (
                           <TableRow key={r.id}>
-                            <TableCell className='w-[140px] whitespace-nowrap text-xs text-center '>{r.codigoRestricao}</TableCell>
+                            <TableCell className='w-[140px] whitespace-nowrap text-xs text-center '>{normalizeRestricaoCodigo(r.codigoRestricao)}</TableCell>
                             <TableCell className='truncate text-center text-xs'>{r.descricao}</TableCell>
-                            <TableCell className='w-[220px] whitespace-nowrap text-center text-xs'>{r.anotacoes || '—'}</TableCell>
+                            <TableCell className='w-[220px] whitespace-nowrap text-center text-xs'>
+                              <Input
+                                value={r.anotacoes ?? ''}
+                                onChange={(e) =>
+                                  setRestricoesAnterioresAtestado((prev) =>
+                                    prev.map((x) => (x.id === r.id ? { ...x, anotacoes: e.target.value } : x))
+                                  )
+                                }
+                                className='h-7'
+                                placeholder='Anotação'
+                              />
+                            </TableCell>
                             <TableCell className='w-[110px] pr-3 text-right'>
                               <Button
                                 type='button'

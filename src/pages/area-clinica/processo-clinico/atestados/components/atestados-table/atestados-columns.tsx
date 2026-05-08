@@ -1,4 +1,5 @@
 import type { CellContext, ColumnDef } from '@tanstack/react-table'
+import type { ReactNode } from 'react'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import type { AtestadoTableDTO } from '@/types/dtos/saude/atestados.dtos'
 import {
@@ -49,8 +50,10 @@ export const columns: Array<ColumnDef<AtestadoTableDTO> & DataTableColumnDef<Ate
     header: 'Estado Envio',
     cell: ({ row }: CellContext<AtestadoTableDTO, unknown>) => {
       const v = row.original.estadoEnvio
-      if (v === 1 || v === 2) return 'Sim'
-      return v === 0 ? 'Não' : '—'
+      if (v === 0) return 'Pendente'
+      if (v === 1) return 'Enviado'
+      if (v === 2) return 'Erro'
+      return '—'
     },
     meta: { align: 'left', width: 'w-[250px]' },
   },
@@ -68,7 +71,8 @@ export function getColumnsWithViewCallback(
   onOpenView: (data: AtestadoTableDTO) => void,
   onOpenEdit?: (data: AtestadoTableDTO) => void,
   onOpenDelete?: (data: AtestadoTableDTO) => void,
-  rowActionPermissions?: AreaComumListRowActionPermissions
+  rowActionPermissions?: AreaComumListRowActionPermissions,
+  renderExtraActions?: (data: AtestadoTableDTO) => ReactNode
 ): Array<ColumnDef<AtestadoTableDTO> & DataTableColumnDef<AtestadoTableDTO>> {
   const baseColumns = columns.filter((c) => (c as { id?: string }).id !== 'actions')
   return [
@@ -78,6 +82,7 @@ export function getColumnsWithViewCallback(
         onOpenView,
         onOpenEdit,
         onOpenDelete,
+        renderExtraActions,
         rowActionPermissions,
       }),
       meta: { align: 'right', width: 'w-[350px]' },

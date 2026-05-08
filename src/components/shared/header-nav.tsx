@@ -194,6 +194,7 @@ export function HeaderNav() {
             aria-label='Menu principal'
           >
             {filteredMenuItems.map((item, index) => {
+              const itemMenuKey = `${item.href}-${item.label}-${index}`
               const filteredSubItems = item.items?.filter(hasItemPermission) || []
               /* Grupo sem sub-itens visíveis: mostrar ligação directa ao href do pai (ex.: permissões
                * não carregadas para todos os filhos) em vez de desaparecer do header. */
@@ -246,12 +247,12 @@ export function HeaderNav() {
 
               return (
                 <DropdownMenu
-                  key={item.href}
+                  key={itemMenuKey}
                   modal
-                  open={openMenuItem === item.href}
+                  open={openMenuItem === itemMenuKey}
                   onOpenChange={(open) => {
                     if (open) {
-                      setOpenMenuItem(item.href)
+                      setOpenMenuItem(itemMenuKey)
                     } else {
                       setOpenMenuItem(undefined)
                     }

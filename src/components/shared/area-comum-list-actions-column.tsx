@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
@@ -8,6 +9,7 @@ export type AreaComumListActionsColumnOptions<T> = {
   onOpenView: (data: T) => void
   onOpenEdit?: (data: T) => void
   onOpenDelete?: (data: T) => void
+  renderExtraActions?: (data: T) => ReactNode
   rowActionPermissions?: AreaComumListRowActionPermissions
   /** Listagens só com ver/editar (sem coluna de eliminar). */
   omitDelete?: boolean
@@ -23,6 +25,7 @@ export function createAreaComumListActionsColumnDef<T>(
     onOpenView,
     onOpenEdit,
     onOpenDelete,
+    renderExtraActions,
     rowActionPermissions,
     omitDelete,
     isRowActionsLocked,
@@ -80,6 +83,7 @@ export function createAreaComumListActionsColumnDef<T>(
               <Trash2 className='h-4 w-4' />
             </Button>
           ) : null}
+          {renderExtraActions?.(data)}
         </div>
       )
     },

@@ -9,6 +9,7 @@ import { utilitariosRoutes } from '@/routes/base/utilitarios-routes'
 import { areaComumRoutes } from '@/routes/area-comum/areaComum'
 import { areaClinicaRoutes } from '@/routes/area-clinica/areaClinica'
 import { reportsRoutes } from '@/routes/reports/reports-routes'
+import { areaAdministrativaRoutes } from '@/routes/area-administrativa/areaAdministrativa'
 
 
 /**
@@ -85,6 +86,7 @@ export function shouldManageWindow(pathname: string): boolean {
     ...areaComumRoutes,
     ...areaClinicaRoutes,
     ...reportsRoutes,
+    ...areaAdministrativaRoutes,
   ]
 
   for (const route of allRoutes) {
@@ -183,11 +185,16 @@ export function handleWindowClose(
   navigate: (path: string) => void,
   removeWindow: (id: string) => void
 ) {
+  const currentPath = window.location.pathname
+  const windowsStore = useWindowsStore.getState()
+  const remainingWindows = windowsStore.windows.filter((w) => w.id !== windowId)
   removeWindow(windowId)
 
-  const windows = useWindowsStore.getState().windows
+  const shouldHardReload = (path: string) =>
+    path.startsWith('/area-comum') ||
+    path.startsWith('/area-administrativa') ||
+    path.startsWith('/area-clinica/processo-clinico')
 
-  const remainingWindows = windows.filter((w) => w.id !== windowId)
   if (remainingWindows.length > 0 ) {
     const lastWindow = remainingWindows[remainingWindows.length - 1]
     const searchParams = new URLSearchParams()
@@ -197,10 +204,39 @@ export function handleWindowClose(
       })
     }
     searchParams.set('instanceId', lastWindow.instanceId)
-    navigate(`${lastWindow.path}?${searchParams.toString()}`)
+    const fullPath = `${lastWindow.path}?${searchParams.toString()}`
+
+    // Repor a janela alvo como ativa para manter o estado de tabs consistente.
+    useWindowsStore.getState().restoreWindow(lastWindow.id)
+
+    // Em listagens/áreas principais, forçar reload para evitar cenário de
+    // "tab fecha mas conteúdo visual não atualiza".
+    if (shouldHardReload(lastWindow.path)) {
+      window.location.href = `${window.location.origin}${fullPath}`
+      return
+    }
+
+    navigate(fullPath)
   } else {
-    navigate('/')
+    navigate(getContextualHomePath(currentPath))
   }
+}
+
+/**
+ * Returns the contextual "home" route for the current area.
+ * This keeps users in the same module when the last tab is closed.
+ */
+export function getContextualHomePath(pathname: string): string {
+  if (pathname.startsWith('/area-administrativa')) {
+    return '/area-administrativa/consultas'
+  }
+  if (pathname.startsWith('/area-comum')) {
+    return '/area-comum/tabelas'
+  }
+  if (pathname.startsWith('/area-clinica')) {
+    return '/area-clinica/processo-clinico'
+  }
+  return '/'
 }
 
 /**
@@ -600,6 +636,18 @@ export function openUtenteCreationInApp(
   addWindow: (window: Omit<WindowState, 'isMinimized'>) => void
 ) {
   openPathInApp(navigate, addWindow, '/utentes/novo', 'Novo utente')
+}
+
+export function openSinistradoCreationInApp(
+  navigate: (path: string) => void,
+  addWindow: (window: Omit<WindowState, 'isMinimized'>) => void
+) {
+  openPathInApp(
+    navigate,
+    addWindow,
+    '/area-administrativa/consultas/sinistrados/novo',
+    'Novo sinistrado'
+  )
 }
 
 export function openUtenteEditInApp(

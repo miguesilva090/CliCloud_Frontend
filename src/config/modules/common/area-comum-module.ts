@@ -251,6 +251,18 @@ export const areaComum: Module = {
       id: '00000002-0000-0000-0063-000000000003',
       name: 'Tipos de Consultas',
     },
+    estadoSinistro: {
+      id: '00000002-0000-0000-0089-000000000003',
+      name: 'Estado de Sinistro',
+    },
+    sinistrados: {
+      id: '00000002-0000-0000-0090-000000000003',
+      name: 'Sinistrados',
+    },
+    historicoSinistrados: {
+      id: '00000002-0000-0000-0091-000000000003',
+      name: 'Histórico de Sinistrados',
+    },
     tratamentos: {
       id: '00000002-0000-0000-0064-000000000003',
       name: 'Tratamentos',
