@@ -3,6 +3,40 @@ import { useLocation } from 'react-router-dom'
 import { useWindowPageState } from '@/stores/use-pages-store'
 import { useCurrentWindowId } from '@/utils/window-utils'
 
+export type PageFilter = { id: string; value: string }
+
+export function filtersAreEqual(
+  a: PageFilter[],
+  b: PageFilter[]
+): boolean {
+  if (a.length !== b.length) return false
+  const key = (f: PageFilter) => `${f.id}\0${f.value}`
+  const sa = [...a].map(key).sort().join('\n')
+  const sb = [...b].map(key).sort().join('\n')
+  return sa === sb
+}
+
+/** Substitui ou acrescenta um filtro sem duplicar o id. */
+export function buildFiltersWithValue(
+  filters: PageFilter[],
+  filterId: string,
+  filterValue: string
+): PageFilter[] {
+  const rest = filters.filter((f) => f.id !== filterId)
+  return [...rest, { id: filterId, value: filterValue }]
+}
+
+/** Evita handleFiltersChange no mount (que rebenta a DataTable e trava a navegação). */
+export function applyFiltersIfChanged(
+  current: PageFilter[],
+  next: PageFilter[],
+  handleFiltersChange: (filters: PageFilter[]) => void
+): void {
+  if (!filtersAreEqual(current, next)) {
+    handleFiltersChange(next)
+  }
+}
+
 type UsePageDataOptions = {
   // Required
   useGetDataPaginated: (
@@ -19,7 +53,9 @@ type UsePageDataOptions = {
   ) => any
 
   // Optional
-  onFiltersChange?: (filters: Array<{ id: string; value: string }>) => void
+  /** Aplicado uma vez no mount via setFilters (sem handleFiltersChange). */
+  defaultFilters?: PageFilter[]
+  onFiltersChange?: (filters: PageFilter[]) => void
   onPaginationChange?: (page: number, pageSize: number) => void
   onSortingChange?: (sorting: Array<{ id: string; desc: boolean }>) => void
 }
@@ -45,6 +81,18 @@ export function usePageData(options: UsePageDataOptions) {
     setSorting,
     setPagination,
   } = useWindowPageState(pageStateKey)
+
+  const defaultFiltersInitialized = useRef(false)
+
+  // Filtros por defeito da rota (ex.: histórico=1) — só setFilters, sem rebentar paginação/DataTable
+  useEffect(() => {
+    if (!options.defaultFilters?.length || defaultFiltersInitialized.current) return
+    defaultFiltersInitialized.current = true
+    if (!filtersAreEqual(filters, options.defaultFilters)) {
+      setFilters(options.defaultFilters)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Initialize filters, pagination and sorting from location state if they exist
   useEffect(() => {

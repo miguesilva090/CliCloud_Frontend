@@ -7,6 +7,7 @@ import Header from '@/components/shared/header'
 import { HeaderNav } from '@/components/shared/header-nav'
 import MobileSidebar from '@/components/shared/mobile-sidebar'
 import Sidebar from '@/components/shared/sidebar'
+import { usePathnameKey } from '@/hooks/use-pathname-key'
 import { WindowManager } from './window-manager'
 
 function DashboardLayoutInner({
@@ -16,6 +17,7 @@ function DashboardLayoutInner({
 }) {
   const { sidebarOpen, setSidebarOpen } = useSidebarOpen()!
   const { isMinimized } = useSidebar()
+  const pathKey = usePathnameKey()
 
   return (
     <>
@@ -72,7 +74,11 @@ function DashboardLayoutInner({
             aria-hidden
           />
           <div className='relative z-10 min-h-full'>
-            <WindowManager>{children}</WindowManager>
+            <WindowManager>
+              <div key={pathKey} className='h-full'>
+                {children}
+              </div>
+            </WindowManager>
           </div>
         </main>
       </div>

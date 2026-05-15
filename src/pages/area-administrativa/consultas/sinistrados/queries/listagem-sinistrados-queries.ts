@@ -1,6 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { PaginatedRequest } from '@/types/api/responses'
+import { modules } from '@/config/modules'
 import { SinistradoService } from '@/lib/services/sinistrados/sinistrado-service'
+
+const listPermId = modules.areaAdministrativa.permissions.sinistrados.id
 
 type Sorting = Array<{ id: string; desc: boolean }> | null
 type Filters = Array<{ id: string; value: string }> | null
@@ -20,7 +23,7 @@ export function useGetSinistradosPaginated(
 
   return useQuery({
     queryKey: ['sinistrados-paginated', params],
-    queryFn: () => SinistradoService().getPaginated(params),
+    queryFn: () => SinistradoService(listPermId).getPaginated(params),
     placeholderData: (previousData) => previousData,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
@@ -40,7 +43,7 @@ export function usePrefetchAdjacentSinistrados(
     const params: PaginatedRequest = { ...baseParams, pageNumber: page - 1 }
     await queryClient.prefetchQuery({
       queryKey: ['sinistrados-paginated', params],
-      queryFn: () => SinistradoService().getPaginated(params),
+      queryFn: () => SinistradoService(listPermId).getPaginated(params),
     })
   }
 
@@ -48,7 +51,7 @@ export function usePrefetchAdjacentSinistrados(
     const params: PaginatedRequest = { ...baseParams, pageNumber: page + 1 }
     await queryClient.prefetchQuery({
       queryKey: ['sinistrados-paginated', params],
-      queryFn: () => SinistradoService().getPaginated(params),
+      queryFn: () => SinistradoService(listPermId).getPaginated(params),
     })
   }
 

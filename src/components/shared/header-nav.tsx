@@ -7,7 +7,11 @@ import { useAuthStore } from '@/stores/auth-store'
 import { usePermissionsStore } from '@/stores/permissions-store'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { cn } from '@/lib/utils'
-import { shouldManageWindow, navigateManagedWindow } from '@/utils/window-utils'
+import {
+  shouldManageWindow,
+  navigateManagedWindow,
+  isManagedRouteAlreadyFocused,
+} from '@/utils/window-utils'
 import {
   hasMenuFuncionalidadeAccess,
   useHeaderMenu,
@@ -56,12 +60,16 @@ export function HeaderNav() {
     // For menu items with subitems
     if (items) {
       const hasActiveChild = items.some((subItem) => {
-        // Check direct match with subitems
-        const isDirectMatch = location.pathname === subItem.href
+        // Check direct match with subitems (inclui rotas filhas, ex. credenciais/novo)
+        const isDirectMatch =
+          location.pathname === subItem.href ||
+          location.pathname.startsWith(`${subItem.href}/`)
 
         // Check nested items (for dropdown menus)
         const hasNestedMatch = subItem.dropdown?.some(
-          (dropdownItem) => location.pathname === dropdownItem.href
+          (dropdownItem) =>
+            location.pathname === dropdownItem.href ||
+            location.pathname.startsWith(`${dropdownItem.href}/`)
         )
 
         // Check nested `items` (ex.: Configuração → Gestão de Separadores → Separadores / …)
@@ -87,41 +95,9 @@ export function HeaderNav() {
       return true
     }
 
-    // Split paths into segments for comparison
-    const currentPathSegments = location.pathname.split('/').filter(Boolean)
-    const hrefSegments = href.split('/').filter(Boolean)
-
-    // For parent routes, we need to be more specific about the relationship
-    if (href !== '/' && currentPathSegments.length > hrefSegments.length) {
-      // Check if all segments of the href match the corresponding segments in the current path
-      const isParentMatch = hrefSegments.every(
-        (segment, index) => segment === currentPathSegments[index]
-      )
-
-      // Only consider it a match if the next segment after the parent path
-      // is not a sibling route (i.e., it's a true child route)
-      if (isParentMatch) {
-        const nextSegment = currentPathSegments[hrefSegments.length]
-
-        // Dynamic sibling route detection
-        // If we're at a level where we have sibling routes (e.g. utilitarios/tabelas/geograficas/...)
-        if (nextSegment) {
-          // Check if this is a sibling route by looking at the current path structure
-          // e.g. utilitarios/tabelas/geograficas/paises vs utilitarios/tabelas/geograficas/distritos
-          const currentPathWithoutLastSegment = currentPathSegments
-            .slice(0, -1)
-            .join('/')
-          const hrefPath = hrefSegments.join('/')
-
-          // If the current path without the last segment matches the href exactly,
-          // and we have an additional segment, it's likely a sibling route
-          if (currentPathWithoutLastSegment === hrefPath) {
-            return false
-          }
-        }
-
-        return true
-      }
+    // True child routes (ex.: /area-administrativa/credenciais/novo sob …/credenciais)
+    if (href !== '/' && location.pathname.startsWith(`${href}/`)) {
+      return true
     }
 
     return false
@@ -135,7 +111,8 @@ export function HeaderNav() {
   const handleLinkClick = (
     e: React.MouseEvent,
     href: string,
-    openInNewTab?: boolean
+    openInNewTab?: boolean,
+    tabTitle?: string
   ) => {
     if (href.startsWith('#')) {
       e.preventDefault()
@@ -153,10 +130,16 @@ export function HeaderNav() {
     const pathOnly = href.split('?')[0]
     if (shouldManageWindow(pathOnly)) {
       e.preventDefault()
-      if (location.pathname === pathOnly) {
+      if (
+        isManagedRouteAlreadyFocused(
+          location.pathname,
+          location.search,
+          pathOnly
+        )
+      ) {
         return
       }
-      navigateManagedWindow(navigate, href)
+      navigateManagedWindow(navigate, href, { title: tabTitle })
     }
   }
 
@@ -214,7 +197,7 @@ export function HeaderNav() {
                       fallbackActive && 'bg-accent text-accent-foreground'
                     )}
                     onClick={(e) =>
-                      handleLinkClick(e, item.href, item.openInNewTab)
+                      handleLinkClick(e, item.href, item.openInNewTab, item.label)
                     }
                   >
                     <span>{item.label}</span>
@@ -237,7 +220,7 @@ export function HeaderNav() {
                       linkActive && 'bg-accent text-accent-foreground'
                     )}
                     onClick={(e) =>
-                      handleLinkClick(e, item.href, item.openInNewTab)
+                      handleLinkClick(e, item.href, item.openInNewTab, item.label)
                     }
                   >
                     <span>{item.label}</span>
@@ -353,7 +336,8 @@ export function HeaderNav() {
                                           handleLinkClick(
                                             e,
                                             dropdownItem.href,
-                                            dropdownItem.openInNewTab
+                                            dropdownItem.openInNewTab,
+                                            dropdownItem.label
                                           )
                                           setOpenMenuItem(undefined)
                                         }}
@@ -402,7 +386,8 @@ export function HeaderNav() {
                                           handleLinkClick(
                                             e,
                                             nestedItem.href,
-                                            nestedItem.openInNewTab
+                                            nestedItem.openInNewTab,
+                                            nestedItem.label
                                           )
                                           setOpenMenuItem(undefined)
                                         }}
@@ -431,7 +416,8 @@ export function HeaderNav() {
                               handleLinkClick(
                                 e,
                                 subItem.href,
-                                subItem.openInNewTab
+                                subItem.openInNewTab,
+                                subItem.label
                               )
                             }}
                           />

@@ -27,11 +27,14 @@ import { MargemMedicoService } from '@/lib/services/saude/margem-medico-service'
 import { ResponseStatus } from '@/types/api/responses'
 
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
 import { modules } from '@/config/modules'
 
-const margemMedicosPermId = modules.areaComum.permissions.margemMedicos.id
-
 function ListagemMargemMedicosPage() {
+  const margemMedicosPermId = useScopedFuncionalidadeId(
+    modules.areaComum.permissions.margemMedicos.id,
+    modules.areaAdministrativa.permissions.margemMedicos.id
+  )
   const { canView, canAdd, canChange, canDelete } =
     useAreaComumEntityListPermissions(margemMedicosPermId)
     const queryClient = useQueryClient()

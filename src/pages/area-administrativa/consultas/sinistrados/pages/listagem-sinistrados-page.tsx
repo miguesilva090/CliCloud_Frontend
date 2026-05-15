@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Plus, RotateCw, List, ListTodo, Archive } from 'lucide-react'
+import { Plus, RotateCw, List, ListTodo, Archive, ClipboardList, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -13,8 +13,11 @@ import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { usePageData } from '@/utils/page-data-utils'
-import { openSinistradoCreationInApp } from '@/utils/window-utils'
+import {
+  applyFiltersIfChanged,
+  buildFiltersWithValue,
+  usePageData,
+} from '@/utils/page-data-utils'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
 import { ResponseStatus } from '@/types/api/responses'
@@ -28,18 +31,23 @@ import {
   usePrefetchAdjacentSinistrados,
 } from '../queries/listagem-sinistrados-queries'
 import { useWindowsStore } from '@/stores/use-windows-store'
+import { openSinistradoCreationInApp } from '@/utils/window-utils'
 
-const permId = modules.areaComum.permissions.sinistrados.id
+const listPermId = modules.areaAdministrativa.permissions.sinistrados.id
+const createPermId = modules.areaAdministrativa.permissions.registoSinistrados.id
 
 export function ListagemSinistradosPage() {
   const navigate = useNavigate()
   const addWindow = useWindowsStore((s) => s.addWindow)
-  const { canView, canAdd, canChange, canDelete } =
-    useAreaComumEntityListPermissions(permId)
+  const { canView, canChange, canDelete } = useAreaComumEntityListPermissions(listPermId)
+  const { canAdd } = useAreaComumEntityListPermissions(createPermId)
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'view' | 'create' | 'edit'>('create')
   const [selectedRow, setSelectedRow] = useState<SinistradoTableDTO | null>(null)
+  const [autoOpenSection, setAutoOpenSection] = useState<'observacoes' | 'relatorio' | null>(
+    null
+  )
   const [historicoAtivo, setHistoricoAtivo] = useState(false)
   const {
     data,
@@ -63,14 +71,17 @@ export function ListagemSinistradosPage() {
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['sinistrados-paginated'] })
 
-  useEffect(() => {
-    const withoutHistorico = filters.filter((f) => f.id !== 'historico')
-    handleFiltersChange([
-      ...withoutHistorico,
-      { id: 'historico', value: historicoAtivo ? '1' : '0' },
-    ])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [historicoAtivo])
+  const toggleHistorico = () => {
+    setHistoricoAtivo((prev) => {
+      const next = !prev
+      applyFiltersIfChanged(
+        filters,
+        buildFiltersWithValue(filters, 'historico', next ? '1' : '0'),
+        handleFiltersChange
+      )
+      return next
+    })
+  }
 
   return (
     <>
@@ -98,18 +109,22 @@ export function ListagemSinistradosPage() {
             onFiltersChange={handleFiltersChange}
             onSortingChange={handleSortingChange}
             toolbarActions={[
-              {
-                label: 'Adicionar',
-                icon: <Plus className='h-4 w-4' />,
-                onClick: () => {
-                  openSinistradoCreationInApp(navigate, addWindow)
-                },
-                variant: 'destructive' as const,
-              },
+              ...(canAdd
+                ? [
+                    {
+                      label: 'Adicionar',
+                      icon: <Plus className='h-4 w-4' />,
+                      onClick: () => {
+                        openSinistradoCreationInApp(navigate, addWindow)
+                      },
+                      variant: 'destructive' as const,
+                    },
+                  ]
+                : []),
               {
                 label: historicoAtivo ? 'Histórico x' : 'Histórico',
                 icon: <Archive className='h-4 w-4' />,
-                onClick: () => setHistoricoAtivo((prev) => !prev),
+                onClick: toggleHistorico,
                 variant: historicoAtivo ? ('emerald' as const) : ('outline' as const),
               },
               {
@@ -128,6 +143,7 @@ export function ListagemSinistradosPage() {
             onOpenView={(row) => {
               setModalMode('view')
               setSelectedRow(row)
+              setAutoOpenSection(null)
               setModalOpen(true)
             }}
             onOpenEdit={
@@ -135,6 +151,7 @@ export function ListagemSinistradosPage() {
                 ? (row) => {
                     setModalMode('edit')
                     setSelectedRow(row)
+                    setAutoOpenSection(null)
                     setModalOpen(true)
                   }
                 : undefined
@@ -143,7 +160,7 @@ export function ListagemSinistradosPage() {
               canDelete
                 ? async (row) => {
                     if (!row?.id) return
-                    const response = await SinistradoService().delete(row.id)
+                    const response = await SinistradoService(listPermId).delete(row.id)
                     if (response.info.status === ResponseStatus.Success) {
                       toast.success('Sinistrado eliminado.')
                       refresh()
@@ -167,31 +184,36 @@ export function ListagemSinistradosPage() {
                   <DropdownMenuContent align='end'>
                     <DropdownMenuItem
                       onClick={async () => {
-                        const response = await SinistradoService().moveToHistory(row.id)
+                        const response = await SinistradoService(listPermId).moveToHistory(row.id)
                         if (response.info.status === ResponseStatus.Success) {
                           toast.success('Movido para histórico.')
                           refresh()
                         }
                       }}
                     >
+                        <Archive className='mr-2 h-4 w-4' />
                       Histórico
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         setModalMode('edit')
                         setSelectedRow(row)
+                        setAutoOpenSection('observacoes')
                         setModalOpen(true)
                       }}
                     >
+                      <ClipboardList className='mr-2 h-4 w-4' />
                       Observações
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         setModalMode('edit')
                         setSelectedRow(row)
+                        setAutoOpenSection('relatorio')
                         setModalOpen(true)
                       }}
                     >
+                      <FileText className='mr-2 h-4 w-4' />
                       Relatório
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -204,10 +226,16 @@ export function ListagemSinistradosPage() {
           />
           <SinistradoViewEditModal
             open={modalOpen}
-            onOpenChange={setModalOpen}
+            onOpenChange={(next) => {
+              setModalOpen(next)
+              if (!next) {
+                setAutoOpenSection(null)
+              }
+            }}
             mode={modalMode}
             viewData={selectedRow}
             onSuccess={refresh}
+            autoOpenSection={autoOpenSection}
           />
         </AreaComumListagemPageShell>
       </DashboardPageContainer>

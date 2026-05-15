@@ -216,9 +216,10 @@ function ExamesSemPapelFilterControls(_: {
   return null
 }
 
-export function ExamesSemPapelPage() {
+export function ExamesSemPapelPage({ historico = false }: { historico?: boolean }) {
   const queryClient = useQueryClient()
   const closeListagemLikeTabBar = useCloseCurrentWindowLikeTabBar()
+  const pageTitle = historico ? 'Exames Sem Papel - Histórico' : 'Exames Sem Papel'
   const [searchUtente, setSearchUtente] = useState('')
   const [dataInicio, setDataInicio] = useState<Date | undefined>(undefined)
   const [dataFim, setDataFim] = useState<Date | undefined>(undefined)
@@ -343,9 +344,9 @@ export function ExamesSemPapelPage() {
 
   return (
     <>
-      <PageHead title='Exames Sem Papel | Exames | Área Clínica | CliCloud' />
+      <PageHead title={`${pageTitle} | CliCloud`} />
       <DashboardPageContainer>
-        <AreaComumListagemPageShell title='Exames Sem Papel'>
+        <AreaComumListagemPageShell title={pageTitle}>
           <div className='mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border/70 pb-3'>
             <div className='flex min-h-8 min-w-0 max-w-[min(55vw,22rem)] shrink-0 items-center gap-2'>
               <Button
@@ -359,29 +360,31 @@ export function ExamesSemPapelPage() {
                 <ChevronLeft className='h-5 w-5' aria-hidden />
               </Button>
               <h2 className='truncate text-base font-semibold leading-snug tracking-tight text-foreground sm:text-lg'>
-                Exames Sem Papel
+                {pageTitle}
               </h2>
             </div>
 
             <div className='flex min-w-0 flex-1 flex-wrap items-center justify-end gap-y-2 gap-x-2'>
               <div className='flex flex-wrap items-center gap-2'>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size='sm' className='h-8 gap-2 bg-primary text-primary-foreground hover:bg-primary/90'>
-                      <Check className='h-4 w-4' />
-                      {assinarMutation.isPending || comunicarMutation.isPending ? 'A executar' : 'Executar'}
-                      <ChevronDown className='h-4 w-4' />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align='start'>
-                    <DropdownMenuItem onClick={handleExecutarAssinarLote}>
-                      Assinar em Lote
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleExecutarComunicarLote}>
-                      Comunicar em Lote
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {!historico ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size='sm' className='h-8 gap-2 bg-primary text-primary-foreground hover:bg-primary/90'>
+                        <Check className='h-4 w-4' />
+                        {assinarMutation.isPending || comunicarMutation.isPending ? 'A executar' : 'Executar'}
+                        <ChevronDown className='h-4 w-4' />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='start'>
+                      <DropdownMenuItem onClick={handleExecutarAssinarLote}>
+                        Assinar em Lote
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleExecutarComunicarLote}>
+                        Comunicar em Lote
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
                 <div className='flex items-center gap-2'>
                   <DatePicker value={dataInicio} onChange={setDataInicio} placeholder='Data início' displayFormat='dd-MM-yyyy' className='h-8 w-[130px]' />
                   <DatePicker value={dataFim} onChange={setDataFim} placeholder='Data fim' displayFormat='dd-MM-yyyy' className='h-8 w-[130px]' />
@@ -396,18 +399,20 @@ export function ExamesSemPapelPage() {
                   className='h-8 w-[180px] shrink-0 bg-muted/60 sm:w-[200px]'
                 />
 
-                <Button
-                  size='sm'
-                  variant={porAssinarActive ? 'default' : 'outline'}
-                  className={`h-8 shrink-0 gap-2 ${porAssinarActive ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
-                  onClick={() => {
-                    setPorAssinarActive((v) => !v)
-                    setPage(1)
-                  }}
-                >
-                  <FileText className='h-4 w-4' />
-                  Por Assinar
-                </Button>
+                {!historico ? (
+                  <Button
+                    size='sm'
+                    variant={porAssinarActive ? 'default' : 'outline'}
+                    className={`h-8 shrink-0 gap-2 ${porAssinarActive ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
+                    onClick={() => {
+                      setPorAssinarActive((v) => !v)
+                      setPage(1)
+                    }}
+                  >
+                    <FileText className='h-4 w-4' />
+                    Por Assinar
+                  </Button>
+                ) : null}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button size='sm' variant='outline' className='h-8 shrink-0 gap-2'>

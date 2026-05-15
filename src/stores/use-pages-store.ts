@@ -1,6 +1,30 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { ServicoTableDTO } from '@/types/dtos/servicos/servico.dtos'
 import { useWindowsStore } from './use-windows-store'
+
+/** Rascunho do modal Serviços ao abrir tabelas auxiliares (+) noutra tab da app. */
+export type ServicoModalPageDraftFormValues = {
+  designacao: string
+  tipoServicoId: string
+  preco: string
+  duracao: string
+  taxaIvaId: string
+  ean: string
+  tipoAparelhoId: string
+  /** Id (Guid) do registo em Motivos de isenção; preenchido quando a taxa IVA é isenta. */
+  motivoIsencaoId: string
+  tratDentario: boolean
+  inativo: boolean
+}
+
+export type ServicoModalPageDraft = {
+  open: boolean
+  mode: 'view' | 'create' | 'edit'
+  values: ServicoModalPageDraftFormValues
+  viewData: ServicoTableDTO | null
+  codigoMotivoNumericoCarregado: number | null
+}
 
 export type PageState = {
   // Table related state
@@ -29,6 +53,8 @@ export type PageState = {
   // Memory optimization fields
   lastActive: number
   dataSize: number
+
+  servicoModalDraft?: ServicoModalPageDraft
 }
 
 interface PagesState {
@@ -148,6 +174,9 @@ export const usePagesStore = create<PagesState>()(
                     break
                   case 'dataSize':
                     acc.dataSize = value as number
+                    break
+                  case 'servicoModalDraft':
+                    acc.servicoModalDraft = value as ServicoModalPageDraft | undefined
                     break
                   default:
                     // Skip unknown keys
@@ -291,6 +320,9 @@ export const usePagesStore = create<PagesState>()(
                     break
                   case 'dataSize':
                     acc.dataSize = value as number
+                    break
+                  case 'servicoModalDraft':
+                    acc.servicoModalDraft = value as ServicoModalPageDraft | undefined
                     break
                   default:
                     // Skip unknown keys

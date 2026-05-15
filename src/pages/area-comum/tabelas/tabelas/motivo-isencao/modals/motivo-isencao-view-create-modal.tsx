@@ -76,10 +76,11 @@ export function MotivoIsencaoViewCreateModal({
         typeof rawId === 'string' ? rawId : rawId != null ? String(rawId) : ''
 
       const existingCodigo = viewData?.codigo
+      /** Compatível com `Servico.CodigoMotivoIsencao` (int32): padrão `M` + dígitos, sem timestamp > int max. */
       const generatedCodigo =
         existingCodigo && existingCodigo.trim().length > 0
           ? existingCodigo.trim()
-          : `MOT-${Date.now()}`
+          : `M${String((Date.now() % 800_000) + 100_000)}`
 
       const body = {
         // O backend continua a esperar um código, mas este é gerado automaticamente

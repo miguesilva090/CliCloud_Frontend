@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useLayoutEffect, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import {} from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
@@ -27,17 +27,73 @@ import { ServicoService } from '@/lib/services/servicos/servico-service'
 import { ResponseStatus } from '@/types/api/responses'
 
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
 import { modules } from '@/config/modules'
-
-const servicosPermId = modules.areaComum.permissions.servicos.id
+import { usePagesStore, type ServicoModalPageDraftFormValues } from '@/stores/use-pages-store'
+import {
+  useCurrentWindowId,
+  readServicoModalAuxSessionDraft,
+  clearServicoModalAuxSessionDraft,
+} from '@/utils/window-utils'
 
 export function ListagemServicosPage() {
+  const servicosPermId = useScopedFuncionalidadeId(
+    modules.areaComum.permissions.servicos.id,
+    modules.areaAdministrativa.permissions.servicos.id
+  )
   const { canView, canAdd, canChange, canDelete } =
     useAreaComumEntityListPermissions(servicosPermId)
+  const location = useLocation()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'view' | 'create' | 'edit'>('create')
   const [selectedRow, setSelectedRow] = useState<ServicoTableDTO | null>(null)
+  const currentWindowId = useCurrentWindowId()
+  const [modalRestoredSnapshot, setModalRestoredSnapshot] = useState<{
+    values: ServicoModalPageDraftFormValues
+    codigoMotivoNumericoCarregado: number | null
+  } | null>(null)
+
+  useLayoutEffect(() => {
+    const instanceId = new URLSearchParams(location.search).get('instanceId')
+    let draft = currentWindowId
+      ? usePagesStore.getState().getPageStateByWindowId(currentWindowId)
+          ?.servicoModalDraft
+      : undefined
+
+    if (!draft?.open && instanceId) {
+      draft = readServicoModalAuxSessionDraft(instanceId) ?? undefined
+    }
+
+    if (!draft?.open) return
+
+    setModalMode(draft.mode)
+    setSelectedRow(draft.viewData)
+    setModalRestoredSnapshot({
+      values: draft.values,
+      codigoMotivoNumericoCarregado: draft.codigoMotivoNumericoCarregado,
+    })
+    setModalOpen(true)
+  }, [currentWindowId, location.pathname, location.search])
+
+  const handleRestoredSnapshotApplied = useCallback(() => {
+    setModalRestoredSnapshot(null)
+  }, [])
+
+  const handleModalOpenChange = (next: boolean) => {
+    setModalOpen(next)
+    if (!next) {
+      const instanceId = new URLSearchParams(location.search).get('instanceId')
+      if (instanceId) {
+        clearServicoModalAuxSessionDraft(instanceId)
+      }
+      if (currentWindowId) {
+        usePagesStore.getState().updatePageState(currentWindowId, () => ({
+          servicoModalDraft: undefined,
+        }))
+      }
+    }
+  }
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<ServicoTableDTO | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -65,6 +121,15 @@ export function ListagemServicosPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const abrirModalNovo = () => {
+    const instanceId = new URLSearchParams(location.search).get('instanceId')
+    if (instanceId) {
+      clearServicoModalAuxSessionDraft(instanceId)
+    }
+    if (currentWindowId) {
+      usePagesStore.getState().updatePageState(currentWindowId, () => ({
+        servicoModalDraft: undefined,
+      }))
+    }
     setSelectedRow(null)
     setModalMode('create')
     setModalOpen(true)
@@ -107,12 +172,30 @@ export function ListagemServicosPage() {
   }> = () => null
 
   const handleOpenView = (row: ServicoTableDTO) => {
+    const instanceId = new URLSearchParams(location.search).get('instanceId')
+    if (instanceId) {
+      clearServicoModalAuxSessionDraft(instanceId)
+    }
+    if (currentWindowId) {
+      usePagesStore.getState().updatePageState(currentWindowId, () => ({
+        servicoModalDraft: undefined,
+      }))
+    }
     setSelectedRow(row)
     setModalMode('view')
     setModalOpen(true)
   }
 
   const handleOpenEdit = (row: ServicoTableDTO) => {
+    const instanceId = new URLSearchParams(location.search).get('instanceId')
+    if (instanceId) {
+      clearServicoModalAuxSessionDraft(instanceId)
+    }
+    if (currentWindowId) {
+      usePagesStore.getState().updatePageState(currentWindowId, () => ({
+        servicoModalDraft: undefined,
+      }))
+    }
     setSelectedRow(row)
     setModalMode('edit')
     setModalOpen(true)
@@ -208,9 +291,12 @@ export function ListagemServicosPage() {
 
         <ServicoViewCreateModal
           open={modalOpen}
-          onOpenChange={setModalOpen}
+          onOpenChange={handleModalOpenChange}
           mode={modalMode}
           viewData={selectedRow}
+          windowId={currentWindowId}
+          restoredSnapshot={modalRestoredSnapshot}
+          onRestoredSnapshotApplied={handleRestoredSnapshotApplied}
           onSuccess={() =>
             queryClient.invalidateQueries({ queryKey: ['servicos-paginated'] })
           }

@@ -1,5 +1,9 @@
 import state from '@/states/state'
-import type { GSResponse } from '@/types/api/responses'
+import type {
+  GSResponse,
+  PaginatedRequest,
+  PaginatedResponse,
+} from '@/types/api/responses'
 import type { ResponseApi } from '@/types/responses'
 import { BaseApiClient } from '@/lib/base-client'
 import type {
@@ -12,6 +16,15 @@ const BASE = '/client/taxas-iva/MotivoIsencao'
 export class MotivoIsencaoClient extends BaseApiClient {
   constructor(idFuncionalidade: string) {
     super(idFuncionalidade)
+  }
+
+  async getMotivosIsencaoPaginated(
+    params: PaginatedRequest
+  ): Promise<ResponseApi<PaginatedResponse<MotivoIsencaoTableDTO>>> {
+    return this.httpClient.postRequest<
+      PaginatedRequest,
+      PaginatedResponse<MotivoIsencaoTableDTO>
+    >(state.URL, `${BASE}/paginated`, params)
   }
 
   async getMotivosIsencaoLight(
@@ -50,6 +63,15 @@ export class MotivoIsencaoClient extends BaseApiClient {
     id: string
   ): Promise<ResponseApi<GSResponse<MotivoIsencaoTableDTO>>> {
     return this.httpClient.getRequest<GSResponse<MotivoIsencaoTableDTO>>(
+      state.URL,
+      `${BASE}/${id}`
+    )
+  }
+
+  async deleteMotivoIsencao(
+    id: string
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.deleteRequest<GSResponse<string>>(
       state.URL,
       `${BASE}/${id}`
     )

@@ -659,7 +659,7 @@ export function ClinicaEditPage() {
                                 onClick={() =>
                                   navigateManagedWindow(
                                     navigate,
-                                    '/area-comum/tabelas/tabelas/geograficas/codigospostais'
+                                    '/area-comum/tabelas/tabelas/geograficas/codigospostais',
                                   )
                                 }
                               >

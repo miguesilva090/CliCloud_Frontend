@@ -29,6 +29,10 @@ export class SinistradoClient extends BaseApiClient {
     return this.httpClient.getRequest(state.URL, `${BASE}/${id}`)
   }
 
+  public async getNextCodigo(): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.getRequest(state.URL, `${BASE}/next-codigo`)
+  }
+
   public async create(
     payload: CreateSinistradoRequest
   ): Promise<ResponseApi<GSResponse<string>>> {

@@ -17,7 +17,11 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { toast } from '@/utils/toast-utils'
 import { ResponseStatus } from '@/types/api/responses'
+import { modules } from '@/config/modules'
 import { SinistradoService } from '@/lib/services/sinistrados/sinistrado-service'
+
+const listPermId = modules.areaAdministrativa.permissions.sinistrados.id
+const createPermId = modules.areaAdministrativa.permissions.registoSinistrados.id
 import { UtentesService } from '@/lib/services/saude/utentes-service'
 import { CodigosPostaisService } from '@/lib/services/base/codigospostais-service'
 import { SubsistemaServicoService } from '@/lib/services/servicos/subsistema-servico-service'
@@ -54,9 +58,7 @@ function getPrimaryAddress(utente: UtenteDTO): string {
 
 function looksLikeGuid(value?: string | null): boolean {
   if (!value) return false
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value.trim()
-  )
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim())
 }
 
 function getLegacyObservationHeader(date = new Date()): string {
@@ -121,6 +123,50 @@ function splitLatestEditableEntry(
   }
 }
 
+function getDisplayCodigoServico(linha: SinistradoLinhaServicoDTO): string {
+  const codigo = linha.codigoServico?.trim() ?? ''
+  if (!codigo) return '-'
+
+  const hasTratamentoRef = Boolean(linha.tratamentoId && looksLikeGuid(linha.tratamentoId))
+  const hasConsultaRef = Boolean(linha.admissaoId && looksLikeGuid(linha.admissaoId))
+  const designacao = (linha.designacaoServico ?? '').trim().toLowerCase()
+  const isConsultaOrTratamentoLabel =
+    designacao === 'consulta' || designacao.includes('tratamento')
+
+  const prefixedShort = /^(CONS|TRAT)-([0-9a-f]{8})$/i.exec(codigo)
+  if (prefixedShort) {
+    const prefix = prefixedShort[1].toUpperCase()
+    const short = prefixedShort[2]
+    if (!isConsultaOrTratamentoLabel) {
+      return `SERV-${short}`
+    }
+    if (prefix === 'CONS' && !hasConsultaRef && !hasTratamentoRef) {
+      return `SERV-${short}`
+    }
+    if (prefix === 'TRAT' && !hasTratamentoRef) {
+      return `SERV-${short}`
+    }
+    return `${prefix}-${short}`
+  }
+
+  const prefixedCompact = /^(CONS|TRAT)-([0-9a-f]{32})$/i.exec(codigo)
+  if (prefixedCompact) {
+    const short = prefixedCompact[2].slice(0, 8)
+    return `SERV-${short}`
+  }
+
+  const guidOnly = looksLikeGuid(codigo)
+  if (!guidOnly) {
+    return codigo
+  }
+
+  return `SERV-${codigo.slice(0, 8)}`
+}
+
+function isLegacyNumericSinistroCode(value: string): boolean {
+  return /^\d+$/.test(value.trim())
+}
+
 export function SinistradoViewEditModal({
   open,
   onOpenChange,
@@ -128,6 +174,7 @@ export function SinistradoViewEditModal({
   viewData,
   onSuccess,
   renderAsPage = false,
+  autoOpenSection = null,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -135,6 +182,7 @@ export function SinistradoViewEditModal({
   viewData: SinistradoTableDTO | null
   onSuccess?: () => void
   renderAsPage?: boolean
+  autoOpenSection?: 'observacoes' | 'relatorio' | null
 }) {
   const queryClient = useQueryClient()
   const [codigoSinistro, setCodigoSinistro] = useState('')
@@ -195,6 +243,8 @@ export function SinistradoViewEditModal({
   const [activeTab, setActiveTab] = useState<TabKey>('dados-sinistrado')
   const [utenteSearch, setUtenteSearch] = useState('')
   const [utenteLabel, setUtenteLabel] = useState('')
+  const [codigoSinistroError, setCodigoSinistroError] = useState<string | null>(null)
+  const [utenteError, setUtenteError] = useState<string | null>(null)
   const isView = mode === 'view'
 
   const utentesLightQuery = useQuery({
@@ -242,7 +292,10 @@ export function SinistradoViewEditModal({
       utente.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 2)?.valor ?? ''
     const telefoneFallback = telefoneContacto || telemovelContacto || ''
     const telemovelFallback = telemovelContacto || telefoneContacto || ''
-    const apoliceFromSubsistema = utente.subsistemaLinhas?.[0]?.numeroApolice ?? ''
+    const apoliceFromSubsistema =
+      utente.subsistemaLinhas
+        ?.map((l) => l.numeroApolice?.trim() ?? '')
+        .find((value) => value.length > 0) ?? ''
     const utenteAny = utente as UtenteDTO & {
       codigoPostal?: { codigo?: string | null; localidade?: string | null } | null
     }
@@ -278,6 +331,7 @@ export function SinistradoViewEditModal({
   }
 
   const handleSelectUtente = async (selectedUtenteId: string) => {
+    setUtenteError(null)
     setUtenteId(selectedUtenteId)
     const selected = utenteItems.find((u) => u.value === selectedUtenteId)
     setUtenteLabel(selected?.label ?? '')
@@ -340,7 +394,7 @@ export function SinistradoViewEditModal({
 
     try {
       const response =
-        await SinistradoService().getUnbilledServicesByUtenteId(utenteId.trim())
+        await SinistradoService(listPermId).getUnbilledServicesByUtenteId(utenteId.trim())
       const linhas = response.info.data ?? []
 
       if (linhas.length === 0) {
@@ -415,6 +469,17 @@ export function SinistradoViewEditModal({
       setActiveTab('dados-sinistrado')
       setUtenteSearch('')
       setUtenteLabel('')
+      SinistradoService(createPermId)
+        .getNextCodigo()
+        .then((response) => {
+          const nextCodigo = response.info.data?.trim()
+          if (nextCodigo) {
+            setCodigoSinistro(nextCodigo)
+          }
+        })
+        .catch(() => {
+          // keep manual input fallback when next code retrieval fails
+        })
       return
     }
 
@@ -458,14 +523,43 @@ export function SinistradoViewEditModal({
     })()
   }, [open, utenteId, mode])
 
+  useEffect(() => {
+    if (!open || mode === 'create' || !autoOpenSection) return
+    if (autoOpenSection === 'observacoes') {
+      handleOpenObservacoesModal()
+    } else if (autoOpenSection === 'relatorio') {
+      handleOpenRelatorioModal()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, mode, autoOpenSection])
+
   const handleSave = async () => {
     if (isView) return
-    if (!codigoSinistro.trim() || !utenteId.trim()) {
-      toast.error('Código de sinistro e utente são obrigatórios.')
+    const codigo = codigoSinistro.trim()
+    const utente = utenteId.trim()
+    setCodigoSinistroError(null)
+    setUtenteError(null)
+
+    if (!codigo) {
+      setCodigoSinistroError('Preencha o nº sinistrado.')
+      setActiveTab('dados-sinistrado')
+      toast.error('Preencha o nº sinistrado.')
+      return
+    }
+    if (!isLegacyNumericSinistroCode(codigo)) {
+      setCodigoSinistroError('Nº sinistrado inválido. Use apenas dígitos.')
+      setActiveTab('dados-sinistrado')
+      toast.error('Nº sinistrado inválido. Use apenas dígitos.')
+      return
+    }
+    if (!utente) {
+      setUtenteError('Selecione o utente.')
+      setActiveTab('dados-sinistrado')
+      toast.error('Selecione o utente.')
       return
     }
 
-    const service = SinistradoService()
+    const service = SinistradoService(mode === 'edit' ? listPermId : createPermId)
     const payload = {
       utenteId: utenteId.trim(),
       estadoSinistroId: estadoSinistroId.trim() || undefined,
@@ -643,7 +737,19 @@ export function SinistradoViewEditModal({
           <div className='grid grid-cols-12 gap-3'>
             <div className='col-span-2 space-y-1.5'>
               <Label>Nº Sinistrado</Label>
-              <Input disabled={isView || mode === 'edit'} value={codigoSinistro} onChange={(e) => setCodigoSinistro(e.target.value)} placeholder='Nº sinistrado' />
+              <Input
+                disabled={isView || mode === 'edit'}
+                value={codigoSinistro}
+                onChange={(e) => {
+                  setCodigoSinistroError(null)
+                  setCodigoSinistro(e.target.value)
+                }}
+                placeholder='Nº sinistrado'
+                className={codigoSinistroError ? 'border-destructive focus-visible:ring-destructive' : undefined}
+              />
+              {codigoSinistroError ? (
+                <p className='text-xs text-destructive'>{codigoSinistroError}</p>
+              ) : null}
             </div>
             <div className='col-span-2 space-y-1.5'>
               <Label>Data Acidente</Label>
@@ -714,7 +820,11 @@ export function SinistradoViewEditModal({
                     disabled={isView}
                     searchValue={utenteSearch}
                     onSearchValueChange={setUtenteSearch}
+                    className={utenteError ? 'border-destructive focus-visible:ring-destructive' : undefined}
                   />
+                  {utenteError ? (
+                    <p className='text-xs text-destructive'>{utenteError}</p>
+                  ) : null}
                 </div>
                 <div className='col-span-2 space-y-1.5'><Label>Idade</Label><Input disabled value={idade} onChange={(e) => setIdade(e.target.value)} /></div>
                 <div className='col-span-4 space-y-1.5'><Label>Profissão</Label><Input disabled value={profissao} onChange={(e) => setProfissao(e.target.value)} /></div>
@@ -779,9 +889,8 @@ export function SinistradoViewEditModal({
             <div className='rounded-md border p-3'>
               {utenteId.trim() && !canAddServicos ? (
                 <div className='mb-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive'>
-                  O utente selecionado não tem número de apólice preenchido. Pode carregar
-                  consultas/tratamentos do histórico, mas a inserção manual de serviços fica
-                  indisponível sem nº de apólice.
+                  O utente selecionado não tem número de apólice preenchido. Atualize o
+                  utente para poder inserir serviços.
                 </div>
               ) : null}
               <div className='mb-3 flex items-center justify-end gap-2'>
@@ -818,7 +927,7 @@ export function SinistradoViewEditModal({
                     ) : (
                       linhasServico.map((linha, index) => (
                         <tr key={linha.id ?? `linha-${index}`} className='border-t'>
-                          <td className='px-2 py-1'>{linha.codigoServico || '-'}</td><td className='px-2 py-1'>{linha.designacaoServico || '-'}</td><td className='px-2 py-1'>{linha.quantidade ?? 0}</td><td className='px-2 py-1'>{linha.valorServico ?? 0}</td><td className='px-2 py-1'>{linha.valorContratado ?? 0}</td><td className='px-2 py-1'>{linha.dataServico?.slice(0, 10) || '-'}</td><td className='px-2 py-1'>{linha.numeroTFatura || 'Não faturado'}</td><td className='px-2 py-1'>{linha.dataFatura?.slice(0, 10) || '-'}</td>
+                          <td className='px-2 py-1'>{getDisplayCodigoServico(linha)}</td><td className='px-2 py-1'>{linha.designacaoServico || '-'}</td><td className='px-2 py-1'>{linha.quantidade ?? 0}</td><td className='px-2 py-1'>{linha.valorServico ?? 0}</td><td className='px-2 py-1'>{linha.valorContratado ?? 0}</td><td className='px-2 py-1'>{linha.dataServico?.slice(0, 10) || '-'}</td><td className='px-2 py-1'>{linha.numeroTFatura || 'Não faturado'}</td><td className='px-2 py-1'>{linha.dataFatura?.slice(0, 10) || '-'}</td>
                         </tr>
                       ))
                     )}
@@ -914,6 +1023,18 @@ export function SinistradoViewEditModal({
               <DialogTitle>Relatório Médico</DialogTitle>
             </DialogHeader>
             <div className='space-y-3'>
+              <div className='rounded-md border p-3'>
+                <div className='grid grid-cols-12 gap-3'>
+                  <div className='col-span-3 space-y-1.5'>
+                    <Label>Cód. Sinistrado</Label>
+                    <Input disabled value={codigoSinistro || viewData?.codigoSinistro || ''} />
+                  </div>
+                  <div className='col-span-9 space-y-1.5'>
+                    <Label>Utente</Label>
+                    <Input disabled value={utenteLabel || utenteId || viewData?.utenteId || ''} />
+                  </div>
+                </div>
+              </div>
               <Textarea
                 className='min-h-[220px]'
                 value={relatorioHistoryView}
@@ -950,6 +1071,18 @@ export function SinistradoViewEditModal({
               <DialogTitle>Observações</DialogTitle>
             </DialogHeader>
             <div className='space-y-3'>
+              <div className='rounded-md border p-3'>
+                <div className='grid grid-cols-12 gap-3'>
+                  <div className='col-span-3 space-y-1.5'>
+                    <Label>Cód. Sinistrado</Label>
+                    <Input disabled value={codigoSinistro || viewData?.codigoSinistro || ''} />
+                  </div>
+                  <div className='col-span-9 space-y-1.5'>
+                    <Label>Utente</Label>
+                    <Input disabled value={utenteLabel || utenteId || viewData?.utenteId || ''} />
+                  </div>
+                </div>
+              </div>
               <Textarea
                 className='min-h-[220px]'
                 value={observacoesHistoryView}

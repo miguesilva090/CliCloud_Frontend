@@ -255,13 +255,17 @@ export const areaComum: Module = {
       id: '00000002-0000-0000-0089-000000000003',
       name: 'Estado de Sinistro',
     },
-    sinistrados: {
-      id: '00000002-0000-0000-0090-000000000003',
-      name: 'Sinistrados',
-    },
     historicoSinistrados: {
       id: '00000002-0000-0000-0091-000000000003',
       name: 'Histórico de Sinistrados',
+    },
+    credenciaisLancamentoConsultas: {
+      id: '00000002-0000-0000-0092-000000000003',
+      name: 'Lançamento Credenciais (Consultas)',
+    },
+    historicoCredenciaisLancamento: {
+      id: '00000002-0000-0000-0093-000000000003',
+      name: 'Histórico Lançamento Credenciais',
     },
     tratamentos: {
       id: '00000002-0000-0000-0064-000000000003',

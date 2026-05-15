@@ -37,31 +37,48 @@ export const HeaderNavProvider: React.FC<{ children: React.ReactNode }> = ({
   const findActiveMenuItem = (pathname: string) => {
     if (!headerMenuItems?.length) return null
 
+    // Prefer the group whose *child* href matches most specifically (longest prefix).
+    // Área administrativa: every group shares href `/area-administrativa`, so we must
+    // not return the first group on pathname.startsWith(parent) alone (unlike processo
+    // clínico, where each group has a distinct parent href).
+    let bestGroup: MenuItem | null = null
+    let bestChildHrefLen = -1
+
     for (const item of headerMenuItems) {
-      if (pathname.startsWith(item.href)) {
-        // Item matches: return it if it has sub-items (items or dropdown)
+      if (!item.items?.length) continue
+      const matchedChild = item.items
+        .filter(
+          (subItem) =>
+            pathname === subItem.href ||
+            pathname.startsWith(`${subItem.href}/`)
+        )
+        .sort((a, b) => b.href.length - a.href.length)[0]
+
+      if (matchedChild && matchedChild.href.length > bestChildHrefLen) {
+        bestChildHrefLen = matchedChild.href.length
+        bestGroup = item
+      }
+    }
+
+    if (bestGroup) {
+      return {
+        label: bestGroup.label,
+        href: bestGroup.href,
+        items: bestGroup.items,
+      }
+    }
+
+    // Hub pages: só coincidência exacta com o href do grupo. Se usarmos startsWith aqui,
+    // em área administrativa todos os grupos partilham `/area-administrativa` e o primeiro
+    // item (ex. Marcações) ficaria sempre activo em `/area-administrativa/consultas`.
+    for (const item of headerMenuItems) {
+      if (pathname === item.href) {
         if (item.items?.length) {
           const hasDropdowns = item.items.some(
             (subItem) => subItem.dropdown && subItem.dropdown.length > 0
           )
           const hasDirectItems = item.items.length > 0
           if (hasDropdowns || hasDirectItems) {
-            return {
-              label: item.label,
-              href: item.href,
-              items: item.items,
-            }
-          }
-        }
-      }
-
-      // Check nested items (sub-item href match)
-      if (item.items) {
-        for (const subItem of item.items) {
-          if (pathname.startsWith(subItem.href)) {
-            // Keep the full parent group visible in header secondary nav.
-            // This avoids collapsing groups like "Sinistrados" to a single item
-            // (e.g. only "Registos") when navigating inside one child route.
             return {
               label: item.label,
               href: item.href,
@@ -103,6 +120,9 @@ export const HeaderNavProvider: React.FC<{ children: React.ReactNode }> = ({
       if (
         pathname.startsWith('/area-administrativa/consultas/sinistrados') ||
         pathname.startsWith('/area-administrativa/consultas/historico-sinistrados') ||
+        pathname.startsWith('/area-administrativa/consultas/historico/') ||
+        pathname.startsWith('/area-administrativa/credenciais') ||
+        pathname.startsWith('/area-administrativa/credenciais/exames-sem-papel') ||
         pathname.startsWith('/area-comum/tabelas/consultas/estado-sinistro')
       ) {
         return 'area-administrativa'

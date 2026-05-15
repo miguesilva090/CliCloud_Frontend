@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { RotateCw, List, ArchiveRestore } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -17,8 +16,8 @@ import {
   useGetSinistradosPaginated,
   usePrefetchAdjacentSinistrados,
 } from '../queries/listagem-sinistrados-queries'
-
 const permId = modules.areaComum.permissions.historicoSinistrados.id
+const listPermId = modules.areaAdministrativa.permissions.sinistrados.id
 
 export function ListagemHistoricoSinistradosPage() {
   const { canView, canChange } = useAreaComumEntityListPermissions(permId)
@@ -39,13 +38,10 @@ export function ListagemHistoricoSinistradosPage() {
     usePageData({
       useGetDataPaginated: useGetSinistradosPaginated,
       usePrefetchAdjacentData: usePrefetchAdjacentSinistrados,
+      defaultFilters: [{ id: 'historico', value: '1' }],
     })
   const errorMessage =
     error instanceof Error ? error.message : error ? String(error) : ''
-
-  useEffect(() => {
-    handleFiltersChange([{ id: 'historico', value: '1' }])
-  }, [handleFiltersChange])
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['sinistrados-paginated'] })
 
@@ -100,7 +96,7 @@ export function ListagemHistoricoSinistradosPage() {
                   className='h-8 w-8'
                   title='Restaurar sinistrado'
                   onClick={async () => {
-                    const response = await SinistradoService().restoreFromHistory(row.id)
+                    const response = await SinistradoService(listPermId).restoreFromHistory(row.id)
                     if (response.info.status === ResponseStatus.Success) {
                       toast.success('Sinistrado restaurado.')
                       refresh()

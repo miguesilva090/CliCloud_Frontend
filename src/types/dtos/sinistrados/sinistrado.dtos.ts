@@ -19,6 +19,9 @@ export interface SinistradoTableDTO
     id: string
     codigoSinistro: string
     utenteId: string
+    utenteNumero?: string
+    utenteNome?: string
+    tipoAcidente?: string
     dataAcidente?: string
     estadoSinistroId?: string
     estadoSinistroDesignacao?: string

@@ -32,7 +32,7 @@ import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity
 import { modules } from '@/config/modules'
 
 type ModalMode = 'view' | 'create' | 'edit'
-const permId = modules.areaComum.permissions.tabelas.id
+const permId = modules.areaAdministrativa.permissions.motivosConsulta.id
 
 export function ListagemMotivosConsultaPage() {
   const { canView, canAdd, canChange, canDelete } =

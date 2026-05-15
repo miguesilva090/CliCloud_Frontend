@@ -7,7 +7,11 @@ import { ChevronRight } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { shouldManageWindow, navigateManagedWindow } from '@/utils/window-utils'
+import {
+  shouldManageWindow,
+  navigateManagedWindow,
+  isManagedRouteAlreadyFocused,
+} from '@/utils/window-utils'
 import { useSidebar } from '@/hooks/use-sidebar'
 import { Icons } from '@/components/ui/icons'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -61,6 +65,9 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
     const isSinistradosAdministrativeContext =
       location.pathname.startsWith('/area-administrativa/consultas/sinistrados') ||
       location.pathname.startsWith('/area-administrativa/consultas/historico-sinistrados') ||
+      location.pathname.startsWith('/area-administrativa/consultas/historico/') ||
+      location.pathname.startsWith('/area-administrativa/credenciais') ||
+      location.pathname.startsWith('/area-administrativa/credenciais/exames-sem-papel') ||
       location.pathname.startsWith('/area-comum/tabelas/consultas/estado-sinistro')
 
     const isAreaAdministrativaConsultasContext =
@@ -100,7 +107,8 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
     e: React.MouseEvent,
     href: string,
     openInNewTab?: boolean,
-    underDevelopment?: boolean
+    underDevelopment?: boolean,
+    tabTitle?: string
   ) => {
     // Prevent navigation if item is under development
     if (underDevelopment) {
@@ -120,12 +128,25 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
     const pathOnly = href.split('?')[0]
     if (shouldManageWindow(pathOnly)) {
       e.preventDefault()
-      if (location.pathname === pathOnly) {
+      if (
+        isManagedRouteAlreadyFocused(
+          location.pathname,
+          location.search,
+          pathOnly
+        )
+      ) {
         return
       }
-      navigateManagedWindow(navigate, href)
+      navigateManagedWindow(navigate, href, {
+        title: tabTitle?.trim() || itemLabelFromHref(href),
+      })
       return
     }
+  }
+
+  function itemLabelFromHref(href: string): string {
+    const segment = href.split('?')[0].split('/').filter(Boolean).pop() ?? ''
+    return segment.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
   }
 
   const renderMenuItem = (
@@ -215,7 +236,8 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
                 e,
                 item.href,
                 item.openInNewTab,
-                item.underDevelopment
+                item.underDevelopment,
+                item.label || item.title
               )
               if (!item.underDevelopment) {
                 handleMenuClick(item.title, hasSubItems)

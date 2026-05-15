@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useFieldArray, type UseFormReturn } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -163,6 +163,46 @@ export function TabSubsistemaSaude({
 
   const removeEntry = (index: number) => subsistemaLinhasArray.remove(index)
 
+  const updatePrimaryLinha = (patch: Partial<SubsistemaSaudeRowInsert>) => {
+    const current = form.getValues('subsistemaLinhas') ?? []
+    const first = current[0] ?? {
+      organismoId: form.getValues('organismoId') ?? null,
+      designacao: '',
+      numeroBeneficiario: '',
+      sigla: '',
+      nomeBeneficiario: '',
+      dataCartao: '',
+      numeroApolice: '',
+      empresaId: form.getValues('empresaId') ?? null,
+      empresaNome: '',
+    }
+    const next = [{ ...first, ...patch }, ...current.slice(1)]
+    form.setValue('subsistemaLinhas', next, { shouldDirty: true, shouldTouch: true })
+  }
+
+  useEffect(() => {
+    const current = form.getValues('subsistemaLinhas') ?? []
+    if (current.length > 0) return
+
+    form.setValue(
+      'subsistemaLinhas',
+      [
+        {
+          organismoId: form.getValues('organismoId') ?? null,
+          designacao: '',
+          numeroBeneficiario: '',
+          sigla: '',
+          nomeBeneficiario: '',
+          dataCartao: '',
+          numeroApolice: '',
+          empresaId: form.getValues('empresaId') ?? null,
+          empresaNome: '',
+        },
+      ],
+      { shouldDirty: false, shouldTouch: false }
+    )
+  }, [form])
+
   const handleInserirConfirm = (row: SubsistemaSaudeRowInsert) => {
     subsistemaLinhasArray.append({
       organismoId: row.organismoId,
@@ -208,6 +248,7 @@ export function TabSubsistemaSaude({
   })
 
   const fieldClass = `${inputClass} bg-background`
+  const primaryLinha = form.watch('subsistemaLinhas.0')
 
   return (
     <div className='space-y-4'>
@@ -253,7 +294,12 @@ export function TabSubsistemaSaude({
           />
           <div className={`${fieldGap} w-full min-w-0`}>
             <FormLabel className={labelClass}>Nome Beneficiário</FormLabel>
-            <Input placeholder='Nome Beneficiário...' className={fieldClass} />
+            <Input
+              placeholder='Nome Beneficiário...'
+              className={fieldClass}
+              value={primaryLinha?.nomeBeneficiario ?? ''}
+              onChange={(e) => updatePrimaryLinha({ nomeBeneficiario: e.target.value })}
+            />
           </div>
         </div>
 
@@ -298,7 +344,12 @@ export function TabSubsistemaSaude({
           />
           <div className={`${fieldGap} w-full min-w-0`}>
             <FormLabel className={labelClass}>Número Beneficiário</FormLabel>
-            <Input placeholder='Número Beneficiário' className={fieldClass} />
+            <Input
+              placeholder='Número Beneficiário'
+              className={fieldClass}
+              value={primaryLinha?.numeroBeneficiario ?? ''}
+              onChange={(e) => updatePrimaryLinha({ numeroBeneficiario: e.target.value })}
+            />
           </div>
         </div>
 
@@ -351,7 +402,12 @@ export function TabSubsistemaSaude({
           </div>
           <div className={`${fieldGap} w-full min-w-0`}>
             <FormLabel className={labelClass}>Apólice</FormLabel>
-            <Input placeholder='Apólice...' className={fieldClass} />
+            <Input
+              placeholder='Apólice...'
+              className={fieldClass}
+              value={primaryLinha?.numeroApolice ?? ''}
+              onChange={(e) => updatePrimaryLinha({ numeroApolice: e.target.value })}
+            />
           </div>
         </div>
 
@@ -359,11 +415,21 @@ export function TabSubsistemaSaude({
         <div className='flex flex-col gap-4'>
           <div className={`${fieldGap} w-full min-w-0`}>
             <FormLabel className={labelClass}>Sigla</FormLabel>
-            <Input placeholder='Sigla...' className={fieldClass} />
+            <Input
+              placeholder='Sigla...'
+              className={fieldClass}
+              value={primaryLinha?.sigla ?? ''}
+              onChange={(e) => updatePrimaryLinha({ sigla: e.target.value })}
+            />
           </div>
           <div className={`${fieldGap} w-full min-w-0`}>
             <FormLabel className={labelClass}>Data do cartão</FormLabel>
-            <Input type='date' className={fieldClass} />
+            <Input
+              type='date'
+              className={fieldClass}
+              value={primaryLinha?.dataCartao ?? ''}
+              onChange={(e) => updatePrimaryLinha({ dataCartao: e.target.value })}
+            />
           </div>
         </div>
       </div>

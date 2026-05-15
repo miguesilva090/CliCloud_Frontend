@@ -15,7 +15,7 @@ import { toast } from '@/utils/toast-utils'
 import { TipoConsultaService } from '@/lib/services/tipos-consulta/tipo-consulta-service'
 import { ResponseStatus } from '@/types/api/responses'
 
-type ModalMode = 'view' | 'edit'
+type ModalMode = 'view' | 'edit' | 'create'
 
 interface TipoConsultaViewEditModalProps {
   open: boolean
@@ -36,12 +36,18 @@ export function TipoConsultaViewEditModal({
 
   const isView = mode === 'view'
   const isEdit = mode === 'edit'
+  const isCreate = mode === 'create'
 
   useEffect(() => {
-    if (open && (isView || isEdit) && viewData) {
+    if (!open) return
+    if (isCreate) {
+      setDesignacao('')
+      return
+    }
+    if ((isView || isEdit) && viewData) {
       setDesignacao(viewData.designacao ?? '')
     }
-  }, [open, mode, isView, isEdit, viewData])
+  }, [open, mode, isView, isEdit, isCreate, viewData])
 
   const handleGuardar = async () => {
     if (isView) return
@@ -65,17 +71,26 @@ export function TipoConsultaViewEditModal({
         return
       }
 
-      const response = await client.updateTipoConsulta(editId, {
-        designacao: designacao.trim(),
-      })
+      const response = isCreate
+        ? await client.createTipoConsulta({ designacao: designacao.trim() })
+        : await client.updateTipoConsulta(editId, {
+            designacao: designacao.trim(),
+          })
 
       if (response.info.status === ResponseStatus.Success) {
-        toast.success('Tipo de Consulta atualizado com sucesso.')
+        toast.success(
+          isCreate
+            ? 'Tipo de consulta criado com sucesso.'
+            : 'Tipo de Consulta atualizado com sucesso.',
+        )
         onOpenChange(false)
         onSuccess?.()
       } else {
         const msg =
-          response.info.messages?.['$']?.[0] ?? 'Falha ao atualizar Tipo de Consulta.'
+          response.info.messages?.['$']?.[0] ??
+          (isCreate
+            ? 'Falha ao criar tipo de consulta.'
+            : 'Falha ao atualizar Tipo de Consulta.')
         toast.error(msg)
       }
     } catch (error: unknown) {
@@ -86,7 +101,12 @@ export function TipoConsultaViewEditModal({
     }
   }
 
-  const title = mode === 'view' ? 'Tipo de Consulta' : 'Editar Tipo de Consulta'
+  const title =
+    mode === 'view'
+      ? 'Tipo de Consulta'
+      : mode === 'create'
+        ? 'Novo tipo de consulta'
+        : 'Editar Tipo de Consulta'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -106,6 +126,7 @@ export function TipoConsultaViewEditModal({
               maxLength={80}
               placeholder='Ex: 1ª Consulta, AV. Final, Feriado...'
               onChange={(e) => setDesignacao(e.target.value)}
+              autoFocus={isCreate}
             />
           </div>
         </div>

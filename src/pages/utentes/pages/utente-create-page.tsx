@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { navigateManagedWindow } from '@/utils/window-utils'
 import { z } from 'zod'
@@ -311,9 +311,10 @@ export function UtenteCreatePage() {
       if (rnu.paisNacionalidade?.trim()) form.setValue('nacionalidade', rnu.paisNacionalidade.trim(), { shouldDirty: true })
 
       if (rnu.sexoCodigo?.trim()) {
+        const sexoRef = rnu.sexoCodigo.trim().toUpperCase()
         const sexoMatch = sexosList.find((s) =>
-          (s.codigo ?? '').toString().trim().toUpperCase() === rnu.sexoCodigo!.trim().toUpperCase()
-          || (s.descricao ?? '').toString().trim().toUpperCase() === rnu.sexoCodigo!.trim().toUpperCase()
+          (s.descricao ?? '').toString().trim().toUpperCase() === sexoRef
+          || (s.id ?? '').toString().trim().toUpperCase() === sexoRef
         )
         if (sexoMatch?.id) {
           form.setValue('sexoId', sexoMatch.id, { shouldDirty: true })

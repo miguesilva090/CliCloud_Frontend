@@ -7,6 +7,7 @@ import type {
 import type { ResponseApi } from '@/types/responses'
 import { BaseApiClient } from '@/lib/base-client'
 import type {
+  CreateTipoConsultaRequest,
   TipoConsultaDTO,
   TipoConsultaTableDTO,
 } from '@/types/dtos/tipos-consulta/tipo-consulta.dtos'
@@ -44,6 +45,15 @@ export class TipoConsultaClient extends BaseApiClient {
       state.URL,
       `${BASE}/${id}`
     )
+  }
+
+  public async createTipoConsulta(
+    body: CreateTipoConsultaRequest,
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest<
+      CreateTipoConsultaRequest,
+      GSResponse<string>
+    >(state.URL, BASE, body)
   }
 
   public async updateTipoConsulta(

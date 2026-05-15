@@ -30,15 +30,18 @@ import { DoencaService } from '@/lib/services/doencas/doenca-service'
 import { ResponseStatus } from '@/types/api/responses'
 
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
 import { modules } from '@/config/modules'
-
-const doencasPermId = modules.areaComum.permissions.doencas.id
 
 type DoencaModalMode = 'view' | 'edit'
 
 type BreadcrumbItem = { id: string; code: string; title: string }
 
 export function ListagemDoencasPage() {
+  const doencasPermId = useScopedFuncionalidadeId(
+    modules.areaComum.permissions.doencas.id,
+    modules.areaAdministrativa.permissions.doencas.id
+  )
   const { canView, canChange, canDelete } =
     useAreaComumEntityListPermissions(doencasPermId)
   const queryClient = useQueryClient()

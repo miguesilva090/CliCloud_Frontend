@@ -1,10 +1,11 @@
-import { useEffect, Suspense, memo, useState, useRef } from 'react'
+﻿import { useEffect, memo, useState, useRef } from 'react'
 import { utilitariosRoutes } from '@/routes/base/utilitarios-routes'
+import { areaComumRoutes } from '@/routes/area-comum/areaComum'
 import { areaClinicaRoutes } from '@/routes/area-clinica/areaClinica'
 import { reportsRoutes } from '@/routes/reports/reports-routes'
 import { areaAdministrativaRoutes } from '@/routes/area-administrativa/areaAdministrativa'
 import { X, ChevronLeft, ChevronRight, XCircle } from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMapStore } from '@/stores/use-map-store'
 import { usePagesStore } from '@/stores/use-pages-store'
 import { useWindowsStore, type WindowState } from '@/stores/use-windows-store'
@@ -15,11 +16,12 @@ import {
   getParentWindowInfo as getParentWindowInfoUtil,
   generateInstanceId,
   shouldManageWindow,
-  getContextualHomePath,
+  navigateToModuleHome,
+  navigateToWindowPath,
+  getNavigationAreaPrefix,
 } from '@/utils/window-utils'
 import { useSidebar } from '@/hooks/use-sidebar'
 import { Button } from '@/components/ui/button'
-import { Icons } from '@/components/ui/icons'
 
 interface WindowManagerProps {
   children: React.ReactNode
@@ -42,82 +44,11 @@ function canReuseInstanceAcrossPaths(
 
   if (from === to) return true
 
-  // Permite apenas transições hierárquicas da mesma instância
+  // Permite apenas transiÃ§Ãµes hierÃ¡rquicas da mesma instÃ¢ncia
   // (ex.: /utentes/:id -> /utentes/:id/editar), evitando "trocas"
-  // entre páginas irmãs como "X" e "Listagem X".
+  // entre pÃ¡ginas irmÃ£s como "X" e "Listagem X".
   return from.startsWith(`${to}/`) || to.startsWith(`${from}/`)
 }
-
-// Memoized window component to prevent unnecessary re-renders
-const Window = memo(
-  ({
-    window,
-    isActive,
-    children,
-  }: {
-    window: WindowState
-    isActive: boolean
-    children: React.ReactNode
-  }) => {
-    const { getCachedContent, setCachedContent } = useWindowsStore()
-    const cachedContent = getCachedContent(window.id)
-    const [isTransitioning, setIsTransitioning] = useState(false)
-    const [isContentReady, setIsContentReady] = useState(false)
-
-    useEffect(() => {
-      if (isActive) {
-        setCachedContent(window.id, children)
-      }
-    }, [window.id, isActive, children, setCachedContent])
-
-    useEffect(() => {
-      if (isActive) {
-        setIsTransitioning(true)
-        setIsContentReady(false)
-        const timer = setTimeout(() => {
-          setIsTransitioning(false)
-          // Add a small delay before showing content to ensure smooth transition
-          setTimeout(() => {
-            setIsContentReady(true)
-          }, 100)
-        }, 300) // Match the transition duration
-        return () => clearTimeout(timer)
-      } else {
-        setIsContentReady(false)
-      }
-    }, [isActive])
-
-    if (window.isMinimized) {
-      return null
-    }
-
-    return (
-      <div
-        className={cn(
-          'absolute inset-0 transition-all duration-300',
-          isActive
-            ? 'visible opacity-100'
-            : 'invisible pointer-events-none opacity-0'
-        )}
-        style={{
-          zIndex: isActive ? 1 : -1,
-        }}
-      >
-        <Suspense fallback={<WindowLoadingState />}>
-          {isTransitioning || !isContentReady ? (
-            <WindowLoadingState />
-          ) : (
-            <div className='fade-in'>
-              {isActive ? children : cachedContent || children}
-            </div>
-          )}
-        </Suspense>
-      </div>
-    )
-  }
-)
-
-Window.displayName = 'Window'
 
 // Component for individual window tab that can use hooks
 const WindowTab = memo(
@@ -202,47 +133,21 @@ const WindowTab = memo(
 
 WindowTab.displayName = 'WindowTab'
 
-const WindowLoadingState = () => (
-  <div className='flex h-full w-full items-center justify-center'>
-    <div className='flex flex-col items-center gap-4'>
-      {/* Animated icon */}
-      <div className='relative'>
-        <div className='w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center shadow-lg border border-primary/20'>
-          <Icons.settings className='h-8 w-8 text-primary animate-spin' />
-        </div>
-        {/* Pulsing ring effect */}
-        <div className='absolute inset-0 rounded-2xl border-2 border-primary/30 animate-ping'></div>
-      </div>
-
-      {/* Loading text */}
-      <div className='text-center'>
-        <p className='text-sm font-medium text-foreground mb-1'>
-          A carregar página...
-        </p>
-        <p className='text-xs text-muted-foreground'>Por favor aguarde</p>
-      </div>
-
-      {/* Progress dots */}
-      <div className='flex gap-1'>
-        <div className='w-2 h-2 bg-primary rounded-full animate-bounce'></div>
-        <div
-          className='w-2 h-2 bg-primary rounded-full animate-bounce'
-          style={{ animationDelay: '0.1s' }}
-        ></div>
-        <div
-          className='w-2 h-2 bg-primary rounded-full animate-bounce'
-          style={{ animationDelay: '0.2s' }}
-        ></div>
-      </div>
-    </div>
-  </div>
-)
 
 export function WindowManager({ children }: WindowManagerProps) {
   const { isMinimized } = useSidebar()
   const location = useLocation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const windowsBarRef = useRef<HTMLDivElement>(null)
+  const skipAutoWindowRef = useRef(false)
+  const suppressAutoWindowUntilRef = useRef(0)
+  const prevAreaPrefixRef = useRef('')
+
+  const suppressAutoWindow = (ms = 800) => {
+    suppressAutoWindowUntilRef.current = Date.now() + ms
+    skipAutoWindowRef.current = true
+  }
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(false)
   const animationFrameRef = useRef<number>(0)
@@ -255,6 +160,7 @@ export function WindowManager({ children }: WindowManagerProps) {
     restoreWindow,
     removeWindow,
     updateWindowState,
+    clearAllWindows,
   } = useWindowsStore()
   const mapStore = useMapStore.getState()
 
@@ -363,13 +269,14 @@ export function WindowManager({ children }: WindowManagerProps) {
     }
   }, [activeWindow])
 
-  // Rotas declaradas com manageWindow + áreas geridas por shouldManageWindow (Área Comum, Processo Clínico, utentes, etc.)
+  // Rotas declaradas com manageWindow + Ã¡reas geridas por shouldManageWindow (Ãrea Comum, Processo ClÃ­nico, utentes, etc.)
   const findRouteWithManageWindow = (pathname: string) => {
     const normalized = pathname.replace(/^\//, '')
     const allRoutes = [
       ...utilitariosRoutes,
-      ...reportsRoutes,
+      ...areaComumRoutes,
       ...areaClinicaRoutes,
+      ...reportsRoutes,
       ...areaAdministrativaRoutes,
     ]
 
@@ -403,7 +310,71 @@ export function WindowManager({ children }: WindowManagerProps) {
     return null
   }
 
+  // Limpar tabs ao mudar de Ã¡rea (ex.: administrativa â†’ comum)
   useEffect(() => {
+    const area = getNavigationAreaPrefix(location.pathname)
+    if (
+      prevAreaPrefixRef.current &&
+      area &&
+      prevAreaPrefixRef.current !== area
+    ) {
+      suppressAutoWindow()
+      clearAllWindows()
+    }
+    prevAreaPrefixRef.current = area
+  }, [location.pathname, clearAllWindows])
+
+  // Hub (/consultas, etc.): limpar tabs Ã³rfÃ£s (Sinistrados preso com URL jÃ¡ no hub)
+  useEffect(() => {
+    if (!shouldManageWindow(location.pathname)) {
+      const { windows: openWindows } = useWindowsStore.getState()
+      if (openWindows.length > 0) {
+        suppressAutoWindow()
+        clearAllWindows()
+      }
+    }
+  }, [location.pathname, clearAllWindows])
+
+  // Sincronizar tab activa com path + instanceId (browser + Router)
+  useEffect(() => {
+    const browserPath = window.location.pathname
+    const browserInstance = new URLSearchParams(window.location.search).get(
+      'instanceId'
+    )
+    const routerPath = location.pathname
+    const routerInstance = searchParams.get('instanceId')
+    const path = browserPath || routerPath
+    const instanceId = browserInstance ?? routerInstance
+
+    const { windows: w, activeWindow: aw, restoreWindow: restore } =
+      useWindowsStore.getState()
+
+    const match = w.find(
+      (win) =>
+        win.path === path && (!instanceId || win.instanceId === instanceId)
+    )
+
+    if (match) {
+      if (aw !== match.id) restore(match.id)
+      return
+    }
+
+    // URL jÃ¡ mudou mas tab activa Ã© de outra rota (ex.: Sinistrados preso)
+    if (aw) {
+      const activeWin = w.find((win) => win.id === aw)
+      if (activeWin && activeWin.path !== path) {
+        useWindowsStore.setState({ activeWindow: null })
+      }
+    }
+  }, [location.pathname, location.search, searchParams, windows])
+
+  useEffect(() => {
+    if (Date.now() < suppressAutoWindowUntilRef.current) return
+    if (skipAutoWindowRef.current) {
+      skipAutoWindowRef.current = false
+      return
+    }
+
     const route = findRouteWithManageWindow(location.pathname)
     if (!route?.manageWindow) return
 
@@ -422,7 +393,7 @@ export function WindowManager({ children }: WindowManagerProps) {
       useWindowsStore.getState()
 
     const exactMatch = findWin(location.pathname, instanceId)
-    // Redirect na mesma instância (ex.: /utentes/:id → /utentes/:id/editar) — uma tab só
+    // Redirect na mesma instÃ¢ncia (ex.: /utentes/:id â†’ /utentes/:id/editar) â€” uma tab sÃ³
     const existingWindow =
       exactMatch ??
       (hadInstanceInUrl
@@ -519,19 +490,13 @@ export function WindowManager({ children }: WindowManagerProps) {
   }, [windows])
 
   const handleRestoreWindow = (targetWindow: WindowState) => {
-    // Always update the URL with the correct instanceId, even if the path is the same
-    const searchParams = new URLSearchParams()
-    if (targetWindow.searchParams) {
-      Object.entries(targetWindow.searchParams).forEach(([key, value]) => {
-        searchParams.set(key, value)
-      })
-    }
-    searchParams.set('instanceId', targetWindow.instanceId)
-    const fullPath = `${targetWindow.path}?${searchParams.toString()}`
-
-
-    navigate(fullPath, { replace: true })
     restoreWindow(targetWindow.id)
+    navigateToWindowPath(
+      navigate,
+      targetWindow.path,
+      targetWindow.instanceId,
+      targetWindow.searchParams
+    )
 
     // Scroll to make the window visible if needed
     if (windowsBarRef.current) {
@@ -580,44 +545,43 @@ export function WindowManager({ children }: WindowManagerProps) {
   }
 
   const handleRemoveWindow = (windowId: string, windowPath: string) => {
-    // Remove window from windows store
+    const closedWindow = windows.find((w) => w.id === windowId)
+    const urlInstanceId = new URLSearchParams(location.search).get('instanceId')
+    const closedWasVisible =
+      !!closedWindow &&
+      closedWindow.path === location.pathname &&
+      closedWindow.instanceId === urlInstanceId
+
+    const remainingWindows = windows.filter((w) => w.id !== windowId)
+
+    if (remainingWindows.length === 0) {
+      suppressAutoWindow()
+      mapStore.cleanupWindowData(windowId)
+      navigateToModuleHome(navigate, windowPath || location.pathname)
+      clearAllWindows()
+      cleanupWindowForms('*')
+      return
+    }
+
     removeWindow(windowId)
 
-    // Remove page state for this specific window
+    // Navegar para a tab restante se fechÃ¡mos a visÃ­vel ou a activa
+    const wasActive = activeWindow === windowId
+    if (closedWasVisible || wasActive) {
+      const lastWindow = remainingWindows[remainingWindows.length - 1]
+      restoreWindow(lastWindow.id)
+      navigateToWindowPath(
+        navigate,
+        lastWindow.path,
+        lastWindow.instanceId,
+        lastWindow.searchParams
+      )
+    }
+
     const pagesStore = usePagesStore.getState()
     pagesStore.removePageStateByWindowId(windowId)
-
-    // Clean up map data for this window
     mapStore.cleanupWindowData(windowId)
-
-    // Check if this was the last window
-    const remainingWindows = windows.filter((w) => w.id !== windowId)
-    if (remainingWindows.length === 0) {
-      // If it was the last window, clean up all form instances
-      cleanupWindowForms('*') // Clean up all form instances
-    } else {
-      // Otherwise just clean up forms for this specific window
-      cleanupWindowForms(windowId)
-    }
-
-    if (windowPath === location.pathname) {
-      // Find any other open window to navigate to, or go home
-      if (remainingWindows.length > 0) {
-        const lastWindow = remainingWindows[remainingWindows.length - 1]
-        // Add instanceId to the URL if it exists
-        const searchParams = new URLSearchParams()
-        if (lastWindow.searchParams) {
-          Object.entries(lastWindow.searchParams).forEach(([key, value]) => {
-            searchParams.set(key, value)
-          })
-        }
-        searchParams.set('instanceId', lastWindow.instanceId)
-        const fullPathToShow = `${lastWindow.path}?${searchParams.toString()}`
-        navigate(fullPathToShow)
-      } else {
-        navigate(getContextualHomePath(windowPath))
-      }
-    }
+    cleanupWindowForms(windowId)
   }
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -650,25 +614,13 @@ export function WindowManager({ children }: WindowManagerProps) {
   }
 
   const handleCloseAllWindows = () => {
-    // Remove all windows and clean up their data
     windows.forEach((window) => {
-      // Remove window from windows store
-      removeWindow(window.id)
-
-      // Remove page state for this window
-      const pagesStore = usePagesStore.getState()
-      pagesStore.removePageStateByWindowId(window.id)
-
-      // Clean up map data for this window
       mapStore.cleanupWindowData(window.id)
-
     })
-
-    // Clean up all form instances
+    suppressAutoWindow()
+    clearAllWindows()
     cleanupWindowForms('*')
-
-    // Navigate to home
-    navigate(getContextualHomePath(location.pathname))
+    navigateToModuleHome(navigate, location.pathname)
   }
 
   // Cleanup animation frames on unmount
@@ -683,27 +635,13 @@ export function WindowManager({ children }: WindowManagerProps) {
     }
   }, [])
 
+  const routeKey = `${window.location.pathname}${window.location.search}`
+
   return (
     <div className='relative h-full'>
-      {/* Windows Container */}
-      <div className='relative h-full'>
-        {windows.length > 0 &&
-        windows.some((window) => !window.isMinimized) &&
-        shouldManageWindow(location.pathname) ? (
-          windows.map((window) => (
-            <Window
-              key={window.id}
-              window={window}
-              isActive={window.id === activeWindow}
-            >
-              {children}
-            </Window>
-          ))
-        ) : (
-          // Rotas sem manageWindow (ex.: hub processo clínico, /) mostram o Outlet aqui;
-          // caso contrário, com tabs abertas, o conteúdo ficava preso à janela "activa" errada.
-          <div className='h-full'>{children}</div>
-        )}
+      {/* Um Ãºnico Outlet vivo â€” tabs sÃ³ controlam navegaÃ§Ã£o (sem cache visual) */}
+      <div key={routeKey} className='h-full'>
+        {children}
       </div>
 
       {/* Windows Bar - Only show when there are windows */}
@@ -711,7 +649,7 @@ export function WindowManager({ children }: WindowManagerProps) {
         <div
           className={cn(
             'fixed bottom-0 right-0 z-50',
-            // Alinhar à área de conteúdo (sidebar fixa só em >=1515px; ver dashboard-layout)
+            // Alinhar Ã  Ã¡rea de conteÃºdo (sidebar fixa sÃ³ em >=1515px; ver dashboard-layout)
             isMinimized
               ? 'left-0 min-[1515px]:left-[110px]'
               : 'left-0 min-[1515px]:left-[260px]'

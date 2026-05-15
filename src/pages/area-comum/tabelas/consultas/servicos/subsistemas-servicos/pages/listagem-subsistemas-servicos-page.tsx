@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import {} from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
-import { usePageData } from '@/utils/page-data-utils'
+import { usePageData, type PageFilter } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
@@ -29,12 +29,23 @@ import { SubsistemaServicoService } from '@/lib/services/servicos/subsistema-ser
 import { ResponseStatus } from '@/types/api/responses'
 
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
 import { modules } from '@/config/modules'
 
-const subsistemasServicosPermId =
-  modules.areaComum.permissions.subsistemasServicos.id
-
 export function ListagemSubsistemasServicosPage() {
+  const [searchParams] = useSearchParams()
+  const organismoIdFromUrl = searchParams.get('organismoId') ?? undefined
+
+  /** Filtro inicial sem handleFiltersChange no mount (trava navegação após DataTable — ver page-data-utils). */
+  const defaultFilters = useMemo((): PageFilter[] | undefined => {
+    if (!organismoIdFromUrl) return undefined
+    return [{ id: 'organismoId', value: organismoIdFromUrl }]
+  }, [organismoIdFromUrl])
+
+  const subsistemasServicosPermId = useScopedFuncionalidadeId(
+    modules.areaComum.permissions.subsistemasServicos.id,
+    modules.areaAdministrativa.permissions.subsistemaServicos.id
+  )
   const { canView, canAdd, canChange, canDelete } =
     useAreaComumEntityListPermissions(subsistemasServicosPermId)
   const queryClient = useQueryClient()
@@ -58,11 +69,13 @@ export function ListagemSubsistemasServicosPage() {
     sorting,
     handleFiltersChange,
     handlePaginationChange,
-    handleSortingChange} = usePageData({
+    handleSortingChange  } = usePageData({
     useGetDataPaginated: (p, ps, f, s) =>
-      useGetSubsistemasServicosPaginated(p, ps, f, s),
+      useGetSubsistemasServicosPaginated(p, ps, f, s, organismoIdFromUrl),
     usePrefetchAdjacentData: (p, ps, f) =>
-      usePrefetchAdjacentSubsistemasServicos(p, ps, f, null)})
+      usePrefetchAdjacentSubsistemasServicos(p, ps, f, null),
+    defaultFilters,
+  })
 
   const subsistemas = data?.info?.data ?? []
   const pageCount = data?.info?.totalPages ?? 0

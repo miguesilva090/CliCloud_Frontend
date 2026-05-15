@@ -75,13 +75,13 @@ export function TiposAparelhoViewCreateModal({
         }
       } else {
         const response = await client.createTipoAparelho({ designacao: designacao.trim() })
-        const status = (response.info as { status?: number })?.status
-        if (status === ResponseStatus.Success) {
+        if (response.info.status === ResponseStatus.Success) {
           toast.success('Tipo de aparelho criado com sucesso.')
           onOpenChange(false)
           onSuccess?.()
         } else {
-          const msg = (response.info as { messages?: Record<string, string[]> })?.messages?.['$']?.[0] ?? 'Falha ao criar.'
+          const msg =
+            response.info.messages?.['$']?.[0] ?? 'Falha ao criar.'
           toast.error(msg)
         }
       }

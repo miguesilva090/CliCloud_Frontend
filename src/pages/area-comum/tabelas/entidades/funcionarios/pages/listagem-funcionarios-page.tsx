@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
@@ -32,12 +32,15 @@ import { useWindowsStore } from '@/stores/use-windows-store'
 import { openEntityEditInApp, openPathInApp } from '@/utils/window-utils'
 import { ResponseStatus } from '@/types/api/responses'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
 import { modules } from '@/config/modules'
 
-const LISTAGEM_PATH = '/area-comum/tabelas/entidades/funcionarios'
-const funcionariosPermId = modules.areaComum.permissions.funcionarios.id
-
 export function ListagemFuncionariosPage() {
+  const { pathname: listagemPath } = useLocation()
+  const funcionariosPermId = useScopedFuncionalidadeId(
+    modules.areaComum.permissions.funcionarios.id,
+    modules.areaAdministrativa.permissions.funcionarios.id
+  )
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)
@@ -82,7 +85,7 @@ export function ListagemFuncionariosPage() {
               openPathInApp(
                 navigate,
                 addWindow,
-                `${LISTAGEM_PATH}/novo`,
+                `${listagemPath}/novo`,
                 'Novo Funcionário'
               ),
             variant: 'destructive' as const,
@@ -205,7 +208,7 @@ export function ListagemFuncionariosPage() {
               openPathInApp(
                 navigate,
                 addWindow,
-                `${LISTAGEM_PATH}/${id}`,
+                `${listagemPath}/${id}`,
                 nome ? `Funcionário: ${nome}` : 'Funcionário'
               )
             }
@@ -219,7 +222,7 @@ export function ListagemFuncionariosPage() {
                     openEntityEditInApp(
                       navigate,
                       addWindow,
-                      `${LISTAGEM_PATH}/${id}/editar`,
+                      `${listagemPath}/${id}/editar`,
                       String(id),
                       nome ? `Funcionário: ${nome}` : null
                     )

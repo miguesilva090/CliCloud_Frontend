@@ -423,6 +423,11 @@ const ListagemPaisesPage = lazy(() =>
       '@/pages/area-comum/tabelas/tabelas/taxas-iva/pages/listagem-taxas-iva-page'
     ).then((m) => ({ default: m.ListagemTaxasIvaPage }))
   )
+  const ListagemMotivosIsencaoPage = lazy(() =>
+    import(
+      '@/pages/area-comum/tabelas/tabelas/motivo-isencao/pages/listagem-motivos-isencao-page'
+    ).then((m) => ({ default: m.ListagemMotivosIsencaoPage }))
+  )
   const ListagemProvenienciasUtentesPage = lazy(() =>
     import(
       '@/pages/area-comum/tabelas/tabelas/proveniencias-utentes/pages/listagem-proveniencias-utentes-page'
@@ -1175,6 +1180,20 @@ export const areaComumRoutes = [
               ),
               manageWindow: true,
               windowName: areaComum?.permissions?.taxasIva?.name,
+            },
+            {
+              path: 'area-comum/tabelas/tabelas/motivos-isencao',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.taxasIva?.id}
+                  actionType={actionTypes.AuthVer}
+                >
+                  <ListagemMotivosIsencaoPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: 'Motivos de isenção',
             },
             {
               path: 'area-comum/tabelas/tabelas/proveniencias-utentes',

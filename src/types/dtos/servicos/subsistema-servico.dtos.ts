@@ -28,6 +28,8 @@ export interface SubsistemaServicoTableDTO {
 
 export interface SubsistemaServicoTableFilterRequest extends PaginationFilterRequest {
   filters?: TableFilter[]
+  servicoId?: string
+  organismoId?: string
 }
 
 export interface CreateSubsistemaServicoRequest {

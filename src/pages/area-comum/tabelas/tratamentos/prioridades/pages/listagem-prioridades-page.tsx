@@ -31,13 +31,16 @@ import { PrioridadeService } from '@/lib/services/prioridades/prioridade-service
 import { ResponseStatus } from '@/types/api/responses'
 
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
 import { modules } from '@/config/modules'
-
-const prioridadesPermId = modules.areaComum.permissions.prioridades.id
 
 type PrioridadeModalMode = 'view' | 'create' | 'edit'
 
 export function ListagemPrioridadesPage() {
+  const prioridadesPermId = useScopedFuncionalidadeId(
+    modules.areaComum.permissions.prioridades.id,
+    modules.areaAdministrativa.permissions.prioridades.id
+  )
   const { canView, canAdd, canChange, canDelete } =
     useAreaComumEntityListPermissions(prioridadesPermId)
   const queryClient = useQueryClient()

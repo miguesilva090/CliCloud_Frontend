@@ -9,13 +9,15 @@ function buildParams(
   pageNumber: number,
   pageSize: number,
   filters: Filters,
-  sorting: Sorting
+  sorting: Sorting,
+  organismoId?: string
 ): SubsistemaServicoTableFilterRequest {
   return {
     pageNumber,
     pageSize,
     filters: filters ?? undefined,
     sorting: sorting ?? undefined,
+    organismoId: organismoId || undefined,
   }
 }
 
@@ -23,9 +25,10 @@ export function useGetSubsistemasServicosPaginated(
   pageNumber: number,
   pageSize: number,
   filters: Filters,
-  sorting: Sorting
+  sorting: Sorting,
+  organismoId?: string
 ) {
-  const params = buildParams(pageNumber, pageSize, filters, sorting)
+  const params = buildParams(pageNumber, pageSize, filters, sorting, organismoId)
 
   return useQuery({
     queryKey: ['subsistemas-servicos-paginated', params],

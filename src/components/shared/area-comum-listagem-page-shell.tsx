@@ -6,6 +6,8 @@ export type AreaComumListagemPageShellProps = {
   title: ReactNode
   /** Conteúdo extra à direita no cabeçalho (opcional). */
   headerTrailing?: ReactNode
+  /** Compatibilidade com páginas antigas que ainda passam refresh. */
+  onRefresh?: () => void | Promise<void>
   children: ReactNode
   showBackButton?: boolean
   onBack?: () => void

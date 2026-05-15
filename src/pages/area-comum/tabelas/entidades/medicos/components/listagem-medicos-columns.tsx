@@ -1,7 +1,7 @@
 import type { CellContext, ColumnDef } from '@tanstack/react-table'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import type { MedicoTableDTO } from '@/types/dtos/saude/medicos.dtos'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Eye, Pencil, Trash2, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -12,10 +12,8 @@ import { useDeleteMedico } from '@/pages/medicos/queries/medicos-queries'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { openMedicoEditInApp, openMedicoViewInApp } from '@/utils/window-utils'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
 import { modules } from '@/config/modules'
-
-const LISTAGEM_RETURN_PATH = '/area-comum/tabelas/entidades/medicos'
-const medicosPermId = modules.areaComum.permissions.medicos.id
 
 function ListagemMedicoRowActions({
   id,
@@ -24,11 +22,16 @@ function ListagemMedicoRowActions({
   id: string
   nome?: string | null
 }) {
+  const location = useLocation()
   const navigate = useNavigate()
   const addWindow = useWindowsStore((s) => s.addWindow)
+  const medicosPermId = useScopedFuncionalidadeId(
+    modules.areaComum.permissions.medicos.id,
+    modules.areaAdministrativa.permissions.medicos.id
+  )
   const { canView, canChange, canDelete } =
     useAreaComumEntityListPermissions(medicosPermId)
-  const del = useDeleteMedico({ onSuccessNavigateTo: LISTAGEM_RETURN_PATH })
+  const del = useDeleteMedico({ onSuccessNavigateTo: location.pathname })
 
   return (
     <div className='flex w-full items-center justify-end gap-1'>

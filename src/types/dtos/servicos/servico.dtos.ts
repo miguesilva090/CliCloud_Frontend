@@ -12,6 +12,7 @@ export interface ServicoDTO {
   tipoAparelhoId?: string
   tipoAparelhoDesignacao?: string
   tratDentario: boolean
+  motivoIsencaoId?: string
   codigoMotivoIsencao?: number
   inativo: boolean
   createdOn?: string
@@ -48,6 +49,7 @@ export interface CreateServicoRequest {
   ean?: string
   tipoAparelhoId?: string
   tratDentario: boolean
+  motivoIsencaoId?: string
   codigoMotivoIsencao?: number
   inativo: boolean
 }

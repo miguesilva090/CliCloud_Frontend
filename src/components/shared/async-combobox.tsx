@@ -23,6 +23,8 @@ export function AsyncCombobox({
   searchValue,
   onSearchValueChange,
   className,
+  open: openControlled,
+  onOpenChange: onOpenChangeControlled,
 }: {
   value?: string
   onChange: (value: string) => void
@@ -36,8 +38,14 @@ export function AsyncCombobox({
   onSearchValueChange: (value: string) => void
   /** Aplicado ao botão trigger (ex.: h-8 para altura mais baixa) */
   className?: string
+  /** Modo controlado (ex.: botão externo “+” a abrir a lista). */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }) {
-  const [open, setOpen] = useState(false)
+  const [openInternal, setOpenInternal] = useState(false)
+  const isOpenControlled = openControlled !== undefined && onOpenChangeControlled !== undefined
+  const open = isOpenControlled ? openControlled : openInternal
+  const setOpen = isOpenControlled ? onOpenChangeControlled : setOpenInternal
 
   const selected = useMemo(
     () => items.find((i) => i.value === value),

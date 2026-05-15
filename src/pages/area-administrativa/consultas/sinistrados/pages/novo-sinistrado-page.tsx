@@ -20,9 +20,7 @@ export function NovoSinistradoPage() {
           }}
           mode='create'
           viewData={null}
-          onSuccess={() => {
-            closeWindowTab()
-          }}
+          onSuccess={closeWindowTab}
         />
       </DashboardPageContainer>
     </>

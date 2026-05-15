@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { List, RotateCw } from 'lucide-react'
+import { List, Plus, RotateCw } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -29,14 +29,17 @@ import {
 import { TipoConsultaViewEditModal } from '../modals/tipo-consulta-view-edit-modal'
 
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
 import { modules } from '@/config/modules'
 
-const tiposConsultasPermId = modules.areaComum.permissions.tiposConsultas.id
-
-type TipoConsultaModalMode = 'view' | 'edit'
+type TipoConsultaModalMode = 'view' | 'edit' | 'create'
 
 export function ListagemTiposConsultaPage() {
-  const { canView, canChange, canDelete } =
+  const tiposConsultasPermId = useScopedFuncionalidadeId(
+    modules.areaComum.permissions.tiposConsultas.id,
+    modules.areaAdministrativa.permissions.tiposConsulta.id
+  )
+  const { canView, canAdd, canChange, canDelete } =
     useAreaComumEntityListPermissions(tiposConsultasPermId)
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -70,6 +73,22 @@ export function ListagemTiposConsultaPage() {
     error instanceof Error ? error.message : error ? String(error) : ''
 
   const toolbarActions: DataTableAction[] = [
+    ...(canAdd
+      ? [
+          {
+            label: 'Adicionar',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () => {
+              setViewData(null)
+              setModalMode('create')
+              setModalOpen(true)
+            },
+            variant: 'destructive' as const,
+            className:
+              '!bg-red-600 !text-white hover:!bg-red-700 focus-visible:!ring-red-600 !border-red-700 shadow-sm',
+          },
+        ]
+      : []),
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
@@ -82,7 +101,11 @@ export function ListagemTiposConsultaPage() {
         handleFiltersChange([])
         handlePaginationChange(1, pageSize)
         queryClient.invalidateQueries({
-          queryKey: ['tipos-consulta-paginated']})
+          queryKey: ['tipos-consulta-paginated'],
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['tipos-consulta-all'],
+        })
       },
       variant: 'outline'},
   ]
@@ -108,6 +131,9 @@ export function ListagemTiposConsultaPage() {
         setItemToDelete(null)
         queryClient.invalidateQueries({
           queryKey: ['tipos-consulta-paginated'],
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['tipos-consulta-all'],
         })
       } else {
         const msg =
@@ -140,7 +166,11 @@ export function ListagemTiposConsultaPage() {
                 handleFiltersChange([])
                 handlePaginationChange(1, pageSize)
                 queryClient.invalidateQueries({
-                  queryKey: ['tipos-consulta-paginated']})
+                  queryKey: ['tipos-consulta-paginated'],
+                })
+                queryClient.invalidateQueries({
+                  queryKey: ['tipos-consulta-all'],
+                })
             }}
         >
 
@@ -200,7 +230,11 @@ export function ListagemTiposConsultaPage() {
           viewData={viewData}
           onSuccess={() => {
             queryClient.invalidateQueries({
-              queryKey: ['tipos-consulta-paginated']})
+              queryKey: ['tipos-consulta-paginated'],
+            })
+            queryClient.invalidateQueries({
+              queryKey: ['tipos-consulta-all'],
+            })
           }}
         />
         <AlertDialog open={deleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>

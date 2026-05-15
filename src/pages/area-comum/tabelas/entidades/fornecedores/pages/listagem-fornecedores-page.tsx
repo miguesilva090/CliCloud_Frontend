@@ -32,11 +32,14 @@ import { useWindowsStore } from '@/stores/use-windows-store'
 import { openEntityEditInApp, openPathInApp } from '@/utils/window-utils'
 import { ResponseStatus } from '@/types/api/responses'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
 import { modules } from '@/config/modules'
 
-const fornecedoresPermId = modules.areaComum.permissions.fornecedores.id
-
 export function ListagemFornecedoresPage() {
+  const fornecedoresPermId = useScopedFuncionalidadeId(
+    modules.areaComum.permissions.fornecedores.id,
+    modules.areaAdministrativa.permissions.fornecedores.id
+  )
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)

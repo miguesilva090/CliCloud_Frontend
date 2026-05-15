@@ -26,11 +26,14 @@ import type { DataTableAction } from '@/components/shared/data-table'
 import { MedicosTable } from '@/pages/medicos/components/medicos-table/medicos-table'
 import { listagemMedicosColumns } from '../components/listagem-medicos-columns'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
 import { modules } from '@/config/modules'
 
-const medicosPermId = modules.areaComum.permissions.medicos.id
-
 export function ListagemMedicosPage() {
+  const medicosPermId = useScopedFuncionalidadeId(
+    modules.areaComum.permissions.medicos.id,
+    modules.areaAdministrativa.permissions.medicos.id
+  )
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)

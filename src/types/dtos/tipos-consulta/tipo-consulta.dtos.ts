@@ -6,3 +6,7 @@ export interface TipoConsultaDTO {
 export interface TipoConsultaTableDTO extends TipoConsultaDTO {
   createdOn?: string
 }
+
+export interface CreateTipoConsultaRequest {
+  designacao: string
+}
