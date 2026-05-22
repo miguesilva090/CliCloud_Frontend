@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { format, isValid, startOfDay } from 'date-fns'
 import { pt } from 'date-fns/locale'
-import { List, Plus, RotateCw } from 'lucide-react'
+import { List, Plus, RotateCw, UserPlus } from 'lucide-react'
 import type { CellContext, ColumnDef } from '@tanstack/react-table'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +55,8 @@ import {
 } from '@/components/shared/area-comum-list-actions-column'
 import { modules } from '@/config/modules'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useWindowsStore } from '@/stores/use-windows-store'
+import { openAdmissaoFromMarcacaoInApp } from '@/utils/window-utils'
 
 export type { ConsultaMarcadaRow }
 
@@ -114,10 +116,12 @@ function getColumnsWithActions(
   onOpenView: (row: ConsultaMarcadaRow) => void,
   onOpenEdit: (row: ConsultaMarcadaRow) => void,
   onOpenDelete: (row: ConsultaMarcadaRow) => void,
+  onAdmitir: ((row: ConsultaMarcadaRow) => void) | undefined,
   rowActionPermissions: {
     canView: boolean
     canChange: boolean
     canDelete: boolean
+    canAdmitir: boolean
   },
 ): Array<ColumnDef<ConsultaMarcadaRow> & DataTableColumnDef<ConsultaMarcadaRow>> {
   return [
@@ -128,8 +132,23 @@ function getColumnsWithActions(
         onOpenEdit: (data) => onOpenEdit(data),
         onOpenDelete: (data) => onOpenDelete(data),
         rowActionPermissions,
+        renderExtraActions:
+          rowActionPermissions.canAdmitir && onAdmitir
+            ? (row) => (
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='icon'
+                  className='h-8 w-8'
+                  title='Admitir na receção'
+                  onClick={() => onAdmitir(row)}
+                >
+                  <UserPlus className='h-4 w-4' />
+                </Button>
+              )
+            : undefined,
       }),
-      meta: { align: 'right', width: 'w-[90px]' },
+      meta: { align: 'right', width: 'w-[120px]' },
     },
   ]
 }
@@ -145,6 +164,8 @@ function ListagemConsultasMarcadasFilterControls(_: {
 
 export function ListagemConsultasMarcadasPage() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const addWindow = useWindowsStore((s) => s.addWindow)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [viewEditModalOpen, setViewEditModalOpen] = useState(false)
   const [viewEditMode, setViewEditMode] = useState<'view' | 'edit'>('view')
@@ -158,8 +179,10 @@ export function ListagemConsultasMarcadasPage() {
   const [sorting, setSorting] = useState<Array<{ id: string; desc: boolean }>>([])
   const consultasMarcadasPermissionId =
     modules.areaClinica.permissions.listagemConsultasMarcadas.id
+  const admissoesPermissionId = modules.areaAdministrativa.permissions.admissoes.id
   const { canView, canAdd, canChange, canDelete } =
     useAreaComumEntityListPermissions(consultasMarcadasPermissionId)
+  const { canAdd: canAdmitir } = useAreaComumEntityListPermissions(admissoesPermissionId)
   const selectedDateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
   const dateForApi = selectedDateStr || format(new Date(), 'yyyy-MM-dd')
   const { rows: consultasFiltradas, refetch, isFetching } = useConsultasDoDiaMarcacoes(
@@ -201,14 +224,23 @@ export function ListagemConsultasMarcadasPage() {
     refetch()
   }
 
+  const handleAdmitir = useCallback(
+    (row: ConsultaMarcadaRow) => {
+      if (!row.id) return
+      openAdmissaoFromMarcacaoInApp(navigate, addWindow, row.id, row.utenteNome)
+    },
+    [navigate, addWindow],
+  )
+
   const columns = useMemo(
     () =>
-      getColumnsWithActions(handleOpenView, handleOpenEdit, handleOpenDelete, {
+      getColumnsWithActions(handleOpenView, handleOpenEdit, handleOpenDelete, handleAdmitir, {
         canView,
         canChange,
         canDelete,
+        canAdmitir,
       }),
-    [handleOpenView, handleOpenEdit, handleOpenDelete, canView, canChange, canDelete],
+    [handleOpenView, handleOpenEdit, handleOpenDelete, handleAdmitir, canView, canChange, canDelete, canAdmitir],
   )
 
   const toolbarActions: DataTableAction[] = [

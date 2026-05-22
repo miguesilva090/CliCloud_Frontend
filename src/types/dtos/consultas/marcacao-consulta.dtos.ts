@@ -1,5 +1,23 @@
 import type { AllFilterRequest, TableFilterRequest } from '@/types/dtos/common/table-filters.dtos'
 
+/** Detalhe de marcação (GET por id). */
+export interface MarcacaoConsultaDTO {
+  id: string
+  consultaId?: string | null
+  utenteId: string
+  medicoId?: string | null
+  especialidadeId?: string | null
+  tecnicoId?: string | null
+  salaId?: string | null
+  data?: string | null
+  horaMarcacao?: string | null
+  motivoConsultaId?: string | null
+  tipoAdmissaoId?: string | null
+  tipoConsultaId?: string | null
+  obs?: string | null
+  statusConsulta?: number | null
+}
+
 export interface MarcacaoConsultaTableDTO {
   id: string
   consultaId?: string | null

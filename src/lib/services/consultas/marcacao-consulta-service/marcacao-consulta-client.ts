@@ -4,6 +4,7 @@ import type { ResponseApi } from '@/types/responses'
 import { BaseApiClient } from '@/lib/base-client'
 import type {
   MarcacaoConsultaAllFilterRequest,
+  MarcacaoConsultaDTO,
   MarcacaoConsultaTableDTO,
   UpdateMarcacaoConsultaBody,
 } from '@/types/dtos/consultas/marcacao-consulta.dtos'
@@ -73,8 +74,8 @@ export class MarcacaoConsultaClient extends BaseApiClient {
   /** Obter uma marcação por id. */
   public async getMarcacaoConsulta(
     id: string
-  ): Promise<ResponseApi<GSResponse<MarcacaoConsultaTableDTO>>> {
-    return this.httpClient.getRequest<GSResponse<MarcacaoConsultaTableDTO>>(
+  ): Promise<ResponseApi<GSResponse<MarcacaoConsultaDTO>>> {
+    return this.httpClient.getRequest<GSResponse<MarcacaoConsultaDTO>>(
       state.URL,
       `${BASE}/${id}`
     )

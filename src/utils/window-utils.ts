@@ -18,7 +18,112 @@ import { areaComumRoutes } from '@/routes/area-comum/areaComum'
 import { areaClinicaRoutes } from '@/routes/area-clinica/areaClinica'
 import { reportsRoutes } from '@/routes/reports/reports-routes'
 import { areaAdministrativaRoutes } from '@/routes/area-administrativa/areaAdministrativa'
+import {
+  clearPathnameKeySyncPending,
+  suppressPathnameKeyUrlChange,
+} from '@/hooks/use-pathname-key'
+import {
+  clearAdmissaoSubsistemasPickerClosingFlag,
+  clearAdmissaoSubsistemasPickerOpeningFlag,
+  markAdmissaoSubsistemasPickerOpening,
+} from '@/pages/area-comum/tabelas/consultas/servicos/subsistemas-servicos/subsistemas-servicos-admissao-flow'
 
+function normalizeAppPath(path: string): string {
+  if (!path) return '/'
+  const p = path.startsWith('/') ? path : `/${path}`
+  return p.length > 1 && p.endsWith('/') ? p.slice(0, -1) : p
+}
+
+/**
+ * Após fechar uma tab, escolhe qual janela restaurar. Preferência explícita quando a tab
+ * fechada veio do fluxo «Nova admissão → Subsistemas» (`searchParams.fromAdmissao`).
+ */
+export function pickRestoreWindowAfterClose(
+  remainingWindows: WindowState[],
+  closedWindow: WindowState | undefined
+): WindowState | undefined {
+  if (remainingWindows.length === 0) return undefined
+  const fromAdm = closedWindow?.searchParams?.fromAdmissao
+  if (fromAdm) {
+    const adm = remainingWindows.find(
+      (w) =>
+        w.instanceId === fromAdm &&
+        (w.path.includes('/admissoes/novo') || w.path.endsWith('admissoes/novo'))
+    )
+    if (adm) return adm
+  }
+  return remainingWindows[remainingWindows.length - 1]
+}
+
+/**
+ * Fecha a tab do picker e volta a Nova admissão com `location.replace`.
+ * O `navigate()` SPA deixa Router/Outlet dessincronizados neste fluxo; o reload da rota garante o ecrã.
+ * As linhas enviadas ficam em sessionStorage/BroadcastChannel para o formulário ao montar.
+ */
+export function returnToAdmissaoAfterSubsistemasPicker(
+  pickerWindowId: string | undefined,
+  admissaoInstanceId: string,
+  removeWindow: (id: string) => void
+): void {
+  const dest = buildWindowTargetUrl(
+    '/area-administrativa/consultas/admissoes/novo',
+    admissaoInstanceId
+  )
+  const store = useWindowsStore.getState()
+
+  if (pickerWindowId) {
+    const closedWindow = store.windows.find((w) => w.id === pickerWindowId)
+    const remaining = store.windows.filter((w) => w.id !== pickerWindowId)
+    if (remaining.length > 0) {
+      const last =
+        pickRestoreWindowAfterClose(remaining, closedWindow) ??
+        remaining[remaining.length - 1]
+      store.restoreWindow(last.id)
+    }
+    removeWindow(pickerWindowId)
+  }
+
+  clearAdmissaoSubsistemasPickerOpeningFlag()
+  clearAdmissaoSubsistemasPickerClosingFlag()
+  window.location.replace(dest)
+}
+
+/**
+ * Resolve a tab da listagem de subsistemas (picker da admissão) mesmo quando o match
+ * pathname+instanceId falha por pequenas diferenças de path ou ordem na store.
+ */
+export function resolveSubsistemasServicosPickerWindowId(): string {
+  const pathname = normalizeAppPath(window.location.pathname)
+  const search = new URLSearchParams(window.location.search)
+  const inst = search.get('instanceId')
+  const fromAdm = search.get('fromAdmissao')
+  const { windows } = useWindowsStore.getState()
+
+  if (inst) {
+    const exact = windows.find(
+      (w) => normalizeAppPath(w.path) === pathname && w.instanceId === inst
+    )
+    if (exact) return exact.id
+
+    const byInst = windows.find(
+      (w) =>
+        w.instanceId === inst && w.path.includes('subsistemas-servicos')
+    )
+    if (byInst) return byInst.id
+  }
+
+  if (fromAdm) {
+    const byContext = windows.find(
+      (w) =>
+        w.path.includes('subsistemas-servicos') &&
+        w.searchParams?.fromAdmissao === fromAdm &&
+        (!inst || w.instanceId === inst)
+    )
+    if (byContext) return byContext.id
+  }
+
+  return ''
+}
 
 /**
  * Hook to get the current window ID based on the location and instance ID.
@@ -29,11 +134,12 @@ export function useCurrentWindowId() {
   const searchParams = new URLSearchParams(location.search)
   const instanceId = searchParams.get('instanceId')
   const { windows } = useWindowsStore()
+  const pathKey = normalizeAppPath(location.pathname)
 
   // First try to find a window with the exact path and instanceId
   const currentWindow = instanceId
     ? windows.find(
-        (w) => w.path === location.pathname && w.instanceId === instanceId
+        (w) => normalizeAppPath(w.path) === pathKey && w.instanceId === instanceId
       )
     : null
 
@@ -41,7 +147,7 @@ export function useCurrentWindowId() {
   // If instanceId is present, we must wait for the exact window to be created
   // This prevents forms from updating the wrong window during initialization
   const fallbackWindow = !instanceId
-    ? windows.find((w) => w.path === location.pathname)
+    ? windows.find((w) => normalizeAppPath(w.path) === pathKey)
     : null
 
   const resolvedWindow = currentWindow || fallbackWindow
@@ -59,11 +165,12 @@ export function getCurrentWindowId() {
   const searchParams = new URLSearchParams(location.search)
   const instanceId = searchParams.get('instanceId')
   const windows = useWindowsStore.getState().windows
+  const pathKey = normalizeAppPath(location.pathname)
 
   // Find a window with the exact path and instanceId match
   const currentWindow = instanceId
     ? windows.find(
-        (w) => w.path === location.pathname && w.instanceId === instanceId
+        (w) => normalizeAppPath(w.path) === pathKey && w.instanceId === instanceId
       )
     : null
 
@@ -71,7 +178,7 @@ export function getCurrentWindowId() {
   // If instanceId is present, we must wait for the exact window to be created
   // This prevents forms from updating the wrong window during initialization
   const fallbackWindow = !instanceId
-    ? windows.find((w) => w.path === location.pathname)
+    ? windows.find((w) => normalizeAppPath(w.path) === pathKey)
     : null
 
   const resolvedWindow = currentWindow || fallbackWindow
@@ -82,6 +189,13 @@ export function getCurrentWindowId() {
 export function resolveWindowIdForClose(): string {
   const fromUrl = getCurrentWindowId()
   if (fromUrl) return fromUrl
+
+  const hasInstanceInUrl = !!new URLSearchParams(window.location.search).get(
+    'instanceId'
+  )
+  // Com instanceId na URL mas sem janela correspondente, não usar `activeWindow`:
+  // isso fechava a tab errada (ex.: Nova admissão) com o ecrã ainda em Subsistemas.
+  if (hasInstanceInUrl) return ''
 
   const { activeWindow, windows } = useWindowsStore.getState()
   if (activeWindow) return activeWindow
@@ -167,13 +281,11 @@ export function getNavigationAreaPrefix(pathname: string): string {
   return ''
 }
 
-/** Navega para o destino de uma janela (path + query) sem reload da página. */
-export function navigateToWindowPath(
-  navigate: NavigateFunction,
+export function buildWindowTargetUrl(
   path: string,
   instanceId: string,
   searchParams?: Record<string, string>
-): void {
+): string {
   const params = new URLSearchParams()
   if (searchParams) {
     Object.entries(searchParams).forEach(([key, value]) => {
@@ -181,14 +293,36 @@ export function navigateToWindowPath(
     })
   }
   params.set('instanceId', instanceId)
-  const target = `${path}?${params.toString()}`
+  return `${path}?${params.toString()}`
+}
+
+export type NavigateToWindowPathOptions = {
+  /**
+   * Reload completo (`location.replace`) — só para fluxos onde o Outlet fica preso
+   * (ex.: picker subsistemas → Nova admissão). Tabs normais usam `navigate` SPA.
+   */
+  forceReload?: boolean
+}
+
+/** Navega para o destino de uma janela (path + query) via React Router (`navigate`). */
+export function navigateToWindowPath(
+  navigate: NavigateFunction,
+  path: string,
+  instanceId: string,
+  searchParams?: Record<string, string>,
+  options?: NavigateToWindowPathOptions
+): void {
+  const target = buildWindowTargetUrl(path, instanceId, searchParams)
+
+  if (options?.forceReload) {
+    clearPathnameKeySyncPending()
+    suppressPathnameKeyUrlChange(200)
+    window.location.replace(target)
+    return
+  }
+
+  clearPathnameKeySyncPending()
   navigate(target, { replace: true })
-  requestAnimationFrame(() => {
-    const browserPath = window.location.pathname
-    if (browserPath !== path) {
-      navigate(target, { replace: true })
-    }
-  })
 }
 
 /** Última tab fechada: ir para a home do módulo (ex. área administrativa → /consultas). */
@@ -503,6 +637,27 @@ export function openAdmissaoCreationInApp(
   )
 }
 
+/** Cenário A: abre Nova admissão com dados da marcação (consultaMarcacaoId na query). */
+export function openAdmissaoFromMarcacaoInApp(
+  navigate: NavigateFunction,
+  addWindow: AddWindowFn,
+  consultaMarcacaoId: string,
+  utenteNome?: string | null
+): void {
+  const qs = new URLSearchParams()
+  qs.set('consultaMarcacaoId', consultaMarcacaoId)
+  const label = utenteNome?.trim()
+  const title = label
+    ? `Admissão — ${label.length > 28 ? `${label.slice(0, 28)}…` : label}`
+    : 'Nova admissão'
+  openPathInApp(
+    navigate,
+    addWindow,
+    `/area-administrativa/consultas/admissoes/novo?${qs.toString()}`,
+    title
+  )
+}
+
 /** Abre listagem de subsistemas/serviços numa nova tab (legado Acor_InsLst / Acor_Ins). */
 export function openSubsistemasServicosFromAdmissao(
   navigate: NavigateFunction,
@@ -522,6 +677,7 @@ export function openSubsistemasServicosFromAdmissao(
   const title = orgLabel
     ? `Subsistemas — ${orgLabel.length > 24 ? `${orgLabel.slice(0, 24)}…` : orgLabel}`
     : 'Subsistemas de Serviços'
+  markAdmissaoSubsistemasPickerOpening()
   openPathInApp(
     navigate,
     addWindow,
@@ -594,33 +750,76 @@ export function getFormId(
 
 /**
  * Handles closing a window and cleaning up associated form state.
- * This is a common operation used in form components.
+ * Ordem: restaurar + `navigate` para o destino **antes** de `removeWindow` — se remover primeiro,
+ * o URL pode continuar na rota fechada sem janela correspondente na store e o Router/Outlet ficam
+ * presos (ex.: Subsistemas visível com URL de Nova admissão).
  */
 export function handleWindowClose(
   windowId: string,
   navigate: NavigateFunction,
   removeWindow: (id: string) => void
 ) {
-  const currentPath = window.location.pathname
+  const locationPath = window.location.pathname
+  const locationSearch = window.location.search
+  const urlInstanceId = new URLSearchParams(locationSearch).get('instanceId')
+
   const windowsStore = useWindowsStore.getState()
+  const closedWindow = windowsStore.windows.find((w) => w.id === windowId)
   const remainingWindows = windowsStore.windows.filter((w) => w.id !== windowId)
 
+  if (import.meta.env.DEV) {
+    console.info('[route-debug] handleWindowClose enter', {
+      windowId,
+      windowPathSearch: `${locationPath}${locationSearch}`,
+      closedPath: closedWindow?.path,
+      closedInstanceId: closedWindow?.instanceId,
+      remainingCount: remainingWindows.length,
+    })
+  }
+
   if (remainingWindows.length > 0) {
-    const lastWindow = remainingWindows[remainingWindows.length - 1]
-    windowsStore.restoreWindow(lastWindow.id)
-    navigateToWindowPath(
-      navigate,
-      lastWindow.path,
-      lastWindow.instanceId,
-      lastWindow.searchParams
-    )
+    const closedWasVisible =
+      !!closedWindow &&
+      closedWindow.path === locationPath &&
+      closedWindow.instanceId === urlInstanceId
+    const wasActive = windowsStore.activeWindow === windowId
+
+    if (import.meta.env.DEV) {
+      console.info('[route-debug] handleWindowClose branch', {
+        closedWasVisible,
+        wasActive,
+        willNavigateRestore:
+          closedWasVisible || wasActive,
+      })
+    }
+
+    if (closedWasVisible || wasActive) {
+      const lastWindow =
+        pickRestoreWindowAfterClose(remainingWindows, closedWindow) ??
+        remainingWindows[remainingWindows.length - 1]
+      windowsStore.restoreWindow(lastWindow.id)
+      navigateToWindowPath(
+        navigate,
+        lastWindow.path,
+        lastWindow.instanceId,
+        lastWindow.searchParams
+      )
+    }
+
+    if (import.meta.env.DEV) {
+      console.info('[route-debug] handleWindowClose removeWindow', {
+        removedWindowId: windowId,
+        windowAfterNavigate: `${window.location.pathname}${window.location.search}`,
+      })
+    }
+
     removeWindow(windowId)
     return
   }
 
   // Última tab: limpar store e cache antes de navegar (evita Sinistrados preso no ecrã)
   windowsStore.clearAllWindows()
-  navigateToModuleHome(navigate, currentPath)
+  navigateToModuleHome(navigate, locationPath)
 }
 
 /**

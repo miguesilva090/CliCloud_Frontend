@@ -48,7 +48,12 @@ export type AdmissaoTableDTO = {
   tipoAdmissaoDesignacao?: string | null
   statusConsulta?: number | null
   confirmado?: boolean | null
+  confirmaConsulta?: boolean | null
+  emTratamento?: boolean
+  tipoConsultaDesignacao?: string | null
   efetuado?: boolean | null
+  pago?: boolean | null
+  faturado?: boolean | null
   ordem?: number | null
   origem: OrigemAdmissao
 }
@@ -58,6 +63,11 @@ export type AdmissaoDTO = {
   utenteId: string
   utenteNumero?: string | null
   utenteNome?: string | null
+  medicoNome?: string | null
+  organismoNome?: string | null
+  salaNome?: string | null
+  especialidadeNome?: string | null
+  medicoExternoNome?: string | null
   consultaMarcacaoId?: string | null
   medicoId?: string | null
   especialidadeId?: string | null
@@ -78,7 +88,12 @@ export type AdmissaoDTO = {
   statusConsulta?: number | null
   origem: OrigemAdmissao
   confirmado?: boolean | null
+  confirmaConsulta?: boolean | null
+  emTratamento?: boolean
+  tipoConsultaDesignacao?: string | null
   efetuado?: boolean | null
+  pago?: boolean | null
+  faturado?: boolean | null
   credencial?: string | null
   credencialExterna?: number | null
   numDestacavel?: string | null
@@ -106,6 +121,7 @@ export type AdmissaoPaginatedRequest = {
   pageNumber: number
   pageSize: number
   modo: ModoListagemAdmissao
+  dataReferencia?: string
   filters?: Array<{ id: string; value: string }>
   sorting?: Array<{ id: string; desc: boolean }>
 }
@@ -115,7 +131,31 @@ export type FechoDiarioRequest = {
 }
 
 export type FechoDiarioResultDTO = {
+  totalElegiveis: number
   totalProcessadas: number
   totalConsultasCriadas: number
+  totalIgnoradas: number
+  avisos: string[]
   erros: string[]
+}
+
+export type PromoverAdmissaoResultDTO = {
+  consultaId: string
+  sugerirMarcacoesFisio: boolean
+}
+
+export type AdmissaoObservacoesDTO = {
+  observacoes: string
+}
+
+export type AppendAdmissaoObservacaoRequest = {
+  texto: string
+}
+
+export type DesmarcarAdmissaoRequest = {
+  motivo?: string | null
+}
+
+export type PromoverAdmissaoLoteRequest = {
+  ids: string[]
 }

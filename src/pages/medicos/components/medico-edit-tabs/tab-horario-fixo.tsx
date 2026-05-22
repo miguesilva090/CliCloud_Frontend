@@ -8,7 +8,14 @@ import { Plus, Save } from 'lucide-react'
 import type { MedicoDTO } from '@/types/dtos/saude/medicos.dtos'
 import type { MedicoEditFormValues } from '@/pages/medicos/types/medico-edit-form-types'
 import type { DiaSemana, Periodo, HorarioMedicoDiaDTO } from '@/types/dtos/saude/medicos.dtos'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ClinicaService } from '@/lib/services/core/clinica-service'
+import {
+  buildHorarioCompletoSlots,
+  clearHorarioSlots,
+  diasTemHorariosPreenchidos,
+  type HorarioCompletoClinicaInput,
+} from '@/lib/horario-completo-utils'
 import {
   useGetHorarioMedicoByMedicoId,
   useGetHorarioMedicoDiaByHorarioMedicoId,
@@ -116,6 +123,45 @@ export const TabHorarioFixo = forwardRef<TabHorarioFixoRef, {
 
   const queryClient = useQueryClient()
 
+  const lastAppliedSigRef = useRef<string>('')
+  const lastMedicoIdRef = useRef<string>('')
+
+  const { data: clinicaHorario } = useQuery({
+    queryKey: ['clinica-horario-completo'],
+    queryFn: async (): Promise<HorarioCompletoClinicaInput> => {
+      const estado = await ClinicaService('medicos').getEstadoContextoClinica()
+      const clinicaId = estado.info?.data?.clinicaDefaultId
+      if (!clinicaId) {
+        return { interrupcao: false }
+      }
+      const clinicaRes = await ClinicaService('medicos').getClinicaById(clinicaId)
+      const c = clinicaRes.info?.data
+      if (!c) return { interrupcao: false }
+      return {
+        interrupcao: c.interrupcao ?? false,
+        horaInicManha: c.horaInicManha,
+        horaFimManha: c.horaFimManha,
+        horaInicTarde: c.horaInicTarde,
+        horaFimTarde: c.horaFimTarde,
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const aplicarHorarioCompleto = () => {
+    const slots = buildHorarioCompletoSlots(clinicaHorario ?? { interrupcao: false })
+    setPeriodo1(slots.periodo1)
+    setPeriodo2(slots.periodo2)
+    lastAppliedSigRef.current = ''
+  }
+
+  const limparHorarioSlots = () => {
+    const empty = clearHorarioSlots()
+    setPeriodo1(empty.periodo1)
+    setPeriodo2(empty.periodo2)
+    lastAppliedSigRef.current = ''
+  }
+
   const diasByKey = useMemo(() => {
     const map = new Map<string, HorarioMedicoDiaDTO>()
     for (const d of dias) {
@@ -142,9 +188,6 @@ export const TabHorarioFixo = forwardRef<TabHorarioFixoRef, {
     setHorarioFlexivel(!!(getH('horarioFlexivel', 'HorarioFlexivel') ?? false))
   }, [horario?.id, horario])
 
-  const lastAppliedSigRef = useRef<string>('')
-  const lastMedicoIdRef = useRef<string>('')
-
   /** Reset ref quando muda de médico */
   useEffect(() => {
     if (medicoId !== lastMedicoIdRef.current) {
@@ -158,7 +201,10 @@ export const TabHorarioFixo = forwardRef<TabHorarioFixoRef, {
    * Ref evita loop: só aplica quando os dados mudaram de facto.
    */
   useEffect(() => {
-    const sig = `${horarioMedicoId}|${diasSignature}|${horaCompFromServer}|${horarioCompleto}`
+    const clinicaSig = clinicaHorario
+      ? `${clinicaHorario.interrupcao}|${clinicaHorario.horaInicManha}|${clinicaHorario.horaFimManha}|${clinicaHorario.horaInicTarde}|${clinicaHorario.horaFimTarde}`
+      : 'pending'
+    const sig = `${horarioMedicoId}|${diasSignature}|${horaCompFromServer}|${horarioCompleto}|${clinicaSig}`
     if (lastAppliedSigRef.current === sig) return
     lastAppliedSigRef.current = sig
 
@@ -191,19 +237,18 @@ export const TabHorarioFixo = forwardRef<TabHorarioFixoRef, {
       }
     }
 
-    // 2) Horário Completo: preencher apenas Segunda–Sexta; Sábado e Domingo ficam vazios
+    // 2) Horário Completo: preencher Segunda–Sexta com horário da clínica (legado HorarioChecked)
     const horaComp = horaCompFromServer || horarioCompleto
-    if (horaComp && dias.length === 0) {
-      const diasUteis = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'] as const
-      for (const d of diasUteis) {
-        p1[d] = { inicio: '08:00', fim: '12:00', sala: '', vagas: '' }
-        p2[d] = { inicio: '12:00', fim: '20:00', sala: '', vagas: '' }
-      }
+    if (horaComp && !diasTemHorariosPreenchidos(dias)) {
+      const slots = buildHorarioCompletoSlots(clinicaHorario ?? { interrupcao: false })
+      setPeriodo1(slots.periodo1)
+      setPeriodo2(slots.periodo2)
+      return
     }
 
     setPeriodo1(p1)
     setPeriodo2(p2)
-  }, [horarioMedicoId, diasSignature, horaCompFromServer, horarioCompleto])
+  }, [horarioMedicoId, diasSignature, horaCompFromServer, horarioCompleto, clinicaHorario])
 
   const handleGravarHorario = async () => {
     return doSaveHorario({ silent: false })
@@ -339,7 +384,13 @@ export const TabHorarioFixo = forwardRef<TabHorarioFixoRef, {
             <Checkbox
               checked={horarioCompleto}
               onCheckedChange={(c) => {
-                setHorarioCompleto(!!c)
+                const checked = !!c
+                setHorarioCompleto(checked)
+                if (checked) {
+                  aplicarHorarioCompleto()
+                } else {
+                  limparHorarioSlots()
+                }
               }}
               disabled={isReadOnly}
             />

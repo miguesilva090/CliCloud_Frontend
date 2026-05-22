@@ -586,6 +586,7 @@ export function DataTable<TData, TValue>({
                               className={cn(
                                 'flex min-w-0 w-full cursor-pointer select-none items-center bg-transparent p-0 font-semibold text-inherit hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                                 align === 'right' && 'justify-end',
+                                align === 'left' && 'justify-start',
                                 isCenterOrDefault && 'justify-center'
                               )}
                               title='Clique: ascendente · Novo clique: descendente'
@@ -625,6 +626,8 @@ export function DataTable<TData, TValue>({
                                 'flex min-w-0 w-full items-center',
                                 align === 'right' &&
                                   'justify-end gap-2',
+                                align === 'left' &&
+                                  'justify-start gap-2',
                                 isCenterOrDefault &&
                                   'justify-center gap-2'
                               )}

@@ -33,6 +33,7 @@ export function TipoConsultaViewEditModal({
   onSuccess,
 }: TipoConsultaViewEditModalProps) {
   const [designacao, setDesignacao] = useState('')
+  const [codigoLegado, setCodigoLegado] = useState('')
 
   const isView = mode === 'view'
   const isEdit = mode === 'edit'
@@ -42,10 +43,14 @@ export function TipoConsultaViewEditModal({
     if (!open) return
     if (isCreate) {
       setDesignacao('')
+      setCodigoLegado('')
       return
     }
     if ((isView || isEdit) && viewData) {
       setDesignacao(viewData.designacao ?? '')
+      setCodigoLegado(
+        viewData.codigoLegado != null ? String(viewData.codigoLegado) : ''
+      )
     }
   }, [open, mode, isView, isEdit, isCreate, viewData])
 
@@ -71,10 +76,21 @@ export function TipoConsultaViewEditModal({
         return
       }
 
+      const codigo =
+        codigoLegado.trim() === '' ? null : Number.parseInt(codigoLegado, 10)
+      if (codigoLegado.trim() !== '' && !Number.isFinite(codigo)) {
+        toast.error('Código legado deve ser um número inteiro.')
+        return
+      }
+
       const response = isCreate
-        ? await client.createTipoConsulta({ designacao: designacao.trim() })
+        ? await client.createTipoConsulta({
+            designacao: designacao.trim(),
+            codigoLegado: codigo,
+          })
         : await client.updateTipoConsulta(editId, {
             designacao: designacao.trim(),
+            codigoLegado: codigo,
           })
 
       if (response.info.status === ResponseStatus.Success) {
@@ -127,6 +143,17 @@ export function TipoConsultaViewEditModal({
               placeholder='Ex: 1ª Consulta, AV. Final, Feriado...'
               onChange={(e) => setDesignacao(e.target.value)}
               autoFocus={isCreate}
+            />
+          </div>
+          <div className='grid gap-2'>
+            <Label>Código legado</Label>
+            <Input
+              readOnly={isView}
+              type='number'
+              min={1}
+              value={codigoLegado}
+              placeholder='Ex: 1 (1ª consulta — duração Prim_Conslt)'
+              onChange={(e) => setCodigoLegado(e.target.value)}
             />
           </div>
         </div>

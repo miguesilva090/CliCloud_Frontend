@@ -1,8 +1,9 @@
 import state from '@/states/state'
-import type { PaginatedRequest, PaginatedResponse } from '@/types/api/responses'
+import type { GSResponse, PaginatedRequest, PaginatedResponse } from '@/types/api/responses'
 import type { ResponseApi } from '@/types/responses'
 import { BaseApiClient } from '@/lib/base-client'
 import type { HistoricoConsultaAdministrativoRowDTO } from '@/types/dtos/consultas/historico-consulta-administrativo.dtos'
+import type { AdmissaoDTO, UpdateAdmissaoRequest } from '@/types/dtos/consultas/admissao.dtos'
 
 const BASE = '/client/consultas/historico-administrativo'
 
@@ -24,5 +25,18 @@ export class HistoricoConsultasAdministrativoClient extends BaseApiClient {
       HistoricoConsultasAdministrativoPaginatedRequest,
       PaginatedResponse<HistoricoConsultaAdministrativoRowDTO>
     >(state.URL, `${BASE}/paginated`, params)
+  }
+
+  async getConsultaForEdit(
+    id: string
+  ): Promise<ResponseApi<GSResponse<AdmissaoDTO>>> {
+    return this.httpClient.getRequest(state.URL, `${BASE}/${id}`)
+  }
+
+  async updateConsultaHistorico(
+    id: string,
+    payload: UpdateAdmissaoRequest
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.putRequest(state.URL, `${BASE}/${id}`, payload)
   }
 }

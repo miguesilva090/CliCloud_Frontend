@@ -15,6 +15,16 @@ export const columns: DataTableColumnDef<TipoConsultaTableDTO>[] = [
     meta: { align: 'left' as const },
   },
   {
+    accessorKey: 'codigoLegado',
+    header: 'Cód. legado',
+    sortKey: 'codigoLegado',
+    enableSorting: true,
+    enableHiding: true,
+    cell: ({ row }) =>
+      row.original.codigoLegado != null ? String(row.original.codigoLegado) : '—',
+    meta: { align: 'center' as const },
+  },
+  {
     id: 'actions',
     header: () => <div className='w-full pr-5 text-right'>Opções</div>,
     cell: () => (

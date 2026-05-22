@@ -1,7 +1,8 @@
 import { Suspense, lazy, useEffect } from 'react'
 import { DashboardPage } from '@/pages/dashboard'
 import { NotFound } from '@/pages/not-found'
-import { Navigate, Outlet, useNavigate, useRoutes } from 'react-router-dom'
+import { Navigate, Outlet, useLocation, useNavigate, useRoutes } from 'react-router-dom'
+import { useBrowserPathSearch } from '@/hooks/use-browser-path-search'
 import { useNavigationStore } from '@/utils/navigation'
 import { useNavigationTracking } from '@/hooks/use-navigation-tracking'
 import { ProtectedRoute } from '@/components/auth/protected-route'
@@ -23,6 +24,36 @@ const DashboardLayout = lazy(
 )
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'))
+
+/**
+ * Sem `key` estável no Suspense/Outlet, rotas `lazy()` podem manter a árvore da página anterior
+ * (ex.: Subsistemas) visível após `navigate` para Nova admissão — URL correcta, ecrã preso.
+ */
+function KeyedLayoutOutlet() {
+  const location = useLocation()
+  const browserPathSearch = useBrowserPathSearch()
+  const routerPathSearch = `${location.pathname}${location.search}`
+
+  /** Browser (tab/history) à frente do Router — alinhar com SPA, sem reload. */
+  if (browserPathSearch && browserPathSearch !== routerPathSearch) {
+    return <Navigate to={browserPathSearch} replace />
+  }
+
+  const suspenseKey = `${routerPathSearch}-${location.key}`
+
+  return (
+    <Suspense
+      key={suspenseKey}
+      fallback={
+        <div className='flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground'>
+          A carregar…
+        </div>
+      }
+    >
+      <Outlet />
+    </Suspense>
+  )
+}
 
 // ----------------------------------------------------------------------
 
@@ -58,9 +89,7 @@ export default function AppRouter() {
       element: (
         <ProtectedRoute>
           <DashboardLayout>
-            <Suspense>
-              <Outlet />
-            </Suspense>
+            <KeyedLayoutOutlet />
           </DashboardLayout>
         </ProtectedRoute>
       ),

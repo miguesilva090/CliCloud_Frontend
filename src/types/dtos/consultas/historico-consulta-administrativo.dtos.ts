@@ -11,6 +11,9 @@ export type HistoricoConsultaAdministrativoRowDTO = {
   especialidadeDesignacao?: string | null
   statusConsulta?: number | null
   statusConsultaLabel?: string | null
+  confirmado?: boolean | null
+  efetuado?: boolean | null
+  faltou?: boolean | null
   pago?: boolean | null
   faturado?: boolean | null
 }

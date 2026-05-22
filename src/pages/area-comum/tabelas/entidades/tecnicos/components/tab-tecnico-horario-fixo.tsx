@@ -18,7 +18,14 @@ import type {
   Periodo,
   HorarioTecnicoDiaDTO,
 } from '@/types/dtos/saude/tecnicos.dtos'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ClinicaService } from '@/lib/services/core/clinica-service'
+import {
+  buildHorarioCompletoSlots,
+  clearHorarioSlots,
+  diasTemHorariosPreenchidos,
+  type HorarioCompletoClinicaInput,
+} from '@/lib/horario-completo-utils'
 import {
   useGetHorarioTecnicoByTecnicoId,
   useGetHorarioTecnicoDiaByHorarioTecnicoId,
@@ -165,6 +172,43 @@ export const TabHorarioTecnicoFixo = forwardRef<
 
   const queryClient = useQueryClient()
 
+  const lastAppliedSigRef = useRef<string>('')
+  const lastTecnicoIdRef = useRef<string>('')
+
+  const { data: clinicaHorario } = useQuery({
+    queryKey: ['clinica-horario-completo'],
+    queryFn: async (): Promise<HorarioCompletoClinicaInput> => {
+      const estado = await ClinicaService('tecnicos').getEstadoContextoClinica()
+      const clinicaId = estado.info?.data?.clinicaDefaultId
+      if (!clinicaId) return { interrupcao: false }
+      const clinicaRes = await ClinicaService('tecnicos').getClinicaById(clinicaId)
+      const c = clinicaRes.info?.data
+      if (!c) return { interrupcao: false }
+      return {
+        interrupcao: c.interrupcao ?? false,
+        horaInicManha: c.horaInicManha,
+        horaFimManha: c.horaFimManha,
+        horaInicTarde: c.horaInicTarde,
+        horaFimTarde: c.horaFimTarde,
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const aplicarHorarioCompleto = () => {
+    const slots = buildHorarioCompletoSlots(clinicaHorario ?? { interrupcao: false })
+    setPeriodo1(slots.periodo1)
+    setPeriodo2(slots.periodo2)
+    lastAppliedSigRef.current = ''
+  }
+
+  const limparHorarioSlots = () => {
+    const empty = clearHorarioSlots()
+    setPeriodo1(empty.periodo1)
+    setPeriodo2(empty.periodo2)
+    lastAppliedSigRef.current = ''
+  }
+
   const diasSignature = useMemo(
     () =>
       dias.length === 0
@@ -207,9 +251,6 @@ export const TabHorarioTecnicoFixo = forwardRef<
     )
   }, [horario?.id, horario])
 
-  const lastAppliedSigRef = useRef<string>('')
-  const lastTecnicoIdRef = useRef<string>('')
-
   useEffect(() => {
     if (tecnicoId !== lastTecnicoIdRef.current) {
       lastTecnicoIdRef.current = tecnicoId
@@ -218,7 +259,10 @@ export const TabHorarioTecnicoFixo = forwardRef<
   }, [tecnicoId])
 
   useEffect(() => {
-    const sig = `${horarioTecnicoId}|${diasSignature}|${horaCompFromServer}|${horarioCompleto}`
+    const clinicaSig = clinicaHorario
+      ? `${clinicaHorario.interrupcao}|${clinicaHorario.horaInicManha}|${clinicaHorario.horaFimManha}|${clinicaHorario.horaInicTarde}|${clinicaHorario.horaFimTarde}`
+      : 'pending'
+    const sig = `${horarioTecnicoId}|${diasSignature}|${horaCompFromServer}|${horarioCompleto}|${clinicaSig}`
     if (lastAppliedSigRef.current === sig) return
     lastAppliedSigRef.current = sig
 
@@ -261,17 +305,16 @@ export const TabHorarioTecnicoFixo = forwardRef<
     }
 
     const horaComp = horaCompFromServer || horarioCompleto
-    if (horaComp && dias.length === 0) {
-      const diasUteis = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'] as const
-      for (const d of diasUteis) {
-        p1[d] = { inicio: '08:00', fim: '12:00', sala: '', vagas: '' }
-        p2[d] = { inicio: '12:00', fim: '20:00', sala: '', vagas: '' }
-      }
+    if (horaComp && !diasTemHorariosPreenchidos(dias)) {
+      const slots = buildHorarioCompletoSlots(clinicaHorario ?? { interrupcao: false })
+      setPeriodo1(slots.periodo1)
+      setPeriodo2(slots.periodo2)
+      return
     }
 
     setPeriodo1(p1)
     setPeriodo2(p2)
-  }, [horarioTecnicoId, diasSignature, horaCompFromServer, horarioCompleto])
+  }, [horarioTecnicoId, diasSignature, horaCompFromServer, horarioCompleto, clinicaHorario])
 
   const handleGravarHorario = async () => {
     if (!tecnicoId) {
@@ -378,9 +421,15 @@ export const TabHorarioTecnicoFixo = forwardRef<
           <div className='flex items-center gap-2'>
             <Checkbox
               checked={horarioCompleto}
-              onCheckedChange={(checked) =>
-                setHorarioCompleto(checked === true)
-              }
+              onCheckedChange={(checked) => {
+                const isChecked = checked === true
+                setHorarioCompleto(isChecked)
+                if (isChecked) {
+                  aplicarHorarioCompleto()
+                } else {
+                  limparHorarioSlots()
+                }
+              }}
               disabled={isReadOnly}
             />
             <span className='text-sm'>Horário Completo</span>

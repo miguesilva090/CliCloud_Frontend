@@ -15,6 +15,8 @@ export type AreaComumListActionsColumnOptions<T> = {
   omitDelete?: boolean
   /** Ex.: registo reservado ao sistema — não mostrar editar nem apagar. */
   isRowActionsLocked?: (data: T) => boolean
+  /** Tooltip do botão eliminar (ex.: «Desmarcar» em admissões). */
+  deleteTitle?: string
 }
 
 /** Coluna «Opções»: AuthVer, AuthChg, AuthDel (se existir handler e não omitDelete). */
@@ -29,6 +31,7 @@ export function createAreaComumListActionsColumnDef<T>(
     rowActionPermissions,
     omitDelete,
     isRowActionsLocked,
+    deleteTitle = 'Apagar',
   } = opts
   const { canView, canChange, canDelete } =
     mergeRowActionPermissions(rowActionPermissions)
@@ -78,7 +81,7 @@ export function createAreaComumListActionsColumnDef<T>(
               size='icon'
               className='h-8 w-8 text-destructive hover:text-destructive'
               onClick={() => onOpenDelete?.(data)}
-              title='Apagar'
+              title={deleteTitle}
             >
               <Trash2 className='h-4 w-4' />
             </Button>

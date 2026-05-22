@@ -1,0 +1,194 @@
+/* FC v6 injeta estilos via JS */
+
+.marcacoes-agenda-calendario {
+  --agenda-nav-bg: #f0f0f0;
+  --agenda-nav-fg: #333333;
+  --agenda-grid-bg: #ffffff;
+  --agenda-slot-bg: #ffffff;
+  --agenda-border: #bdbdbd;
+  --agenda-indisponivel: #dcdcdc;
+  --agenda-slot-height: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.marcacoes-agenda-calendario .fc {
+  --fc-border-color: var(--agenda-border);
+  --fc-page-bg-color: var(--agenda-grid-bg);
+  --fc-neutral-bg-color: #e2e8f0;
+  --fc-today-bg-color: #e0f2fe;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.marcacoes-agenda-calendario .fc .fc-view-harness {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Toolbar própria (não usa fc-toolbar) — colada aos filtros, sem gap */
+.marcacoes-agenda-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--agenda-nav-bg);
+  color: var(--agenda-nav-fg);
+  border-top: 1px solid #e0e0e0;
+}
+
+.marcacoes-agenda-toolbar__left {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-self: start;
+}
+
+.marcacoes-agenda-toolbar__center {
+  justify-self: center;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.marcacoes-agenda-toolbar__right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-self: end;
+}
+
+.marcacoes-agenda-calendario .fc .fc-scroller-harness,
+.marcacoes-agenda-calendario .fc .fc-scroller {
+  overflow: hidden !important;
+}
+
+.marcacoes-agenda-calendario .fc .fc-col-header {
+  background: #ffffff;
+}
+
+.marcacoes-agenda-calendario .fc .fc-col-header-cell.fc-day {
+  background: #ffffff;
+  border-left: none !important;
+  border-right: 1px solid var(--agenda-border) !important;
+  border-bottom: 1px solid var(--agenda-border) !important;
+}
+
+.marcacoes-agenda-calendario .fc .fc-timegrid-body {
+  position: relative;
+}
+
+.marcacoes-agenda-calendario .marcacoes-agenda-day-dividers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.marcacoes-agenda-calendario .marcacoes-agenda-day-dividers__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--agenda-border);
+}
+
+.marcacoes-agenda-calendario .fc .fc-col-header-cell-cushion {
+  display: block;
+  padding: 0.4rem 0.15rem;
+  color: #334155;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+.marcacoes-agenda-calendario .fc .fc-timegrid-axis {
+  background: #f1f5f9;
+  border-right: 1px solid var(--agenda-border) !important;
+}
+
+.marcacoes-agenda-calendario .fc .fc-timegrid-slot-label {
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.marcacoes-agenda-calendario .fc .fc-timegrid-slot {
+  background: var(--agenda-slot-bg);
+  height: var(--agenda-slot-height);
+}
+
+/* Só linha horizontal por hora (sem tracejado de 30 em 30 min) */
+.marcacoes-agenda-calendario .fc .fc-timegrid-slot-lane {
+  background-color: var(--agenda-slot-bg);
+  border-bottom: none !important;
+}
+
+.marcacoes-agenda-calendario .fc .fc-timegrid-slot:not(.fc-timegrid-slot-minor) {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.marcacoes-agenda-calendario .fc .fc-timegrid-slot-minor {
+  border-bottom: none !important;
+}
+
+.marcacoes-agenda-calendario .fc .fc-timegrid-col {
+  background: var(--agenda-grid-bg);
+}
+
+.marcacoes-agenda-calendario .fc .fc-timegrid-col.fc-day-today {
+  background: #f0f9ff;
+}
+
+.marcacoes-agenda-calendario .fc .fc-timegrid-axis-cushion,
+.marcacoes-agenda-calendario .fc .fc-timegrid-slot-label-cushion {
+  color: #475569;
+  font-size: 0.7rem;
+}
+
+.marcacoes-agenda-calendario .fc .fc-non-business {
+  background: var(--agenda-indisponivel) !important;
+}
+
+.marcacoes-agenda-calendario .fc .fc-bg-event {
+  opacity: 1;
+}
+
+.marcacoes-agenda-calendario .fc .fc-event.marcacao-agenda-selecionada {
+  outline: 2px solid #dc2626;
+  outline-offset: 1px;
+  z-index: 4 !important;
+}
+
+.marcacoes-agenda-calendario .fc .fc-timegrid-event {
+  border-radius: 2px;
+  font-size: 0.6875rem;
+  line-height: 1.15;
+}
+
+/* Sem hora no texto — só utente / médico; menos padding para caber mais legível */
+.marcacoes-agenda-calendario .fc .fc-timegrid-event .fc-event-main {
+  padding: 1px 3px 2px;
+}
+
+.marcacoes-agenda-calendario .fc .fc-timegrid-event .fc-event-time {
+  display: none;
+}
+
+.marcacoes-agenda-calendario .fc .fc-timegrid-event .fc-event-title {
+  padding: 0;
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.marcacoes-agenda-calendario__hint {
+  pointer-events: none;
+}

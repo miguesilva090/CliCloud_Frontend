@@ -5,7 +5,7 @@ import { Navigate, useLocation, useParams } from 'react-router-dom'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
 import type { CellContext, ColumnDef } from '@tanstack/react-table'
 import { useQueryClient } from '@tanstack/react-query'
-import { RefreshCw, SlidersHorizontal } from 'lucide-react'
+import { Eye, Pencil, RefreshCw, SlidersHorizontal } from 'lucide-react'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
@@ -13,7 +13,11 @@ import { DataTable, type DataTableAction } from '@/components/shared/data-table'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { modules } from '@/config/modules'
+import { OrigemAdmissao, type AdmissaoTableDTO } from '@/types/dtos/consultas/admissao.dtos'
 import type { HistoricoConsultaAdministrativoRowDTO } from '@/types/dtos/consultas/historico-consulta-administrativo.dtos'
+import { AdmissaoViewEditModal } from '../../admissoes/modals/admissao-view-edit-modal'
 import type { HistoricoConsultaAdministrativoVista } from '@/lib/services/consultas/historico-consultas-administrativo-service/historico-consultas-administrativo-client'
 import { useGetHistoricoConsultasAdministrativoPaginated } from '../queries/historico-consultas-administrativo-queries'
 import {
@@ -118,7 +122,26 @@ function criteriaSummary(
   return ''
 }
 
-const columns: Array<
+function historicoRowToAdmissaoTable(row: HistoricoConsultaAdministrativoRowDTO): AdmissaoTableDTO {
+  return {
+    id: row.id,
+    utenteId: row.utenteId ?? '',
+    data: row.data ?? undefined,
+    horaInicio: row.horaInic ?? undefined,
+    utenteNumero: row.utenteNumero,
+    utenteNome: row.utenteNome,
+    medicoNome: row.medicoNome,
+    especialidadeDesignacao: row.especialidadeDesignacao,
+    organismoNome: row.organismoNome,
+    confirmado: row.confirmado,
+    efetuado: row.efetuado,
+    pago: row.pago,
+    faturado: row.faturado,
+    origem: OrigemAdmissao.Manual,
+  }
+}
+
+const baseColumns: Array<
   ColumnDef<HistoricoConsultaAdministrativoRowDTO> &
     DataTableColumnDef<HistoricoConsultaAdministrativoRowDTO>
 > = [
@@ -184,13 +207,22 @@ const columns: Array<
     meta: { align: 'left' as const, width: 'w-[160px]' },
   },
   {
-    accessorKey: 'statusConsultaLabel',
-    id: 'statusConsultaLabel',
-    header: 'Estado',
+    accessorKey: 'confirmado',
+    id: 'confirmado',
+    header: 'Presente',
     enableSorting: false,
     cell: ({ row }: CellContext<HistoricoConsultaAdministrativoRowDTO, unknown>) =>
-      row.original.statusConsultaLabel ?? '—',
-    meta: { align: 'left' as const, width: 'w-[140px]' },
+      row.original.confirmado === true ? 'Sim' : row.original.confirmado === false ? 'Não' : '—',
+    meta: { align: 'center' as const, width: 'w-[88px]' },
+  },
+  {
+    accessorKey: 'efetuado',
+    id: 'efetuado',
+    header: 'Efetuado',
+    enableSorting: false,
+    cell: ({ row }: CellContext<HistoricoConsultaAdministrativoRowDTO, unknown>) =>
+      row.original.efetuado === true ? 'Sim' : row.original.efetuado === false ? 'Não' : '—',
+    meta: { align: 'center' as const, width: 'w-[88px]' },
   },
   {
     accessorKey: 'pago',
@@ -213,10 +245,15 @@ const columns: Array<
 ]
 
 export function ListagemHistoricoConsultasAdministrativoPage() {
+  const listPermId = modules.areaAdministrativa.permissions.consultas.id
+  const { canView, canChange } = useAreaComumEntityListPermissions(listPermId)
   const { vista: vistaParam } = useParams<{ vista: string }>()
   const location = useLocation()
   const queryClient = useQueryClient()
   const closeLikeTabBar = useCloseCurrentWindowLikeTabBar()
+  const [selectedRow, setSelectedRow] = useState<HistoricoConsultaAdministrativoRowDTO | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalMode, setModalMode] = useState<'view' | 'edit'>('view')
   const urlVista = vistaParam ?? ''
   const vistaValid = isValidVista(urlVista)
   const vista: HistoricoConsultaAdministrativoVista = vistaValid ? urlVista : 'datas'
@@ -300,6 +337,53 @@ export function ListagemHistoricoConsultasAdministrativoPage() {
   }, [queryClient])
 
   const summary = useMemo(() => criteriaSummary(vista, criteria), [vista, criteria])
+
+  const columns = useMemo(() => {
+    const cols = [...baseColumns]
+    if (canView) {
+      cols.push({
+        id: 'acoes',
+        header: 'Ações',
+        enableSorting: false,
+        cell: ({ row }: CellContext<HistoricoConsultaAdministrativoRowDTO, unknown>) => (
+          <div className='flex items-center gap-1'>
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8'
+              title='Ver'
+              onClick={() => {
+                setSelectedRow(row.original)
+                setModalMode('view')
+                setModalOpen(true)
+              }}
+            >
+              <Eye className='h-4 w-4' />
+            </Button>
+            {canChange ? (
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon'
+                className='h-8 w-8'
+                title='Editar'
+                onClick={() => {
+                  setSelectedRow(row.original)
+                  setModalMode('edit')
+                  setModalOpen(true)
+                }}
+              >
+                <Pencil className='h-4 w-4' />
+              </Button>
+            ) : null}
+          </div>
+        ),
+        meta: { align: 'center' as const, width: 'w-[100px]' },
+      })
+    }
+    return cols
+  }, [canView, canChange])
 
   const toolbarActions: DataTableAction[] = useMemo(
     () => [
@@ -406,6 +490,16 @@ export function ListagemHistoricoConsultasAdministrativoPage() {
           />
         </AreaComumListagemPageShell>
       </DashboardPageContainer>
+      {selectedRow ? (
+        <AdmissaoViewEditModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          mode={modalMode}
+          row={historicoRowToAdmissaoTable(selectedRow)}
+          source='consulta-historico'
+          onSaved={refresh}
+        />
+      ) : null}
     </>
   )
 }

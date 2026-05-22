@@ -35,6 +35,9 @@ interface Props {
   canView?: boolean
   canChange?: boolean
   canDelete?: boolean
+  /** Seleção de linhas (ex.: enviar subsistemas para Nova admissão) — activa checkboxes na DataTable. */
+  selectedRows?: string[]
+  onRowSelectionChange?: (selectedIds: string[]) => void
 }
 
 export function ListagemSubsistemasServicosTable({
@@ -59,6 +62,8 @@ export function ListagemSubsistemasServicosTable({
   canView,
   canChange,
   canDelete,
+  selectedRows,
+  onRowSelectionChange,
 }: Props) {
 
   const tableColumns = onOpenView
@@ -92,6 +97,8 @@ export function ListagemSubsistemasServicosTable({
       toolbarActions={toolbarActions}
       globalSearchColumnId={globalSearchColumnId}
       globalSearchPlaceholder={globalSearchPlaceholder}
+      selectedRows={selectedRows}
+      onRowSelectionChange={onRowSelectionChange}
     />
   )
 }

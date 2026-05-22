@@ -1,277 +1,72 @@
-import { useMemo, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
-import { usePageData, type PageFilter } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
-import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle} from '@/components/ui/alert-dialog'
+import { ListagemSubsistemasServicosPanel } from '../components/listagem-subsistemas-servicos-panel'
 import { toast } from '@/utils/toast-utils'
-import type { DataTableAction } from '@/components/shared/data-table'
-import type { SubsistemaServicoTableDTO } from '@/types/dtos/servicos/subsistema-servico.dtos'
-import { ListagemSubsistemasServicosTable } from '../components/listagem-subsistemas-servicos-table'
 import {
-  useGetSubsistemasServicosPaginated,
-  usePrefetchAdjacentSubsistemasServicos} from '../queries/listagem-subsistemas-servicos-queries'
-import { SubsistemaServicoViewCreateModal } from '../modals/subsistema-servico-view-create-modal'
-import { SubsistemaServicoService } from '@/lib/services/servicos/subsistema-servico-service'
-import { ResponseStatus } from '@/types/api/responses'
-
-import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
-import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
-import { modules } from '@/config/modules'
+  resolveSubsistemasServicosPickerWindowId,
+  resolveWindowIdForClose,
+  returnToAdmissaoAfterSubsistemasPicker,
+} from '@/utils/window-utils'
+import { useWindowsStore } from '@/stores/use-windows-store'
+import {
+  clearAdmissaoSubsistemasPickerOpeningFlag,
+  sendSubsistemasPickerResult,
+} from '../subsistemas-servicos-admissao-flow'
+import type { SubsistemaServicoTableDTO } from '@/types/dtos/servicos/subsistema-servico.dtos'
 
 export function ListagemSubsistemasServicosPage() {
   const [searchParams] = useSearchParams()
+  const removeWindow = useWindowsStore((s) => s.removeWindow)
+
   const organismoIdFromUrl = searchParams.get('organismoId') ?? undefined
+  const fromAdmissao = searchParams.get('fromAdmissao') ?? undefined
 
-  /** Filtro inicial sem handleFiltersChange no mount (trava navegação após DataTable — ver page-data-utils). */
-  const defaultFilters = useMemo((): PageFilter[] | undefined => {
-    if (!organismoIdFromUrl) return undefined
-    return [{ id: 'organismoId', value: organismoIdFromUrl }]
-  }, [organismoIdFromUrl])
+  useEffect(() => {
+    if (fromAdmissao) {
+      clearAdmissaoSubsistemasPickerOpeningFlag()
+    }
+  }, [fromAdmissao])
 
-  const subsistemasServicosPermId = useScopedFuncionalidadeId(
-    modules.areaComum.permissions.subsistemasServicos.id,
-    modules.areaAdministrativa.permissions.subsistemaServicos.id
-  )
-  const { canView, canAdd, canChange, canDelete } =
-    useAreaComumEntityListPermissions(subsistemasServicosPermId)
-  const queryClient = useQueryClient()
-  const [modalOpen, setModalOpen] = useState(false)
-  const [modalMode, setModalMode] = useState<'view' | 'create' | 'edit'>('create')
-  const [selectedRow, setSelectedRow] =
-    useState<SubsistemaServicoTableDTO | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [itemToDelete, setItemToDelete] =
-    useState<SubsistemaServicoTableDTO | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const closePickerAndReturnToAdmissao = useCallback(() => {
+    if (!fromAdmissao) return
+    const wid =
+      resolveSubsistemasServicosPickerWindowId() ||
+      resolveWindowIdForClose()
+    returnToAdmissaoAfterSubsistemasPicker(wid || undefined, fromAdmissao, removeWindow)
+  }, [fromAdmissao, removeWindow])
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    page,
-    pageSize,
-    filters,
-    sorting,
-    handleFiltersChange,
-    handlePaginationChange,
-    handleSortingChange  } = usePageData({
-    useGetDataPaginated: (p, ps, f, s) =>
-      useGetSubsistemasServicosPaginated(p, ps, f, s, organismoIdFromUrl),
-    usePrefetchAdjacentData: (p, ps, f) =>
-      usePrefetchAdjacentSubsistemasServicos(p, ps, f, null),
-    defaultFilters,
-  })
-
-  const subsistemas = data?.info?.data ?? []
-  const pageCount = data?.info?.totalPages ?? 0
-  const totalRows = data?.info?.totalCount ?? 0
-  const errorMessage =
-    error instanceof Error ? error.message : error ? String(error) : ''
-
-  const abrirModalNovo = () => {
-    setSelectedRow(null)
-    setModalMode('create')
-    setModalOpen(true)
-  }
-
-  const toolbarActions: DataTableAction[] = [
-    ...(canAdd
-      ? [
-          {
-            label: 'Adicionar',
-            icon: <Plus className='h-4 w-4' />,
-            onClick: abrirModalNovo,
-            variant: 'destructive' as const,
-            className:
-              'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-          },
-        ]
-      : []),
-    {
-      label: 'Listagens',
-      icon: <List className='h-4 w-4' />,
-      onClick: () => {},
-      variant: 'outline'},
-    {
-      label: 'Atualizar',
-      icon: <RotateCw className='h-4 w-4' />,
-      onClick: () => {
-        handleFiltersChange([])
-        handlePaginationChange(1, pageSize)
-        queryClient.invalidateQueries({
-          queryKey: ['subsistemas-servicos-paginated']})
-      },
-      variant: 'outline'},
-  ]
-
-  const EmptyFilterControls: React.ComponentType<{
-    table: any
-    columns: any[]
-    onApplyFilters: () => void
-    onClearFilters: () => void
-  }> = () => null
-
-  const handleOpenView = (row: SubsistemaServicoTableDTO) => {
-    setSelectedRow(row)
-    setModalMode('view')
-    setModalOpen(true)
-  }
-
-  const handleOpenEdit = (row: SubsistemaServicoTableDTO) => {
-    setSelectedRow(row)
-    setModalMode('edit')
-    setModalOpen(true)
-  }
-
-  const handleOpenDelete = (row: SubsistemaServicoTableDTO) => {
-    setItemToDelete(row)
-    setDeleteDialogOpen(true)
-  }
-
-  const handleConfirmDelete = async () => {
-    if (!itemToDelete) return
-    const id = itemToDelete.id ?? (itemToDelete as { Id?: string }).Id
-    if (!id) return
-
-    setIsDeleting(true)
-    try {
-      const response = await SubsistemaServicoService().deleteSubsistemaServico(
-        String(id)
-      )
-      if (response.info.status === ResponseStatus.Success) {
-        toast.success('Subsistema de Serviço eliminado com sucesso.')
-        setDeleteDialogOpen(false)
-        setItemToDelete(null)
-        queryClient.invalidateQueries({
-          queryKey: ['subsistemas-servicos-paginated']})
-      } else {
-        const msg =
-          response.info.messages?.['$']?.[0] ??
-          'Falha ao eliminar Subsistema de Serviço.'
-        toast.error(msg)
+  const handleAddToAdmissao = useCallback(
+    (rows: SubsistemaServicoTableDTO[]) => {
+      if (!fromAdmissao) return
+      const res = sendSubsistemasPickerResult(fromAdmissao, rows)
+      if (!res.ok) {
+        toast.error(res.error)
+        return
       }
-    } catch (error: unknown) {
-      const err = error as { message?: string }
-      toast.error(
-        err?.message ?? 'Ocorreu um erro ao eliminar o Subsistema de Serviço.'
+      toast.success(
+        res.count === 1
+          ? '1 linha enviada para o formulário de admissão.'
+          : `${res.count} linhas enviadas para o formulário de admissão.`
       )
-    } finally {
-      setIsDeleting(false)
-    }
-  }
-
-  const handleCloseDeleteDialog = () => {
-    if (!isDeleting) {
-      setDeleteDialogOpen(false)
-      setItemToDelete(null)
-    }
-  }
+      closePickerAndReturnToAdmissao()
+    },
+    [fromAdmissao, closePickerAndReturnToAdmissao]
+  )
 
   return (
     <>
       <PageHead title='Subsistemas de Serviços | Tabelas | CliCloud' />
       <DashboardPageContainer>
-        <AreaComumListagemPageShell
-            title='Subsistemas de Serviços'
-            onRefresh={() => {
-                handleFiltersChange([])
-                handlePaginationChange(1, pageSize)
-                queryClient.invalidateQueries({
-                  queryKey: ['subsistemas-servicos-paginated']})
-            }}
-        >
-
-        {isError ? (
-          <Alert variant='destructive' className='mb-4'>
-            <AlertTitle>Falha ao carregar Subsistemas de Serviços</AlertTitle>
-            <AlertDescription>
-              {errorMessage ||
-                'Ocorreu um erro ao pedir a lista de Subsistemas de Serviços.'}
-            </AlertDescription>
-          </Alert>
-        ) : null}
-
-        <ListagemSubsistemasServicosTable
-          data={subsistemas}
-          isLoading={isLoading}
-          pageCount={pageCount}
-          totalRows={totalRows}
-          page={page}
-          pageSize={pageSize}
-          filters={filters}
-          sorting={sorting}
-          onPaginationChange={handlePaginationChange}
-          onFiltersChange={handleFiltersChange}
-          onSortingChange={handleSortingChange}
-          toolbarActions={toolbarActions}
-          globalSearchColumnId='servicoId'
-          globalSearchPlaceholder='Procurar...'
-          FilterControls={EmptyFilterControls}
-          onOpenView={(row) => {
-            if (!canView) return
-            handleOpenView(row)
-          }}
-          onOpenEdit={canChange ? handleOpenEdit : undefined}
-          onOpenDelete={canDelete ? handleOpenDelete : undefined}
-          canView={canView}
-          canChange={canChange}
-          canDelete={canDelete}
-        />
-
-        <SubsistemaServicoViewCreateModal
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-          mode={modalMode}
-          viewData={selectedRow}
-          onSuccess={() =>
-            queryClient.invalidateQueries({
-              queryKey: ['subsistemas-servicos-paginated']})
+        <ListagemSubsistemasServicosPanel
+          organismoIdFromUrl={organismoIdFromUrl}
+          onBack={fromAdmissao ? closePickerAndReturnToAdmissao : undefined}
+          admissaoSelecao={
+            fromAdmissao ? { onAddToAdmissao: handleAddToAdmissao } : undefined
           }
         />
-        <AlertDialog open={deleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Eliminar Subsistema de Serviço</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem a certeza que pretende eliminar o Subsistema de Serviço com
-                serviço &quot;
-                {itemToDelete?.servicoId ?? ''}
-                &quot;? Esta ação não pode ser revertida.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={(e) => {
-                  e.preventDefault()
-                  handleConfirmDelete()
-                }}
-                disabled={isDeleting}
-                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-              >
-                {isDeleting ? 'A eliminar...' : 'Eliminar'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-        </AreaComumListagemPageShell>
-        </DashboardPageContainer>
+      </DashboardPageContainer>
     </>
   )
 }
-

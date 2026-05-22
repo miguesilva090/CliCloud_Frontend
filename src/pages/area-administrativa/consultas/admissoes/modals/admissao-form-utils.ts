@@ -4,6 +4,7 @@ import type {
   AdmissaoServicoDTO,
   CreateAdmissaoRequest,
 } from '@/types/dtos/consultas/admissao.dtos'
+import type { MarcacaoConsultaDTO } from '@/types/dtos/consultas/marcacao-consulta.dtos'
 import type { SubsistemaServicoDTO } from '@/types/dtos/servicos/subsistema-servico.dtos'
 import type { UtenteDTO } from '@/types/dtos/saude/utentes.dtos'
 import { OrigemAdmissao } from '@/types/dtos/consultas/admissao.dtos'
@@ -171,9 +172,18 @@ export function computeLinhaTotal(
   const qty = parseDecimal(linha.quantidade) ?? 1
   const valorUnit = parseDecimal(linha.valorUnitario) ?? 0
   const descClinica = parseDecimal(linha.descClinica) ?? 0
+  const subtotal = valorUnit * qty
+  const desconto = (subtotal * descClinica) / 100
+  const totalLinhaServico = Math.max(0, subtotal - desconto)
 
+  /** Isento: utente não paga; o total da linha continua a ser o valor do serviço (soma no registo / fatura). */
   if (taxaModeradoraAtiva && taxaModeradora === 'isento') {
-    return { total: 0, valorUtente: 0, percentagem: 100, valorOrganismo: 0 }
+    return {
+      total: totalLinhaServico,
+      valorUtente: 0,
+      percentagem: 100,
+      valorOrganismo: 0,
+    }
   }
 
   const percentagem = parseDecimal(linha.percentagem)
@@ -198,9 +208,7 @@ export function computeLinhaTotal(
   vOrg = vOrg ?? 0
   vUt = vUt ?? Math.max(0, valorUnit - vOrg)
 
-  const subtotal = valorUnit * qty
-  const desconto = (subtotal * descClinica) / 100
-  const total = Math.max(0, subtotal - desconto)
+  const total = totalLinhaServico
 
   return {
     total,
@@ -343,9 +351,43 @@ export type AdmissaoFormState = {
   doencaSecundariaLabel: string
   obs: string
   confirmado: boolean
+  confirmaConsulta: boolean
+  emTratamento: boolean
   efetuado: boolean
+  pago: boolean
+  faturado: boolean
+  consultaMarcacaoId: string
   linhasServico: LinhaServicoForm[]
   numLinhasInserir: string
+}
+
+/** Preenche formulário de admissão a partir de uma marcação (Cenário A). */
+export function applyMarcacaoToAdmissaoForm(
+  form: AdmissaoFormState,
+  marcacao: MarcacaoConsultaDTO,
+  utenteLabel = ''
+): AdmissaoFormState {
+  const hora =
+    marcacao.horaMarcacao?.slice(0, 5) ??
+    (marcacao.horaMarcacao?.length ? marcacao.horaMarcacao.slice(0, 5) : '')
+  return {
+    ...form,
+    consultaMarcacaoId: marcacao.id,
+    utenteId: marcacao.utenteId,
+    utenteLabel: utenteLabel || form.utenteLabel,
+    medicoId: marcacao.medicoId ?? form.medicoId,
+    especialidadeId: marcacao.especialidadeId ?? form.especialidadeId,
+    salaId: marcacao.salaId ?? form.salaId,
+    motivoConsultaId: marcacao.motivoConsultaId ?? form.motivoConsultaId,
+    tipoAdmissaoId: marcacao.tipoAdmissaoId ?? form.tipoAdmissaoId,
+    tipoConsultaId: marcacao.tipoConsultaId ?? form.tipoConsultaId,
+    data: marcacao.data?.slice(0, 10) ?? form.data,
+    horaInicio: hora || form.horaInicio,
+    obs: marcacao.obs ?? form.obs,
+    presente: true,
+    confirmado: true,
+    emTratamento: marcacao.emTratamento ?? form.emTratamento,
+  }
 }
 
 export function createEmptyAdmissaoForm(now = new Date()): AdmissaoFormState {
@@ -402,10 +444,23 @@ export function createEmptyAdmissaoForm(now = new Date()): AdmissaoFormState {
     doencaSecundariaLabel: '',
     obs: '',
     confirmado: false,
+    confirmaConsulta: false,
+    emTratamento: false,
     efetuado: false,
+    pago: false,
+    faturado: false,
+    consultaMarcacaoId: '',
     linhasServico: [],
     numLinhasInserir: '1',
   }
+}
+
+function timeSpanToInput(value: string | null | undefined): string {
+  if (value == null || value === '') return ''
+  const s = String(value)
+  const match = s.match(/^(\d{1,2}):(\d{2})/)
+  if (match) return `${match[1].padStart(2, '0')}:${match[2]}`
+  return s.length >= 5 ? s.slice(0, 5) : s
 }
 
 export function mapDtoToForm(dto: AdmissaoDTO): AdmissaoFormState {
@@ -417,18 +472,23 @@ export function mapDtoToForm(dto: AdmissaoDTO): AdmissaoFormState {
     utenteLabel: dto.utenteNome ?? '',
     organismoAtivo: Boolean(dto.organismoId),
     organismoId: dto.organismoId ?? '',
+    organismoLabel: dto.organismoNome ?? '',
     numeroUtente: dto.utenteNumero ?? '',
     data: dto.data?.slice(0, 10) ?? base.data,
-    horaInicio: dto.horaInicio?.slice(0, 5) ?? '',
-    horaFim: dto.horaFim?.slice(0, 5) ?? '',
-    horaChegada: dto.horaChegada?.slice(0, 5) ?? '',
+    horaInicio: timeSpanToInput(dto.horaInicio),
+    horaFim: timeSpanToInput(dto.horaFim),
+    horaChegada: timeSpanToInput(dto.horaChegada),
     sinistrado: dto.sinistrado != null ? String(dto.sinistrado) : '',
     numChegada: dto.ordem != null ? String(dto.ordem) : '',
     tipoConsultaId: dto.tipoConsultaId ?? '',
     medicoId: dto.medicoId ?? '',
+    medicoLabel: dto.medicoNome ?? '',
     especialidadeId: dto.especialidadeId ?? '',
+    especialidadeNome: dto.especialidadeNome ?? '',
     salaId: dto.salaId ?? '',
+    salaLabel: dto.salaNome ?? '',
     medicoExternoId: dto.medicoExternoId ?? '',
+    medicoExternoLabel: dto.medicoExternoNome ?? '',
     credencial: dto.credencial ?? '',
     credencialExterna: dto.credencialExterna === 1,
     tipoAdmissaoId: dto.tipoAdmissaoId ?? '',
@@ -445,7 +505,12 @@ export function mapDtoToForm(dto: AdmissaoDTO): AdmissaoFormState {
         : '',
     obs: dto.obs ?? '',
     confirmado: Boolean(dto.confirmado),
+    confirmaConsulta: Boolean(dto.confirmaConsulta),
+    emTratamento: Boolean(dto.emTratamento),
     efetuado: Boolean(dto.efetuado),
+    pago: dto.pago === true,
+    faturado: dto.faturado === true,
+    consultaMarcacaoId: dto.consultaMarcacaoId ?? '',
     presente: Boolean(dto.confirmado),
     efetuada: Boolean(dto.efetuado),
     faltou: dto.statusConsulta === 7,
@@ -484,6 +549,8 @@ export function mapFormToPayload(form: AdmissaoFormState): CreateAdmissaoRequest
     credencial: form.credencial || undefined,
     credencialExterna: form.credencialExterna ? 1 : 0,
     confirmado: form.presente || form.confirmado,
+    confirmaConsulta: form.confirmaConsulta,
+    emTratamento: form.emTratamento,
     efetuado: form.efetuada || form.efetuado,
     statusConsulta: form.faltou ? 7 : undefined,
     sinistrado: Number.isFinite(sinistrado) ? sinistrado : undefined,
@@ -493,7 +560,8 @@ export function mapFormToPayload(form: AdmissaoFormState): CreateAdmissaoRequest
     doencaPrincipalId: form.doencaPrincipalId || undefined,
     doencaSecundariaId: form.doencaSecundariaId || undefined,
     obs: form.obs || undefined,
-    origem: OrigemAdmissao.Manual,
+    consultaMarcacaoId: form.consultaMarcacaoId || undefined,
+    origem: form.consultaMarcacaoId ? OrigemAdmissao.Marcacao : OrigemAdmissao.Manual,
     servicos: form.linhasServico
       .filter((l) => l.servicoId || l.descricao)
       .map((l, i) => linhaToDto(l, i)),

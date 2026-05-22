@@ -19,6 +19,7 @@ import {
   navigateToModuleHome,
   navigateToWindowPath,
   getNavigationAreaPrefix,
+  pickRestoreWindowAfterClose,
 } from '@/utils/window-utils'
 import { useSidebar } from '@/hooks/use-sidebar'
 import { Button } from '@/components/ui/button'
@@ -563,12 +564,10 @@ export function WindowManager({ children }: WindowManagerProps) {
       return
     }
 
-    removeWindow(windowId)
-
-    // Navegar para a tab restante se fechÃ¡mos a visÃ­vel ou a activa
-    const wasActive = activeWindow === windowId
-    if (closedWasVisible || wasActive) {
-      const lastWindow = remainingWindows[remainingWindows.length - 1]
+    if (closedWasVisible || activeWindow === windowId) {
+      const lastWindow =
+        pickRestoreWindowAfterClose(remainingWindows, closedWindow) ??
+        remainingWindows[remainingWindows.length - 1]
       restoreWindow(lastWindow.id)
       navigateToWindowPath(
         navigate,
@@ -577,6 +576,8 @@ export function WindowManager({ children }: WindowManagerProps) {
         lastWindow.searchParams
       )
     }
+
+    removeWindow(windowId)
 
     const pagesStore = usePagesStore.getState()
     pagesStore.removePageStateByWindowId(windowId)
@@ -635,14 +636,9 @@ export function WindowManager({ children }: WindowManagerProps) {
     }
   }, [])
 
-  const routeKey = `${window.location.pathname}${window.location.search}`
-
   return (
     <div className='relative h-full'>
-      {/* Um Ãºnico Outlet vivo â€” tabs sÃ³ controlam navegaÃ§Ã£o (sem cache visual) */}
-      <div key={routeKey} className='h-full'>
-        {children}
-      </div>
+      <div className='h-full'>{children}</div>
 
       {/* Windows Bar - Only show when there are windows */}
       {windows.length > 0 && (

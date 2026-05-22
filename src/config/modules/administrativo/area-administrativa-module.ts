@@ -80,5 +80,29 @@ export const areaAdministrativa: Module = {
       id: '00000002-0000-0000-0107-000000000004',
       name: 'Fecho Diário',
     },
+    marcacoes: {
+      id: '00000002-0000-0000-0108-000000000004',
+      name: 'Marcações',
+    },
+    marcacoesAgenda: {
+      id: '00000002-0000-0000-0109-000000000004',
+      name: 'Marcações agenda',
+    },
+    trocaMarcacoesMedicos: {
+      id: '00000002-0000-0000-0110-000000000004',
+      name: 'Troca marcações entre médicos',
+    },
+    ordemEntradaMarcacoes: {
+      id: '00000002-0000-0000-0111-000000000004',
+      name: 'Ordem de entrada marcações',
+    },
+    listaEsperaConsultas: {
+      id: '00000002-0000-0000-0112-000000000004',
+      name: 'Lista de espera consultas',
+    },
+    globalBooking: {
+      id: '00000002-0000-0000-0113-000000000004',
+      name: 'GlobalBooking',
+    },
   },
 }

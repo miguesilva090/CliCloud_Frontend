@@ -140,18 +140,33 @@ export const roleHeaderMenus = {
     'area-administrativa': [
       {
         label: 'Marcações',
-        href: '/area-administrativa',
-        funcionalidadeId: modules.areaComum.permissions.tabelas.id,
+        href: '/area-administrativa/consultas/marcacoes',
+        funcionalidadeId: modules.areaAdministrativa.permissions.marcacoes.id,
         items: [
           {
-            label: 'Consultas Marcadas',
-            href: '/area-clinica/processo-clinico/agenda/consultas-marcadas',
-            funcionalidadeId: modules.areaClinica.permissions.consultasMarcadas.id,
+            label: 'Agenda',
+            href: '/area-administrativa/consultas/marcacoes',
+            funcionalidadeId: modules.areaAdministrativa.permissions.marcacoesAgenda.id,
           },
           {
-            label: 'Listagem Consultas Marcadas',
-            href: '/area-clinica/processo-clinico/agenda/listagem-consultas-marcadas',
-            funcionalidadeId: modules.areaClinica.permissions.listagemConsultasMarcadas.id,
+            label: 'Troca de Marcações entre Médicos',
+            href: '/area-administrativa/consultas/marcacoes/troca-medicos',
+            funcionalidadeId: modules.areaAdministrativa.permissions.trocaMarcacoesMedicos.id,
+          },
+          {
+            label: 'Entrada de Marcações',
+            href: '/area-administrativa/consultas/marcacoes/ordem-entrada',
+            funcionalidadeId: modules.areaAdministrativa.permissions.ordemEntradaMarcacoes.id,
+          },
+          {
+            label: 'Lista de Espera',
+            href: '/area-administrativa/consultas/marcacoes/lista-espera',
+            funcionalidadeId: modules.areaAdministrativa.permissions.listaEsperaConsultas.id,
+          },
+          {
+            label: 'GlobalBooking',
+            href: '/area-administrativa/consultas/marcacoes/global-booking',
+            funcionalidadeId: modules.areaAdministrativa.permissions.globalBooking.id,
           },
         ],
       },

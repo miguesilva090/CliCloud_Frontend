@@ -97,6 +97,31 @@ const FechoDiarioPage = lazy(() =>
     (m) => ({ default: m.FechoDiarioPage })
   )
 )
+const ListagemMarcacoesAdministrativoPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/consultas/marcacoes/pages/listagem-marcacoes-administrativo-page'
+  ).then((m) => ({ default: m.ListagemMarcacoesAdministrativoPage }))
+)
+const TrocaMarcacoesMedicosPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/consultas/troca-medicos/pages/troca-marcacoes-medicos-page'
+  ).then((m) => ({ default: m.TrocaMarcacoesMedicosPage }))
+)
+const ListagemOrdemEntradaPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/consultas/ordem-entrada/pages/listagem-ordem-entrada-page'
+  ).then((m) => ({ default: m.ListagemOrdemEntradaPage }))
+)
+const ListagemListaEsperaPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/consultas/lista-espera/pages/listagem-lista-espera-page'
+  ).then((m) => ({ default: m.ListagemListaEsperaPage }))
+)
+const ListagemGlobalBookingPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/consultas/global-booking/pages/listagem-global-booking-page'
+  ).then((m) => ({ default: m.ListagemGlobalBookingPage }))
+)
 const NovoSinistradoPage = lazy(() =>
   import(
     '@/pages/area-administrativa/consultas/sinistrados/pages/novo-sinistrado-page'
@@ -218,6 +243,96 @@ export const areaAdministrativaRoutes = [
     ),
     manageWindow: true,
     windowName: 'Histórico de consultas',
+  },
+  {
+    path: 'area-administrativa/consultas/marcacoes',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.marcacoesAgenda.id}
+        permissionFallbackIds={[
+          modules.areaAdministrativa.permissions.marcacoes.id,
+          modules.areaAdministrativa.permissions.consultas.id,
+        ]}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemMarcacoesAdministrativoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Agenda',
+  },
+  {
+    path: 'area-administrativa/consultas/marcacoes/troca-medicos',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.trocaMarcacoesMedicos.id}
+        permissionFallbackIds={[
+          modules.areaAdministrativa.permissions.marcacoes.id,
+          modules.areaAdministrativa.permissions.consultas.id,
+        ]}
+        actionType={actionTypes.AuthVer}
+      >
+        <TrocaMarcacoesMedicosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Troca de Marcações entre Médicos',
+  },
+  {
+    path: 'area-administrativa/consultas/marcacoes/ordem-entrada',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.ordemEntradaMarcacoes.id}
+        permissionFallbackIds={[
+          modules.areaAdministrativa.permissions.marcacoes.id,
+          modules.areaAdministrativa.permissions.consultas.id,
+        ]}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemOrdemEntradaPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Entrada de Marcações',
+  },
+  {
+    path: 'area-administrativa/consultas/marcacoes/lista-espera',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.listaEsperaConsultas.id}
+        permissionFallbackIds={[
+          modules.areaAdministrativa.permissions.marcacoes.id,
+          modules.areaAdministrativa.permissions.consultas.id,
+        ]}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemListaEsperaPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Lista de Espera',
+  },
+  {
+    path: 'area-administrativa/consultas/marcacoes/global-booking',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.globalBooking.id}
+        permissionFallbackIds={[
+          modules.areaAdministrativa.permissions.marcacoes.id,
+          modules.areaAdministrativa.permissions.consultas.id,
+        ]}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemGlobalBookingPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'GlobalBooking',
   },
   {
     path: 'area-administrativa/consultas/admissoes',

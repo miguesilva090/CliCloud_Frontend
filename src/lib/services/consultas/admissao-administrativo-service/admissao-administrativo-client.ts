@@ -9,8 +9,19 @@ import type {
   CreateAdmissaoRequest,
   FechoDiarioRequest,
   FechoDiarioResultDTO,
+  PromoverAdmissaoResultDTO,
   UpdateAdmissaoRequest,
+  AdmissaoObservacoesDTO,
+  AppendAdmissaoObservacaoRequest,
+  DesmarcarAdmissaoRequest,
+  PromoverAdmissaoLoteRequest,
 } from '@/types/dtos/consultas/admissao.dtos'
+import type {
+  AnularOrdemEntradaRequest,
+  DefinirOrdemEntradaRequest,
+  OrdemEntradaPaginatedRequest,
+  OrdemEntradaTableDTO,
+} from '@/types/dtos/consultas/ordem-entrada.dtos'
 
 const ADMISSOES_BASE = '/client/consultas/admissoes-administrativo'
 const FECHO_BASE = '/client/consultas/fecho-diario-administrativo'
@@ -61,9 +72,48 @@ export class AdmissaoAdministrativoClient extends BaseApiClient {
     return this.httpClient.postRequest(state.URL, `${ADMISSOES_BASE}/${id}/efetuado`, efetuado)
   }
 
+  public async setConfirmaConsulta(
+    id: string,
+    confirmaConsulta: boolean
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest(
+      state.URL,
+      `${ADMISSOES_BASE}/${id}/confirma-consulta`,
+      confirmaConsulta
+    )
+  }
+
+  public async setEmTratamento(
+    id: string,
+    emTratamento: boolean
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest(
+      state.URL,
+      `${ADMISSOES_BASE}/${id}/em-tratamento`,
+      emTratamento
+    )
+  }
+
+  public async desmarcar(
+    id: string,
+    payload: DesmarcarAdmissaoRequest = {}
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest(
+      state.URL,
+      `${ADMISSOES_BASE}/${id}/desmarcar`,
+      payload
+    )
+  }
+
+  public async promoverLote(
+    payload: PromoverAdmissaoLoteRequest
+  ): Promise<ResponseApi<GSResponse<FechoDiarioResultDTO>>> {
+    return this.httpClient.postRequest(state.URL, `${ADMISSOES_BASE}/promover-lote`, payload)
+  }
+
   public async promoverParaConsulta(
     id: string
-  ): Promise<ResponseApi<GSResponse<string>>> {
+  ): Promise<ResponseApi<GSResponse<PromoverAdmissaoResultDTO>>> {
     return this.httpClient.postRequest(
       state.URL,
       `${ADMISSOES_BASE}/${id}/promover-consulta`,
@@ -71,9 +121,65 @@ export class AdmissaoAdministrativoClient extends BaseApiClient {
     )
   }
 
+  public async getObservacoes(
+    id: string
+  ): Promise<ResponseApi<GSResponse<AdmissaoObservacoesDTO>>> {
+    return this.httpClient.getRequest(state.URL, `${ADMISSOES_BASE}/${id}/observacoes`)
+  }
+
+  public async appendObservacao(
+    id: string,
+    payload: AppendAdmissaoObservacaoRequest
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest(
+      state.URL,
+      `${ADMISSOES_BASE}/${id}/observacoes`,
+      payload
+    )
+  }
+
+  public async contarFecho(data: string): Promise<ResponseApi<GSResponse<number>>> {
+    return this.httpClient.getRequest(
+      state.URL,
+      `${FECHO_BASE}/contagem?data=${encodeURIComponent(data)}`
+    )
+  }
+
   public async executarFecho(
     payload: FechoDiarioRequest
   ): Promise<ResponseApi<GSResponse<FechoDiarioResultDTO>>> {
     return this.httpClient.postRequest(state.URL, FECHO_BASE, payload)
+  }
+
+  public async getOrdemEntradaPaginated(
+    params: OrdemEntradaPaginatedRequest
+  ): Promise<ResponseApi<PaginatedResponse<OrdemEntradaTableDTO>>> {
+    return this.httpClient.postRequest(
+      state.URL,
+      `${ADMISSOES_BASE}/ordem-entrada/paginated`,
+      params
+    )
+  }
+
+  public async definirOrdemEntrada(
+    id: string,
+    payload: DefinirOrdemEntradaRequest
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest(
+      state.URL,
+      `${ADMISSOES_BASE}/${id}/ordem-entrada/ordem`,
+      payload
+    )
+  }
+
+  public async anularOrdemEntrada(
+    id: string,
+    payload: AnularOrdemEntradaRequest
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest(
+      state.URL,
+      `${ADMISSOES_BASE}/${id}/ordem-entrada/anular`,
+      payload
+    )
   }
 }

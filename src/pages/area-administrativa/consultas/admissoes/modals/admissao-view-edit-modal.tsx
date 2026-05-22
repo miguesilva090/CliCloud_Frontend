@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
 import {
   ArrowLeft,
@@ -38,6 +38,8 @@ import { useAuthStore } from '@/stores/auth-store'
 import type { TipoServicoLightDTO } from '@/types/dtos/servicos/tipo-servico.dtos'
 import type { ServicoLightDTO } from '@/types/dtos/servicos/servico.dtos'
 import { AdmissaoAdministrativoService } from '@/lib/services/consultas/admissao-administrativo-service'
+import { HistoricoConsultasAdministrativoService } from '@/lib/services/consultas/historico-consultas-administrativo-service'
+import { MarcacaoConsultaClient } from '@/lib/services/consultas/marcacao-consulta-service/marcacao-consulta-client'
 import { UtentesService } from '@/lib/services/saude/utentes-service'
 import { MedicosService } from '@/lib/services/saude/medicos-service'
 import { modules } from '@/config/modules'
@@ -57,6 +59,7 @@ import type {
 import type { UtenteDTO } from '@/types/dtos/saude/utentes.dtos'
 import type { SalaTableDTO } from '@/types/dtos/consultas/sala.dtos'
 import {
+  applyMarcacaoToAdmissaoForm,
   createEmptyAdmissaoForm,
   formatMoneyPt,
   isencaoToTaxaModeradora,
@@ -70,7 +73,15 @@ import {
   type LinhaServicoForm,
   type TaxaModeradora,
 } from './admissao-form-utils'
+import { invalidateAdmissoesListQueries } from '../queries/listagem-admissoes-queries'
 import { AdmissaoServicoLinhaModal } from './admissao-servico-linha-modal'
+import { AdmissaoObservacoesModal } from './admissao-observacoes-modal'
+import {
+  clearPendingLinhasParaAdmissao,
+  persistAdmissaoSubsistemasPickerContext,
+  readPendingLinhasParaAdmissao,
+  subscribeLinhasFromSubsistemasPicker,
+} from '@/pages/area-comum/tabelas/consultas/servicos/subsistemas-servicos/subsistemas-servicos-admissao-flow'
 import {
   clearAdmissaoFormSessionDraft,
   persistAdmissaoFormSessionDraft,
@@ -113,6 +124,8 @@ function icdCodeFromLabel(label: string): string {
   return sep >= 0 ? label.slice(0, sep).trim() : label.trim()
 }
 
+export type AdmissaoModalSource = 'admissao' | 'consulta-historico'
+
 export function AdmissaoViewEditModal({
   open,
   onOpenChange,
@@ -120,6 +133,7 @@ export function AdmissaoViewEditModal({
   row,
   onSaved,
   renderAsPage = false,
+  source = 'admissao',
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -127,11 +141,22 @@ export function AdmissaoViewEditModal({
   row: AdmissaoTableDTO | null
   onSaved?: () => void
   renderAsPage?: boolean
+  /** Histórico administrativo: load/save em Consulta (pós-promoção). */
+  source?: AdmissaoModalSource
 }) {
-  const permId = modules.areaAdministrativa.permissions.admissoes.id
+  const admissoesPermId = modules.areaAdministrativa.permissions.admissoes.id
+  const consultasPermId = modules.areaAdministrativa.permissions.consultas.id
+  const permId = source === 'consulta-historico' ? consultasPermId : admissoesPermId
+  const isHistorico = source === 'consulta-historico'
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const consultaMarcacaoIdParam = searchParams.get('consultaMarcacaoId')?.trim() ?? ''
+  const marcacaoPrefillDoneRef = useRef(false)
   const addWindow = useWindowsStore((s) => s.addWindow)
   const setWindowHasFormData = useWindowsStore((s) => s.setWindowHasFormData)
+  const pickerHubRef = useRef<string | null>(null)
+  const [pickerHubSync, setPickerHubSync] = useState(0)
   const funcionarioNome = useAuthStore((s) => s.name || s.email || '')
   const readOnly = mode === 'view'
   const [loading, setLoading] = useState(false)
@@ -257,6 +282,47 @@ export function AdmissaoViewEditModal({
     )
   }, [servicosLightAll, form.tipoServicoRegistoId])
   const valorTotal = useMemo(() => sumLinhasTotal(form.linhasServico), [form.linhasServico])
+  const urlInstanceId = searchParams.get('instanceId')
+
+  const handleConfirmSubsistemasSelecionados = useCallback((novasLinhas: LinhaServicoForm[]) => {
+    setForm((prev) => ({
+      ...prev,
+      linhasServico: [...prev.linhasServico, ...novasLinhas],
+    }))
+    toast.success(
+      novasLinhas.length === 1
+        ? '1 linha adicionada à admissão.'
+        : `${novasLinhas.length} linhas adicionadas à admissão.`
+    )
+  }, [])
+
+  useEffect(() => {
+    if (!open) {
+      pickerHubRef.current = null
+      return
+    }
+    if (!renderAsPage && !pickerHubRef.current) {
+      pickerHubRef.current = crypto.randomUUID()
+      setPickerHubSync((s) => s + 1)
+    }
+  }, [open, renderAsPage])
+
+  const admissionPickerHubId = useMemo(() => {
+    if (!open) return null
+    if (renderAsPage) {
+      return urlInstanceId && urlInstanceId !== 'default' ? urlInstanceId : null
+    }
+    return pickerHubRef.current
+  }, [open, renderAsPage, urlInstanceId, pickerHubSync])
+
+  useEffect(() => {
+    if (!open || !admissionPickerHubId) return
+    return subscribeLinhasFromSubsistemasPicker(
+      admissionPickerHubId,
+      handleConfirmSubsistemasSelecionados
+    )
+  }, [open, admissionPickerHubId, handleConfirmSubsistemasSelecionados])
+
   const icd91Display = icdCodeFromLabel(form.doencaPrincipalLabel)
   const icd92Display = icdCodeFromLabel(form.doencaSecundariaLabel)
 
@@ -308,14 +374,14 @@ export function AdmissaoViewEditModal({
     setWindowHasFormData,
   ])
 
+  /**
+   * Abre a listagem de Subsistemas de Serviços (nova tab / rota gerida), como no legado.
+   * O formulário escuta `subscribeLinhasFromSubsistemasPicker` para receber linhas após «Adicionar à admissão».
+   */
   const openSubsistemasServicosList = () => {
     if (!organismoEfetivo) {
       toast.error('Selecione utente e organismo na aba «Dados do Utente».')
       setActiveTab('dados-utente')
-      return
-    }
-    if (!renderAsPage) {
-      toast.info('Abra a admissão num separador para gerir subsistemas de serviços.')
       return
     }
     if (!form.utenteId) {
@@ -333,14 +399,33 @@ export function AdmissaoViewEditModal({
       toast.error('Indique o nº de linhas (mínimo 1).')
       return
     }
-    const admissaoInstanceId = getCurrentInstanceId()
-    if (!admissaoInstanceId || admissaoInstanceId === 'default') {
-      toast.error('Não foi possível identificar a admissão actual.')
+    const hubId = renderAsPage
+      ? (() => {
+          const id = getCurrentInstanceId()
+          return id !== 'default' ? id : null
+        })()
+      : (pickerHubRef.current ??
+          (() => {
+            const id = crypto.randomUUID()
+            pickerHubRef.current = id
+            setPickerHubSync((s) => s + 1)
+            return id
+          })())
+    if (!hubId) {
+      toast.error(
+        'Não foi possível identificar o separador da admissão. Recarregue a página ou reabra «Nova admissão».'
+      )
       return
     }
     persistDraftForAuxTab()
+    persistAdmissaoSubsistemasPickerContext(hubId, {
+      numLinhasInserir: Math.max(1, numLinhas),
+      servicosLight: servicosLightAll,
+      taxaModeradora: form.taxaModeradora,
+      taxaModeradoraAtiva: form.taxaModeradoraAtiva,
+    })
     openSubsistemasServicosFromAdmissao(navigate, addWindow, {
-      admissaoInstanceId,
+      admissaoInstanceId: hubId,
       organismoId: organismoEfetivo,
       organismoLabel: form.organismoLabel,
     })
@@ -422,6 +507,10 @@ export function AdmissaoViewEditModal({
     const instanceId = renderAsPage ? getCurrentInstanceId() : ''
     const draft = instanceId ? readAdmissaoFormSessionDraft(instanceId) : null
 
+    if (isHistorico && mode === 'create') {
+      return
+    }
+
     if (mode === 'create') {
       if (draft?.form && draft.mode === 'create') {
         setForm(draft.form)
@@ -458,11 +547,18 @@ export function AdmissaoViewEditModal({
     }
     setActiveTab('dados-utente')
     setLoading(true)
-    AdmissaoAdministrativoService(permId)
-      .getById(row.id)
+    const loadPromise = isHistorico
+      ? HistoricoConsultasAdministrativoService(permId).getConsultaForEdit(row.id)
+      : AdmissaoAdministrativoService(permId).getById(row.id)
+
+    loadPromise
       .then(async (res) => {
         if (res.info?.status !== ResponseStatus.Success || !res.info.data) {
-          toast.error('Não foi possível carregar a admissão.')
+          toast.error(
+            isHistorico
+              ? 'Não foi possível carregar a consulta (histórico).'
+              : 'Não foi possível carregar a admissão.'
+          )
           return
         }
         const mapped = mapDtoToForm(res.info.data)
@@ -477,8 +573,91 @@ export function AdmissaoViewEditModal({
           // ignore
         }
       })
+      .catch(() => {
+        toast.error(
+          isHistorico
+            ? 'Não foi possível carregar a consulta (histórico).'
+            : 'Não foi possível carregar a admissão.'
+        )
+      })
       .finally(() => setLoading(false))
-  }, [open, mode, row?.id, permId])
+  }, [open, mode, row?.id, permId, isHistorico])
+
+  useEffect(() => {
+    if (!open) {
+      marcacaoPrefillDoneRef.current = false
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open || mode !== 'create' || !consultaMarcacaoIdParam || marcacaoPrefillDoneRef.current) {
+      return
+    }
+    const instanceId = renderAsPage ? getCurrentInstanceId() : ''
+    const draft = instanceId ? readAdmissaoFormSessionDraft(instanceId) : null
+    if (draft?.form?.consultaMarcacaoId === consultaMarcacaoIdParam) {
+      marcacaoPrefillDoneRef.current = true
+      return
+    }
+
+    marcacaoPrefillDoneRef.current = true
+    void new MarcacaoConsultaClient(permId)
+      .getMarcacaoConsulta(consultaMarcacaoIdParam)
+      .then(async (res) => {
+        const m = res.info?.data
+        if (res.info?.status !== ResponseStatus.Success || !m) {
+          toast.error('Não foi possível carregar a marcação.')
+          return
+        }
+        let utenteLabel = ''
+        try {
+          const ut = await UtentesService('utentes').getUtente(m.utenteId)
+          utenteLabel = ut.info?.data?.nome ?? ''
+        } catch {
+          /* ignore */
+        }
+        setForm((prev) => applyMarcacaoToAdmissaoForm(prev, m, utenteLabel))
+        if (m.medicoId) {
+          const item = medicosItems.find((x) => x.value === m.medicoId)
+          if (item) {
+            setForm((prev) => ({
+              ...prev,
+              medicoLabel: item.label,
+              especialidadeNome: item.secondary ?? prev.especialidadeNome,
+            }))
+          }
+        }
+      })
+      .catch(() => {
+        toast.error('Não foi possível carregar a marcação.')
+      })
+  }, [
+    open,
+    mode,
+    consultaMarcacaoIdParam,
+    permId,
+    renderAsPage,
+    medicosItems,
+  ])
+
+  /** Fallback: pending no sessionStorage (ex. sem rascunho ao abrir Serviços). */
+  useEffect(() => {
+    if (!open || !admissionPickerHubId) return
+    const pending = readPendingLinhasParaAdmissao(admissionPickerHubId)
+    if (!pending?.length) return
+    const draft = readAdmissaoFormSessionDraft(admissionPickerHubId)
+    const jaNoRascunho =
+      (draft?.form.linhasServico?.length ?? 0) >= pending.length
+    clearPendingLinhasParaAdmissao(admissionPickerHubId)
+    if (jaNoRascunho) return
+    handleConfirmSubsistemasSelecionados(pending)
+  }, [
+    open,
+    admissionPickerHubId,
+    handleConfirmSubsistemasSelecionados,
+    mode,
+    row?.id,
+  ])
 
   useEffect(() => {
     if (!open || mode !== 'create') return
@@ -511,12 +690,30 @@ export function AdmissaoViewEditModal({
       const res =
         mode === 'create'
           ? await AdmissaoAdministrativoService(permId).create(payload)
-          : await AdmissaoAdministrativoService(permId).update(
-              row!.id,
-              payload as UpdateAdmissaoRequest
-            )
+          : isHistorico
+            ? await HistoricoConsultasAdministrativoService(permId).updateConsultaHistorico(
+                row!.id,
+                payload as UpdateAdmissaoRequest
+              )
+            : await AdmissaoAdministrativoService(permId).update(
+                row!.id,
+                payload as UpdateAdmissaoRequest
+              )
       if (res.info?.status === ResponseStatus.Success) {
-        toast.success(mode === 'create' ? 'Admissão criada.' : 'Admissão atualizada.')
+        toast.success(
+          mode === 'create'
+            ? 'Admissão criada.'
+            : isHistorico
+              ? 'Consulta (histórico) atualizada.'
+              : 'Admissão atualizada.'
+        )
+        if (isHistorico) {
+          void queryClient.invalidateQueries({
+            queryKey: ['historico-consultas-administrativo-paginated'],
+          })
+        } else {
+          invalidateAdmissoesListQueries(queryClient)
+        }
         if (renderAsPage) {
           clearAdmissaoFormSessionDraft(getCurrentInstanceId())
         }
@@ -562,8 +759,15 @@ export function AdmissaoViewEditModal({
     })
   }
 
-  const title =
-    mode === 'create' ? 'Nova admissão' : mode === 'edit' ? 'Editar admissão' : 'Admissão'
+  const title = isHistorico
+    ? mode === 'edit'
+      ? 'Editar consulta (histórico)'
+      : 'Consulta (histórico)'
+    : mode === 'create'
+      ? 'Nova admissão'
+      : mode === 'edit'
+        ? 'Editar admissão'
+        : 'Admissão'
 
   const content = (
     <>
@@ -596,9 +800,15 @@ export function AdmissaoViewEditModal({
             variant='secondary'
             size='sm'
             className={BTN_SECONDARY_ACTION}
-            disabled={readOnly}
+            disabled={readOnly && !row?.id}
             onClick={() => {
-              setObsDraft(form.obs)
+              if (!isHistorico && !row?.id) {
+                toast.info('Guarde a admissão antes de registar observações.')
+                return
+              }
+              if (isHistorico) {
+                setObsDraft(form.obs)
+              }
               setObsModalOpen(true)
             }}
           >
@@ -1225,73 +1435,105 @@ export function AdmissaoViewEditModal({
                 className='flex-1 overflow-y-auto py-4 data-[state=inactive]:hidden'
               >
                 <div className='space-y-4'>
-                  <div className='grid grid-cols-12 gap-3 rounded-md border p-3'>
-                    <div className={`col-span-12 md:col-span-4 ${fieldGap}`}>
-                      <Label className={labelClass}>Tipo serviço</Label>
-                      <AsyncCombobox
-                        value={form.tipoServicoRegistoId}
-                        onChange={handleSelectTipoServico}
-                        items={
-                          form.tipoServicoRegistoId &&
-                          form.tipoServicoRegistoLabel &&
-                          !tipoServicoItems.some((i) => i.value === form.tipoServicoRegistoId)
-                            ? [
-                                {
-                                  value: form.tipoServicoRegistoId,
-                                  label: form.tipoServicoRegistoLabel,
-                                },
-                                ...tipoServicoItems,
-                              ]
-                            : tipoServicoItems
-                        }
-                        isLoading={tiposServicoQuery.isFetching}
-                        placeholder='Tipo serviço...'
-                        searchPlaceholder='Pesquisar tipo...'
-                        emptyText='Sem tipos'
-                        disabled={readOnly}
-                        searchValue={tipoServicoSearch}
-                        onSearchValueChange={setTipoServicoSearch}
-                      />
+                  {/* Legado: só tipo de serviço, nº de linhas (vias) e abertura da lista de serviços */}
+                  <div className='rounded-md border p-3'>
+                    <div className='grid grid-cols-12 gap-3'>
+                      <div className={`col-span-12 md:col-span-6 ${fieldGap}`}>
+                        <Label className={labelClass}>Tipo serviço</Label>
+                        <AsyncCombobox
+                          value={form.tipoServicoRegistoId}
+                          onChange={handleSelectTipoServico}
+                          items={
+                            form.tipoServicoRegistoId &&
+                            form.tipoServicoRegistoLabel &&
+                            !tipoServicoItems.some((i) => i.value === form.tipoServicoRegistoId)
+                              ? [
+                                  {
+                                    value: form.tipoServicoRegistoId,
+                                    label: form.tipoServicoRegistoLabel,
+                                  },
+                                  ...tipoServicoItems,
+                                ]
+                              : tipoServicoItems
+                          }
+                          isLoading={tiposServicoQuery.isFetching}
+                          placeholder='Tipo serviço...'
+                          searchPlaceholder='Pesquisar tipo...'
+                          emptyText='Sem tipos'
+                          disabled={readOnly}
+                          searchValue={tipoServicoSearch}
+                          onSearchValueChange={setTipoServicoSearch}
+                        />
+                      </div>
+                      <div className={`col-span-6 sm:col-span-4 md:col-span-3 ${fieldGap}`}>
+                        <Label className={labelClass}>Nº de linhas</Label>
+                        <Input
+                          className={inputClass}
+                          disabled={readOnly}
+                          value={form.numLinhasInserir}
+                          onChange={(e) => patch({ numLinhasInserir: e.target.value })}
+                        />
+                      </div>
+                      <div className='col-span-6 sm:col-span-4 md:col-span-3 flex items-end'>
+                        <Button
+                          type='button'
+                          size='sm'
+                          className='w-full'
+                          disabled={readOnly}
+                          onClick={openSubsistemasServicosList}
+                        >
+                          Serviços
+                        </Button>
+                      </div>
                     </div>
-                    <div className={`col-span-6 md:col-span-2 ${fieldGap}`}>
-                      <Label className={labelClass}>Nº de linhas</Label>
-                      <Input
-                        className={inputClass}
-                        disabled={readOnly}
-                        value={form.numLinhasInserir}
-                        onChange={(e) => patch({ numLinhasInserir: e.target.value })}
-                      />
+                  </div>
+
+                  {/* Legado: documento, data recibo, pago/faturado e acções no mesmo bloco */}
+                  <div className='rounded-md border p-3'>
+                    <div className='mb-3 flex flex-wrap items-center gap-6'>
+                      <div className='flex items-center gap-2'>
+                        <Checkbox
+                          id='admissao-pago'
+                          checked={form.pago}
+                          disabled
+                        />
+                        <Label htmlFor='admissao-pago' className={labelClass}>
+                          Pago
+                        </Label>
+                      </div>
+                      <div className='flex items-center gap-2'>
+                        <Checkbox
+                          id='admissao-faturado'
+                          checked={form.faturado}
+                          disabled
+                        />
+                        <Label htmlFor='admissao-faturado' className={labelClass}>
+                          Faturado
+                        </Label>
+                      </div>
                     </div>
-                    <div className='col-span-6 flex items-end md:col-span-2'>
-                      <Button
-                        type='button'
-                        size='sm'
-                        className='w-full'
-                        disabled={readOnly}
-                        onClick={openSubsistemasServicosList}
-                      >
-                        Serviços
-                      </Button>
+                    <div className='grid grid-cols-12 gap-3'>
+                      <div className={`col-span-12 sm:col-span-6 md:col-span-4 ${fieldGap}`}>
+                        <Label className={labelClass}>Nº documento</Label>
+                        <Input
+                          className={`${inputClass} bg-muted/40`}
+                          readOnly
+                          value={form.numDocumento}
+                          placeholder='—'
+                        />
+                      </div>
+                      <div className={`col-span-12 sm:col-span-6 md:col-span-4 ${fieldGap}`}>
+                        <Label className={labelClass}>Data recibo</Label>
+                        <Input
+                          className={`${inputClass} bg-muted/40`}
+                          readOnly
+                          value={form.dataRecibo}
+                          placeholder='—'
+                        />
+                      </div>
                     </div>
-                    <div className={`col-span-6 md:col-span-4 ${fieldGap}`}>
-                      <Label className={labelClass}>Nº documento</Label>
-                      <Input
-                        className={`${inputClass} bg-muted/40`}
-                        readOnly
-                        value={form.numDocumento}
-                        placeholder='—'
-                      />
-                    </div>
-                    <div className={`col-span-6 md:col-span-4 ${fieldGap}`}>
-                      <Label className={labelClass}>Data recibo</Label>
-                      <Input
-                        className={`${inputClass} bg-muted/40`}
-                        readOnly
-                        value={form.dataRecibo}
-                        placeholder='—'
-                      />
-                    </div>
-                    <div className='col-span-12 flex flex-wrap gap-2 md:col-span-4 md:justify-end'>
+                    <div className='mt-3 flex flex-wrap gap-2'>
+
                       <Button
                         type='button'
                         size='sm'
@@ -1480,39 +1722,65 @@ export function AdmissaoViewEditModal({
       ) : (
         <Dialog open={open} onOpenChange={onOpenChange}>
           <DialogContent className='flex max-h-[100vh] w-[96vw] flex-col overflow-hidden p-4 pt-3 sm:max-w-[96vw] 2xl:max-w-[min(98vw,1600px)] [&>button]:hidden'>
+            <DialogTitle className='sr-only'>{title}</DialogTitle>
             {content}
           </DialogContent>
         </Dialog>
       )}
 
-      <Dialog open={obsModalOpen} onOpenChange={setObsModalOpen}>
-        <DialogContent className='max-w-lg'>
-          <DialogHeader>
-            <DialogTitle>Observações</DialogTitle>
-          </DialogHeader>
-          <Textarea
-            rows={8}
-            disabled={readOnly}
-            value={obsDraft}
-            onChange={(e) => setObsDraft(e.target.value)}
-          />
-          <DialogFooter>
-            <Button variant='outline' onClick={() => setObsModalOpen(false)}>
-              Cancelar
-            </Button>
-            {!readOnly ? (
-              <Button
-                onClick={() => {
-                  patch({ obs: obsDraft })
-                  setObsModalOpen(false)
-                }}
-              >
-                OK
+      {isHistorico ? (
+        <Dialog open={obsModalOpen} onOpenChange={setObsModalOpen}>
+          <DialogContent className='max-w-lg'>
+            <DialogHeader>
+              <DialogTitle>Observações</DialogTitle>
+            </DialogHeader>
+            <Textarea
+              rows={8}
+              disabled={readOnly}
+              value={obsDraft}
+              onChange={(e) => setObsDraft(e.target.value)}
+            />
+            <DialogFooter>
+              <Button variant='outline' onClick={() => setObsModalOpen(false)}>
+                Cancelar
               </Button>
-            ) : null}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {!readOnly ? (
+                <Button
+                  onClick={() => {
+                    patch({ obs: obsDraft })
+                    setObsModalOpen(false)
+                  }}
+                >
+                  OK
+                </Button>
+              ) : null}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <AdmissaoObservacoesModal
+          open={obsModalOpen}
+          onOpenChange={setObsModalOpen}
+          admissaoId={row?.id ?? null}
+          utenteLabel={
+            [form.numeroUtente, form.utenteLabel].filter(Boolean).join(' — ') || undefined
+          }
+          listPermId={permId}
+          readOnly={readOnly}
+          onSaved={() => {
+            if (!row?.id) {
+              return
+            }
+            void AdmissaoAdministrativoService(permId)
+              .getObservacoes(row.id)
+              .then((res) => {
+                if (res.info?.status === ResponseStatus.Success && res.info.data) {
+                  patch({ obs: res.info.data.observacoes ?? '' })
+                }
+              })
+          }}
+        />
+      )}
 
       <AdmissaoServicoLinhaModal
         open={servicoModalOpen}
