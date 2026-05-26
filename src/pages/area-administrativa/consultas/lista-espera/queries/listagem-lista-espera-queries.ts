@@ -4,7 +4,7 @@ import { ListaEsperaAdministrativoService } from '@/lib/services/consultas/lista
 import type { ListaEsperaPaginatedRequest } from '@/types/dtos/consultas/lista-espera-administrativo.dtos'
 import { filterGuid, filterValue } from '../../shared/listagem-api-filters'
 
-const listPermId = modules.areaAdministrativa.permissions.consultas.id
+const listPermId = modules.areaAdministrativa.permissions.listaEsperaConsultas.id
 
 export const LISTA_ESPERA_PAGINATED_QUERY_KEY = ['lista-espera-administrativo-paginated'] as const
 

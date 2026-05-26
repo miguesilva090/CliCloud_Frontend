@@ -1,11 +1,9 @@
-/* FC v6 injeta estilos via JS */
-
 .marcacoes-agenda-calendario {
   --agenda-nav-bg: #f0f0f0;
-  --agenda-nav-fg: #333333;
+  --agenda-nav-fg: #c5c5c5;
   --agenda-grid-bg: #ffffff;
   --agenda-slot-bg: #ffffff;
-  --agenda-border: #bdbdbd;
+  --agenda-border: #918f8f;
   --agenda-indisponivel: #dcdcdc;
   --agenda-slot-height: 1.35rem;
   display: flex;
@@ -18,8 +16,8 @@
 .marcacoes-agenda-calendario .fc {
   --fc-border-color: var(--agenda-border);
   --fc-page-bg-color: var(--agenda-grid-bg);
-  --fc-neutral-bg-color: #e2e8f0;
-  --fc-today-bg-color: #e0f2fe;
+  --fc-neutral-bg-color: #797979;
+  --fc-today-bg-color: #f7f7f7;
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -109,13 +107,13 @@
 }
 
 .marcacoes-agenda-calendario .fc .fc-timegrid-axis {
-  background: #f1f5f9;
+  background: #f3f3f3;
   border-right: 1px solid var(--agenda-border) !important;
 }
 
 .marcacoes-agenda-calendario .fc .fc-timegrid-slot-label {
-  background: #f1f5f9;
-  border-bottom: 1px solid #e2e8f0;
+  background: #f3f3f3;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .marcacoes-agenda-calendario .fc .fc-timegrid-slot {
@@ -130,7 +128,7 @@
 }
 
 .marcacoes-agenda-calendario .fc .fc-timegrid-slot:not(.fc-timegrid-slot-minor) {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .marcacoes-agenda-calendario .fc .fc-timegrid-slot-minor {
@@ -142,7 +140,7 @@
 }
 
 .marcacoes-agenda-calendario .fc .fc-timegrid-col.fc-day-today {
-  background: #f0f9ff;
+  background: #fafafa;
 }
 
 .marcacoes-agenda-calendario .fc .fc-timegrid-axis-cushion,

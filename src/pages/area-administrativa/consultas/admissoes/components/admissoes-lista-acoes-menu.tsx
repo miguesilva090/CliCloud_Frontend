@@ -182,6 +182,7 @@ export function AdmissoesListaAcoesMenu({
             <AlertDialogDescription>
               Deseja passar esta admissão para histórico?
               <br />
+              Será criada a consulta correspondente e a admissão deixará de aparecer como pendente.
               <span className='mt-2 block text-sm'>
                 <strong>Utente:</strong> {row.utenteNome ?? '—'}
               </span>

@@ -16,12 +16,6 @@ import type {
   DesmarcarAdmissaoRequest,
   PromoverAdmissaoLoteRequest,
 } from '@/types/dtos/consultas/admissao.dtos'
-import type {
-  AnularOrdemEntradaRequest,
-  DefinirOrdemEntradaRequest,
-  OrdemEntradaPaginatedRequest,
-  OrdemEntradaTableDTO,
-} from '@/types/dtos/consultas/ordem-entrada.dtos'
 
 const ADMISSOES_BASE = '/client/consultas/admissoes-administrativo'
 const FECHO_BASE = '/client/consultas/fecho-diario-administrativo'
@@ -35,6 +29,15 @@ export class AdmissaoAdministrativoClient extends BaseApiClient {
 
   public async getById(id: string): Promise<ResponseApi<GSResponse<AdmissaoDTO>>> {
     return this.httpClient.getRequest(state.URL, `${ADMISSOES_BASE}/${id}`)
+  }
+
+  public async getByConsultaMarcacaoId(
+    consultaMarcacaoId: string
+  ): Promise<ResponseApi<GSResponse<AdmissaoDTO | null>>> {
+    return this.httpClient.getRequest(
+      state.URL,
+      `${ADMISSOES_BASE}/por-marcacao/${consultaMarcacaoId}`
+    )
   }
 
   public async create(
@@ -151,35 +154,4 @@ export class AdmissaoAdministrativoClient extends BaseApiClient {
     return this.httpClient.postRequest(state.URL, FECHO_BASE, payload)
   }
 
-  public async getOrdemEntradaPaginated(
-    params: OrdemEntradaPaginatedRequest
-  ): Promise<ResponseApi<PaginatedResponse<OrdemEntradaTableDTO>>> {
-    return this.httpClient.postRequest(
-      state.URL,
-      `${ADMISSOES_BASE}/ordem-entrada/paginated`,
-      params
-    )
-  }
-
-  public async definirOrdemEntrada(
-    id: string,
-    payload: DefinirOrdemEntradaRequest
-  ): Promise<ResponseApi<GSResponse<string>>> {
-    return this.httpClient.postRequest(
-      state.URL,
-      `${ADMISSOES_BASE}/${id}/ordem-entrada/ordem`,
-      payload
-    )
-  }
-
-  public async anularOrdemEntrada(
-    id: string,
-    payload: AnularOrdemEntradaRequest
-  ): Promise<ResponseApi<GSResponse<string>>> {
-    return this.httpClient.postRequest(
-      state.URL,
-      `${ADMISSOES_BASE}/${id}/ordem-entrada/anular`,
-      payload
-    )
-  }
 }

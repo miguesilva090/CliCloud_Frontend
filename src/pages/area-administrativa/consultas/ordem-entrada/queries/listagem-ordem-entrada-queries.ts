@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { modules } from '@/config/modules'
-import { AdmissaoAdministrativoService } from '@/lib/services/consultas/admissao-administrativo-service'
+import { OrdemEntradaAdministrativoService } from '@/lib/services/consultas/ordem-entrada-administrativo-service'
 import type { OrdemEntradaPaginatedRequest } from '@/types/dtos/consultas/ordem-entrada.dtos'
 import { getDataTrabalhoIsoDate } from '@/lib/utils/data-trabalho'
 import { filterGuid, filterValue } from '../../shared/listagem-api-filters'
@@ -40,7 +40,7 @@ export function useGetOrdemEntradaPaginated(
 
   return useQuery({
     queryKey: [...ORDEM_ENTRADA_PAGINATED_QUERY_KEY, params],
-    queryFn: () => AdmissaoAdministrativoService(listPermId).getOrdemEntradaPaginated(params),
+    queryFn: () => OrdemEntradaAdministrativoService(listPermId).getPaginated(params),
     placeholderData: (previousData) => previousData,
     staleTime: 0,
     gcTime: 10 * 60 * 1000,
@@ -73,7 +73,7 @@ export function usePrefetchAdjacentOrdemEntrada(
     const params: OrdemEntradaPaginatedRequest = { ...base, pageNumber: page - 1 }
     await queryClient.prefetchQuery({
       queryKey: [...ORDEM_ENTRADA_PAGINATED_QUERY_KEY, params],
-      queryFn: () => AdmissaoAdministrativoService(listPermId).getOrdemEntradaPaginated(params),
+      queryFn: () => OrdemEntradaAdministrativoService(listPermId).getPaginated(params),
     })
   }
 
@@ -81,7 +81,7 @@ export function usePrefetchAdjacentOrdemEntrada(
     const params: OrdemEntradaPaginatedRequest = { ...base, pageNumber: page + 1 }
     await queryClient.prefetchQuery({
       queryKey: [...ORDEM_ENTRADA_PAGINATED_QUERY_KEY, params],
-      queryFn: () => AdmissaoAdministrativoService(listPermId).getOrdemEntradaPaginated(params),
+      queryFn: () => OrdemEntradaAdministrativoService(listPermId).getPaginated(params),
     })
   }
 

@@ -53,9 +53,10 @@ export class MarcacaoConsultaClient extends BaseApiClient {
 
   /** Marcações do dia do médico logado (backend resolve médico por UserId). */
   public async getConsultasDoDia(
-    data: string
+    data: string,
+    desmarcadas = false
   ): Promise<ResponseApi<GSResponse<MarcacaoConsultaTableDTO[]>>> {
-    const url = `${BASE}/consultas-do-dia?data=${encodeURIComponent(data)}`
+    const url = `${BASE}/consultas-do-dia?data=${encodeURIComponent(data)}&desmarcadas=${desmarcadas}`
     return this.httpClient.getRequest<GSResponse<MarcacaoConsultaTableDTO[]>>(
       state.URL,
       url

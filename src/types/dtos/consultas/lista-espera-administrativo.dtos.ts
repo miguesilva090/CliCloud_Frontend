@@ -91,6 +91,6 @@ export type ConverterListaEsperaMarcacaoRequest = {
 }
 
 export type ConverterListaEsperaMarcacaoResultDTO = {
-  marcacaoId: string
   listaEsperaId: string
+  consultaMarcacaoId: string
 }

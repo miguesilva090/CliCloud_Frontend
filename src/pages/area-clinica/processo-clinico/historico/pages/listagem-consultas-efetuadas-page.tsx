@@ -12,6 +12,7 @@ import { DataTable, type DataTableAction } from '@/components/shared/data-table'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
+import { Input } from '@/components/ui/input'
 import {
   Popover,
   PopoverContent,
@@ -25,12 +26,23 @@ import type { ConsultaTableDTO } from '@/types/dtos/consultas/consulta.dtos'
 
 const DEFAULT_FILTERS: Array<{ id: string; value: string }> = [
   { id: 'efectuado', value: 'true' },
+  { id: 'medico_logado', value: 'true' },
 ]
 
 function buildFilters(
-  selectedDate: Date | null
+  selectedDate: Date | null,
+  utenteNumeroDe: string,
+  utenteNumeroAte: string
 ): Array<{ id: string; value: string }> {
   const f = [...DEFAULT_FILTERS]
+  const numeroDe = utenteNumeroDe.trim()
+  const numeroAte = utenteNumeroAte.trim()
+  if (numeroDe) {
+    f.push({ id: 'utente_numero_de', value: numeroDe })
+  }
+  if (numeroAte) {
+    f.push({ id: 'utente_numero_ate', value: numeroAte })
+  }
   if (selectedDate) {
     const dateStr = format(selectedDate, 'yyyy-MM-dd')
     f.push({ id: 'data_de', value: dateStr }, { id: 'data_ate', value: dateStr })
@@ -52,6 +64,8 @@ function ListagemConsultasEfetuadasFilterControls(_: {
   return null
 }
 
+
+
 const columns: Array<
   ColumnDef<ConsultaTableDTO> & DataTableColumnDef<ConsultaTableDTO>
 > = [
@@ -66,9 +80,17 @@ const columns: Array<
   {
     accessorKey: 'horaInic',
     id: 'horaInic',
-    header: 'Hora',
+    header: 'Hora Início',
     cell: ({ row }: CellContext<ConsultaTableDTO, unknown>) =>
       row.original.horaInic ?? '—',
+    meta: { align: 'left' as const, width: 'w-[90px]' },
+  },
+  {
+    accessorKey: 'horaFim',
+    id: 'horaFim',
+    header: 'Hora Fim',
+    cell: ({ row }: CellContext<ConsultaTableDTO, unknown>) =>
+      row.original.horaFim ?? '—',
     meta: { align: 'left' as const, width: 'w-[90px]' },
   },
   {
@@ -90,15 +112,6 @@ const columns: Array<
     meta: { align: 'left' as const, width: 'w-[220px]' },
   },
   {
-    accessorKey: 'organismoCodigo',
-    id: 'organismoCodigo',
-    header: 'Cód. Organismo',
-    enableSorting: false,
-    cell: ({ row }: CellContext<ConsultaTableDTO, unknown>) =>
-      row.original.organismoId ?? '—',
-    meta: { align: 'left' as const, width: 'w-[130px]' },
-  },
-  {
     accessorKey: 'organismoNome',
     id: 'organismoNome',
     header: 'Organismo',
@@ -107,6 +120,42 @@ const columns: Array<
       row.original.organismoNome ?? '—',
     meta: { align: 'left' as const, width: 'w-[220px]' },
   },
+  {
+    accessorKey: 'medicoNome',
+    id: 'medicoNome',
+    header: 'Médico',
+    enableSorting: false,
+    cell: ({ row }: CellContext<ConsultaTableDTO, unknown>) =>
+      row.original.medicoNome ?? '—',
+    meta: { align: 'left' as const, width: 'w-[180px]' },
+  },
+  {
+    accessorKey: 'tipoConsultaDesignacao',
+    id: 'tipoConsultaDesignacao',
+    header: 'Tipo',
+    enableSorting: false,
+    cell: ({ row }: CellContext<ConsultaTableDTO, unknown>) =>
+      row.original.tipoConsultaDesignacao ?? '—',
+    meta: { align: 'left' as const, width: 'w-[160px]' },
+  },
+  {
+    accessorKey: 'diagnostico',
+    id: 'diagnostico',
+    header: 'Diagnóstico',
+    enableSorting: false,
+    cell: ({ row }: CellContext<ConsultaTableDTO, unknown>) =>
+      row.original.diagnostico ?? '—',
+    meta: { align: 'left' as const, width: 'w-[240px]' },
+  },
+  {
+    accessorKey: 'statusConsultaLabel',
+    id: 'statusConsultaLabel',
+    header: 'Estado',
+    enableSorting: false,
+    cell: ({ row }: CellContext<ConsultaTableDTO, unknown>) =>
+      row.original.statusConsultaLabel ?? '—',
+    meta: { align: 'left' as const, width: 'w-[130px]' },
+  },
 ]
 
 export function ListagemConsultasEfetuadasPage() {
@@ -114,11 +163,18 @@ export function ListagemConsultasEfetuadasPage() {
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [sorting, setSorting] = useState<Array<{ id: string; desc: boolean }>>([])
+  const [sorting, setSorting] = useState<Array<{ id: string; desc: boolean }>>([
+    { id: 'data', desc: false },
+  ])
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [utenteNumeroDe, setUtenteNumeroDe] = useState('')
+  const [utenteNumeroAte, setUtenteNumeroAte] = useState('')
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
 
-  const filters = useMemo(() => buildFilters(selectedDate), [selectedDate])
+  const filters = useMemo(
+    () => buildFilters(selectedDate, utenteNumeroDe, utenteNumeroAte),
+    [selectedDate, utenteNumeroAte, utenteNumeroDe]
+  )
 
   const {
     data,
@@ -129,7 +185,7 @@ export function ListagemConsultasEfetuadasPage() {
 
   useEffect(() => {
     setPage(1)
-  }, [selectedDate])
+  }, [selectedDate, utenteNumeroAte, utenteNumeroDe])
 
   useEffect(() => {
     setIsDatePickerOpen(false)
@@ -145,8 +201,10 @@ export function ListagemConsultasEfetuadasPage() {
     queryClient.invalidateQueries({ queryKey: ['consultas-efetuadas-paginated'] })
   }
 
-  const clearDate = () => {
+  const clearFilters = () => {
     setSelectedDate(null)
+    setUtenteNumeroDe('')
+    setUtenteNumeroAte('')
   }
 
   const toolbarActions: DataTableAction[] = useMemo(
@@ -162,7 +220,25 @@ export function ListagemConsultasEfetuadasPage() {
   )
 
   const toolbarEndPrefix = (
-    <>
+    <div className='flex flex-wrap items-center gap-2'>
+      <Input
+        type='number'
+        inputMode='numeric'
+        min={0}
+        className='h-9 w-[130px]'
+        placeholder='Nº utente de'
+        value={utenteNumeroDe}
+        onChange={(e) => setUtenteNumeroDe(e.target.value)}
+      />
+      <Input
+        type='number'
+        inputMode='numeric'
+        min={0}
+        className='h-9 w-[130px]'
+        placeholder='Nº utente até'
+        value={utenteNumeroAte}
+        onChange={(e) => setUtenteNumeroAte(e.target.value)}
+      />
       <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -186,12 +262,12 @@ export function ListagemConsultasEfetuadasPage() {
           />
         </PopoverContent>
       </Popover>
-      {selectedDate ? (
-        <Button variant='outline' size='sm' onClick={clearDate}>
-          Limpar data
+      {selectedDate || utenteNumeroDe || utenteNumeroAte ? (
+        <Button variant='outline' size='sm' onClick={clearFilters}>
+          Limpar filtros
         </Button>
       ) : null}
-    </>
+    </div>
   )
 
   return (

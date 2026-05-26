@@ -92,6 +92,11 @@ const NovaAdmissaoPage = lazy(() =>
     '@/pages/area-administrativa/consultas/admissoes/pages/nova-admissao-page'
   ).then((m) => ({ default: m.NovaAdmissaoPage }))
 )
+const EditarAdmissaoPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/consultas/admissoes/pages/editar-admissao-page'
+  ).then((m) => ({ default: m.EditarAdmissaoPage }))
+)
 const FechoDiarioPage = lazy(() =>
   import('@/pages/area-administrativa/consultas/fecho-diario/pages/fecho-diario-page').then(
     (m) => ({ default: m.FechoDiarioPage })
@@ -361,6 +366,20 @@ export const areaAdministrativaRoutes = [
     ),
     manageWindow: true,
     windowName: 'Nova admissão',
+  },
+  {
+    path: 'area-administrativa/consultas/admissoes/:id',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.admissoes.id}
+        actionType={actionTypes.AuthChg}
+      >
+        <EditarAdmissaoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Editar admissão',
   },
   {
     path: 'area-administrativa/consultas/admissoes/pendentes',

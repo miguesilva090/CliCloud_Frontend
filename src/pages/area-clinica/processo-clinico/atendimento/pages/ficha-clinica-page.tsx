@@ -46,7 +46,12 @@ import { MedicosService } from '@/lib/services/saude/medicos-service'
 import { SeparadoresGestaoService } from '@/lib/services/processo-clinico/separadores-gestao-service'
 import type { SeparadorFichaClinicaDTO } from '@/types/dtos/processo-clinico/separadores-gestao.dtos'
 
-type FichaClinicaLocationState = { utenteId?: string; consultaId?: string } | null
+type FichaClinicaLocationState = {
+  utenteId?: string
+  consultaId?: string
+  consultaMarcacaoId?: string
+  admissaoId?: string
+} | null
 
 export function FichaClinicaPage() {
   const queryClient = useQueryClient()
@@ -58,10 +63,16 @@ export function FichaClinicaPage() {
 
   const utenteIdFromState = stateFromNav?.utenteId
   const consultaIdFromState = stateFromNav?.consultaId
+  const consultaMarcacaoIdFromState = stateFromNav?.consultaMarcacaoId
+  const admissaoIdFromState = stateFromNav?.admissaoId
   const utenteIdFromQuery = searchParams.get('utenteId') ?? ''
   const consultaIdFromQuery = searchParams.get('consultaId') ?? undefined
+  const consultaMarcacaoIdFromQuery = searchParams.get('consultaMarcacaoId') ?? undefined
+  const admissaoIdFromQuery = searchParams.get('admissaoId') ?? undefined
   const id = (utenteIdFromState ?? utenteIdFromQuery)?.trim() ?? ''
   const consultaId = consultaIdFromState ?? consultaIdFromQuery
+  const consultaMarcacaoId = consultaMarcacaoIdFromState ?? consultaMarcacaoIdFromQuery
+  const admissaoId = admissaoIdFromState ?? admissaoIdFromQuery
 
   const hasInitialUtente = !!id
   const [utenteId, setUtenteId] = useState<string>(id)
@@ -195,7 +206,7 @@ export function FichaClinicaPage() {
   }, [utenteId])
 
   const hoje = new Date()
-  const filtersHoje = buildConsultaFilters(utenteId, hoje)
+  const filtersHoje = buildConsultaFilters(utenteId, hoje, { apenasEfetuadas: false })
   const {
     data: consultasHojeData,
     isLoading: isLoadingHoje,
@@ -213,6 +224,8 @@ export function FichaClinicaPage() {
 
   const refreshConsultas = () => {
     queryClient.invalidateQueries({ queryKey: ['consultas-efetuadas-paginated'] })
+    queryClient.invalidateQueries({ queryKey: ['consultas-do-dia-atendimento'] })
+    queryClient.invalidateQueries({ queryKey: ['servicos-consulta'] })
   }
 
   const finalizarConsultaMutation = useMutation({
@@ -266,12 +279,16 @@ export function FichaClinicaPage() {
     params.set('utenteId', utenteId)
     if (instanceId) params.set('instanceId', instanceId)
     if (consultaId) params.set('consultaId', consultaId)
+    if (consultaMarcacaoId) params.set('consultaMarcacaoId', consultaMarcacaoId)
+    if (admissaoId) params.set('admissaoId', admissaoId)
     navigate(`${location.pathname}?${params.toString()}`, { replace: true })
     const windowId = getCurrentWindowId()
     if (windowId) {
       const searchParamsObj: Record<string, string> = { utenteId }
       if (instanceId) searchParamsObj.instanceId = instanceId
       if (consultaId) searchParamsObj.consultaId = consultaId
+      if (consultaMarcacaoId) searchParamsObj.consultaMarcacaoId = consultaMarcacaoId
+      if (admissaoId) searchParamsObj.admissaoId = admissaoId
       updateWindowState(windowId, { searchParams: searchParamsObj })
     }
   }

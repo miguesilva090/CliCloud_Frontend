@@ -14,7 +14,7 @@ import {
   type PageFilter,
 } from '@/utils/page-data-utils'
 
-const permId = modules.areaAdministrativa.permissions.consultas.id
+const permId = modules.areaAdministrativa.permissions.listaEsperaConsultas.id
 
 type Props = {
   filters: PageFilter[]
@@ -71,7 +71,7 @@ export function ListaEsperaFilterControls({ filters, onFiltersChange }: Props) {
 
   const prioridadeItems = useMemo(() => {
     const list = prioridadesQuery.data ?? []
-    return list.map((p) => ({ value: p.id, label: p.descricao ?? p.nome ?? '' }))
+    return list.map((p) => ({ value: p.id, label: p.descricao ?? '' }))
   }, [prioridadesQuery.data])
 
   const utenteItems = useMemo(() => {

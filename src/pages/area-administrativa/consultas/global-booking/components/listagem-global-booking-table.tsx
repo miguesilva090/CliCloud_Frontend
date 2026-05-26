@@ -1,5 +1,5 @@
 import { DataTable } from '@/components/shared/data-table'
-import type { DataTableAction } from '@/components/shared/data-table-types'
+import type { DataTableAction } from '@/components/shared/data-table'
 import { GlobalBookingFilterControls } from './global-booking-filter-controls'
 import { getGlobalBookingColumns } from './listagem-global-booking-table.columns'
 import type { PedidoConsultaTableDTO } from '@/types/dtos/consultas/pedidos-consulta-administrativo.dtos'

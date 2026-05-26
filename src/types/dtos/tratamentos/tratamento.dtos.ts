@@ -10,6 +10,11 @@ export interface TratamentoTableDTO {
   dataInic?: string | null
   dataFim?: string | null
   numSessao?: number | null
+  nFaltMax?: number | null
+  nFaltComax?: number | null
+  nFalta?: number | null
+  nFaltaCons?: number | null
+  nAltSess?: number | null
   pago?: number | null
   faturado?: number | null
   suspenso?: number | null

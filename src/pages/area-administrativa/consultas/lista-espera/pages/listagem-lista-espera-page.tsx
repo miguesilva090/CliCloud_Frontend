@@ -29,7 +29,7 @@ import {
   buildFiltersWithValue,
 } from '@/utils/page-data-utils'
 
-const listPermId = modules.areaAdministrativa.permissions.consultas.id
+const listPermId = modules.areaAdministrativa.permissions.listaEsperaConsultas.id
 
 export function ListagemListaEsperaPage() {
   const navigate = useNavigate()
@@ -75,7 +75,7 @@ export function ListagemListaEsperaPage() {
     medicoUrlDoneRef.current = true
     applyFiltersIfChanged(
       filters,
-      buildFiltersWithValue(filters, 'medicoId', medicoId),
+      buildFiltersWithValue(filters, 'medicoAgendaId', medicoId),
       handleFiltersChange
     )
   }, [searchParams, filters, handleFiltersChange])

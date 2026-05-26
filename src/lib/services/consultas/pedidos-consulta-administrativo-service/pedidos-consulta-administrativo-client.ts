@@ -58,9 +58,10 @@ export class PedidosConsultaAdministrativoClient extends BaseApiClient {
     codigo: number,
     forcar = false
   ): Promise<ResponseApi<GSResponse<string>>> {
-    return this.httpClient.postRequest(
+    return this.httpClient.postRequest<undefined, GSResponse<string>>(
       state.URL,
-      `${BASE}/${codigo}/criar-utente?forcar=${forcar ? 'true' : 'false'}`
+      `${BASE}/${codigo}/criar-utente?forcar=${forcar ? 'true' : 'false'}`,
+      undefined
     )
   }
 
@@ -75,13 +76,21 @@ export class PedidosConsultaAdministrativoClient extends BaseApiClient {
     codigo: number,
     tipo: number
   ): Promise<ResponseApi<GSResponse<number>>> {
-    return this.httpClient.postRequest(state.URL, `${BASE}/${codigo}/enviar-email?tipo=${tipo}`)
+    return this.httpClient.postRequest<undefined, GSResponse<number>>(
+      state.URL,
+      `${BASE}/${codigo}/enviar-email?tipo=${tipo}`,
+      undefined
+    )
   }
 
   public async enviarSms(
     codigo: number,
     tipo: number
   ): Promise<ResponseApi<GSResponse<number>>> {
-    return this.httpClient.postRequest(state.URL, `${BASE}/${codigo}/enviar-sms?tipo=${tipo}`)
+    return this.httpClient.postRequest<undefined, GSResponse<number>>(
+      state.URL,
+      `${BASE}/${codigo}/enviar-sms?tipo=${tipo}`,
+      undefined
+    )
   }
 }

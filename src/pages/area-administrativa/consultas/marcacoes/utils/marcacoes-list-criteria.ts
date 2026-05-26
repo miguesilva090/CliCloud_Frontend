@@ -6,6 +6,8 @@ export type MarcacoesListCriteria = {
   dataAte: string
   medicoId: string
   medicoLabel: string
+  salaId: string
+  salaLabel: string
   especialidadeId: string
   especialidadeLabel: string
 }
@@ -19,6 +21,8 @@ export function defaultMarcacoesListCriteria(): MarcacoesListCriteria {
     dataAte: format(weekEnd, 'yyyy-MM-dd'),
     medicoId: '',
     medicoLabel: '',
+    salaId: '',
+    salaLabel: '',
     especialidadeId: '',
     especialidadeLabel: '',
   }

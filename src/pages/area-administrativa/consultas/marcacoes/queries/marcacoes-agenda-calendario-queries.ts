@@ -17,11 +17,13 @@ export function useMarcacoesAgendaCalendario(
       criteria.dataDe,
       criteria.dataAte,
       criteria.medicoId,
+      criteria.salaId,
       criteria.especialidadeId,
     ],
     queryFn: async (): Promise<MarcacaoCalendarioDTO> => {
       const res = await MarcacoesAdministrativoService(listPermId).getCalendario({
         medicoId: criteria.medicoId!,
+        salaId: criteria.salaId || undefined,
         especialidadeId: criteria.especialidadeId || undefined,
         dataDe: `${criteria.dataDe}T00:00:00`,
         dataAte: `${criteria.dataAte}T23:59:59`,
@@ -36,7 +38,10 @@ export function useMarcacoesAgendaCalendario(
       )
     },
     enabled:
-      enabled && !!criteria.medicoId && !!criteria.dataDe && !!criteria.dataAte,
+      enabled
+      && !!criteria.dataDe
+      && !!criteria.dataAte
+      && !!criteria.medicoId,
     staleTime: 0,
   })
 }

@@ -2,17 +2,14 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
-import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { cn } from '@/lib/utils'
 import { modules } from '@/config/modules'
 import { MedicosService } from '@/lib/services/saude/medicos-service'
 import { EspecialidadeService } from '@/lib/services/especialidades/especialidade-service'
+import { SalaService } from '@/lib/services/consultas/sala-service'
+import { ClinicaService } from '@/lib/services/core/clinica-service'
+import type { SalaTableDTO } from '@/types/dtos/consultas/sala.dtos'
 import type { MarcacoesListCriteria } from '../utils/marcacoes-list-criteria'
-import {
-  MARCACOES_AGENDA_TEAL,
-  MARCACOES_AGENDA_TEAL_ACTIVE,
-} from '../utils/marcacoes-agenda-cores'
 
 const permId = modules.areaAdministrativa.permissions.consultas.id
 
@@ -24,7 +21,11 @@ type Props = {
 /** Legado: uma linha de especialidade + botões de médico (sem dropdown duplicado). */
 export function MarcacoesAgendaMedicosToolbar({ criteria, onChange }: Props) {
   const [espSearch, setEspSearch] = useState('')
+  const [medSearch, setMedSearch] = useState('')
+  const [salaSearch, setSalaSearch] = useState('')
   const [debouncedEsp] = useDebounce(espSearch, 300)
+  const [debouncedMed] = useDebounce(medSearch, 300)
+  const [debouncedSala] = useDebounce(salaSearch, 300)
 
   const espQuery = useQuery({
     queryKey: ['marcacoes-agenda', 'especialidades', debouncedEsp],
@@ -32,9 +33,28 @@ export function MarcacoesAgendaMedicosToolbar({ criteria, onChange }: Props) {
   })
 
   const medicosQuery = useQuery({
-    queryKey: ['marcacoes-agenda', 'medicos-todos'],
-    queryFn: () => MedicosService(permId).getMedicosLight(''),
+    queryKey: ['marcacoes-agenda', 'medicos', debouncedMed],
+    queryFn: () => MedicosService(permId).getMedicosLight(debouncedMed),
     enabled: !!criteria.especialidadeId,
+  })
+
+  const salasQuery = useQuery({
+    queryKey: ['marcacoes-agenda', 'salas'],
+    queryFn: async () => {
+      const res = await SalaService(permId).getSalasPaginated({
+        pageNumber: 1,
+        pageSize: 300,
+        sorting: [{ id: 'nome', desc: false }],
+      })
+      const payload = res.info?.data as { data?: SalaTableDTO[] } | SalaTableDTO[] | undefined
+      if (Array.isArray(payload)) return payload
+      return payload?.data ?? []
+    },
+  })
+
+  const clinicaQuery = useQuery({
+    queryKey: ['marcacoes-agenda', 'clinica-current'],
+    queryFn: () => ClinicaService(permId).getClinicaCurrent(),
   })
 
   const espItems = useMemo(() => {
@@ -42,19 +62,54 @@ export function MarcacoesAgendaMedicosToolbar({ criteria, onChange }: Props) {
     return list.map((e) => ({ value: e.id, label: e.nome }))
   }, [espQuery.data])
 
-  const medicos = useMemo(() => {
+  const medicoItems = useMemo(() => {
     const list = (medicosQuery.data?.info?.data ?? []) as Array<{
       id: string
       nome: string
       especialidadeId?: string | null
     }>
     if (!criteria.especialidadeId) return []
-    return list
+    const items = list
       .filter((m) => m.especialidadeId === criteria.especialidadeId)
       .sort((a, b) => a.nome.localeCompare(b.nome, 'pt'))
-  }, [medicosQuery.data, criteria.especialidadeId])
+      .map((m) => ({ value: m.id, label: m.nome }))
+
+    if (
+      criteria.medicoId &&
+      criteria.medicoLabel &&
+      !items.some((item) => item.value === criteria.medicoId)
+    ) {
+      items.unshift({ value: criteria.medicoId, label: criteria.medicoLabel })
+    }
+
+    return items
+  }, [
+    medicosQuery.data,
+    criteria.especialidadeId,
+    criteria.medicoId,
+    criteria.medicoLabel,
+  ])
+
+  const salaItems = useMemo(() => {
+    const keyword = debouncedSala.toLocaleLowerCase('pt')
+    const items: Array<{ value: string; label: string; secondary?: string }> = (salasQuery.data ?? [])
+      .filter((s) => !keyword || s.nome.toLocaleLowerCase('pt').includes(keyword))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt'))
+      .map((s) => ({ value: s.id, label: s.nome, secondary: String(s.numeroSala) }))
+
+    if (
+      criteria.salaId &&
+      criteria.salaLabel &&
+      !items.some((item) => item.value === criteria.salaId)
+    ) {
+      items.unshift({ value: criteria.salaId, label: criteria.salaLabel, secondary: undefined })
+    }
+
+    return items
+  }, [salasQuery.data, debouncedSala, criteria.salaId, criteria.salaLabel])
 
   const patch = (partial: Partial<MarcacoesListCriteria>) => onChange({ ...criteria, ...partial })
+  const gestaoSalasAtiva = clinicaQuery.data?.info?.data?.gestaoSalas === true
 
   return (
     <div className='flex flex-col gap-2 border-b border-border/40 bg-white px-3 py-2.5 sm:flex-row sm:items-center'>
@@ -66,6 +121,7 @@ export function MarcacoesAgendaMedicosToolbar({ criteria, onChange }: Props) {
           value={criteria.especialidadeId}
           onChange={(id) => {
             const label = espItems.find((i) => i.value === id)?.label ?? ''
+            setMedSearch('')
             patch({
               especialidadeId: id,
               especialidadeLabel: label,
@@ -83,41 +139,47 @@ export function MarcacoesAgendaMedicosToolbar({ criteria, onChange }: Props) {
         />
       </div>
 
+      {gestaoSalasAtiva ? (
+        <div className='flex w-full min-w-0 flex-col gap-1 sm:max-w-md'>
+          <Label className='text-[11px] font-semibold uppercase tracking-wide text-muted-foreground'>
+            Sala
+          </Label>
+          <AsyncCombobox
+            value={criteria.salaId}
+            onChange={(id) => {
+              const label = salaItems.find((item) => item.value === id)?.label ?? ''
+              patch({ salaId: id, salaLabel: label })
+            }}
+            searchValue={salaSearch}
+            onSearchValueChange={setSalaSearch}
+            items={salaItems}
+            isLoading={salasQuery.isFetching}
+            placeholder='Selecione a sala…'
+            searchPlaceholder='Pesquisar sala…'
+            emptyText='Sem salas'
+          />
+        </div>
+      ) : null}
+
       {criteria.especialidadeId ? (
-        <div className='flex min-w-0 flex-1 flex-col gap-1'>
+        <div className='flex w-full min-w-0 flex-col gap-1 sm:max-w-md'>
           <Label className='text-[11px] font-semibold uppercase tracking-wide text-muted-foreground'>
             Médico
           </Label>
-          <div className='flex flex-wrap gap-1'>
-            {medicos.length === 0 ? (
-              <span className='text-sm text-muted-foreground'>Sem médicos nesta especialidade.</span>
-            ) : (
-              medicos.map((m) => {
-                const active = criteria.medicoId === m.id
-                return (
-                  <Button
-                    key={m.id}
-                    type='button'
-                    size='sm'
-                    variant={active ? 'default' : 'secondary'}
-                    className={cn(
-                      'h-8 max-w-[200px] truncate rounded border-0 px-2.5 text-xs font-semibold text-white shadow-sm',
-                      active ? 'hover:opacity-95' : 'opacity-90 hover:opacity-100'
-                    )}
-                    style={{
-                      backgroundColor: active
-                        ? MARCACOES_AGENDA_TEAL_ACTIVE
-                        : MARCACOES_AGENDA_TEAL,
-                    }}
-                    title={m.nome}
-                    onClick={() => patch({ medicoId: m.id, medicoLabel: m.nome })}
-                  >
-                    {m.nome}
-                  </Button>
-                )
-              })
-            )}
-          </div>
+          <AsyncCombobox
+            value={criteria.medicoId}
+            onChange={(id) => {
+              const label = medicoItems.find((item) => item.value === id)?.label ?? ''
+              patch({ medicoId: id, medicoLabel: label })
+            }}
+            searchValue={medSearch}
+            onSearchValueChange={setMedSearch}
+            items={medicoItems}
+            isLoading={medicosQuery.isFetching}
+            placeholder='Selecione o médico…'
+            searchPlaceholder='Pesquisar médico…'
+            emptyText='Sem médicos nesta especialidade'
+          />
         </div>
       ) : (
         <p className='flex flex-1 items-end pb-1 text-sm text-muted-foreground sm:pb-2'>

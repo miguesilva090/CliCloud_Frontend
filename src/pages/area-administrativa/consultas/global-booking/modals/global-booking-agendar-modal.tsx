@@ -164,9 +164,9 @@ export function GlobalBookingAgendarModal({
         const [pedidoRes, espRes, orgRes, tiposRes, tiposAdmRes] = await Promise.all([
           PedidosConsultaAdministrativoService(listPermId).getById(codigo),
           EspecialidadeService(listPermId).getEspecialidadesLight(''),
-          OrganismoService(listPermId).getOrganismosLight(''),
-          TipoConsultaService(listPermId).getTiposConsultaLight(''),
-          TipoAdmissaoService(listPermId).getTiposAdmissaoLight(''),
+          OrganismoService(listPermId).getOrganismoLight(''),
+          TipoConsultaService(listPermId).getAllTiposConsulta({ filters: [] }),
+          TipoAdmissaoService(listPermId).getAllTiposAdmissao(),
         ])
 
         if (cancelled || pedidoRes.info?.status !== ResponseStatus.Success || !pedidoRes.info.data) {
@@ -271,7 +271,7 @@ export function GlobalBookingAgendarModal({
     (m: { id: string; nome: string }) => ({ value: m.id, label: m.nome })
   )
   const utenteItems = (utentesQuery.data?.info?.data ?? []).map(
-    (u: { id: string; nome: string; numeroUtente?: string }) => ({
+    (u: { id: string; nome: string; numeroUtente?: string | null }) => ({
       value: u.id,
       label: [u.numeroUtente, u.nome].filter(Boolean).join(' — '),
     })
@@ -352,7 +352,8 @@ export function GlobalBookingAgendarModal({
                 items={utenteItems}
                 placeholder='Deixar vazio para criar ficha'
                 searchPlaceholder='Pesquisar utente…'
-                onSearchChange={setUtSearch}
+                searchValue={utSearch}
+                onSearchValueChange={setUtSearch}
               />
             </div>
             <div>
@@ -363,7 +364,8 @@ export function GlobalBookingAgendarModal({
                 items={medicoItems}
                 placeholder='Médico…'
                 searchPlaceholder='Pesquisar…'
-                onSearchChange={setMedSearch}
+                searchValue={medSearch}
+                onSearchValueChange={setMedSearch}
               />
             </div>
             <div>
@@ -374,7 +376,8 @@ export function GlobalBookingAgendarModal({
                 items={espItems}
                 placeholder={pedido?.especialidade ?? 'Especialidade…'}
                 searchPlaceholder='Pesquisar…'
-                onSearchChange={() => {}}
+                searchValue=''
+                onSearchValueChange={() => {}}
               />
             </div>
             <div>
@@ -385,7 +388,8 @@ export function GlobalBookingAgendarModal({
                 items={orgItems}
                 placeholder='Organismo…'
                 searchPlaceholder='Pesquisar…'
-                onSearchChange={() => {}}
+                searchValue=''
+                onSearchValueChange={() => {}}
               />
             </div>
             <div>
@@ -396,7 +400,8 @@ export function GlobalBookingAgendarModal({
                 items={tipoConsultaItems}
                 placeholder='Tipo consulta…'
                 searchPlaceholder='Pesquisar…'
-                onSearchChange={() => {}}
+                searchValue=''
+                onSearchValueChange={() => {}}
               />
             </div>
             <div>
@@ -407,7 +412,8 @@ export function GlobalBookingAgendarModal({
                 items={tipoAdmissaoItems}
                 placeholder='Tipo admissão…'
                 searchPlaceholder='Pesquisar…'
-                onSearchChange={() => {}}
+                searchValue=''
+                onSearchValueChange={() => {}}
               />
             </div>
             <div className='grid grid-cols-2 gap-2'>

@@ -1,5 +1,4 @@
 import { MarcacoesAdministrativoService } from '@/lib/services/consultas/marcacoes-administrativo-service'
-import { ResponseStatus } from '@/types/api/responses'
 import type { MarcacaoAdministrativoTableDTO } from '@/types/dtos/consultas/marcacoes-administrativo.dtos'
 import type { MarcacoesListCriteria } from './marcacoes-list-criteria'
 
@@ -58,11 +57,11 @@ export async function exportMarcacoesRelatorioCsv(
   }
 
   const res = await MarcacoesAdministrativoService(listPermId).getPaginated(params)
-  if (res.info?.status !== ResponseStatus.Success || !res.info.data) {
+  if (!res.info?.data) {
     return { ok: false, message: 'Não foi possível obter marcações.' }
   }
 
-  const items = res.info.data?.data ?? []
+  const items = res.info.data ?? []
   const rows = items.map((r: MarcacaoAdministrativoTableDTO) => [
     r.data ? String(r.data).slice(0, 10) : '',
     r.horaInicio ?? '',

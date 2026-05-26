@@ -178,7 +178,7 @@ export function ListagemGlobalBookingPage() {
   return (
     <AreaComumListagemPageShell title={PAGE_TITLE}>
       <DashboardPageContainer>
-        <PageHead title={PAGE_TITLE} description='Pedidos de consulta externos (portal/booking).' />
+        <PageHead title={PAGE_TITLE} />
         <GlobalBookingToolbarPresets
           filters={filters as PageFilter[]}
           onFiltersChange={handleFiltersChange}

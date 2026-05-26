@@ -14,17 +14,10 @@ import {
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
 import type { OrdemEntradaTableDTO } from '@/types/dtos/consultas/ordem-entrada.dtos'
-import type { AdmissaoTableDTO } from '@/types/dtos/consultas/admissao.dtos'
-import { AdmissaoAdministrativoService } from '@/lib/services/consultas/admissao-administrativo-service'
-import { ResponseStatus } from '@/types/api/responses'
-import { toast } from '@/utils/toast-utils'
 import { ListagemOrdemEntradaTable } from '../components/listagem-ordem-entrada-table'
-import { OrdemEntradaDefinirOrdemModal } from '../modals/ordem-entrada-definir-ordem-modal'
 import { OrdemEntradaAnularModal } from '../modals/ordem-entrada-anular-modal'
-import { AdmissaoViewEditModal } from '../../admissoes/modals/admissao-view-edit-modal'
+import { OrdemEntradaRegistoModal } from '../modals/ordem-entrada-registo-modal'
 import { AdmissaoObservacoesModal } from '../../admissoes/modals/admissao-observacoes-modal'
-import { AdmissaoDesmarcarModal } from '../../admissoes/modals/admissao-desmarcar-modal'
-import { ordemEntradaToAdmissaoTable } from '../utils/ordem-entrada-admissao-map'
 import {
   ORDEM_ENTRADA_PAGINATED_QUERY_KEY,
   useGetOrdemEntradaPaginated,
@@ -36,7 +29,7 @@ import { getDataTrabalhoIsoDate } from '@/lib/utils/data-trabalho'
 const listPermId = modules.areaAdministrativa.permissions.consultas.id
 const dataRef = getDataTrabalhoIsoDate()
 
-type AdmissaoModalMode = 'view' | 'edit' | 'create'
+type OrdemEntradaModalMode = 'view' | 'edit' | 'create'
 
 export function ListagemOrdemEntradaPage() {
   const navigate = useNavigate()
@@ -44,16 +37,13 @@ export function ListagemOrdemEntradaPage() {
   const { canView, canChange, canDelete, canAdd } =
     useAreaComumEntityListPermissions(listPermId)
   const queryClient = useQueryClient()
-  const [definirOpen, setDefinirOpen] = useState(false)
   const [anularOpen, setAnularOpen] = useState(false)
   const [selectedRow, setSelectedRow] = useState<OrdemEntradaTableDTO | null>(null)
-  const [admissaoModalOpen, setAdmissaoModalOpen] = useState(false)
-  const [admissaoModalMode, setAdmissaoModalMode] = useState<AdmissaoModalMode>('view')
-  const [admissaoRow, setAdmissaoRow] = useState<AdmissaoTableDTO | null>(null)
+  const [registoOpen, setRegistoOpen] = useState(false)
+  const [registoMode, setRegistoMode] = useState<OrdemEntradaModalMode>('view')
+  const [registoRow, setRegistoRow] = useState<OrdemEntradaTableDTO | null>(null)
   const [obsOpen, setObsOpen] = useState(false)
   const [obsRow, setObsRow] = useState<OrdemEntradaTableDTO | null>(null)
-  const [desmarcarOpen, setDesmarcarOpen] = useState(false)
-  const [desmarcarRow, setDesmarcarRow] = useState<OrdemEntradaTableDTO | null>(null)
 
   const {
     data,
@@ -82,26 +72,10 @@ export function ListagemOrdemEntradaPage() {
   const refresh = () =>
     void queryClient.invalidateQueries({ queryKey: ORDEM_ENTRADA_PAGINATED_QUERY_KEY })
 
-  const runAction = async (fn: () => Promise<unknown>, success: string) => {
-    try {
-      const res = (await fn()) as {
-        info?: { status?: ResponseStatus; messages?: Record<string, string[]> }
-      }
-      if (res.info?.status === ResponseStatus.Success) {
-        toast.success(success)
-        refresh()
-      } else {
-        toast.error(res.info?.messages?.['$']?.[0] ?? 'Operação falhou.')
-      }
-    } catch {
-      toast.error('Operação falhou.')
-    }
-  }
-
-  const openAdmissao = (row: OrdemEntradaTableDTO, mode: 'view' | 'edit') => {
-    setAdmissaoRow(ordemEntradaToAdmissaoTable(row))
-    setAdmissaoModalMode(mode)
-    setAdmissaoModalOpen(true)
+  const openRegisto = (row: OrdemEntradaTableDTO | null, mode: OrdemEntradaModalMode) => {
+    setRegistoRow(row)
+    setRegistoMode(mode)
+    setRegistoOpen(true)
   }
 
   const errorMessage =
@@ -145,27 +119,13 @@ export function ListagemOrdemEntradaPage() {
             canChange={canChange}
             canDelete={canDelete}
             consultasDesmarcadas={consultasDesmarcadas}
-            onDefinirOrdem={(row) => {
-              setSelectedRow(row)
-              setDefinirOpen(true)
-            }}
-            onAnularOrdem={(row) => {
-              setSelectedRow(row)
-              setAnularOpen(true)
-            }}
-            onTogglePresente={(row, value) =>
-              void runAction(
-                () => AdmissaoAdministrativoService(listPermId).confirmar(row.id, value),
-                value ? 'Presença confirmada.' : 'Presença desmarcada.'
-              )
-            }
-            onOpenView={(row) => openAdmissao(row, 'view')}
-            onOpenEdit={canChange ? (row) => openAdmissao(row, 'edit') : undefined}
+            onOpenView={(row) => openRegisto(row, 'view')}
+            onOpenEdit={canChange ? (row) => openRegisto(row, 'edit') : undefined}
             onOpenDelete={
               canDelete
                 ? (row) => {
-                    setDesmarcarRow(row)
-                    setDesmarcarOpen(true)
+                    setSelectedRow(row)
+                    setAnularOpen(true)
                   }
                 : undefined
             }
@@ -175,9 +135,7 @@ export function ListagemOrdemEntradaPage() {
             }}
             toolbarActions={[
               {
-                label: consultasDesmarcadas
-                  ? 'Consultas desmarcadas ✓'
-                  : 'Consultas desmarcadas',
+                label: consultasDesmarcadas ? 'Desmarcadas ✓' : 'Desmarcadas',
                 icon: <Eraser className='h-4 w-4' />,
                 onClick: () => {
                   applyFiltersIfChanged(
@@ -197,11 +155,7 @@ export function ListagemOrdemEntradaPage() {
                     {
                       label: 'Adicionar',
                       icon: <Plus className='h-4 w-4' />,
-                      onClick: () => {
-                        setAdmissaoRow(null)
-                        setAdmissaoModalMode('create')
-                        setAdmissaoModalOpen(true)
-                      },
+                      onClick: () => openRegisto(null, 'create'),
                       variant: 'destructive' as const,
                     },
                   ]
@@ -217,14 +171,6 @@ export function ListagemOrdemEntradaPage() {
         </AreaComumListagemPageShell>
       </DashboardPageContainer>
 
-      <OrdemEntradaDefinirOrdemModal
-        open={definirOpen}
-        onOpenChange={setDefinirOpen}
-        row={selectedRow}
-        listPermId={listPermId}
-        onSaved={refresh}
-      />
-
       <OrdemEntradaAnularModal
         open={anularOpen}
         onOpenChange={setAnularOpen}
@@ -233,11 +179,12 @@ export function ListagemOrdemEntradaPage() {
         onSaved={refresh}
       />
 
-      <AdmissaoViewEditModal
-        open={admissaoModalOpen}
-        onOpenChange={setAdmissaoModalOpen}
-        mode={admissaoModalMode}
-        row={admissaoRow}
+      <OrdemEntradaRegistoModal
+        open={registoOpen}
+        onOpenChange={setRegistoOpen}
+        mode={registoMode}
+        row={registoRow}
+        listPermId={listPermId}
         onSaved={refresh}
       />
 
@@ -253,14 +200,6 @@ export function ListagemOrdemEntradaPage() {
         listPermId={listPermId}
         readOnly={!canChange}
         onSaved={refresh}
-      />
-
-      <AdmissaoDesmarcarModal
-        open={desmarcarOpen}
-        onOpenChange={setDesmarcarOpen}
-        row={desmarcarRow ? ordemEntradaToAdmissaoTable(desmarcarRow) : null}
-        listPermId={listPermId}
-        onDesmarcada={refresh}
       />
     </>
   )

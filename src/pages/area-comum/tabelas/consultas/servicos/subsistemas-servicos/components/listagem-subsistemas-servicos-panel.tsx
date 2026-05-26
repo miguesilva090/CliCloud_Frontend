@@ -108,7 +108,7 @@ export function ListagemSubsistemasServicosPanel({
     defaultFilters,
   })
 
-  const subsistemas = data?.info?.data ?? []
+  const subsistemas = (data?.info?.data ?? []) as SubsistemaServicoTableDTO[]
   const pageCount = data?.info?.totalPages ?? 0
   const totalRows = data?.info?.totalCount ?? 0
   const errorMessage =

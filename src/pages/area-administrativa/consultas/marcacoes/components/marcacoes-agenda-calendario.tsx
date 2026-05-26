@@ -39,13 +39,29 @@ import {
 import { formatDiaCabecalhoLegado } from '../utils/marcacoes-agenda-format'
 import { toTimeSpan } from '../modals/marcacao-administrativo-form-utils'
 import {
-  MARCACOES_AGENDA_TEAL,
-  MARCACOES_AGENDA_TEAL_ACTIVE,
+  MARCACOES_AGENDA_VIEW_ACTIVE,
+  MARCACOES_AGENDA_VIEW_IDLE,
 } from '../utils/marcacoes-agenda-cores'
 
 import './marcacoes-agenda-calendario.css'
 
 type AgendaViewId = 'timeGridDay' | 'timeGridWeek' | 'dayGridMonth'
+
+function getApiErrorMessage(info: unknown, fallback: string): string {
+  const data = info as { messages?: unknown } | undefined
+  const messages = data?.messages
+
+  if (typeof messages === 'string') return messages
+  if (Array.isArray(messages) && typeof messages[0] === 'string') return messages[0]
+  if (messages && typeof messages === 'object') {
+    const first = Object.values(messages as Record<string, string[]>)
+      .flat()
+      .find((x) => typeof x === 'string')
+    if (first) return first
+  }
+
+  return fallback
+}
 
 /** Linhas verticais alinhadas às colunas reais do timegrid (não ao cabeçalho em scroll separado). */
 function syncAgendaDayDividers(root: HTMLElement | null) {
@@ -343,7 +359,7 @@ export function MarcacoesAgendaCalendario({
         onRefresh()
       } else {
         arg.revert()
-        toast.error('Não foi possível alterar o horário.')
+        toast.error(getApiErrorMessage(res.info, 'Não foi possível alterar o horário.'))
       }
     } catch {
       arg.revert()
@@ -352,12 +368,16 @@ export function MarcacoesAgendaCalendario({
   }
 
   const navBtnClass =
-    'h-8 border-0 text-sm text-white shadow-sm hover:opacity-95'
-  const navBtnStyle = { backgroundColor: MARCACOES_AGENDA_TEAL }
+    'h-8 border border-slate-300 bg-white text-sm text-slate-700 shadow-sm hover:bg-slate-100 hover:text-slate-900'
   const viewBtnClass = (active: boolean) =>
-    cn('h-8 min-w-[3.25rem] border-0 text-sm text-white shadow-sm hover:opacity-95')
+    cn(
+      'h-8 min-w-[3.25rem] border text-sm shadow-sm',
+      active
+        ? 'border-slate-500 text-white hover:opacity-95'
+        : 'border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+    )
   const viewBtnStyle = (active: boolean) => ({
-    backgroundColor: active ? MARCACOES_AGENDA_TEAL_ACTIVE : MARCACOES_AGENDA_TEAL,
+    backgroundColor: active ? MARCACOES_AGENDA_VIEW_ACTIVE : MARCACOES_AGENDA_VIEW_IDLE,
   })
 
   return (
@@ -369,7 +389,6 @@ export function MarcacoesAgendaCalendario({
             variant='outline'
             size='icon'
             className={navBtnClass}
-            style={navBtnStyle}
             aria-label='Semana anterior'
             onClick={() => getCalendarApi()?.prev()}
           >
@@ -380,7 +399,6 @@ export function MarcacoesAgendaCalendario({
             variant='outline'
             size='icon'
             className={navBtnClass}
-            style={navBtnStyle}
             aria-label='Semana seguinte'
             onClick={() => getCalendarApi()?.next()}
           >
@@ -391,7 +409,6 @@ export function MarcacoesAgendaCalendario({
             variant='outline'
             size='sm'
             className={cn(navBtnClass, 'px-3')}
-            style={navBtnStyle}
             onClick={() => getCalendarApi()?.today()}
           >
             Hoje
@@ -429,14 +446,6 @@ export function MarcacoesAgendaCalendario({
         <div className='marcacoes-agenda-calendario__hint absolute inset-0 z-[5] flex items-center justify-center bg-white/75'>
           <p className='rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-950 shadow-sm'>
             Selecione a especialidade para ver disponibilidade dos médicos.
-          </p>
-        </div>
-      )}
-
-      {!modoDisponibilidade && !temMedico && (
-        <div className='marcacoes-agenda-calendario__hint absolute inset-0 z-[5] flex items-center justify-center bg-white/75'>
-          <p className='rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-950 shadow-sm'>
-            Selecione o médico para carregar o horário na agenda.
           </p>
         </div>
       )}

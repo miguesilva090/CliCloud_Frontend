@@ -68,31 +68,32 @@ export function ConsultasDiaSection({
                 <TableHead className='w-[90px] text-center'>Hora Saída</TableHead>
                 <TableHead className='text-center'>Médico</TableHead>
                 <TableHead className='text-center'>Tipo de Admissão / Especialidade</TableHead>
+                <TableHead className='text-center'>Estado</TableHead>
                 <TableHead className='w-[120px] text-center'></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!utenteId ? (
                 <TableRow>
-                  <TableCell colSpan={7} className='py-6 text-center text-muted-foreground'>
+                  <TableCell colSpan={8} className='py-6 text-center text-muted-foreground'>
                     Selecione um utente para ver as consultas do dia.
                   </TableCell>
                 </TableRow>
               ) : isErrorDia ? (
                 <TableRow>
-                  <TableCell colSpan={7} className='py-6 text-center text-destructive'>
+                  <TableCell colSpan={8} className='py-6 text-center text-destructive'>
                     {errorMessageDia || 'Erro ao carregar consultas.'}
                   </TableCell>
                 </TableRow>
               ) : isLoadingDia ? (
                 <TableRow>
-                  <TableCell colSpan={7} className='py-6 text-center text-muted-foreground'>
+                  <TableCell colSpan={8} className='py-6 text-center text-muted-foreground'>
                     A carregar...
                   </TableCell>
                 </TableRow>
               ) : consultasDia.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className='py-6 text-center font-medium text-muted-foreground'>
+                  <TableCell colSpan={8} className='py-6 text-center font-medium text-muted-foreground'>
                     NÃO EXISTEM CONSULTAS HOJE!
                   </TableCell>
                 </TableRow>
@@ -107,6 +108,7 @@ export function ConsultasDiaSection({
                     <TableCell className='text-center'>{row.horaFim ?? '-'}</TableCell>
                     <TableCell className='text-center'>{row.medicoNome ?? '-'}</TableCell>
                     <TableCell className='text-center'>{row.especialidadeDesignacao ?? '-'}</TableCell>
+                    <TableCell className='text-center'>{row.statusConsultaLabel ?? '-'}</TableCell>
                     <TableCell></TableCell>
                   </TableRow>
                 ))
@@ -159,19 +161,20 @@ export function ConsultasDiaSection({
                       <TableHead className='w-[90px]'>Hora Saída</TableHead>
                       <TableHead>Médico</TableHead>
                       <TableHead>Tipo de Admissão / Especialidade</TableHead>
+                      <TableHead>Diagnóstico</TableHead>
                       <TableHead className='w-[120px] text-center'>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isLoadingHistorico ? (
                       <TableRow>
-                        <TableCell colSpan={7} className='py-8 text-center text-muted-foreground'>
+                        <TableCell colSpan={8} className='py-8 text-center text-muted-foreground'>
                           A carregar...
                         </TableCell>
                       </TableRow>
                     ) : consultasHistorico.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className='py-8 text-center text-muted-foreground'>
+                        <TableCell colSpan={8} className='py-8 text-center text-muted-foreground'>
                           Nenhuma consulta efetuada.
                         </TableCell>
                       </TableRow>
@@ -186,6 +189,9 @@ export function ConsultasDiaSection({
                           <TableCell className='text-center'>{row.horaFim ?? '-'}</TableCell>
                           <TableCell className='text-center'>{row.medicoNome ?? '-'}</TableCell>
                           <TableCell className='text-center'>{row.especialidadeDesignacao ?? '-'}</TableCell>
+                          <TableCell className='max-w-[220px] truncate' title={row.diagnostico ?? ''}>
+                            {row.diagnostico ?? '-'}
+                          </TableCell>
                           <TableCell className='text-center'>
                             <div className='flex items-center justify-center gap-2'>
                               <Button

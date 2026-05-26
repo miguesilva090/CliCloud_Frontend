@@ -378,7 +378,10 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
     return map
   }, [evolucoes])
 
-  const tratamentosAtivos = useMemo(() => tratamentos, [tratamentos])
+  const tratamentosAtivos = useMemo(
+    () => tratamentos.filter((t) => !t.dataFim),
+    [tratamentos],
+  )
 
   const tratamentosHistorico = useMemo(
     () => tratamentos.filter((t) => !!t.dataFim),
@@ -652,6 +655,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                     <TableHead className='text-start'>Organismo</TableHead>
                     <TableHead className='text-start'>Local Tratamento</TableHead>
                     <TableHead className='text-center'>Nº Sessões</TableHead>
+                    <TableHead className='text-center'>Faltas</TableHead>
                     <TableHead className='text-start'>Médico</TableHead>
                     <TableHead className='text-start'>Patologia</TableHead>
                     <TableHead className='text-center'>Alta</TableHead>
@@ -661,25 +665,25 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                 <TableBody>
                   {!utenteId ? (
                     <TableRow>
-                      <TableCell colSpan={7} className='py-8 text-center text-muted-foreground'>
+                      <TableCell colSpan={9} className='py-8 text-center text-muted-foreground'>
                         Selecione um utente para ver os tratamentos.
                       </TableCell>
                     </TableRow>
                   ) : isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={7} className='py-8 text-center text-muted-foreground'>
+                      <TableCell colSpan={9} className='py-8 text-center text-muted-foreground'>
                         A carregar tratamentos...
                       </TableCell>
                     </TableRow>
                   ) : isError ? (
                     <TableRow>
-                      <TableCell colSpan={7} className='py-8 text-center text-destructive'>
+                      <TableCell colSpan={9} className='py-8 text-center text-destructive'>
                         Ocorreu um erro ao carregar os tratamentos.
                       </TableCell>
                     </TableRow>
                   ) : tratamentosAtivos.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className='py-6 text-center text-muted-foreground'>
+                      <TableCell colSpan={9} className='py-6 text-center text-muted-foreground'>
                         Nenhum tratamento ativo para este utente.
                       </TableCell>
                     </TableRow>
@@ -691,6 +695,10 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                       const organismoNome = t.organismoNome ?? '-'
                       const localTratamentoNome = t.localTratamentoNome ?? '-'
                       const medicoNome = t.medicoNome ?? '-'
+                      const sessoesResumo =
+                        t.numSessao != null ? `${t.sessoesCount ?? 0}/${t.numSessao}` : (t.sessoesCount ?? '-')
+                      const faltasResumo =
+                        t.nFalta != null ? `${t.nFalta}${t.nFaltaCons ? ` (${t.nFaltaCons} cons.)` : ''}` : '-'
                       // Regra alinhada com o legado:
                       // só permite editar quando o tratamento vem de lista de espera
                       // (VemListEsp diferente de 0/null) e o médico da linha é o médico em sessão.
@@ -707,7 +715,8 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                           <TableCell>{dataPrescricao}</TableCell>
                           <TableCell>{organismoNome}</TableCell>
                           <TableCell>{localTratamentoNome}</TableCell>
-                          <TableCell className='text-center'>{t.numSessao ?? '-'}</TableCell>
+                          <TableCell className='text-center'>{sessoesResumo}</TableCell>
+                          <TableCell className='text-center'>{faltasResumo}</TableCell>
                           <TableCell>{medicoNome}</TableCell>
                           <TableCell>{t.nomePatologia ?? '-'}</TableCell>
                           <TableCell className='text-center'>
@@ -799,6 +808,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                     <TableHead className='text-start'>Organismo</TableHead>
                     <TableHead className='text-start'>Local Tratamento</TableHead>
                     <TableHead className='text-center'>Nº Sessões</TableHead>
+                    <TableHead className='text-center'>Faltas</TableHead>
                     <TableHead className='text-start'>Médico</TableHead>
                     <TableHead className='text-start'>Patologia</TableHead>
                     <TableHead className='text-center'>Alta</TableHead>
@@ -808,7 +818,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                 <TableBody>
                   {tratamentosHistorico.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className='py-6 text-center text-muted-foreground'>
+                      <TableCell colSpan={9} className='py-6 text-center text-muted-foreground'>
                         Nenhum tratamento em histórico para este utente.
                       </TableCell>
                     </TableRow>
@@ -820,6 +830,10 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                       const organismoNome = t.organismoNome ?? '-'
                       const localTratamentoNome = t.localTratamentoNome ?? '-'
                       const medicoNome = t.medicoNome ?? '-'
+                      const sessoesResumo =
+                        t.numSessao != null ? `${t.sessoesCount ?? 0}/${t.numSessao}` : (t.sessoesCount ?? '-')
+                      const faltasResumo =
+                        t.nFalta != null ? `${t.nFalta}${t.nFaltaCons ? ` (${t.nFaltaCons} cons.)` : ''}` : '-'
                       const isFromWaitList = t.vemListEsp != null && t.vemListEsp !== 0
                       const isOwner = !!userId && !!t.medicoId && t.medicoId === userId
                       const podeEditar = isFromWaitList && isOwner
@@ -833,7 +847,8 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                           <TableCell>{dataPrescricao}</TableCell>
                           <TableCell>{organismoNome}</TableCell>
                           <TableCell>{localTratamentoNome}</TableCell>
-                          <TableCell className='text-center'>{t.numSessao ?? '-'}</TableCell>
+                          <TableCell className='text-center'>{sessoesResumo}</TableCell>
+                          <TableCell className='text-center'>{faltasResumo}</TableCell>
                           <TableCell>{medicoNome}</TableCell>
                           <TableCell>{t.nomePatologia ?? '-'}</TableCell>
                           <TableCell className='text-center'>
@@ -1348,6 +1363,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                 <TableHead className='text-start'>Cód. Trat.</TableHead>
                 <TableHead className='text-start'>Organismo</TableHead>
                 <TableHead className='text-center'>Nº Sessões</TableHead>
+                <TableHead className='text-center'>Faltas</TableHead>
                 <TableHead className='text-start'>Data Inicial</TableHead>
                 <TableHead className='text-start'>Data Final</TableHead>
                 <TableHead className='text-center'>Alta</TableHead>
@@ -1358,25 +1374,25 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
             <TableBody>
               {!utenteId ? (
                 <TableRow>
-                  <TableCell colSpan={9} className='py-8 text-center text-muted-foreground'>
+                  <TableCell colSpan={10} className='py-8 text-center text-muted-foreground'>
                     Selecione um utente para ver as evoluções de tratamento.
                   </TableCell>
                 </TableRow>
               ) : isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={9} className='py-8 text-center text-muted-foreground'>
+                  <TableCell colSpan={10} className='py-8 text-center text-muted-foreground'>
                     A carregar tratamentos...
                   </TableCell>
                 </TableRow>
               ) : isError ? (
                 <TableRow>
-                  <TableCell colSpan={9} className='py-8 text-center text-destructive'>
+                  <TableCell colSpan={10} className='py-8 text-center text-destructive'>
                     Ocorreu um erro ao carregar os tratamentos.
                   </TableCell>
                 </TableRow>
               ) : tratamentos.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className='py-8 text-center text-muted-foreground'>
+                  <TableCell colSpan={10} className='py-8 text-center text-muted-foreground'>
                     Nenhum tratamento registado para este utente.
                   </TableCell>
                 </TableRow>
@@ -1386,12 +1402,15 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                     ? format(new Date(t.createdOn), 'dd/MM/yyyy')
                     : '-'
                   const organismoNome = t.organismoNome ?? '-'
-                  const numSess = t.numSessao ?? '-'
+                  const numSess =
+                    t.numSessao != null ? `${t.sessoesCount ?? 0}/${t.numSessao}` : (t.sessoesCount ?? '-')
+                  const faltasResumo =
+                    t.nFalta != null ? `${t.nFalta}${t.nFaltaCons ? ` (${t.nFaltaCons} cons.)` : ''}` : '-'
                   const dataInic = t.dataInic ? format(new Date(t.dataInic), 'dd/MM/yyyy') : '-'
                   const dataFim = t.dataFim ? format(new Date(t.dataFim), 'dd/MM/yyyy') : '-'
 
                   const evolucao = evolucaoByTratamentoId.get(t.id)
-                  const temAlta = !!evolucao?.dataAlta
+                  const temAlta = !!evolucao?.dataAlta || !!t.dataFim
 
                   return (
                     <TableRow key={t.id}>
@@ -1399,6 +1418,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{organismoNome}</TableCell>
                       <TableCell className='text-center'>{numSess}</TableCell>
+                      <TableCell className='text-center'>{faltasResumo}</TableCell>
                       <TableCell>{dataInic}</TableCell>
                       <TableCell>{dataFim}</TableCell>
                       <TableCell className='text-center'>

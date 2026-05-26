@@ -58,7 +58,7 @@ export class TipoConsultaClient extends BaseApiClient {
 
   public async updateTipoConsulta(
     id: string,
-    body: { designacao: string }
+    body: { designacao: string; codigoLegado?: number | null }
   ): Promise<ResponseApi<GSResponse<string>>> {
     return this.httpClient.putRequest<typeof body, GSResponse<string>>(
       state.URL,

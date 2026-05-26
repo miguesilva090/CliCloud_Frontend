@@ -35,7 +35,7 @@ function buildGlobalBookingParams(
   return {
     pageNumber,
     pageSize,
-    filters: filters ?? undefined,
+    filters: filters ?? [],
     sorting: sorting ?? undefined,
     agendadoSim: flag(filters, 'agendadoSim'),
     agendadoNao: flag(filters, 'agendadoNao'),

@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { AdmissaoAdministrativoService } from '@/lib/services/consultas/admissao-administrativo-service'
+import { OrdemEntradaAdministrativoService } from '@/lib/services/consultas/ordem-entrada-administrativo-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
 import type { OrdemEntradaTableDTO } from '@/types/dtos/consultas/ordem-entrada.dtos'
@@ -39,7 +39,7 @@ export function OrdemEntradaAnularModal({
 
     setSaving(true)
     try {
-      const res = await AdmissaoAdministrativoService(listPermId).anularOrdemEntrada(row.id, {
+      const res = await OrdemEntradaAdministrativoService(listPermId).anular(row.id, {
         motivo: motivo.trim(),
       })
       if (res.info?.status === ResponseStatus.Success) {

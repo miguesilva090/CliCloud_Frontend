@@ -4,7 +4,6 @@ import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { createAreaComumListActionsColumnDef } from '@/components/shared/area-comum-list-actions-column'
 import type { OrdemEntradaTableDTO } from '@/types/dtos/consultas/ordem-entrada.dtos'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 
 function formatDate(value?: string | null) {
   if (!value) return '—'
@@ -43,9 +42,6 @@ function obsActionButton(onOpenObservacoes: (row: OrdemEntradaTableDTO) => void)
 }
 
 export function getOrdemEntradaColumns(opts: {
-  onDefinirOrdem: (row: OrdemEntradaTableDTO) => void
-  onAnularOrdem: (row: OrdemEntradaTableDTO) => void
-  onTogglePresente: (row: OrdemEntradaTableDTO, value: boolean) => void
   onOpenView: (row: OrdemEntradaTableDTO) => void
   onOpenEdit?: (row: OrdemEntradaTableDTO) => void
   onOpenDelete?: (row: OrdemEntradaTableDTO) => void
@@ -53,13 +49,9 @@ export function getOrdemEntradaColumns(opts: {
   canView: boolean
   canChange: boolean
   canDelete: boolean
-  /** Legado: em modo «Consultas desmarcadas» só observações na linha. */
   consultasDesmarcadas: boolean
 }): DataTableColumnDef<OrdemEntradaTableDTO>[] {
   const {
-    onDefinirOrdem,
-    onAnularOrdem,
-    onTogglePresente,
     onOpenView,
     onOpenEdit,
     onOpenDelete,
@@ -89,7 +81,7 @@ export function getOrdemEntradaColumns(opts: {
     },
     {
       accessorKey: 'utenteNumero',
-      header: 'Cód. utente',
+      header: 'Cód. Utente',
       enableSorting: false,
       cell: ({ row }) => row.original.utenteNumero || '—',
     },
@@ -106,109 +98,46 @@ export function getOrdemEntradaColumns(opts: {
       cell: ({ row }) => row.original.medicoNome || '—',
     },
     {
+      accessorKey: 'tipoConsultaDesignacao',
+      header: 'Consulta',
+      enableSorting: false,
+      cell: ({ row }) => row.original.tipoConsultaDesignacao || '—',
+    },
+    {
       accessorKey: 'createdByNome',
       header: 'Utilizador',
       enableSorting: false,
       cell: ({ row }) => row.original.createdByNome || '—',
     },
     {
-      accessorKey: 'statusConsultaLabel',
-      header: 'Consulta',
-      enableSorting: false,
-      cell: ({ row }) => row.original.statusConsultaLabel || '—',
-    },
-    {
       accessorKey: 'dataHoraMarcacao',
-      header: 'Data/hora marcação',
+      header: 'Registo (Histórico)',
       enableSorting: false,
       cell: ({ row }) => formatDateTime(row.original.dataHoraMarcacao),
     },
   ]
 
-  const actionsColumn = createAreaComumListActionsColumnDef<OrdemEntradaTableDTO>({
-    onOpenView,
-    onOpenEdit,
-    onOpenDelete,
-    rowActionPermissions: { canView, canChange, canDelete },
-    deleteTitle: 'Desmarcar',
-    renderExtraActions: renderObs,
-  })
+  const actionsColumn: DataTableColumnDef<OrdemEntradaTableDTO> = consultasDesmarcadas
+    ? {
+        id: 'actions',
+        header: () => <div className='w-full pr-5 text-right'>Opções</div>,
+        cell: ({ row }) => (
+          <div className='flex w-full items-center justify-end gap-1'>
+            {renderObs(row.original)}
+          </div>
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        meta: { align: 'right' as const },
+      }
+    : createAreaComumListActionsColumnDef<OrdemEntradaTableDTO>({
+        onOpenView,
+        onOpenEdit,
+        onOpenDelete,
+        rowActionPermissions: { canView, canChange, canDelete },
+        deleteTitle: 'Desmarcar',
+        renderExtraActions: renderObs,
+      })
 
-  const queueColumns: DataTableColumnDef<OrdemEntradaTableDTO>[] = consultasDesmarcadas
-    ? []
-    : [
-        {
-          accessorKey: 'confirmado',
-          header: 'Presente',
-          enableSorting: false,
-          meta: { align: 'center' as const },
-          cell: ({ row }) => (
-            <div className='flex justify-center'>
-              <Checkbox
-                checked={row.original.confirmado === true}
-                disabled={!canChange}
-                onCheckedChange={(v) => {
-                  if (!canChange) return
-                  onTogglePresente(row.original, v === true)
-                }}
-              />
-            </div>
-          ),
-        },
-        {
-          accessorKey: 'ordem',
-          header: 'Ordem',
-          enableSorting: true,
-          sortKey: 'ordem',
-          cell: ({ row }) => row.original.ordem ?? '—',
-        },
-        {
-          accessorKey: 'horaChegada',
-          header: 'Chegada',
-          enableSorting: false,
-          cell: ({ row }) => formatTime(row.original.horaChegada),
-        },
-      ]
-
-  const ordemShortcuts: DataTableColumnDef<OrdemEntradaTableDTO> | null =
-    consultasDesmarcadas
-      ? null
-      : {
-          id: 'ordemAtalhos',
-          header: 'Fila',
-          enableSorting: false,
-          cell: ({ row }) =>
-            canChange ? (
-              <div className='flex items-center gap-1'>
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='sm'
-                  className='h-7 px-2 text-xs'
-                  onClick={() => onDefinirOrdem(row.original)}
-                >
-                  Ordem
-                </Button>
-                <Button
-                  type='button'
-                  variant='ghost'
-                  size='sm'
-                  className='h-7 px-2 text-xs text-destructive'
-                  onClick={() => onAnularOrdem(row.original)}
-                  disabled={!row.original.ordem}
-                >
-                  Anular
-                </Button>
-              </div>
-            ) : (
-              '—'
-            ),
-        }
-
-  return [
-    ...queueColumns,
-    ...legacyColumns,
-    ...(ordemShortcuts ? [ordemShortcuts] : []),
-    actionsColumn,
-  ]
+  return [...legacyColumns, actionsColumn]
 }

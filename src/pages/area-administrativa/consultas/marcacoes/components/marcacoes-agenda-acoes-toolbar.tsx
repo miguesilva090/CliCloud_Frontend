@@ -5,7 +5,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronLeft, RotateCw, Send } from 'lucide-react'
+import { Building2, ChevronDown, ChevronLeft, RotateCw, Send } from 'lucide-react'
 import { toast } from '@/utils/toast-utils'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
 import {
@@ -23,6 +23,7 @@ type Props = {
   onDisponibilidade: () => void
   onSairDisponibilidade: () => void
   onEnvioSms: () => void
+  onAssociarSala: () => void
   onListagens: () => void
   onDesmarcar: () => void
   onRefresh: () => void
@@ -36,6 +37,7 @@ export function MarcacoesAgendaAcoesToolbar({
   onDisponibilidade,
   onSairDisponibilidade,
   onEnvioSms,
+  onAssociarSala,
   onListagens,
   onDesmarcar,
   onRefresh,
@@ -97,16 +99,35 @@ export function MarcacoesAgendaAcoesToolbar({
             </Button>
 
             {canChange ? (
-              <Button
-                type='button'
-                size='sm'
-                className={MARCACOES_AGENDA_ACTION_BTN}
-                style={{ backgroundColor: MARCACOES_AGENDA_ACTION_BLUE }}
-                onClick={onEnvioSms}
-              >
-                <Send className='mr-1 h-3.5 w-3.5' />
-                Envio SMS
-              </Button>
+              <>
+                <Button
+                  type='button'
+                  size='sm'
+                  className={MARCACOES_AGENDA_ACTION_BTN}
+                  style={{ backgroundColor: MARCACOES_AGENDA_ACTION_BLUE }}
+                  onClick={onEnvioSms}
+                >
+                  <Send className='mr-1 h-3.5 w-3.5' />
+                  Envio SMS
+                </Button>
+
+                <Button
+                  type='button'
+                  size='sm'
+                  className={MARCACOES_AGENDA_ACTION_BTN}
+                  style={{ backgroundColor: MARCACOES_AGENDA_ACTION_BLUE }}
+                  onClick={() => {
+                    if (!selectedMarcacaoId) {
+                      toast.error('Selecione uma marcação no calendário (clique no evento).')
+                      return
+                    }
+                    onAssociarSala()
+                  }}
+                >
+                  <Building2 className='mr-1 h-3.5 w-3.5' />
+                  Sala
+                </Button>
+              </>
             ) : null}
 
             {canDelete ? (

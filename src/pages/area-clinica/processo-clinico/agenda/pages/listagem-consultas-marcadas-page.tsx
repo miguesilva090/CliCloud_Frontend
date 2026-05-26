@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { format, isValid, startOfDay } from 'date-fns'
 import { pt } from 'date-fns/locale'
-import { List, Plus, RotateCw, UserPlus } from 'lucide-react'
+import { List, Plus, RotateCw, Stethoscope, UserPlus } from 'lucide-react'
 import type { CellContext, ColumnDef } from '@tanstack/react-table'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -45,18 +46,25 @@ import {
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { toast } from '@/utils/toast-utils'
+import { ResponseStatus } from '@/types/api/responses'
 import { useGetAllTiposConsulta } from '@/pages/area-comum/tabelas/consultas/tipos-consultas/queries/listagem-tipos-consulta-queries'
 import type { ConsultaMarcadaRow } from '../types/consulta-marcada-types'
 import { ConsultaMarcadaViewEditModal } from '../modals/consulta-marcada-view-edit-modal'
 import { useConsultasDoDiaMarcacoes } from '../queries/consultas-do-dia-queries'
 import type { TipoConsultaDTO } from '@/types/dtos/tipos-consulta/tipo-consulta.dtos'
+import { AdmissaoAdministrativoService } from '@/lib/services/consultas/admissao-administrativo-service'
+import { ConsultaService } from '@/lib/services/consultas/consulta-service'
 import {
   createAreaComumListActionsColumnDef,
 } from '@/components/shared/area-comum-list-actions-column'
 import { modules } from '@/config/modules'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { openAdmissaoFromMarcacaoInApp } from '@/utils/window-utils'
+import {
+  openAdmissaoEditInApp,
+  openAdmissaoFromMarcacaoInApp,
+  openFichaClinicaAtendimentoInApp,
+} from '@/utils/window-utils'
 
 export type { ConsultaMarcadaRow }
 
@@ -116,6 +124,7 @@ function getColumnsWithActions(
   onOpenView: (row: ConsultaMarcadaRow) => void,
   onOpenEdit: (row: ConsultaMarcadaRow) => void,
   onOpenDelete: (row: ConsultaMarcadaRow) => void,
+  onAtender: ((row: ConsultaMarcadaRow) => void) | undefined,
   onAdmitir: ((row: ConsultaMarcadaRow) => void) | undefined,
   rowActionPermissions: {
     canView: boolean
@@ -133,18 +142,35 @@ function getColumnsWithActions(
         onOpenDelete: (data) => onOpenDelete(data),
         rowActionPermissions,
         renderExtraActions:
-          rowActionPermissions.canAdmitir && onAdmitir
+          ((rowActionPermissions.canView && onAtender) ||
+            (rowActionPermissions.canAdmitir && onAdmitir))
             ? (row) => (
-                <Button
-                  type='button'
-                  variant='ghost'
-                  size='icon'
-                  className='h-8 w-8'
-                  title='Admitir na receção'
-                  onClick={() => onAdmitir(row)}
-                >
-                  <UserPlus className='h-4 w-4' />
-                </Button>
+                <>
+                  {rowActionPermissions.canView && onAtender ? (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8'
+                      title={row.consultaId ? 'Abrir ficha clínica' : 'Iniciar atendimento'}
+                      onClick={() => onAtender(row)}
+                    >
+                      <Stethoscope className='h-4 w-4' />
+                    </Button>
+                  ) : null}
+                  {rowActionPermissions.canAdmitir && onAdmitir ? (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8'
+                      title='Admitir na receção'
+                      onClick={() => onAdmitir(row)}
+                    >
+                      <UserPlus className='h-4 w-4' />
+                    </Button>
+                  ) : null}
+                </>
               )
             : undefined,
       }),
@@ -166,6 +192,7 @@ export function ListagemConsultasMarcadasPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const addWindow = useWindowsStore((s) => s.addWindow)
+  const queryClient = useQueryClient()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [viewEditModalOpen, setViewEditModalOpen] = useState(false)
   const [viewEditMode, setViewEditMode] = useState<'view' | 'edit'>('view')
@@ -175,6 +202,7 @@ export function ListagemConsultasMarcadasPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [consultasDesmarcadas, setConsultasDesmarcadas] = useState(false)
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [sorting, setSorting] = useState<Array<{ id: string; desc: boolean }>>([])
   const consultasMarcadasPermissionId =
@@ -187,7 +215,7 @@ export function ListagemConsultasMarcadasPage() {
   const dateForApi = selectedDateStr || format(new Date(), 'yyyy-MM-dd')
   const { rows: consultasFiltradas, refetch, isFetching } = useConsultasDoDiaMarcacoes(
     dateForApi,
-    { enabled: true },
+    { enabled: true, desmarcadas: consultasDesmarcadas },
   )
   const filters = selectedDateStr ? [{ id: 'data', value: selectedDateStr }] : []
 
@@ -224,23 +252,69 @@ export function ListagemConsultasMarcadasPage() {
     refetch()
   }
 
+  const handleAtender = useCallback(
+    async (row: ConsultaMarcadaRow) => {
+      if (!row.id || !row.utenteId) return
+
+      const res = await ConsultaService(consultasMarcadasPermissionId).iniciarAtendimento({
+        consultaId: row.consultaId ?? null,
+        consultaMarcacaoId: row.id,
+      })
+      if (res.info?.status !== ResponseStatus.Success || !res.info.data?.consultaId) {
+        toast.error(
+          res.info?.messages?.$?.[0] ??
+            res.info?.messages?.['']?.[0] ??
+            'Não foi possível iniciar o atendimento.'
+        )
+        return
+      }
+
+      const contexto = res.info.data
+      await queryClient.invalidateQueries({ queryKey: ['consultas-do-dia-marcacoes'] })
+      await queryClient.invalidateQueries({ queryKey: ['consultas-do-dia-atendimento'] })
+
+      openFichaClinicaAtendimentoInApp(navigate, addWindow, {
+        utenteId: contexto.utenteId,
+        consultaId: contexto.consultaId,
+        consultaMarcacaoId: contexto.consultaMarcacaoId,
+        admissaoId: contexto.admissaoId,
+        utenteNome: contexto.utenteNome ?? row.utenteNome,
+      })
+    },
+    [addWindow, consultasMarcadasPermissionId, navigate, queryClient],
+  )
+
   const handleAdmitir = useCallback(
-    (row: ConsultaMarcadaRow) => {
+    async (row: ConsultaMarcadaRow) => {
       if (!row.id) return
+      const res = await AdmissaoAdministrativoService(admissoesPermissionId)
+        .getByConsultaMarcacaoId(row.id)
+      if (res.info?.status === ResponseStatus.Success && res.info.data?.id) {
+        openAdmissaoEditInApp(navigate, addWindow, res.info.data.id, row.utenteNome)
+        return
+      }
+      if (res.info?.status !== ResponseStatus.Success) {
+        toast.error(
+          res.info?.messages?.$?.[0] ??
+            res.info?.messages?.['']?.[0] ??
+            'Não foi possível verificar a admissão da marcação.'
+        )
+        return
+      }
       openAdmissaoFromMarcacaoInApp(navigate, addWindow, row.id, row.utenteNome)
     },
-    [navigate, addWindow],
+    [navigate, addWindow, admissoesPermissionId],
   )
 
   const columns = useMemo(
     () =>
-      getColumnsWithActions(handleOpenView, handleOpenEdit, handleOpenDelete, handleAdmitir, {
+      getColumnsWithActions(handleOpenView, handleOpenEdit, handleOpenDelete, handleAtender, handleAdmitir, {
         canView,
         canChange,
         canDelete,
         canAdmitir,
       }),
-    [handleOpenView, handleOpenEdit, handleOpenDelete, handleAdmitir, canView, canChange, canDelete, canAdmitir],
+    [handleOpenView, handleOpenEdit, handleOpenDelete, handleAtender, handleAdmitir, canView, canChange, canDelete, canAdmitir],
   )
 
   const toolbarActions: DataTableAction[] = [
@@ -259,6 +333,15 @@ export function ListagemConsultasMarcadasPage() {
       icon: <List className='h-4 w-4' />,
       onClick: () => {},
       variant: 'outline',
+    },
+    {
+      label: consultasDesmarcadas ? 'Desmarcadas ✓' : 'Desmarcadas',
+      icon: <List className='h-4 w-4' />,
+      onClick: () => {
+        setPage(1)
+        setConsultasDesmarcadas((value) => !value)
+      },
+      variant: consultasDesmarcadas ? ('emerald' as const) : ('outline' as const),
     },
     {
       label: 'Atualizar',

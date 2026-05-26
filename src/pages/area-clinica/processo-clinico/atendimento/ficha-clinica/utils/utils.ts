@@ -6,9 +6,10 @@ export const DEFAULT_CONSULTA_FILTERS: Array<{ id: string; value: string }> = [
 
 export function buildConsultaFilters(
   utenteId: string,
-  selectedDate: Date | null
+  selectedDate: Date | null,
+  options: { apenasEfetuadas?: boolean } = {}
 ): Array<{ id: string; value: string }> {
-  const filters = [...DEFAULT_CONSULTA_FILTERS]
+  const filters = options.apenasEfetuadas === false ? [] : [...DEFAULT_CONSULTA_FILTERS]
   if (utenteId) {
     filters.push({ id: 'utenteId', value: utenteId })
   }

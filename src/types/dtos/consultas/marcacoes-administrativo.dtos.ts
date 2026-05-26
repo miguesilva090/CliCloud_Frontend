@@ -43,7 +43,10 @@ export type MarcacaoAdministrativoDTO = {
 export type SalasDisponiveisRequest = {
   data: string
   horaInicio: string
+  horaFim?: string
   clinicaId?: string
+  ignorarMarcacaoId?: string
+  ignorarAdmissaoId?: string
 }
 
 export type SalaDisponivelDTO = {
@@ -80,6 +83,7 @@ export type CreateMarcacaoAdministrativoRequest = {
   data: string
   horaInicio: string
   horaFim?: string
+  salaId?: string
   organismoId?: string
   tipoConsultaId?: string
   tipoAdmissaoId?: string
@@ -102,6 +106,7 @@ export type MudarHorarioMarcacaoAdministrativoRequest = {
 /** Fase 1c — calendário agenda (legado calendarioMarcacoesMedicoLst). */
 export type MarcacaoCalendarioRequest = {
   medicoId: string
+  salaId?: string
   especialidadeId?: string
   dataDe: string
   dataAte: string

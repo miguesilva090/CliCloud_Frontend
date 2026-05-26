@@ -7,21 +7,23 @@ export const MARCACOES_AGENDA_NAV_BG = '#f0f0f0'
 export const MARCACOES_AGENDA_TEAL = '#33a199'
 export const MARCACOES_AGENDA_TEAL_ACTIVE = '#2a8580'
 export const MARCACOES_AGENDA_ACTION_BLUE = '#4b8df8'
+export const MARCACOES_AGENDA_VIEW_IDLE = '#ffffff'
+export const MARCACOES_AGENDA_VIEW_ACTIVE = '#64748b'
 
 /** @deprecated Usar MARCACOES_AGENDA_HEADER_BG ou MARCACOES_AGENDA_NAV_BG */
 export const MARCACOES_AGENDA_CHROME_BG = MARCACOES_AGENDA_HEADER_BG
 
 export const MARCACOES_AGENDA_CORES = {
-  primeiraConsulta: '#e87e04',
-  subsequente: '#4b8df8',
-  avFinal: '#35aa47',
-  posOperatorio: '#852b99',
-  tipoOutro: '#e26a6a',
-  indisponivel: '#dcdcdc',
-  feriado: '#f4b04f',
-  vagasExtra: '#c8d046',
-  horarioVariavel: '#ffb848',
-  horarioFolga: '#94a0b2',
+  primeiraConsulta: '#b7791f',
+  subsequente: '#64748b',
+  avFinal: '#6b8f71',
+  posOperatorio: '#7c6f87',
+  tipoOutro: '#8b8b8b',
+  indisponivel: '#e5e7eb',
+  feriado: '#f1d0a2',
+  vagasExtra: '#d6d8a8',
+  horarioVariavel: '#d7b56d',
+  horarioFolga: '#cbd5e1',
 } as const
 
 /** Botões secundários na barra teal (Lista Espera, Listagens). */

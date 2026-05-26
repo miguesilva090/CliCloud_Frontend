@@ -14,6 +14,8 @@ export type MarcacaoAdministrativoFormState = {
   data: string
   horaInicio: string
   horaFim: string
+  salaId: string
+  salaLabel: string
   tipoConsultaId: string
   tipoAdmissaoId: string
   organismoId: string
@@ -63,6 +65,8 @@ export function createEmptyMarcacaoForm(
     data: defaultData ?? '',
     horaInicio: '',
     horaFim: '',
+    salaId: '',
+    salaLabel: '',
     tipoConsultaId: '',
     tipoAdmissaoId: '',
     organismoId: '',
@@ -86,6 +90,8 @@ export function mapMarcacaoDtoToForm(dto: MarcacaoAdministrativoDTO): MarcacaoAd
     data: isoDateOnly(dto.data),
     horaInicio: timeSpanToInput(dto.horaInicio),
     horaFim: timeSpanToInput(dto.horaFim),
+    salaId: dto.salaId ?? '',
+    salaLabel: dto.salaNome ?? '',
     tipoConsultaId: dto.tipoConsultaId ?? '',
     tipoAdmissaoId: dto.tipoAdmissaoId ?? '',
     organismoId: dto.organismoId ?? '',
@@ -107,6 +113,7 @@ export function mapMarcacaoFormToCreatePayload(
     data: `${form.data}T00:00:00`,
     horaInicio: toTimeSpan(form.horaInicio) as string,
     horaFim: toTimeSpan(form.horaFim),
+    salaId: form.salaId || undefined,
     tipoConsultaId: form.tipoConsultaId || undefined,
     tipoAdmissaoId: form.tipoAdmissaoId || undefined,
     organismoId: form.organismoId || undefined,

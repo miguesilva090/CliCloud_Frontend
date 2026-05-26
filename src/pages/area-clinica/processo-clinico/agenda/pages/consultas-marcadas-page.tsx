@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format, isValid, startOfDay } from 'date-fns'
 import { pt } from 'date-fns/locale'
-import { List, Plus, RotateCw, UserPlus } from 'lucide-react'
+import { List, Plus, RotateCw, Stethoscope, UserPlus } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { CellContext, ColumnDef } from '@tanstack/react-table'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -60,11 +60,17 @@ import { ConsultaMarcadaViewEditModal } from '../modals/consulta-marcada-view-ed
 import { useConsultasDoDiaMarcacoes } from '../queries/consultas-do-dia-queries'
 import { MarcacaoConsultaService } from '@/lib/services/consultas/marcacao-consulta-service'
 import type { CreateMarcacaoConsultaBody } from '@/lib/services/consultas/marcacao-consulta-service/marcacao-consulta-client'
+import { AdmissaoAdministrativoService } from '@/lib/services/consultas/admissao-administrativo-service'
+import { ConsultaService } from '@/lib/services/consultas/consulta-service'
 import { modules } from '@/config/modules'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { createAreaComumListActionsColumnDef } from '@/components/shared/area-comum-list-actions-column'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { openAdmissaoFromMarcacaoInApp } from '@/utils/window-utils'
+import {
+  openAdmissaoEditInApp,
+  openAdmissaoFromMarcacaoInApp,
+  openFichaClinicaAtendimentoInApp,
+} from '@/utils/window-utils'
 
 function getTodayStr() {
   return format(new Date(), 'yyyy-MM-dd')
@@ -94,6 +100,7 @@ function getColumnsWithActions(
   onOpenView: (row: ConsultaMarcadaRow) => void,
   onOpenEdit: (row: ConsultaMarcadaRow) => void,
   onOpenDelete: (row: ConsultaMarcadaRow) => void,
+  onAtender: ((row: ConsultaMarcadaRow) => void) | undefined,
   onAdmitir: ((row: ConsultaMarcadaRow) => void) | undefined,
   rowActionPermissions: {
     canView: boolean
@@ -111,18 +118,35 @@ function getColumnsWithActions(
         onOpenDelete,
         rowActionPermissions,
         renderExtraActions:
-          rowActionPermissions.canAdmitir && onAdmitir
+          ((rowActionPermissions.canView && onAtender) ||
+            (rowActionPermissions.canAdmitir && onAdmitir))
             ? (row) => (
-                <Button
-                  type='button'
-                  variant='ghost'
-                  size='icon'
-                  className='h-8 w-8'
-                  title='Admitir na receção'
-                  onClick={() => onAdmitir(row)}
-                >
-                  <UserPlus className='h-4 w-4' />
-                </Button>
+                <>
+                  {rowActionPermissions.canView && onAtender ? (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8'
+                      title={row.consultaId ? 'Abrir ficha clínica' : 'Iniciar atendimento'}
+                      onClick={() => onAtender(row)}
+                    >
+                      <Stethoscope className='h-4 w-4' />
+                    </Button>
+                  ) : null}
+                  {rowActionPermissions.canAdmitir && onAdmitir ? (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8'
+                      title='Admitir na receção'
+                      onClick={() => onAdmitir(row)}
+                    >
+                      <UserPlus className='h-4 w-4' />
+                    </Button>
+                  ) : null}
+                </>
               )
             : undefined,
       }),
@@ -147,6 +171,7 @@ export function ConsultasMarcadasPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [consultasDesmarcadas, setConsultasDesmarcadas] = useState(false)
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [sorting, setSorting] = useState<Array<{ id: string; desc: boolean }>>([])
   const consultasMarcadasPermissionId = modules.areaClinica.permissions.consultasMarcadas.id
@@ -155,7 +180,10 @@ export function ConsultasMarcadasPage() {
     useAreaComumEntityListPermissions(consultasMarcadasPermissionId)
   const { canAdd: canAdmitir } = useAreaComumEntityListPermissions(admissoesPermissionId)
   const effectiveDateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : getTodayStr()
-  const { rows: consultasFiltradas, refetch, isFetching } = useConsultasDoDiaMarcacoes(effectiveDateStr, { enabled: true })
+  const { rows: consultasFiltradas, refetch, isFetching } = useConsultasDoDiaMarcacoes(
+    effectiveDateStr,
+    { enabled: true, desmarcadas: consultasDesmarcadas },
+  )
   const handleOpenView = (row: ConsultaMarcadaRow) => { setSelectedRow(row); setViewEditMode('view'); setViewEditModalOpen(true) }
   const handleOpenEdit = (row: ConsultaMarcadaRow) => { setSelectedRow(row); setViewEditMode('edit'); setViewEditModalOpen(true) }
   const handleOpenDelete = (row: ConsultaMarcadaRow) => { setItemToDelete(row); setDeleteDialogOpen(true) }
@@ -179,22 +207,67 @@ export function ConsultasMarcadasPage() {
 
   const handleConfirmDelete = () => { if (!itemToDelete?.id) return; deleteMarcacaoMutation.mutate(itemToDelete.id); setDeleteDialogOpen(false); setItemToDelete(null) }
   const handleRefresh = () => { setPage(1); refetch() }
+  const handleAtender = useCallback(
+    async (row: ConsultaMarcadaRow) => {
+      if (!row.id || !row.utenteId) return
+
+      const res = await ConsultaService(consultasMarcadasPermissionId).iniciarAtendimento({
+        consultaId: row.consultaId ?? null,
+        consultaMarcacaoId: row.id,
+      })
+      if (res.info?.status !== ResponseStatus.Success || !res.info.data?.consultaId) {
+        toast.error(
+          res.info?.messages?.$?.[0] ??
+            res.info?.messages?.['']?.[0] ??
+            'Não foi possível iniciar o atendimento.'
+        )
+        return
+      }
+
+      const contexto = res.info.data
+      await queryClient.invalidateQueries({ queryKey: ['consultas-do-dia-marcacoes'] })
+      await queryClient.invalidateQueries({ queryKey: ['consultas-do-dia-atendimento'] })
+
+      openFichaClinicaAtendimentoInApp(navigate, addWindow, {
+        utenteId: contexto.utenteId,
+        consultaId: contexto.consultaId,
+        consultaMarcacaoId: contexto.consultaMarcacaoId,
+        admissaoId: contexto.admissaoId,
+        utenteNome: contexto.utenteNome ?? row.utenteNome,
+      })
+    },
+    [addWindow, consultasMarcadasPermissionId, navigate, queryClient]
+  )
   const handleAdmitir = useCallback(
-    (row: ConsultaMarcadaRow) => {
+    async (row: ConsultaMarcadaRow) => {
       if (!row.id) return
+      const res = await AdmissaoAdministrativoService(admissoesPermissionId)
+        .getByConsultaMarcacaoId(row.id)
+      if (res.info?.status === ResponseStatus.Success && res.info.data?.id) {
+        openAdmissaoEditInApp(navigate, addWindow, res.info.data.id, row.utenteNome)
+        return
+      }
+      if (res.info?.status !== ResponseStatus.Success) {
+        toast.error(
+          res.info?.messages?.$?.[0] ??
+            res.info?.messages?.['']?.[0] ??
+            'Não foi possível verificar a admissão da marcação.'
+        )
+        return
+      }
       openAdmissaoFromMarcacaoInApp(navigate, addWindow, row.id, row.utenteNome)
     },
-    [navigate, addWindow]
+    [navigate, addWindow, admissoesPermissionId]
   )
   const columns = useMemo(
     () =>
-      getColumnsWithActions(handleOpenView, handleOpenEdit, handleOpenDelete, handleAdmitir, {
+      getColumnsWithActions(handleOpenView, handleOpenEdit, handleOpenDelete, handleAtender, handleAdmitir, {
         canView,
         canChange,
         canDelete,
         canAdmitir,
       }),
-    [canView, canChange, canDelete, canAdmitir, handleAdmitir]
+    [canView, canChange, canDelete, canAdmitir, handleAtender, handleAdmitir]
   )
   const totalRegistos = consultasFiltradas.length
   const totalPages = Math.max(1, Math.ceil(totalRegistos / pageSize))
@@ -294,6 +367,15 @@ export function ConsultasMarcadasPage() {
       icon: <List className='h-4 w-4' />,
       onClick: () => {},
       variant: 'outline',
+    },
+    {
+      label: consultasDesmarcadas ? 'Desmarcadas ✓' : 'Desmarcadas',
+      icon: <List className='h-4 w-4' />,
+      onClick: () => {
+        setPage(1)
+        setConsultasDesmarcadas((value) => !value)
+      },
+      variant: consultasDesmarcadas ? ('emerald' as const) : ('outline' as const),
     },
     {
       label: 'Atualizar',

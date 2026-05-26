@@ -15,6 +15,7 @@ export interface MarcacaoConsultaDTO {
   tipoAdmissaoId?: string | null
   tipoConsultaId?: string | null
   obs?: string | null
+  emTratamento?: boolean | null
   statusConsulta?: number | null
 }
 

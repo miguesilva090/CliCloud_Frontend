@@ -107,6 +107,22 @@ type TabKey = 'dados-utente' | 'dados-consulta' | 'registo-servicos'
 const BTN_SECONDARY_ACTION =
   'bg-slate-800 text-white shadow-sm hover:bg-slate-700'
 
+function getApiErrorMessage(info: unknown, fallback: string): string {
+  const data = info as { messages?: unknown } | undefined
+  const messages = data?.messages
+
+  if (typeof messages === 'string') return messages
+  if (Array.isArray(messages) && typeof messages[0] === 'string') return messages[0]
+  if (messages && typeof messages === 'object') {
+    const first = Object.values(messages as Record<string, string[]>)
+      .flat()
+      .find((x) => typeof x === 'string')
+    if (first) return first
+  }
+
+  return fallback
+}
+
 function FuncionarioFooter({ nome }: { nome: string }) {
   return (
     <div className='mt-4 rounded-md border bg-muted/20 px-3 py-2'>
@@ -720,7 +736,16 @@ export function AdmissaoViewEditModal({
         onSaved?.()
         onOpenChange(false)
       } else {
-        toast.error(res.info?.messages?.['']?.[0] ?? 'Erro ao gravar admissão.')
+        toast.error(
+          getApiErrorMessage(
+            res.info,
+            mode === 'create'
+              ? 'Erro ao criar admissão.'
+              : isHistorico
+                ? 'Erro ao atualizar consulta (histórico).'
+                : 'Erro ao gravar admissão.'
+          )
+        )
       }
     } finally {
       setSaving(false)

@@ -1,8 +1,16 @@
 import { Suspense, lazy, useEffect } from 'react'
 import { DashboardPage } from '@/pages/dashboard'
 import { NotFound } from '@/pages/not-found'
-import { Navigate, Outlet, useLocation, useNavigate, useRoutes } from 'react-router-dom'
+import {
+  Navigate,
+  Outlet,
+  useLocation,
+  useMatches,
+  useNavigate,
+  useRoutes,
+} from 'react-router-dom'
 import { useBrowserPathSearch } from '@/hooks/use-browser-path-search'
+import { getWindowShellResetFromState } from '@/utils/window-utils'
 import { useNavigationStore } from '@/utils/navigation'
 import { useNavigationTracking } from '@/hooks/use-navigation-tracking'
 import { ProtectedRoute } from '@/components/auth/protected-route'
@@ -39,7 +47,10 @@ function KeyedLayoutOutlet() {
     return <Navigate to={browserPathSearch} replace />
   }
 
-  const suspenseKey = `${routerPathSearch}-${location.key}`
+  const shellReset = getWindowShellResetFromState(location.state)
+  const suspenseKey = `${routerPathSearch}-${location.key}${
+    shellReset ? `-${shellReset}` : ''
+  }`
 
   return (
     <Suspense

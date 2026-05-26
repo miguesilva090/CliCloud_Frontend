@@ -21,9 +21,6 @@ export function ListagemOrdemEntradaTable({
   onFiltersChange,
   onSortingChange,
   toolbarActions,
-  onDefinirOrdem,
-  onAnularOrdem,
-  onTogglePresente,
   onOpenView,
   onOpenEdit,
   onOpenDelete,
@@ -45,9 +42,6 @@ export function ListagemOrdemEntradaTable({
   onFiltersChange: (filters: TableFilter) => void
   onSortingChange: (sorting: TableSort) => void
   toolbarActions?: DataTableAction[]
-  onDefinirOrdem: (row: OrdemEntradaTableDTO) => void
-  onAnularOrdem: (row: OrdemEntradaTableDTO) => void
-  onTogglePresente: (row: OrdemEntradaTableDTO, value: boolean) => void
   onOpenView: (row: OrdemEntradaTableDTO) => void
   onOpenEdit?: (row: OrdemEntradaTableDTO) => void
   onOpenDelete?: (row: OrdemEntradaTableDTO) => void
@@ -64,9 +58,6 @@ export function ListagemOrdemEntradaTable({
   return (
     <DataTable
       columns={getOrdemEntradaColumns({
-        onDefinirOrdem,
-        onAnularOrdem,
-        onTogglePresente,
         onOpenView,
         onOpenEdit,
         onOpenDelete,

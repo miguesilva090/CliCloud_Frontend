@@ -28,6 +28,36 @@ import {
   markAdmissaoSubsistemasPickerOpening,
 } from '@/pages/area-comum/tabelas/consultas/servicos/subsistemas-servicos/subsistemas-servicos-admissao-flow'
 
+/** Estado de navegação para forçar remount do shell sem reload (última tab). */
+export type WindowShellNavigateState = {
+  windowShellReset?: number
+}
+
+let suppressAutoWindowUntil = 0
+let skipAutoWindowOnce = false
+
+/** Evita o WindowManager recriar tab enquanto o URL ainda é listagem (ex. última tab). */
+export function suppressAutoWindowRegistration(ms = 800): void {
+  suppressAutoWindowUntil = Date.now() + ms
+  skipAutoWindowOnce = true
+}
+
+export function shouldSuppressAutoWindowRegistration(): boolean {
+  return Date.now() < suppressAutoWindowUntil
+}
+
+export function consumeSkipAutoWindowOnce(): boolean {
+  if (!skipAutoWindowOnce) return false
+  skipAutoWindowOnce = false
+  return true
+}
+
+export function getWindowShellResetFromState(state: unknown): number {
+  if (!state || typeof state !== 'object') return 0
+  const reset = (state as WindowShellNavigateState).windowShellReset
+  return typeof reset === 'number' ? reset : 0
+}
+
 function normalizeAppPath(path: string): string {
   if (!path) return '/'
   const p = path.startsWith('/') ? path : `/${path}`
@@ -325,15 +355,33 @@ export function navigateToWindowPath(
   navigate(target, { replace: true })
 }
 
+export type NavigateToModuleHomeOptions = {
+  /** Remount fluido do Outlet ao fechar a última tab (sem reload). */
+  resetOutlet?: boolean
+}
+
 /** Última tab fechada: ir para a home do módulo (ex. área administrativa → /consultas). */
 export function navigateToModuleHome(
   navigate: NavigateFunction,
-  contextPath?: string
+  contextPath?: string,
+  options?: NavigateToModuleHomeOptions
 ): void {
   const homePath = getContextualHomePath(contextPath || window.location.pathname)
-  navigate(homePath, { replace: true })
 
-  // Sinistrados + DataTable: o browser pode reflectir o novo path antes do Router remontar a rota.
+  clearPathnameKeySyncPending()
+
+  const state: WindowShellNavigateState | undefined = options?.resetOutlet
+    ? { windowShellReset: Date.now() }
+    : undefined
+
+  if (!options?.resetOutlet) {
+    suppressPathnameKeyUrlChange(600)
+  }
+
+  navigate(homePath, { replace: true, state })
+
+  if (options?.resetOutlet) return
+
   requestAnimationFrame(() => {
     const browserPath = window.location.pathname
     const targetPath = homePath.split('?')[0]
@@ -637,6 +685,59 @@ export function openAdmissaoCreationInApp(
   )
 }
 
+export function openAdmissaoEditInApp(
+  navigate: NavigateFunction,
+  addWindow: AddWindowFn,
+  admissaoId: string,
+  utenteNome?: string | null
+): void {
+  const label = utenteNome?.trim()
+  const title = label
+    ? `Admissão — ${label.length > 28 ? `${label.slice(0, 28)}…` : label}`
+    : 'Editar admissão'
+  openPathInApp(
+    navigate,
+    addWindow,
+    `/area-administrativa/consultas/admissoes/${admissaoId}`,
+    title
+  )
+}
+
+export function openFichaClinicaAtendimentoInApp(
+  navigate: NavigateFunction,
+  addWindow: AddWindowFn,
+  options: {
+    utenteId: string
+    consultaId?: string | null
+    consultaMarcacaoId?: string | null
+    admissaoId?: string | null
+    utenteNome?: string | null
+  }
+): void {
+  const qs = new URLSearchParams()
+  qs.set('utenteId', options.utenteId)
+  if (options.consultaId) {
+    qs.set('consultaId', options.consultaId)
+  }
+  if (options.consultaMarcacaoId) {
+    qs.set('consultaMarcacaoId', options.consultaMarcacaoId)
+  }
+  if (options.admissaoId) {
+    qs.set('admissaoId', options.admissaoId)
+  }
+
+  const label = options.utenteNome?.trim()
+  const title = label
+    ? `Ficha Clínica — ${label.length > 28 ? `${label.slice(0, 28)}…` : label}`
+    : 'Ficha Clínica'
+  openPathInApp(
+    navigate,
+    addWindow,
+    `/area-clinica/processo-clinico/atendimento/ficha-clinica?${qs.toString()}`,
+    title
+  )
+}
+
 /** Cenário A: abre Nova admissão com dados da marcação (consultaMarcacaoId na query). */
 export function openAdmissaoFromMarcacaoInApp(
   navigate: NavigateFunction,
@@ -817,9 +918,13 @@ export function handleWindowClose(
     return
   }
 
-  // Última tab: limpar store e cache antes de navegar (evita Sinistrados preso no ecrã)
-  windowsStore.clearAllWindows()
-  navigateToModuleHome(navigate, locationPath)
+  // Última tab: navegar primeiro; sync pathname pode corrigir router; limpar store depois.
+  suppressAutoWindowRegistration(800)
+  navigateToModuleHome(navigate, locationPath, { resetOutlet: true })
+  queueMicrotask(() => {
+    windowsStore.clearAllWindows()
+    cleanupWindowForms('*')
+  })
 }
 
 /**

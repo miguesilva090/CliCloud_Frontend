@@ -13,7 +13,7 @@ import {
   type PageFilter,
 } from '@/utils/page-data-utils'
 
-const permId = modules.areaAdministrativa.permissions.consultas.id
+const permId = modules.areaAdministrativa.permissions.listaEsperaConsultas.id
 
 type Props = {
   filters: PageFilter[]

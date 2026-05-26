@@ -14,6 +14,7 @@ import { MarcacoesAdministrativoService } from '@/lib/services/consultas/marcaco
 import { ResponseStatus } from '@/types/api/responses'
 import { MarcacaoAdministrativoViewEditModal } from '../modals/marcacao-administrativo-view-edit-modal'
 import { MarcacaoAdministrativoDesmarcarModal } from '../modals/marcacao-administrativo-desmarcar-modal'
+import { MarcacaoAssociarSalaModal } from '../modals/marcacao-associar-sala-modal'
 import { MarcacoesRelatoriosModal } from '../modals/marcacoes-relatorios-modal'
 import { MarcacoesEnvioSmsModal } from '../modals/marcacoes-envio-sms-modal'
 import {
@@ -31,6 +32,13 @@ import type { MarcacaoAdministrativoFormState } from '../modals/marcacao-adminis
 
 const listPermId = modules.areaAdministrativa.permissions.consultas.id
 
+type SalaModalState = {
+  marcacaoId: string
+  data: string
+  horaInicio: string
+  salaAtualNome?: string | null
+} | null
+
 export function ListagemMarcacoesAdministrativoPage() {
   const [searchParams] = useSearchParams()
   const queryClient = useQueryClient()
@@ -47,6 +55,8 @@ export function ListagemMarcacoesAdministrativoPage() {
   const [modalMode, setModalMode] = useState<'view' | 'create' | 'edit'>('view')
   const [selectedRow, setSelectedRow] = useState<MarcacaoAdministrativoTableDTO | null>(null)
   const [desmarcarOpen, setDesmarcarOpen] = useState(false)
+  const [salaOpen, setSalaOpen] = useState(false)
+  const [salaModalState, setSalaModalState] = useState<SalaModalState>(null)
   const [relatoriosOpen, setRelatoriosOpen] = useState(false)
   const [smsOpen, setSmsOpen] = useState(false)
   const [createSlotData, setCreateSlotData] = useState<string | undefined>()
@@ -89,7 +99,11 @@ export function ListagemMarcacoesAdministrativoPage() {
     setSelectedRow(null)
     setCreateSlotData(data)
     setCreateSlotHora(hora)
-    setCreatePrefill(null)
+    setCreatePrefill(
+      listCriteria.salaId
+        ? { salaId: listCriteria.salaId, salaLabel: listCriteria.salaLabel }
+        : null
+    )
     setModalMode('create')
     setModalOpen(true)
   }
@@ -143,6 +157,35 @@ export function ListagemMarcacoesAdministrativoPage() {
     }
   }
 
+  const openAssociarSalaSelecionada = async () => {
+    if (!selectedMarcacaoId) return
+    try {
+      const res = await MarcacoesAdministrativoService(listPermId).getById(selectedMarcacaoId)
+      if (res.info?.status !== ResponseStatus.Success || !res.info.data) {
+        toast.error('Não foi possível carregar a marcação selecionada.')
+        return
+      }
+
+      const d = res.info.data
+      const data = d.data?.slice(0, 10) ?? ''
+      const horaInicio = d.horaInicio?.slice(0, 5) ?? ''
+      if (!data || !horaInicio) {
+        toast.error('A marcação selecionada não tem data e hora definidas.')
+        return
+      }
+
+      setSalaModalState({
+        marcacaoId: d.id,
+        data,
+        horaInicio,
+        salaAtualNome: d.salaNome,
+      })
+      setSalaOpen(true)
+    } catch {
+      toast.error('Erro ao carregar a marcação selecionada.')
+    }
+  }
+
   const entrarDisponibilidade = () => {
     if (!listCriteria.especialidadeId) {
       toast.error('Selecione a especialidade na agenda.')
@@ -183,6 +226,7 @@ export function ListagemMarcacoesAdministrativoPage() {
             onDisponibilidade={entrarDisponibilidade}
             onSairDisponibilidade={sairDisponibilidade}
             onEnvioSms={() => setSmsOpen(true)}
+            onAssociarSala={openAssociarSalaSelecionada}
             onListagens={() => setRelatoriosOpen(true)}
             onDesmarcar={openDesmarcarSelecionada}
             onRefresh={refresh}
@@ -244,6 +288,22 @@ export function ListagemMarcacoesAdministrativoPage() {
           setSelectedMarcacaoId(null)
           refresh()
         }}
+      />
+
+      <MarcacaoAssociarSalaModal
+        open={salaOpen}
+        onOpenChange={(open) => {
+          setSalaOpen(open)
+          if (!open) {
+            setSalaModalState(null)
+          }
+        }}
+        marcacaoId={salaModalState?.marcacaoId ?? null}
+        data={salaModalState?.data ?? ''}
+        horaInicio={salaModalState?.horaInicio ?? ''}
+        salaAtualNome={salaModalState?.salaAtualNome}
+        listPermId={listPermId}
+        onSaved={refresh}
       />
 
       <MarcacoesRelatoriosModal

@@ -31,9 +31,12 @@ import { EspecialidadeService } from '@/lib/services/especialidades/especialidad
 import { TipoConsultaService } from '@/lib/services/tipos-consulta/tipo-consulta-service'
 import { TipoAdmissaoService } from '@/lib/services/consultas/tipo-admissao-service'
 import { OrganismoService } from '@/lib/services/saude/organismo-service'
+import { SalaService } from '@/lib/services/consultas/sala-service'
+import { ClinicaService } from '@/lib/services/core/clinica-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
 import type { MarcacaoAdministrativoTableDTO } from '@/types/dtos/consultas/marcacoes-administrativo.dtos'
+import type { SalaTableDTO } from '@/types/dtos/consultas/sala.dtos'
 import {
   createEmptyMarcacaoForm,
   mapMarcacaoDtoToForm,
@@ -51,8 +54,26 @@ import {
 import { AdmissaoAdministrativoService } from '@/lib/services/consultas/admissao-administrativo-service'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { openAdmissaoFromMarcacaoInApp } from '@/utils/window-utils'
+import { modules } from '@/config/modules'
 
 type ModalMode = 'view' | 'create' | 'edit'
+const listaEsperaPermId = modules.areaAdministrativa.permissions.listaEsperaConsultas.id
+
+function getApiErrorMessage(info: unknown, fallback: string): string {
+  const data = info as { messages?: unknown } | undefined
+  const messages = data?.messages
+
+  if (typeof messages === 'string') return messages
+  if (Array.isArray(messages) && typeof messages[0] === 'string') return messages[0]
+  if (messages && typeof messages === 'object') {
+    const first = Object.values(messages as Record<string, string[]>)
+      .flat()
+      .find((x) => typeof x === 'string')
+    if (first) return first
+  }
+
+  return fallback
+}
 
 export function MarcacaoAdministrativoViewEditModal({
   open,
@@ -95,6 +116,7 @@ export function MarcacaoAdministrativoViewEditModal({
   const [medSearch, setMedSearch] = useState('')
   const [espSearch, setEspSearch] = useState('')
   const [orgSearch, setOrgSearch] = useState('')
+  const [salaSearch, setSalaSearch] = useState('')
   const [debouncedUt] = useDebounce(utSearch, 300)
   const [debouncedMed] = useDebounce(medSearch, 300)
   const [debouncedEsp] = useDebounce(espSearch, 300)
@@ -197,6 +219,31 @@ export function MarcacaoAdministrativoViewEditModal({
     enabled: open && !readOnly,
   })
 
+  const clinicaQuery = useQuery({
+    queryKey: ['marcacao-form', 'clinica-current'],
+    queryFn: () => ClinicaService(listPermId).getClinicaCurrent(),
+    enabled: open,
+  })
+
+  const salasQuery = useQuery({
+    queryKey: ['marcacao-form', 'salas'],
+    queryFn: async () => {
+      const res = await SalaService(listPermId).getSalasPaginated({
+        pageNumber: 1,
+        pageSize: 300,
+        sorting: [{ id: 'nome', desc: false }],
+      })
+      const payload = res.info?.data as
+        | { data?: SalaTableDTO[] }
+        | SalaTableDTO[]
+        | undefined
+      if (Array.isArray(payload)) return payload
+      return payload?.data ?? []
+    },
+    enabled: open && !readOnly,
+    staleTime: 5 * 60_000,
+  })
+
   const tiposConsultaQuery = useQuery({
     queryKey: ['marcacao-form', 'tipos-consulta'],
     queryFn: async () => {
@@ -229,6 +276,15 @@ export function MarcacaoAdministrativoViewEditModal({
     return list.map((o) => ({ value: o.id, label: o.nome }))
   }, [orgQuery.data])
 
+  const salaItems = useMemo(() => {
+    const list = salasQuery.data ?? []
+    return list.map((s) => ({
+      value: s.id,
+      label: s.nome,
+      secondary: String(s.numeroSala),
+    }))
+  }, [salasQuery.data])
+
   const utenteItems = useMemo(() => {
     const list = (utentesQuery.data?.info?.data ?? []) as Array<{
       id: string
@@ -254,6 +310,7 @@ export function MarcacaoAdministrativoViewEditModal({
 
   const title =
     mode === 'create' || mode === 'edit' ? 'Marcações' : 'Marcação'
+  const gestaoSalasAtiva = clinicaQuery.data?.info?.data?.gestaoSalas === true
 
   const tiposConsultaLegado = useMemo(() => {
     const list = tiposConsultaQuery.data ?? []
@@ -312,7 +369,9 @@ export function MarcacaoAdministrativoViewEditModal({
         if (syncRes.info?.status === ResponseStatus.Success && syncRes.info.data) {
           await detailQuery.refetch()
         } else {
-          toast.error('Não foi possível ligar a marcação à admissão.')
+          toast.error(
+            getApiErrorMessage(syncRes.info, 'Não foi possível ligar a marcação à admissão.')
+          )
           return
         }
       } catch {
@@ -342,12 +401,16 @@ export function MarcacaoAdministrativoViewEditModal({
       toast.error('Indique data e hora.')
       return
     }
+    if (gestaoSalasAtiva && !form.salaId) {
+      toast.error('Sala é obrigatória.')
+      return
+    }
 
     setSaving(true)
     try {
       if (mode === 'create') {
         if (form.listaEsperaId && form.vemListaEspera) {
-          const res = await ListaEsperaAdministrativoService(listPermId).converterMarcacao(
+          const res = await ListaEsperaAdministrativoService(listaEsperaPermId).converterMarcacao(
             form.listaEsperaId,
             {
               dataMarcacao: form.data ? `${form.data}T00:00:00` : undefined,
@@ -363,7 +426,7 @@ export function MarcacaoAdministrativoViewEditModal({
             onOpenChange(false)
             onSaved?.()
           } else {
-            toast.error(res.info?.messages?.[0] ?? 'Não foi possível marcar.')
+            toast.error(getApiErrorMessage(res.info, 'Não foi possível marcar.'))
           }
         } else {
           const res = await MarcacoesAdministrativoService(listPermId).create(
@@ -374,7 +437,7 @@ export function MarcacaoAdministrativoViewEditModal({
             onOpenChange(false)
             onSaved?.()
           } else {
-            toast.error('Não foi possível criar a marcação.')
+            toast.error(getApiErrorMessage(res.info, 'Não foi possível criar a marcação.'))
           }
         }
       } else if (mode === 'edit' && row?.id) {
@@ -393,7 +456,7 @@ export function MarcacaoAdministrativoViewEditModal({
           onOpenChange(false)
           onSaved?.()
         } else {
-          toast.error('Não foi possível atualizar a marcação.')
+          toast.error(getApiErrorMessage(res.info, 'Não foi possível atualizar a marcação.'))
         }
       }
     } catch {
@@ -538,6 +601,32 @@ export function MarcacaoAdministrativoViewEditModal({
               />
             </div>
           </div>
+
+          {!readOnly ? (
+            <div className={fieldGap}>
+              <Label className={labelClass}>
+                Sala{gestaoSalasAtiva ? ' *' : ''}
+              </Label>
+              <AsyncCombobox
+                value={form.salaId}
+                onChange={(id) => {
+                  const label = salaItems.find((item) => item.value === id)?.label ?? ''
+                  patch({ salaId: id, salaLabel: label })
+                }}
+                searchValue={salaSearch}
+                onSearchValueChange={setSalaSearch}
+                items={
+                  form.salaLabel && !salaItems.some((item) => item.value === form.salaId)
+                    ? [{ value: form.salaId, label: form.salaLabel }, ...salaItems]
+                    : salaItems
+                }
+                isLoading={salasQuery.isFetching}
+                placeholder='Selecionar sala…'
+                searchPlaceholder='Pesquisar sala…'
+                emptyText='Sem salas'
+              />
+            </div>
+          ) : null}
 
           {readOnly ? (
             <div className='grid gap-3 sm:grid-cols-2'>
@@ -729,7 +818,7 @@ export function MarcacaoAdministrativoViewEditModal({
       <ListaEsperaSelecionarModal
         open={lePickerOpen}
         onOpenChange={setLePickerOpen}
-        listPermId={listPermId}
+        listPermId={listaEsperaPermId}
         medicoAgendaId={
           lePickerComMedico ? form.medicoId || defaultMedicoId : undefined
         }

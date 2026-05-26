@@ -20,6 +20,9 @@ import {
   navigateToWindowPath,
   getNavigationAreaPrefix,
   pickRestoreWindowAfterClose,
+  suppressAutoWindowRegistration,
+  shouldSuppressAutoWindowRegistration,
+  consumeSkipAutoWindowOnce,
 } from '@/utils/window-utils'
 import { useSidebar } from '@/hooks/use-sidebar'
 import { Button } from '@/components/ui/button'
@@ -45,9 +48,6 @@ function canReuseInstanceAcrossPaths(
 
   if (from === to) return true
 
-  // Permite apenas transiÃ§Ãµes hierÃ¡rquicas da mesma instÃ¢ncia
-  // (ex.: /utentes/:id -> /utentes/:id/editar), evitando "trocas"
-  // entre pÃ¡ginas irmÃ£s como "X" e "Listagem X".
   return from.startsWith(`${to}/`) || to.startsWith(`${from}/`)
 }
 
@@ -141,14 +141,7 @@ export function WindowManager({ children }: WindowManagerProps) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const windowsBarRef = useRef<HTMLDivElement>(null)
-  const skipAutoWindowRef = useRef(false)
-  const suppressAutoWindowUntilRef = useRef(0)
   const prevAreaPrefixRef = useRef('')
-
-  const suppressAutoWindow = (ms = 800) => {
-    suppressAutoWindowUntilRef.current = Date.now() + ms
-    skipAutoWindowRef.current = true
-  }
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(false)
   const animationFrameRef = useRef<number>(0)
@@ -319,7 +312,7 @@ export function WindowManager({ children }: WindowManagerProps) {
       area &&
       prevAreaPrefixRef.current !== area
     ) {
-      suppressAutoWindow()
+      suppressAutoWindowRegistration()
       clearAllWindows()
     }
     prevAreaPrefixRef.current = area
@@ -330,7 +323,7 @@ export function WindowManager({ children }: WindowManagerProps) {
     if (!shouldManageWindow(location.pathname)) {
       const { windows: openWindows } = useWindowsStore.getState()
       if (openWindows.length > 0) {
-        suppressAutoWindow()
+        suppressAutoWindowRegistration()
         clearAllWindows()
       }
     }
@@ -370,11 +363,8 @@ export function WindowManager({ children }: WindowManagerProps) {
   }, [location.pathname, location.search, searchParams, windows])
 
   useEffect(() => {
-    if (Date.now() < suppressAutoWindowUntilRef.current) return
-    if (skipAutoWindowRef.current) {
-      skipAutoWindowRef.current = false
-      return
-    }
+    if (shouldSuppressAutoWindowRegistration()) return
+    if (consumeSkipAutoWindowOnce()) return
 
     const route = findRouteWithManageWindow(location.pathname)
     if (!route?.manageWindow) return
@@ -407,7 +397,6 @@ export function WindowManager({ children }: WindowManagerProps) {
 
     if (!existingWindow) {
       const id = generateInstanceId()
-
       const parentWindowId = sessionStorage.getItem(
         `parent-window-${instanceId}`
       )
@@ -556,11 +545,15 @@ export function WindowManager({ children }: WindowManagerProps) {
     const remainingWindows = windows.filter((w) => w.id !== windowId)
 
     if (remainingWindows.length === 0) {
-      suppressAutoWindow()
+      suppressAutoWindowRegistration(800)
       mapStore.cleanupWindowData(windowId)
-      navigateToModuleHome(navigate, windowPath || location.pathname)
-      clearAllWindows()
-      cleanupWindowForms('*')
+      navigateToModuleHome(navigate, windowPath || location.pathname, {
+        resetOutlet: true,
+      })
+      queueMicrotask(() => {
+        clearAllWindows()
+        cleanupWindowForms('*')
+      })
       return
     }
 
@@ -618,10 +611,12 @@ export function WindowManager({ children }: WindowManagerProps) {
     windows.forEach((window) => {
       mapStore.cleanupWindowData(window.id)
     })
-    suppressAutoWindow()
-    clearAllWindows()
-    cleanupWindowForms('*')
-    navigateToModuleHome(navigate, location.pathname)
+    suppressAutoWindowRegistration(800)
+    navigateToModuleHome(navigate, location.pathname, { resetOutlet: true })
+    queueMicrotask(() => {
+      clearAllWindows()
+      cleanupWindowForms('*')
+    })
   }
 
   // Cleanup animation frames on unmount

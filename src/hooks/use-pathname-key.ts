@@ -5,6 +5,7 @@ import {
   isAdmissaoSubsistemasPickerClosing,
   isAdmissaoSubsistemasPickerOpening,
 } from '@/pages/area-comum/tabelas/consultas/servicos/subsistemas-servicos/subsistemas-servicos-admissao-flow'
+import { getWindowShellResetFromState } from '@/utils/window-utils'
 
 const URL_CHANGE_EVENT = 'urlchange'
 
@@ -155,11 +156,15 @@ export function usePathnameKey(): string {
     })
   }, [])
 
+  const shellReset = getWindowShellResetFromState(location.state)
+
   useEffect(() => {
-    const next = `${location.pathname}${location.search}-${location.key}`
+    const next = `${location.pathname}${location.search}-${location.key}${
+      shellReset ? `-${shellReset}` : ''
+    }`
     setPathKey(next)
     ctrlRef.current.syncGen += 1
-  }, [location.pathname, location.search, location.key])
+  }, [location.pathname, location.search, location.key, shellReset])
 
   useEffect(() => {
     const onPopstate = () => syncRouterFromBrowser()

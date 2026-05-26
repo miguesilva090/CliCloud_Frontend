@@ -102,6 +102,7 @@ export interface ConsultaLightDTO {
   data?: string | null
   horaInic?: string | null
   horaFim?: string | null
+  horaChegada?: string | null
   sala?: string | null
 }
 
@@ -121,10 +122,18 @@ export interface ConsultaTableDTO {
   tecnicoId?: string | null
   confirmado?: boolean | null
   efectuado?: boolean | null
+  efetuado?: boolean | null
   faltou?: boolean | null
+  statusConsulta?: number | null
+  statusConsultaLabel?: string | null
+  diagnostico?: string | null
+  obs?: string | null
+  credencial?: string | null
   createdOn: string
   tipoConsultaId?: string | null
   tipoConsultaDesignacao?: string | null
+  motivoConsultaId?: string | null
+  motivoConsultaDesignacao?: string | null
 }
 
 // ---------------------------------------------------------------------
