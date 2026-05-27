@@ -25,6 +25,12 @@
 .marcacoes-agenda-calendario .fc .fc-view-harness {
   margin: 0 !important;
   padding: 0 !important;
+  width: 100% !important;
+}
+
+.marcacoes-agenda-calendario .fc .fc-scrollgrid,
+.marcacoes-agenda-calendario .fc .fc-scrollgrid-sync-table {
+  width: 100% !important;
 }
 
 /* Toolbar própria (não usa fc-toolbar) — colada aos filtros, sem gap */

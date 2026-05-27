@@ -496,7 +496,31 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
     }
   }
 
-  // Navegação para a página de Evolução é feita noutros handlers específicos.
+  const handleOpenEvolucaoTratamento = (
+    tratamento: (typeof tratamentos)[number],
+    evolucao?: EvolucaoTratamentoTableDTO,
+  ) => {
+    if (!utenteId || !tratamento.id) {
+      toast.error('Não foi possível abrir a evolução deste tratamento.')
+      return
+    }
+
+    const params = new URLSearchParams()
+    params.set('tratamentoId', tratamento.id)
+    params.set('utenteId', utenteId)
+    params.set('designacao', tratamento.designacao ?? tratamento.nomePatologia ?? '')
+    params.set('organismo', tratamento.organismoNome ?? '')
+    params.set('numSessao', tratamento.numSessao != null ? String(tratamento.numSessao) : '')
+    if (evolucao?.id) {
+      params.set('evolucaoId', evolucao.id)
+    }
+
+    navigateManagedWindow(
+      navigate,
+      `/area-clinica/processo-clinico/atendimento/evolucao-tratamento?${params.toString()}`,
+      { title: 'Evolução Tratamento' },
+    )
+  }
 
   const handleOpenNovo = () => {
     if (!utenteId) return
@@ -724,6 +748,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                               type='checkbox'
                               className='h-3 w-3'
                               checked={!!t.dataFim}
+                              onClick={(e) => e.stopPropagation()}
                               onChange={(e) => handleToggleAlta(t.id, e.target.checked)}
                               disabled={toggleAltaMutation.isPending || !canChange}
                             />
@@ -856,6 +881,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                               type='checkbox'
                               className='h-3 w-3'
                               checked={!!t.dataFim}
+                              onClick={(e) => e.stopPropagation()}
                               onChange={(e) => handleToggleAlta(t.id, e.target.checked)}
                               disabled={toggleAltaMutation.isPending || !canChange}
                             />
@@ -1367,7 +1393,7 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                 <TableHead className='text-start'>Data Inicial</TableHead>
                 <TableHead className='text-start'>Data Final</TableHead>
                 <TableHead className='text-center'>Alta</TableHead>
-                <TableHead className='text-center'>Serviços</TableHead>
+                <TableHead className='text-center'>Evolução</TableHead>
                 <TableHead className='text-center'>Relatório</TableHead>
               </TableRow>
             </TableHeader>
@@ -1413,7 +1439,11 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                   const temAlta = !!evolucao?.dataAlta || !!t.dataFim
 
                   return (
-                    <TableRow key={t.id}>
+                    <TableRow
+                      key={t.id}
+                      className='cursor-pointer hover:bg-muted/40'
+                      onClick={() => handleOpenEvolucaoTratamento(t, evolucao)}
+                    >
                       <TableCell>{dataPrescricao}</TableCell>
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{organismoNome}</TableCell>
@@ -1422,16 +1452,44 @@ export function TratamentosTab({ utenteId, isActive = true }: TratamentosTabProp
                       <TableCell>{dataInic}</TableCell>
                       <TableCell>{dataFim}</TableCell>
                       <TableCell className='text-center'>
-                        <input type='checkbox' className='h-3 w-3' checked={temAlta} readOnly />
+                        <input
+                          type='checkbox'
+                          className='h-3 w-3'
+                          checked={temAlta}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => handleToggleAlta(t.id, e.target.checked)}
+                          disabled={toggleAltaMutation.isPending || !canChange}
+                        />
                       </TableCell>
                       <TableCell className='text-center'>
                         <Button
                           variant='ghost'
                           size='icon'
                           className='h-7 w-7'
-                          disabled={!evolucao}
-                          onClick={() => {
-                            if (!evolucao) return
+                          title={evolucao?.id ? 'Editar evolução' : 'Registar evolução'}
+                          disabled={!canView}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleOpenEvolucaoTratamento(t, evolucao)
+                          }}
+                        >
+                          {evolucao?.id ? (
+                            <Pencil className='h-4 w-4' />
+                          ) : (
+                            <PlusCircle className='h-4 w-4' />
+                          )}
+                        </Button>
+                      </TableCell>
+                      <TableCell className='text-center'>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          className='h-7 w-7'
+                          title='Relatório evolução'
+                          disabled={!evolucao?.id}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (!evolucao?.id) return
                             handleOpenEvolucaoImprimir(evolucao.id)
                           }}
                         >

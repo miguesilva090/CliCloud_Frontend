@@ -159,7 +159,13 @@ export function MarcacoesAgendaCalendario({
   useEffect(() => {
     const root = agendaRootRef.current
     if (!root) return
-    const ro = new ResizeObserver(() => syncDayDividers())
+    const ro = new ResizeObserver(() => {
+      const api = getCalendarApi()
+      if (api) {
+        api.updateSize()
+      }
+      requestAnimationFrame(syncDayDividers)
+    })
     ro.observe(root)
     return () => ro.disconnect()
   }, [syncDayDividers])
