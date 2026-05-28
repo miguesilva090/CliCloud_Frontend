@@ -116,6 +116,12 @@ export const HeaderNavProvider: React.FC<{ children: React.ReactNode }> = ({
         return 'area-administrativa'
       }
 
+      // Área Financeira: manter sempre o header próprio da área,
+      // mesmo quando estamos em subsecções como /faturacao, /tesouraria, etc.
+      if (pathname.startsWith('/area-financeira')) {
+        return 'area-financeira'
+      }
+
       // Sinistrados pertence ao contexto funcional de Área Administrativa > Consultas.
       if (
         pathname.startsWith('/area-administrativa/consultas/sinistrados') ||

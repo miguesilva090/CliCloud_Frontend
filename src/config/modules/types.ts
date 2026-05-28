@@ -15,4 +15,5 @@ export interface Modules {
   areaClinica: Module
   areaComum: Module
   areaAdministrativa: Module
+  areaFinanceira: Module
 }

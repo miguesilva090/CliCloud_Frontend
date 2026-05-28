@@ -20,6 +20,7 @@ import { areaComumRoutes } from './area-comum/areaComum'
 import { areaClinicaRoutes } from './area-clinica/areaClinica'
 import { reportsRoutes } from './reports/reports-routes'
 import { areaAdministrativaRoutes } from './area-administrativa/areaAdministrativa'
+import { areaFinanceiraRoutes } from './area-financeira/areaFinanceira'
 
 const ReportDesignerPage = lazy(() =>
   import('@/pages/reports/report-designer/report-designer-page').then((m) => ({
@@ -126,6 +127,7 @@ export default function AppRouter() {
         ...utilitariosRoutes,
         ...areaComumRoutes,
         ...areaClinicaRoutes,
+        ...areaFinanceiraRoutes,
         ...areaAdministrativaRoutes,
         ...reportsRoutes.filter((route) => route.path !== 'reports/designer'),
       ],

@@ -87,6 +87,37 @@ export const roleMenuItems = {
       href: '/area-financeira',
       icon: 'building2',
       label: 'Área Financeira',
+      moduloId: modules.areaFinanceira.id,
+      items: [
+        {
+          title: 'financeira-faturacao',
+          href: '/area-financeira/faturacao',
+          icon: 'fileText',
+          label: 'Faturação',
+          funcionalidadeId: modules.areaFinanceira.permissions.faturacao.id,
+        },
+        {
+          title: 'financeira-contas-correntes',
+          href: '/area-financeira/contas-correntes',
+          icon: 'wallet',
+          label: 'Contas Correntes',
+          funcionalidadeId: modules.areaFinanceira.permissions.contasCorrentes.id,
+        },
+        {
+          title: 'financeira-tesouraria',
+          href: '/area-financeira/tesouraria',
+          icon: 'calculator',
+          label: 'Tesouraria',
+          funcionalidadeId: modules.areaFinanceira.permissions.tesouraria.id,
+        },
+        {
+          title: 'financeira-configuracoes',
+          href: '/area-financeira/configuracoes',
+          icon: 'settings',
+          label: 'Configurações',
+          funcionalidadeId: modules.areaFinanceira.permissions.configuracoes.id,
+        },
+      ],
     },
     {
       title: 'area-aprovisionamento',
@@ -347,6 +378,65 @@ export const roleHeaderMenus = {
             funcionalidadeId: modules.areaAdministrativa.permissions.motivosConsulta.id,
           },
         ],
+      },
+    ],
+    'area-financeira': [
+      {
+        label: 'Faturação',
+        href: '/area-financeira/faturacao',
+        funcionalidadeId: modules.areaFinanceira.permissions.faturacao.id,
+        items: [
+          {
+            label: 'Novo Documento',
+            href: '/area-financeira/faturacao/novo-documento',
+            funcionalidadeId: modules.areaFinanceira.permissions.faturacao.id,
+          },
+          {
+            label: 'Faturação',
+            href: '/area-financeira/faturacao/faturacao',
+            funcionalidadeId: modules.areaFinanceira.permissions.faturacao.id,
+          },
+        ],
+      },
+      {
+        label: 'Ficheiros Eletrónicos',
+        href: '/area-financeira/faturacao/ficheiros-eletronicos',
+        funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+      },
+      {
+        label: 'Credenciais S.N.S.',
+        href: '/area-financeira/faturacao/credenciais-sns',
+        funcionalidadeId: modules.areaFinanceira.permissions.credenciaisSns.id,
+      },
+      {
+        label: 'ADSE',
+        href: '/area-financeira/faturacao/adse',
+        funcionalidadeId: modules.areaFinanceira.permissions.adse.id,
+      },
+      {
+        label: 'Mapas',
+        href: '/area-financeira/faturacao/mapas',
+        funcionalidadeId: modules.areaFinanceira.permissions.mapas.id,
+      },
+      {
+        label: 'Entidades',
+        href: '/area-financeira/faturacao/entidades',
+        funcionalidadeId: modules.areaFinanceira.permissions.entidades.id,
+      },
+      {
+        label: 'Tabelas',
+        href: '/area-financeira/faturacao/tabelas',
+        funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
+      },
+      {
+        label: 'Emails',
+        href: '/area-financeira/faturacao/emails',
+        funcionalidadeId: modules.areaFinanceira.permissions.emails.id,
+      },
+      {
+        label: 'Referências Multibanco',
+        href: '/area-financeira/faturacao/referencias-multibanco',
+        funcionalidadeId: modules.areaFinanceira.permissions.referenciasMultibanco.id,
       },
     ],
     'processo-clinico': [
