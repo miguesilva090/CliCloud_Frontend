@@ -16,6 +16,7 @@ import {
   taxaPercentagemFromId,
 } from '../utils/documento-linha-mappers'
 import {
+  calcularPercentagemDescontoEfectiva,
   calcularSubtotalLinha,
   type OpcoesCalculoDocumento,
 } from '../utils/documento-editor-calculos'
@@ -181,11 +182,10 @@ export function DocumentoLinhaRow({
       <TableCell className='w-20'>
         <Input
           type='number'
-          className={inputClass}
-          value={linha.percentagemDesconto ?? 0}
-          onChange={(e) =>
-            onPatch({ percentagemDesconto: Number(e.target.value) })
-          }
+          className={`${inputClass} bg-muted/50`}
+          readOnly
+          title='Calculado (cliente × pagamento × descontos linha ou desconto global)'
+          value={calcularPercentagemDescontoEfectiva(linha, opcoesCalculo)}
         />
       </TableCell>
       {perfil.mostraDescontosAvancados ? (

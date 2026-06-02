@@ -17,7 +17,10 @@ import { ServicoService } from '@/lib/services/servicos/servico-service'
 import type { EmitirDocumentoLinhaRequest } from '@/types/dtos/faturacao/documento-emissao.dtos'
 import type { DocumentoEditorProfile } from '../utils/documento-tipo-editor-profile'
 import type { OpcoesCalculoDocumento } from '../utils/documento-editor-calculos'
-import { calcularSubtotalLinha } from '../utils/documento-editor-calculos'
+import {
+  calcularPercentagemDescontoEfectiva,
+  calcularSubtotalLinha,
+} from '../utils/documento-editor-calculos'
 import { formatMoneyPt } from '../utils/faturacao-documento-display'
 import {
   findSubsistemaPreco,
@@ -227,17 +230,12 @@ export function DocumentoLinhaModal({
                 />
               </div>
               <div className={fieldGap}>
-                <Label className={labelClass}>Desconto %</Label>
+                <Label className={labelClass}>Desconto % (efetivo)</Label>
                 <Input
                   type='number'
-                  min={0}
-                  max={100}
-                  step={0.01}
-                  className={`${inputClass} tabular-nums`}
-                  value={linha.percentagemDesconto ?? 0}
-                  onChange={(e) =>
-                    patch({ percentagemDesconto: Number(e.target.value) || 0 })
-                  }
+                  readOnly
+                  className={`${inputClass} tabular-nums bg-muted/50`}
+                  value={calcularPercentagemDescontoEfectiva(linha, opcoesCalculo)}
                 />
               </div>
             </div>

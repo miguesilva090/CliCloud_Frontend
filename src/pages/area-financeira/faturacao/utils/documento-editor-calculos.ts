@@ -40,6 +40,10 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100
 }
 
+/**
+ * Percentagem efetiva (legado calcularTaxaDesconto).
+ * Prioridade: desconto global → composto (cliente × pagamento × tipo1–3).
+ */
 export function calcularPercentagemDescontoEfectiva(
   l: EmitirDocumentoLinhaRequest,
   opts: Pick<
@@ -48,9 +52,6 @@ export function calcularPercentagemDescontoEfectiva(
   >,
 ): number {
   if (opts.descontoGlobalPct > 0) return round2(opts.descontoGlobalPct)
-  if (l.percentagemDesconto != null && l.percentagemDesconto > 0) {
-    return round2(l.percentagemDesconto)
-  }
 
   const d1 = l.descontoTipo1 ?? 0
   const d2 = l.descontoTipo2 ?? 0
@@ -77,22 +78,13 @@ export function calcularLinha(
   }
 
   const totalLinhaSemIva = precoUn * l.quantidade
-
-  let descontoValor: number
-  let pctEfectiva: number
-
-  if (l.valorDesconto != null && l.valorDesconto > 0) {
-    descontoValor = round2(l.valorDesconto)
-    pctEfectiva =
-      totalLinhaSemIva > 0 ? round2((descontoValor / totalLinhaSemIva) * 100) : 0
-  } else {
-    pctEfectiva = calcularPercentagemDescontoEfectiva(l, opts)
-    descontoValor = round2(totalLinhaSemIva * (pctEfectiva / 100))
-  }
+  const pctEfectiva = calcularPercentagemDescontoEfectiva(l, opts)
+  const descontoValor = round2(totalLinhaSemIva * (pctEfectiva / 100))
 
   const totalSemDesconto = totalLinhaSemIva - descontoValor
-  const valorIva = round2(totalSemDesconto * (taxa / 100))
-  let subTotalLinha = totalSemDesconto
+  const valorIva = totalSemDesconto * (taxa / 100)
+
+  let subTotalLinha = round2(totalSemDesconto)
   if (opts.regraFaturacao === REGRA_PRECOS_COM_IVA_INCLUIDO) {
     subTotalLinha = round2(totalSemDesconto + valorIva)
   }
@@ -130,7 +122,7 @@ function calcularResumoIva(
         valorIncidencia += linha.valorIncidencia
       } else {
         totalIvaGrupo += linha.valorIva
-        valorIncidencia += linha.subTotalLinha - linha.valorIva
+        valorIncidencia += linha.valorIncidencia
       }
     }
 
@@ -179,9 +171,8 @@ export function calcularTotaisDocumento(
         totalMercadoria += linha.valorIncidencia + linha.descontoValor
       } else {
         totalIvaGrupo += linha.valorIva
-        const incidenciaLinha = linha.subTotalLinha - linha.valorIva
-        valorIncidencia += incidenciaLinha
-        totalMercadoria += incidenciaLinha + linha.descontoValor
+        valorIncidencia += linha.valorIncidencia
+        totalMercadoria += linha.valorIncidencia + linha.descontoValor
       }
     }
 

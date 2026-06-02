@@ -205,8 +205,32 @@ export function useDocumentoEditor(
     [opcoesPagamentoQ.data?.impostosRetencao],
   )
 
+  useEffect(() => {
+    if (!state.retencaoAtiva || state.retencaoTaxa <= 0) return
+    const base = totais.total + totais.acerto
+    const valor = Math.round(base * (state.retencaoTaxa / 100) * 100) / 100
+    if (Math.abs(valor - state.retencaoValor) < 0.005) return
+    setState((s) => ({ ...s, retencaoValor: valor }))
+  }, [
+    state.retencaoAtiva,
+    state.retencaoTaxa,
+    state.retencaoValor,
+    totais.total,
+    totais.acerto,
+  ])
+
   const patch = (p: Partial<DocumentoEditorState>) =>
-    setState((s) => ({ ...s, ...p }))
+    setState((s) => {
+      const next: DocumentoEditorState = { ...s, ...p }
+      if (p.isentoIva === true) {
+        next.linhas = next.linhas.map((l) => ({
+          ...l,
+          taxaIvaPercentagem: 0,
+          motivoIsencaoId: next.motivoIsencaoId ?? l.motivoIsencaoId,
+        }))
+      }
+      return next
+    })
 
   const toEmitirRequest = (): EmitirDocumentoRequest | null => {
     const linhasValidas = state.linhas.filter(
