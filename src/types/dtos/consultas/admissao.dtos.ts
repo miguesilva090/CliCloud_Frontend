@@ -1,6 +1,7 @@
 export enum ModoListagemAdmissao {
   Dia = 0,
   Pendentes = 1,
+  ParaFaturacao = 2,
 }
 
 export enum OrigemAdmissao {
@@ -158,4 +159,12 @@ export type DesmarcarAdmissaoRequest = {
 
 export type PromoverAdmissaoLoteRequest = {
   ids: string[]
+}
+
+export type AdmissaoDebitoFaturacaoDTO = {
+  debito: number
+  podeFaturar: boolean
+  servicosComDebito?: number
+  servicosTotal?: number
+  admissaoServicoIdsComDebito?: string[]
 }

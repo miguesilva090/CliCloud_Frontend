@@ -27,12 +27,9 @@ import { useWindowsStore } from '@/stores/use-windows-store'
 import { openFichaClinicaAtendimentoInApp } from '@/utils/window-utils'
 import { modules } from '@/config/modules'
 import type { ConsultaDoDiaDTO } from '@/types/dtos/consultas/consulta.dtos'
+import { canIniciarAtendimentoConsulta } from '@/pages/area-clinica/processo-clinico/atendimento/utils/can-iniciar-atendimento'
 
 export type ConsultaDoDiaRow = ConsultaDoDiaDTO
-
-const STATUS_DESMARCADA = 2
-const STATUS_SUSPENSA = 4
-const STATUS_CONCLUIDA = 6
 
 const baseColumns: Array<ColumnDef<ConsultaDoDiaRow> & DataTableColumnDef<ConsultaDoDiaRow>> = [
   {
@@ -80,10 +77,12 @@ const baseColumns: Array<ColumnDef<ConsultaDoDiaRow> & DataTableColumnDef<Consul
 ]
 
 function canAtenderConsulta(row: ConsultaDoDiaRow, mostrarDesmarcadas: boolean) {
-  if (mostrarDesmarcadas) return false
-  return ![STATUS_DESMARCADA, STATUS_SUSPENSA, STATUS_CONCLUIDA].includes(
-    row.statusConsulta ?? -1
-  )
+  return canIniciarAtendimentoConsulta(row.statusConsulta, {
+    mostrarDesmarcadas,
+    podeIniciarAtendimento: row.podeIniciarAtendimento,
+    efetuado: row.efetuado,
+    faltou: row.faltou,
+  })
 }
 
 function ConsultasDoDiaFilterControls(_: {

@@ -1,6 +1,9 @@
 # Plano de Implementacao - Area Financeira (Legado -> Novo)
 
-**Ultima atualizacao:** 2026-05-28
+**Ultima atualizacao:** 2026-05-29
+
+> **Alinhamento FE detalhado (legado ↔ novo):** [`alinhamento-fe-faturacao-legado-vs-novo.md`](./alinhamento-fe-faturacao-legado-vs-novo.md)  
+> **Auditoria menu Faturação (legado ↔ novo):** [`auditoria-menu-faturacao-legado-vs-novo.md`](./auditoria-menu-faturacao-legado-vs-novo.md)
 
 ## Objetivo
 

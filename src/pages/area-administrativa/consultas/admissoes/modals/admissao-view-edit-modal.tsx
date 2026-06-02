@@ -815,7 +815,15 @@ export function AdmissaoViewEditModal({
             type='button'
             variant='outline'
             size='sm'
-            onClick={() => toast.info('Documento manual — fase 2 (faturação).')}
+            onClick={() => {
+              const admissaoId = row?.id
+              if(!admissaoId) {
+                toast.info('Guarde a admissão antes de abrir faturacao manual.')
+                return
+              }
+              navigate(`/area-financeira/faturacao/novo-documento?admissaoId=${admissaoId}`)
+            }
+          }
           >
             <FileText className='mr-2 h-4 w-4' />
             Documento Manual
@@ -1563,7 +1571,15 @@ export function AdmissaoViewEditModal({
                         type='button'
                         size='sm'
                         variant='outline'
-                        onClick={() => toast.info('Fatura recibo — fase 2 (faturação).')}
+                        onClick={() => {
+                          const admissaoId = row?.id
+                          if(!admissaoId) {
+                            toast.info('Guarde a admissão antes de faturar o recibo.')
+                            return
+                          }
+
+                          navigate(`/area-financeira/faturacao/novo-documento?admissaoId=${admissaoId}`)
+                        }}
                       >
                         <Receipt className='mr-1.5 h-3.5 w-3.5' />
                         Fatura recibo

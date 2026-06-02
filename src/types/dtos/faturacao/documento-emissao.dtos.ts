@@ -13,6 +13,7 @@ export type EmitirDocumentoLinhaRequest = {
     descontoTipo3?: number | null
     taxaIvaId?: string | null
     taxaIvaPercentagem: number
+    motivoIsencaoId?: string | null
 }
 
 export type EmitirDocumentoRequest = {
@@ -34,11 +35,13 @@ export type EmitirDocumentoRequest = {
     taxaCambio?: number | null
     tipoCambio?: number | null
     dataVencimentoPagamento?: string | null
+    tipoSerie?: string | null
     descontoCliente?: number | null
     descontoPagamento?: number | null
     outros?: number | null
     isentoIva?: boolean
     ivaCaixa?: boolean
+    motivoIsencaoId?: string | null
     rectificado?: boolean
     liquidado?: boolean
     anulado?: boolean
@@ -50,6 +53,17 @@ export type EmitirDocumentoRequest = {
     moduloOrigem?: number | null
     codigoTipoDocSaft?: number | null
     linhas: EmitirDocumentoLinhaRequest[]
+    retencaoAtiva?: boolean
+    retencaoImposto?: string | null
+    retencaoTaxa?: number | null
+    retencaoValor?: number | null
+    retencaoMotivo?: string | null
+    retencaoCodigoMotivo?: number | null
+    percentagemDescontoGlobal?: number | null
+    documentoOrigemId?: string | null
+    identificadorUnicoDocumentoOrigem?: string | null
+    dataDocumentoOrigem?: string | null
+    gerarReferenciaMb?: number | null
 }
 
 export type EmitirDocumentoDesdeAdmissaoRequest = {
@@ -132,4 +146,25 @@ export type DocumentoEmissaoDTO = {
     numeroExibicao?: string | null
     hashDocumento?: string | null
     versaoChave?: number | null
+    referenciaMbEntidade?: string | null
+    referenciaMbCodigo?: string | null
+    referenciaMbWay?: boolean
+}
+
+export type PagamentoOpcaoDTO = {
+    valor: number
+    descricao: string
+}
+
+export type OpcaoTextoDTO = {
+    valor: string
+    descricao: string
+}
+
+export type DocumentoEmissaoOpcoesPagamentoDTO = {
+    condicoesPagamento: PagamentoOpcaoDTO[]
+    modosPagamento: PagamentoOpcaoDTO[]
+    tiposSerie: OpcaoTextoDTO[]
+    impostosRetencao: OpcaoTextoDTO[]
+    referenciasMb: PagamentoOpcaoDTO[]
 }

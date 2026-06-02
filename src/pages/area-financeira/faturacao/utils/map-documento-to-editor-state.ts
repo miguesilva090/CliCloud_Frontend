@@ -1,0 +1,72 @@
+import type { DocumentoDTO } from '@/types/dtos/faturacao/documento.dtos'
+import type { TipoDocumentoLightDTO } from '@/types/dtos/faturacao/tipo-documento.dtos'
+import type { DocumentoEditorState } from '../types/documento-editor.types'
+import { REGRA_PRECOS_SEM_IVA_INCLUIDO } from './documento-editor-calculos'
+
+export function mapDocumentoToEditorState(
+  doc: DocumentoDTO,
+  tipo: TipoDocumentoLightDTO,
+  regraFaturacao = REGRA_PRECOS_SEM_IVA_INCLUIDO,
+): DocumentoEditorState {
+  const dataStr = doc.data?.slice(0, 10) ?? new Date().toISOString().slice(0, 10)
+
+  return {
+    tipoDocumentoId: tipo.id,
+    tipoAbreviatura: tipo.abreviatura,
+    tipoDescricao: tipo.descricao,
+    anoFiscal: doc.anoFiscal,
+    dataDocumento: dataStr,
+    dataVencimentoPagamento: dataStr,
+    tipoSerie: 'N',
+    isentoIva: false,
+    motivoIsencaoId: null,
+    codigoValidacaoTransporte: '',
+    dataTransporte: dataStr,
+    horaTransporte: '12:00',
+    tipoCliente: doc.organismoId ? 'organismo' : 'utente',
+    utenteId: doc.utenteId ?? null,
+    organismoId: doc.organismoId ?? null,
+    nomeCliente: doc.nomeCliente ?? '',
+    moradaCliente: doc.moradaCliente ?? '',
+    localidadeCliente: '',
+    numeroContribuinteCliente: doc.numeroContribuinteCliente ?? '',
+    codigoPostalId: null,
+    codigoPostalTexto: '',
+    globalDesde: '',
+    globalAte: '',
+    numeroSinistrado: '',
+    limiteCredito: null,
+    observacoes: doc.observacoes ?? '',
+    moedaId: null,
+    moedaCodigo: 'EUR',
+    cambio: 1,
+    movimentosUtente: [],
+    regraFaturacao,
+    descontoCliente: 0,
+    descontoPagamento: 0,
+    percentagemDescontoGlobal: 0,
+    ivaCaixa: false,
+    retencaoAtiva: false,
+    retencaoImposto: '',
+    retencaoMotivo: '',
+    retencaoTaxa: 0,
+    retencaoValor: 0,
+    gerarReferenciaMb: 0,
+    outros: 0,
+    documentoOrigemId: doc.documentoOrigemId ?? null,
+    identificadorUnicoDocumentoOrigem: doc.identificadorUnicoDocumentoOrigem ?? '',
+    dataDocumentoOrigem: doc.dataDocumentoOrigem?.slice(0, 10) ?? '',
+    linhas: (doc.linhas ?? []).map((l) => ({
+      descricao: l.descricao,
+      quantidade: l.quantidade,
+      precoUnitario: l.precoUnitario,
+      taxaIvaPercentagem: l.taxaIvaPercentagem,
+      percentagemDesconto: l.percentagemDesconto ?? 0,
+      valorDesconto: l.valorDesconto ?? null,
+      servicoId: l.servicoId ?? null,
+      codigoArtigo: l.codigoArtigo ?? null,
+      taxaIvaId: null,
+      motivoIsencaoId: null,
+    })),
+  }
+}

@@ -13,6 +13,31 @@ const AreaFinanceiraPlaceholderPage = lazy(() =>
     (m) => ({ default: m.AreaFinanceiraPlaceholderPage }),
   ),
 )
+const ListagemFaturacaoPage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/pages/listagem-faturacao-page').then(
+    (m) => ({ default: m.ListagemFaturacaoPage }),
+  ),
+)
+const NovoDocumentoPage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/pages/novo-documento-page').then(
+    (m) => ({ default: m.NovoDocumentoPage }),
+  ),
+)
+const DocumentoEdicaoPage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/pages/documento-edicao-page').then(
+    (m) => ({ default: m.DocumentoEdicaoPage }),
+  ),
+)
+const LiquidacaoUtentePage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/pages/liquidacao-utente-page').then(
+    (m) => ({ default: m.LiquidacaoUtentePage }),
+  ),
+)
+const LiquidacaoOrganismoPage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/pages/liquidacao-organismo-page').then(
+    (m) => ({ default: m.LiquidacaoOrganismoPage }),
+  ),
+)
 
 export const areaFinanceiraRoutes = [
   {
@@ -56,7 +81,7 @@ export const areaFinanceiraRoutes = [
         requiredPermission={modules.areaFinanceira.permissions.faturacao.id}
         actionType={actionTypes.AuthVer}
       >
-        <AreaFinanceiraPlaceholderPage title='Novo Documento' />
+        <NovoDocumentoPage />
       </LicenseGuard>
     ),
     manageWindow: true,
@@ -70,11 +95,53 @@ export const areaFinanceiraRoutes = [
         requiredPermission={modules.areaFinanceira.permissions.faturacao.id}
         actionType={actionTypes.AuthVer}
       >
-        <AreaFinanceiraPlaceholderPage title='Faturação' />
+        <ListagemFaturacaoPage />
       </LicenseGuard>
     ),
     manageWindow: true,
     windowName: 'Faturação',
+  },
+  {
+    path: 'area-financeira/faturacao/documento/:id',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.faturacao.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <DocumentoEdicaoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Documento',
+  },
+  {
+    path: 'area-financeira/faturacao/liquidacao-utente',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.faturacao.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <LiquidacaoUtentePage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Liquidação de Utente',
+  },
+  {
+    path: 'area-financeira/faturacao/liquidacao-organismo',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.faturacao.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <LiquidacaoOrganismoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Liquidação de Organismo',
   },
   {
     path: 'area-financeira/contas-correntes',

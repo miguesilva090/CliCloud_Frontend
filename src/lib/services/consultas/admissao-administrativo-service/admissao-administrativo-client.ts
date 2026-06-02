@@ -15,6 +15,7 @@ import type {
   AppendAdmissaoObservacaoRequest,
   DesmarcarAdmissaoRequest,
   PromoverAdmissaoLoteRequest,
+  AdmissaoDebitoFaturacaoDTO,
 } from '@/types/dtos/consultas/admissao.dtos'
 
 const ADMISSOES_BASE = '/client/consultas/admissoes-administrativo'
@@ -29,6 +30,15 @@ export class AdmissaoAdministrativoClient extends BaseApiClient {
 
   public async getById(id: string): Promise<ResponseApi<GSResponse<AdmissaoDTO>>> {
     return this.httpClient.getRequest(state.URL, `${ADMISSOES_BASE}/${id}`)
+  }
+
+  public async getDebitoFaturacao(
+    id: string,
+  ): Promise<ResponseApi<GSResponse<AdmissaoDebitoFaturacaoDTO>>> {
+    return this.httpClient.getRequest<GSResponse<AdmissaoDebitoFaturacaoDTO>>(
+      state.URL,
+      `${ADMISSOES_BASE}/${id}/debito-faturacao`,
+    )
   }
 
   public async getByConsultaMarcacaoId(

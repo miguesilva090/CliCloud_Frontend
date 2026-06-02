@@ -71,6 +71,7 @@ import {
   openAdmissaoFromMarcacaoInApp,
   openFichaClinicaAtendimentoInApp,
 } from '@/utils/window-utils'
+import { canIniciarAtendimentoConsulta } from '@/pages/area-clinica/processo-clinico/atendimento/utils/can-iniciar-atendimento'
 
 function getTodayStr() {
   return format(new Date(), 'yyyy-MM-dd')
@@ -102,6 +103,7 @@ function getColumnsWithActions(
   onOpenDelete: (row: ConsultaMarcadaRow) => void,
   onAtender: ((row: ConsultaMarcadaRow) => void) | undefined,
   onAdmitir: ((row: ConsultaMarcadaRow) => void) | undefined,
+  mostrarDesmarcadas: boolean,
   rowActionPermissions: {
     canView: boolean
     canChange: boolean
@@ -122,7 +124,9 @@ function getColumnsWithActions(
             (rowActionPermissions.canAdmitir && onAdmitir))
             ? (row) => (
                 <>
-                  {rowActionPermissions.canView && onAtender ? (
+                  {rowActionPermissions.canView &&
+                  onAtender &&
+                  canIniciarAtendimentoConsulta(row.statusConsulta, { mostrarDesmarcadas }) ? (
                     <Button
                       type='button'
                       variant='ghost'
@@ -261,13 +265,21 @@ export function ConsultasMarcadasPage() {
   )
   const columns = useMemo(
     () =>
-      getColumnsWithActions(handleOpenView, handleOpenEdit, handleOpenDelete, handleAtender, handleAdmitir, {
-        canView,
-        canChange,
-        canDelete,
-        canAdmitir,
-      }),
-    [canView, canChange, canDelete, canAdmitir, handleAtender, handleAdmitir]
+      getColumnsWithActions(
+        handleOpenView,
+        handleOpenEdit,
+        handleOpenDelete,
+        handleAtender,
+        handleAdmitir,
+        consultasDesmarcadas,
+        {
+          canView,
+          canChange,
+          canDelete,
+          canAdmitir,
+        }
+      ),
+    [canView, canChange, canDelete, canAdmitir, consultasDesmarcadas, handleAtender, handleAdmitir]
   )
   const totalRegistos = consultasFiltradas.length
   const totalPages = Math.max(1, Math.ceil(totalRegistos / pageSize))

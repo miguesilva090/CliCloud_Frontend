@@ -65,6 +65,7 @@ import {
   openAdmissaoFromMarcacaoInApp,
   openFichaClinicaAtendimentoInApp,
 } from '@/utils/window-utils'
+import { canIniciarAtendimentoConsulta } from '@/pages/area-clinica/processo-clinico/atendimento/utils/can-iniciar-atendimento'
 
 export type { ConsultaMarcadaRow }
 
@@ -126,6 +127,7 @@ function getColumnsWithActions(
   onOpenDelete: (row: ConsultaMarcadaRow) => void,
   onAtender: ((row: ConsultaMarcadaRow) => void) | undefined,
   onAdmitir: ((row: ConsultaMarcadaRow) => void) | undefined,
+  mostrarDesmarcadas: boolean,
   rowActionPermissions: {
     canView: boolean
     canChange: boolean
@@ -146,7 +148,9 @@ function getColumnsWithActions(
             (rowActionPermissions.canAdmitir && onAdmitir))
             ? (row) => (
                 <>
-                  {rowActionPermissions.canView && onAtender ? (
+                  {rowActionPermissions.canView &&
+                  onAtender &&
+                  canIniciarAtendimentoConsulta(row.statusConsulta, { mostrarDesmarcadas }) ? (
                     <Button
                       type='button'
                       variant='ghost'
@@ -308,13 +312,32 @@ export function ListagemConsultasMarcadasPage() {
 
   const columns = useMemo(
     () =>
-      getColumnsWithActions(handleOpenView, handleOpenEdit, handleOpenDelete, handleAtender, handleAdmitir, {
-        canView,
-        canChange,
-        canDelete,
-        canAdmitir,
-      }),
-    [handleOpenView, handleOpenEdit, handleOpenDelete, handleAtender, handleAdmitir, canView, canChange, canDelete, canAdmitir],
+      getColumnsWithActions(
+        handleOpenView,
+        handleOpenEdit,
+        handleOpenDelete,
+        handleAtender,
+        handleAdmitir,
+        consultasDesmarcadas,
+        {
+          canView,
+          canChange,
+          canDelete,
+          canAdmitir,
+        }
+      ),
+    [
+      handleOpenView,
+      handleOpenEdit,
+      handleOpenDelete,
+      handleAtender,
+      handleAdmitir,
+      consultasDesmarcadas,
+      canView,
+      canChange,
+      canDelete,
+      canAdmitir,
+    ],
   )
 
   const toolbarActions: DataTableAction[] = [

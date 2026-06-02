@@ -62,6 +62,7 @@ export interface ConsultaDoDiaDTO {
   confirmado?: boolean | null
   efetuado?: boolean | null
   faltou?: boolean | null
+  podeIniciarAtendimento?: boolean | null
 }
 
 export interface IniciarAtendimentoConsultaRequest {

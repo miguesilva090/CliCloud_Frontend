@@ -5,6 +5,7 @@ import type { ResponseApi } from '@/types/responses'
 import type {
     AnularDocumentoRequest,
     CriarNotaCreditoRequest,
+    DocumentoEmissaoOpcoesPagamentoDTO,
     DocumentoEmissaoDTO,
     EmitirDocumentoDesdeAdmissaoRequest,
     EmitirDocumentoDesdeConsultaRequest,
@@ -14,6 +15,10 @@ import type {
 const BASE = '/client/documentos/DocumentoEmissao'
 
 export class DocumentoEmissaoClient extends BaseApiClient {
+    async getOpcoesPagamento(): Promise<ResponseApi<GSResponse<DocumentoEmissaoOpcoesPagamentoDTO>>> {
+        return this.httpClient.getRequest(state.URL, `${BASE}/opcoes/pagamento`)
+    }
+
     async emitirDocumento(
         payload: EmitirDocumentoRequest,
     ): Promise<ResponseApi<GSResponse<DocumentoEmissaoDTO>>> {
