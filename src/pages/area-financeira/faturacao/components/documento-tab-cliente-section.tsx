@@ -24,8 +24,12 @@ import {
   selectTriggerClass,
 } from '@/lib/form-styles'
 import { OrganismoService } from '@/lib/services/saude/organismo-service'
+import { useCodigosPostaisLight } from '@/lib/services/utility/lookups/lookups-queries'
 import { useGetUtente, useUtentesLight } from '@/pages/utentes/queries/utentes-queries'
-import { buildUtenteOrganismoOptions } from '@/pages/area-administrativa/consultas/admissoes/modals/admissao-form-utils'
+import {
+  buildUtenteOrganismoOptions,
+  resolveBeneficiarioApolice,
+} from '@/pages/area-administrativa/consultas/admissoes/modals/admissao-form-utils'
 import type { OrganismoLightDTO } from '@/types/dtos/saude/organismos.dtos'
 import type { DocumentoEditorState } from '../types/documento-editor.types'
 
@@ -43,8 +47,10 @@ export function DocumentoTabClienteSection({
 }) {
   const [utenteSearch, setUtenteSearch] = useState('')
   const [orgSearch, setOrgSearch] = useState('')
+  const [cpSearch, setCpSearch] = useState(state.codigoPostalTexto)
   const [debUt] = useDebounce(utenteSearch, 300)
   const [debOrg] = useDebounce(orgSearch, 300)
+  const [debCp] = useDebounce(cpSearch, 300)
 
   const utentesQ = useUtentesLight(debUt)
   const orgsQ = useQuery({
@@ -52,6 +58,7 @@ export function DocumentoTabClienteSection({
     queryFn: () => OrganismoService(ID_FUNCIONALIDADE).getOrganismoLight(debOrg),
     enabled: state.tipoCliente === 'organismo',
   })
+  const codigosPostaisQ = useCodigosPostaisLight(debCp)
 
   const utenteDetalhe = useGetUtente(state.utenteId ?? '')
 
@@ -79,13 +86,36 @@ export function DocumentoTabClienteSection({
     [orgsQ.data],
   )
 
+  const cpItems = useMemo(
+    () =>
+      (codigosPostaisQ.data?.info?.data ?? []).map((c) => ({
+        value: c.id,
+        label: c.codigo?.trim() ?? c.id,
+        secondary: c.localidade ?? undefined,
+      })),
+    [codigosPostaisQ.data],
+  )
+
+  const aplicarBeneficiario = (utenteId: string | null, organismoId: string | null) => {
+    const u = utenteDetalhe.data?.info?.data
+    if (!u || !utenteId) {
+      onChange({ beneficiario: '' })
+      return
+    }
+    const { beneficiario } = resolveBeneficiarioApolice(u, organismoId ?? undefined)
+    onChange({ beneficiario })
+  }
+
   const aplicarSnapshotUtente = async () => {
     const u = utenteDetalhe.data?.info?.data
-    if (!u) return
-    if (state.tipoCliente !== 'utente') return
-    const codigoPostalTexto = await resolveCodigoPostalTexto(
+    if (!u || state.tipoCliente !== 'utente') return
+    const cpLabel = await resolveCodigoPostalTexto(
       u.codigoPostalId,
       ID_FUNCIONALIDADE,
+    )
+    const { beneficiario } = resolveBeneficiarioApolice(
+      u,
+      state.organismoId ?? undefined,
     )
     onChange({
       nomeCliente: u.nome ?? '',
@@ -93,35 +123,37 @@ export function DocumentoTabClienteSection({
       moradaCliente: u.rua?.nome ?? '',
       localidadeCliente: u.freguesia?.nome ?? u.concelho?.nome ?? '',
       codigoPostalId: u.codigoPostalId ?? null,
-      codigoPostalTexto,
+      codigoPostalTexto: cpLabel,
+      beneficiario,
+      limiteCreditoExibicao: '',
     })
+    setCpSearch(cpLabel)
   }
 
   const aplicarSnapshotOrganismo = (organismoId: string) => {
     const fromUtente = organismoUtenteItems.find((o) => o.value === organismoId)
     if (fromUtente) {
-      onChange({
-        organismoId,
-        nomeCliente: fromUtente.label,
-      })
+      onChange({ organismoId, nomeCliente: fromUtente.label })
+      aplicarBeneficiario(state.utenteId, organismoId)
       return
     }
     const org = orgItemsGlobal.find((o) => o.value === organismoId)
     onChange({
       organismoId,
       nomeCliente: org?.label ?? state.nomeCliente,
+      beneficiario: '',
     })
   }
 
   useEffect(() => {
     void aplicarSnapshotUtente()
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot ao mudar utente / tipo
-  }, [utenteDetalhe.data, state.tipoCliente, state.utenteId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot ao mudar utente
+  }, [utenteDetalhe.data, state.tipoCliente, state.utenteId, state.organismoId])
 
   useEffect(() => {
     if (state.tipoCliente !== 'organismo' || !state.organismoId) return
     aplicarSnapshotOrganismo(state.organismoId)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot organismo facturação
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot organismo
   }, [state.tipoCliente, state.organismoId, organismoUtenteItems, orgItemsGlobal])
 
   return (
@@ -133,12 +165,36 @@ export function DocumentoTabClienteSection({
           value={state.tipoCliente}
           onValueChange={(v) => {
             if (v !== 'utente' && v !== 'organismo') return
-            onChange({ tipoCliente: v })
-            if (v === 'utente') {
-              void aplicarSnapshotUtente()
-            } else if (state.organismoId) {
-              aplicarSnapshotOrganismo(state.organismoId)
+            if (v === 'organismo') {
+              onChange({
+                tipoCliente: v,
+                utenteId: null,
+                organismoId: null,
+                beneficiario: '',
+                nomeCliente: '',
+                moradaCliente: '',
+                localidadeCliente: '',
+                numeroContribuinteCliente: '',
+                codigoPostalId: null,
+                codigoPostalTexto: '',
+                limiteCreditoExibicao: '',
+              })
+              setCpSearch('')
+              return
             }
+            onChange({
+              tipoCliente: v,
+              organismoId: null,
+              beneficiario: '',
+              nomeCliente: '',
+              moradaCliente: '',
+              localidadeCliente: '',
+              numeroContribuinteCliente: '',
+              codigoPostalId: null,
+              codigoPostalTexto: '',
+              limiteCreditoExibicao: '',
+            })
+            setCpSearch('')
           }}
           disabled={clienteBloqueado}
         >
@@ -162,7 +218,7 @@ export function DocumentoTabClienteSection({
           placeholder='Pesquisar utente…'
           searchValue={utenteSearch}
           onSearchValueChange={setUtenteSearch}
-          disabled={clienteBloqueado}
+          disabled={clienteBloqueado || state.tipoCliente === 'organismo'}
         />
       </div>
 
@@ -178,6 +234,7 @@ export function DocumentoTabClienteSection({
                 return
               }
               onChange({ organismoId: v })
+              aplicarBeneficiario(state.utenteId, v)
             }}
             disabled={clienteBloqueado || !state.utenteId}
           >
@@ -203,11 +260,7 @@ export function DocumentoTabClienteSection({
               onChange({ organismoId: id || null })
               if (id) aplicarSnapshotOrganismo(id)
             }}
-            items={
-              organismoUtenteItems.length > 0
-                ? organismoUtenteItems
-                : orgItemsGlobal
-            }
+            items={orgItemsGlobal}
             isLoading={orgsQ.isFetching}
             placeholder='Pesquisar organismo…'
             searchValue={orgSearch}
@@ -223,6 +276,7 @@ export function DocumentoTabClienteSection({
           className={inputClass}
           value={state.nomeCliente}
           onChange={(e) => onChange({ nomeCliente: e.target.value })}
+          readOnly={clienteBloqueado}
         />
       </div>
       <div className={fieldGap}>
@@ -234,68 +288,51 @@ export function DocumentoTabClienteSection({
             onChange={(e) =>
               onChange({ numeroContribuinteCliente: e.target.value })
             }
+            readOnly={clienteBloqueado}
           />
           {isConsumidorFinalNif(state.numeroContribuinteCliente) ? (
             <Badge variant='secondary'>Consumidor final</Badge>
           ) : null}
         </div>
       </div>
+
       <div className={fieldGap}>
-        <Label className={labelClass}>Código postal</Label>
+        <Label className={labelClass}>Beneficiário</Label>
         <Input
           className={inputClass}
-          value={state.codigoPostalTexto}
-          onChange={(e) => onChange({ codigoPostalTexto: e.target.value })}
-          placeholder='0000-000'
-        />
-      </div>
-      <div className={fieldGap}>
-        <Label className={labelClass}>Global desde</Label>
-        <Input
-          type='date'
-          className={inputClass}
-          value={state.globalDesde}
-          onChange={(e) => onChange({ globalDesde: e.target.value })}
-        />
-      </div>
-      <div className={fieldGap}>
-        <Label className={labelClass}>Global até</Label>
-        <Input
-          type='date'
-          className={inputClass}
-          value={state.globalAte}
-          onChange={(e) => onChange({ globalAte: e.target.value })}
-        />
-      </div>
-      <div className={fieldGap}>
-        <Label className={labelClass}>N.º sinistrado</Label>
-        <Input
-          className={inputClass}
-          value={state.numeroSinistrado}
-          onChange={(e) => onChange({ numeroSinistrado: e.target.value })}
+          readOnly
+          value={state.beneficiario}
+          title='Legado: modFldBeneficiario (readonly)'
         />
       </div>
       <div className={fieldGap}>
         <Label className={labelClass}>Limite crédito</Label>
         <Input
-          type='number'
-          step={0.01}
           className={inputClass}
-          value={state.limiteCredito ?? ''}
-          onChange={(e) =>
-            onChange({
-              limiteCredito:
-                e.target.value === '' ? null : Number(e.target.value),
-            })
-          }
+          readOnly
+          value={state.limiteCreditoExibicao || '—'}
+          title='Legado: modFldLimiteCredito (plafond utente)'
         />
       </div>
-      <div className={`md:col-span-2 ${fieldGap}`}>
-        <Label className={labelClass}>Morada *</Label>
-        <Input
-          className={inputClass}
-          value={state.moradaCliente}
-          onChange={(e) => onChange({ moradaCliente: e.target.value })}
+
+      <div className={fieldGap}>
+        <Label className={labelClass}>Código postal</Label>
+        <AsyncCombobox
+          value={state.codigoPostalId ?? ''}
+          onChange={(id) => {
+            const item = cpItems.find((c) => c.value === id)
+            onChange({
+              codigoPostalId: id || null,
+              codigoPostalTexto: item?.label ?? state.codigoPostalTexto,
+            })
+            if (item?.label) setCpSearch(item.label)
+          }}
+          items={cpItems}
+          isLoading={codigosPostaisQ.isFetching}
+          placeholder='0000-000…'
+          searchValue={cpSearch}
+          onSearchValueChange={setCpSearch}
+          disabled={clienteBloqueado}
         />
       </div>
       <div className={fieldGap}>
@@ -304,6 +341,34 @@ export function DocumentoTabClienteSection({
           className={inputClass}
           value={state.localidadeCliente}
           onChange={(e) => onChange({ localidadeCliente: e.target.value })}
+          readOnly={clienteBloqueado}
+        />
+      </div>
+
+      <div className={fieldGap}>
+        <Label className={labelClass}>Fatura global desde</Label>
+        <Input
+          className={inputClass}
+          readOnly
+          value={state.faturaGlobalDesde || '—'}
+        />
+      </div>
+      <div className={fieldGap}>
+        <Label className={labelClass}>Fatura global até</Label>
+        <Input
+          className={inputClass}
+          readOnly
+          value={state.faturaGlobalAte || '—'}
+        />
+      </div>
+
+      <div className={`md:col-span-2 ${fieldGap}`}>
+        <Label className={labelClass}>Morada *</Label>
+        <Input
+          className={inputClass}
+          value={state.moradaCliente}
+          onChange={(e) => onChange({ moradaCliente: e.target.value })}
+          readOnly={clienteBloqueado}
         />
       </div>
     </div>

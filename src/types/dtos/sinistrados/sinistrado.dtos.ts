@@ -3,6 +3,7 @@ export interface SinistradoLinhaServicoDTO
     id?: string
     tratamentoId?: string
     admissaoId?: string
+    servicoId?: string | null
     codigoServico: string
     designacaoServico?: string
     quantidade: number

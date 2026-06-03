@@ -1,11 +1,14 @@
 # Alinhamento FE — Faturação (Legado → Novo)
 
-**Última atualização:** 2026-05-29  
+**Última atualização:** 2026-06-03  
 **Âmbito:** submenu **Faturação → Faturação** e **Faturação → Novo Documento** (não inclui Fases B–F: SNS, ADSE, mapas, etc.)  
 **Fontes de verdade legado:** `CliCloud.ASPcli`, `Dados/CliCloud.Dados.Faturacao`  
 **Fontes de verdade novo:** `Backend/CliCloud.*`, `Frontend/src/pages/area-financeira/faturacao`
 
-Documento complementar a `plano-area-financeira-legado-vs-novo.md`. Este ficheiro define **como** alinhar o frontend React ao comportamento e à apresentação do legado, por ecrã e por prioridade.
+> **Estado de implementação e disparidades:** ver **[`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md)** (fonte de verdade).  
+> Este ficheiro mantém **princípios de UX**, mapas de ficheiros e padrões visuais — **não** duplicar checklists de «o que falta».
+
+Documento complementar a `plano-area-financeira-legado-vs-novo.md`.
 
 ---
 
@@ -23,8 +26,9 @@ Documento complementar a `plano-area-financeira-legado-vs-novo.md`. Este ficheir
 
 | Legado (`WSMenus.asmx.cs`) | URL legado | Novo (`menu-items.ts` + rotas) | Estado FE |
 |----------------------------|------------|--------------------------------|-----------|
-| Menu → Faturação → **Novo Documento** | `~/Client/Faturacao/TfaturaEdt.aspx` | `/area-financeira/faturacao/novo-documento` | 🟡 página mínima |
-| Menu → Faturação → **Faturação** | `~/Client/Faturacao/TfaturaLst.aspx` | `/area-financeira/faturacao/faturacao` | 🟡 listagem mínima |
+| Menu → Faturação → **Novo Documento** | `~/Client/Faturacao/TfaturaEdt.aspx` | `/area-financeira/faturacao/novo-documento` | ✅ editor + modal tipo |
+| Menu → Faturação → **Faturação** | `~/Client/Faturacao/TfaturaLst.aspx` | `/area-financeira/faturacao/faturacao` | ✅ listagem operacional |
+| Ver documento (lista) | `TfaturaEdt.aspx?oper=ver` | `/area-financeira/faturacao/documento/:id` | ✅ só leitura |
 | Permissões | `Faturacao_NovoDoc`, `Faturacao_FaturacaoListagem` | `modules.areaFinanceira.permissions.faturacao` | 🟡 granularidade a validar |
 
 **Nota:** No legado, “Novo Documento” abre o **mesmo editor** (`TfaturaEdt`) que “ver/editar” na listagem. No novo há rota separada `novo-documento` — aceitável se o **conteúdo** do formulário for o equivalente a `TfaturaEdt` em modo inserção.
@@ -55,42 +59,34 @@ Documento complementar a `plano-area-financeira-legado-vs-novo.md`. Este ficheir
 
 ### 3.3 Colunas da grelha
 
-| Coluna legado (`TfaturaLst.js`) | Campo `TFaturaLst` | Novo `DocumentoTableDTO` | Alinhamento |
-|--------------------------------|--------------------|---------------------------|-------------|
-| N.º TFatura | `NumeroTFatura` (string composta) | `numeroDocumento` (int) | ⚠️ BE expor `numeroExibicao` na tabela (domínio já tem `Documento.NumeroExibicao`) |
-| Data | `Data` | `data` | ✅ |
-| Nome | `Nome` | `nomeCliente` / `utenteNome` | 🟡 mostrar como legado (prioridade nome cliente) |
-| Origem | `Origem` | — | ⏳ BE+FE |
-| Ref. | (coluna sem `Column` nome explícito na lista) | — | ⏳ identificar origem no legado / SP |
-| Admissões | `Admissoes` | — | ⏳ BE+FE |
-| Total desconto | `TotalDesconto` | — (existe em `DocumentoDTO`) | ⏳ incluir em `DocumentoTableDTO` |
-| Total IVA | `TotalIva` | `totalIva` | ✅ (não mostrado na grelha FE atual) |
-| Total fatura | `TotalFatura` | `totalDocumento` | ✅ |
-| Estado | `Estado` (renderizado) | `estado` (número) | 🟡 FE: texto/badge, não código cru |
-| (implícito) | `Abreviatura` | `tipoDocumentoAbreviatura` | ✅ coluna “Tipo” no novo |
-| (implícito) | `Anulado` | — | ⏳ BE+FE badge/filtro |
-| (implícito) | `Liquidado` (int 0/1/2) | `liquidado` (bool) | 🟡 mapear estados de liquidação legado |
+**Estado 2026-06-03:** alinhadas em `listagem-faturacao-table.colums.tsx`. Detalhe e lacunas residuais: [`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md) §5.
+
+| Coluna legado | Novo `DocumentoTableDTO` / FE | Estado |
+|---------------|-------------------------------|--------|
+| N.º TFatura | `numeroExibicao` + `getDocumentoNumeroLabel` | ✅ |
+| Data, Nome, Origem, Ref., Admissões | `data`, `nomeCliente`, `origemLabel`, `referenciaDocumento`, `admissoesResumo` | ✅ (Ref./Admissões 🟡 regras pós-MVP) |
+| Totais desconto / IVA / fatura | `totalDesconto`, `totalIva`, `totalDocumento` | ✅ |
+| Estado | `getDocumentoEstadoBadge` | ✅ 🟡 textos legado |
+| Anulado / Liquidado (filtros) | colunas ocultas + painel filtros | ✅ |
 
 ### 3.4 Filtros
 
-| Filtro legado (`TfaturaLst.aspx`) | Par de campos | Novo FE | API BE (`DocumentoSearchTable`) |
-|-----------------------------------|---------------|---------|-----------------------------------|
-| N.º TFatura | `NumeroTFatura_de` / `_ate` | só `numeroDocumento` único | `numerodocumento` (igualdade) — **sem intervalo** |
-| Nome | `Nome_de` / `_ate` | `nomeCliente` único | `nomecliente` (contains) — **sem intervalo** |
-| Data | `Data_de` / `_ate` | `data` única | `data` (dia exacto) — **sem intervalo** |
-| N.º documento | `NumeroDocumento_de` / `_ate` | — | `numerodocumento` |
-| Tipo documento | `TipoDocumento_de` / `_ate` | `tipoDocumentoId` (combo) | `tipodocumentoid` |
-| Pesquisa global | caixa `LstSearchBox` | `globalSearchColumnId='numeroDocumento'` | depende coluna |
+| Filtro legado | Novo FE (`listagem-faturacao-filter-controls.tsx`) | BE `DocumentoSearchTable` |
+|---------------|---------------------------------------------------|---------------------------|
+| N.º documento de/até | ✅ `numerodocumento_de` / `_ate` | ✅ |
+| Data de/até | ✅ `data_de` / `data_ate` | ✅ |
+| Nome de/até | 🟡 campo único «Cliente» (`nomeCliente`); BE tem `nomecliente_de/ate` sem UI | ✅ BE; 🟡 FE |
+| Tipo documento | ✅ combo `tipoDocumentoId` | ✅ `tipodocumentoid` |
+| Anulado / Liquidado | ✅ selects | ✅ |
+| Pesquisa global | `globalSearchColumnId='numeroExibicao'` | `numeroexibicao` |
 
-**Regra de alinhamento:** para paridade visual e funcional com o legado, o painel de filtros do novo deve usar **de / até** onde o legado usa. Isso implica **estender** `DocumentoSearchTable` (ou campos `numerodocumentoDe`/`numerodocumentoAte`, etc.) — não basta alterar só o FE.
-
-**Referência visual FE:** `ordem-entrada-filter-controls.tsx` (labels `text-xs text-muted-foreground`, datas de/até, largura total).
+**Referência visual FE:** `ordem-entrada-filter-controls.tsx`.
 
 ### 3.5 Toolbar (acções globais)
 
 | Acção legado | Novo atual | Prioridade |
 |--------------|------------|------------|
-| **Novo** → `selectTipoDocumentoGeral()` (modal tipo + série) | botão “Novo Documento” → navega directo para form | **P0** — modal tipo+série antes do editor |
+| **Novo** → `selectTipoDocumentoGeral()` | botão → `SelecionarTipoDocumentoDialog` → `/novo-documento` | ✅ tipo; 🟡 série explícita se exigida |
 | **Listagens** → Crystal `ListagemTFaturaPage.rpt` | botão sem `onClick` | **P1** — integrar relatórios quando stack de reports existir; até lá ocultar |
 | **Atualizar** | ✅ | — |
 | **Envio e-mails em série** | — | **P2** |
@@ -102,33 +98,29 @@ Legado: ícones rápidos (e-mail, SMS, WhatsApp, ver) + dropdown **Tarefas** (`f
 
 | Acção legado (condição resumida) | Novo | Prioridade |
 |----------------------------------|------|------------|
-| Ver → `TfaturaEdt.aspx?oper=ver` | dialog detalhe mínimo | **P0** → página/modal estilo edição ver |
-| Anular / ver motivo anulação | dialog anular | **P0** — bloquear se `anulado`; mostrar motivo se anulado |
-| Imprimir / imprimir original | — | **P1** (reports) |
-| Pagamento (FA/FS liquidada) | — | **P1** |
-| Emitir fatura (GT/GR/CM/FP) | — | **P1** |
-| Validação transporte (GT/GR) | — | **P2** |
-| Nota crédito (no editor; na lista via fluxos NC) | dialog NC na lista | **P0** — regras por `Abreviatura` |
-| E-fatura / E-NC | — | **P2** |
-| E-mail / SMS / WhatsApp | — | **P2** |
-| Resumo FA / Excel | — | **P2** |
-| Imprimir ARS / acordo | — | **P2** |
-| Detalhes admissões | — | **P1** |
-| Ticket | — | **P2** |
+| Ver | `documento/:id` (editor view) | ✅ |
+| Anular / NC | dialogs + regras em `listagem-faturacao-acoes.ts` | ✅ |
+| Imprimir / original / e-mail | mutations print + email | ✅ (não Crystal) |
+| Pagamento / liquidar | `liquidacao-utente` / `organismo` | 🟡 mínimo |
+| Emitir fatura GT/GR | listagem | ✅ |
+| Validação transporte | dialog | ✅ |
+| E-fatura, SMS, WhatsApp, ARS, ticket, Excel resumo | — | Fora âmbito (disparidades doc) |
+| Detalhes admissões | dialog | ✅ |
 
 **Regra visual FE:** substituir ícones soltos na coluna por `DropdownMenu` “Tarefas” (padrão próximo do legado), mantendo no máximo 1–2 ícones de atalho (ex. ver, e-mail) se necessário.
 
 **Referência componente:** `DropdownMenu` + itens condicionais; permissões via `useAreaComumEntityListPermissions` e flags vindas do DTO (`anulado`, `tipoDocumentoAbreviatura`, `emitido`, `liquidado`).
 
-### 3.7 Estado actual vs alvo (listagem)
+### 3.7 Estado actual (listagem) — 2026-06-03
 
-| Aspeto | Actual | Alvo alinhado |
-|--------|--------|---------------|
-| Shell | `AreaComumListagemPageShell` | ✅ manter |
-| Filtros | grelha com `max-w` fixos | painel estilo ordem de entrada, de/até |
-| Colunas | 6 visíveis | 10+ alinhadas à secção 3.3 |
-| Detalhe | dialog 8 campos | modal com tabs ou rota `TfaturaEdt` equivalente |
-| Linha opções | Ver + 2 ícones | Dropdown tarefas |
+| Aspeto | Estado |
+|--------|--------|
+| Shell `AreaComumListagemPageShell` | ✅ |
+| Colunas legado | ✅ |
+| Filtros nº/data de/até + anulado/liquidado/tipo | ✅ |
+| Filtro nome de/até | 🟡 ver disparidades #2 |
+| Ver documento | ✅ rota `documento/:id` |
+| Ações linha | ✅ ícones (não dropdown legado — por desenho) |
 
 ---
 
@@ -147,9 +139,12 @@ Legado: ícones rápidos (e-mail, SMS, WhatsApp, ver) + dropdown **Tarefas** (`f
 
 | Tipo | Caminho |
 |------|---------|
-| Página | `novo-documento-page.tsx` |
-| Form | `novo-documento-form.tsx` |
+| Página criar | `novo-documento-page.tsx` + `SelecionarTipoDocumentoDialog` |
+| Editor | `documento-editor.tsx` + `hooks/use-documento-editor.ts` + `documento-tab-*.tsx` |
+| Página ver | `documento-edicao-page.tsx` |
 | Emissão API | `POST .../DocumentoEmissao/emitir` |
+
+`novo-documento-form.tsx` existe mas o fluxo principal é o **editor** — não duplicar form mínimo paralelo.
 
 ### 4.3 Estrutura por tabs (legado)
 
@@ -243,32 +238,11 @@ Novo: `CriarNotaCreditoRequest` + dialog na listagem.
 
 ---
 
-## 6. Mapa Backend ↔ Legado (pré-requisitos FE)
+## 6. Mapa Backend ↔ Legado
 
-Endpoints já existentes:
+Endpoints: ver tabela em [`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md) §2.
 
-| Operação | Endpoint novo |
-|----------|---------------|
-| Listagem paginada | `POST /client/documentos/Documento/paginated` |
-| Detalhe | `GET /client/documentos/Documento/{id}` |
-| Tipos (combo) | `GET /client/documentos/TipoDocumento/light` |
-| Emitir | `POST /client/documentos/DocumentoEmissao/emitir` |
-| Anular | `POST /client/documentos/DocumentoEmissao/anular/{id}` |
-| NC | `POST /client/documentos/DocumentoEmissao/nota-credito` |
-| Emitir desde admissão/consulta | `POST .../emitir/admissao/{id}`, `.../consulta/{id}` |
-
-Gaps BE que bloqueiam paridade visual/funcional na listagem:
-
-| Gap | Entidade/DTO | Impacto FE |
-|-----|--------------|------------|
-| `Anulado`, `MotivoAnulacao`, `DataAnulacao` não em `DocumentoTableDTO` | `Documento` tem `Anulado` | coluna/filtro/regras de acções |
-| `NumeroExibicao` não em `DocumentoTableDTO` | `Documento.NumeroExibicao` | coluna “N.º TFatura” |
-| `Origem`, totais desconto, resumo admissões na lista | `TFaturaLst` | colunas em falta |
-| Listagem inclui **Recibos** (TPT) | `Documento` + `Recibo` | mistura documentos na grelha “Faturação” |
-| Filtros só valor único, sem **de/até** | `DocumentoSearchTable` | painel filtros legado |
-| Filtro `anulado` | — | checkbox legado implícito |
-| `GET Documento/{id}` sem **linhas** no DTO | `DocumentoLinha` | tab linhas no detalhe |
-| `TipoSerie` / série documento | tipo documento legado | modal novo documento |
+**Gaps BE/FE ainda relevantes (pós-MVP):** `FaturaGlobalObter`, `Documento.SinistradoId`, filtro nome FE, liquidação profunda, reabrir emitido — **não** repetir aqui; ver disparidades §4.
 
 ---
 
@@ -285,45 +259,16 @@ Legado Anulado (0|1)           →  bool Anulado
 
 ---
 
-## 8. Plano de alinhamento FE (fases)
+## 8. Plano de alinhamento FE (fases) — histórico
 
-### Fase V0 — Estabilização (sem mudar UX legado)
+| Fase | Estado 2026-06-03 |
+|------|-------------------|
+| V1 Listagem | ✅ fechado no MVP (lacunas: disparidades §4) |
+| V2 Editor | ✅ `documento-editor` + tabs |
+| V3 Detalhe / NC / anular | ✅ dialogs + ver documento |
+| V4+ (reports, SMS, e-fatura, dropdown tarefas) | Fora âmbito ou pós-MVP |
 
-- [ ] Corrigir nomenclatura ficheiros (`table.columns.tsx` em vez de `colums`)
-- [ ] Remover botões mortos ou marcar `@todo` visível na UI
-- [ ] Documentar `idFuncionalidade: 'documentos'` em todos os clients
-
-### Fase V1 — Listagem reconhecível (P0)
-
-**BE (bloqueante):** `Anulado`, `NumeroExibicao`, excluir recibos, filtros de/até ou equivalente.
-
-**FE:**
-
-- [ ] Colunas secção 3.3 (mínimo: n.º exibição, data, nome, tipo, total, IVA, desconto, estado textual, anulado, liquidado)
-- [ ] Filtros de/até + NIF opcional
-- [ ] Dropdown “Tarefas” com itens P0 (ver, anular/ver motivo, NC condicional)
-- [ ] Modal novo: **tipo documento (+ série)**
-- [ ] Pesquisa global alinhada ao campo que o utilizador espera (n.º exibição)
-
-**Critério aceite:** utilizador legado identifica o ecrã como “a listagem de faturas” sem treinar.
-
-### Fase V2 — Editor mínimo credível (P0)
-
-- [ ] Página `documento-edicao-page` (create/view) substitui form solto
-- [ ] Tabs Cliente + Linhas (A1→A2)
-- [ ] `form-styles` em todo o formulário
-- [ ] Totais calculados na UI (subtotal, IVA, total) como feedback visual
-
-### Fase V3 — Detalhe e NC/anular completos (P1)
-
-- [ ] Detalhe com linhas (depende BE)
-- [ ] NC parcial com grelha de linhas
-- [ ] Integração impressão/listagens quando definido stack de reports no novo
-
-### Fase V4 — Paridade alargada (P2)
-
-- [ ] Comunicações (e-mail, SMS, WhatsApp)
-- [ ] E-fatura, transporte, conversões GT→FA, etc.
+**Trabalho FE seguinte:** seguir roadmap em [`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md) §7 — não reabrir V1/V2.
 
 ---
 
@@ -344,27 +289,25 @@ Aplicar em **todos** os ecrãs de faturação quando se retomar o alinhamento:
 
 ---
 
-## 10. O que o FE actual implementa (baseline 2026-05-29)
+## 10. Baseline FE (2026-06-03)
+
+Resumo: **MVP Faturação/Faturação fechado** no FE. Detalhe: [`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md).
 
 | Item | Estado |
 |------|--------|
-| Rotas `faturacao/faturacao` e `novo-documento` | ✅ ligadas |
-| Listagem paginada | ✅ |
-| Filtros parciais (5 campos) | 🟡 |
-| Colunas reduzidas | 🟡 |
-| Detalhe dialog simples | 🟡 |
-| Anular / NC dialogs | 🟡 |
-| Novo documento form mínimo | 🟡 |
-| Paridade legado listagem | ❌ |
-| Paridade legado editor | ❌ |
-| Paridade visual design system | ❌ |
+| Rotas listagem / novo / documento / liquidação | ✅ |
+| Listagem + colunas + ações legado (sem Crystal/SMS) | ✅ |
+| Editor tabs + sinistrados + fatura global datas | ✅ |
+| Filtro nome de/até | 🟡 |
+| Fatura global linhas (`FaturaGlobalObter`) | ⏳ |
+| Reabrir documento emitido | ⏳ |
 
 ---
 
 ## 11. Decisão registada (equipa)
 
-> **2026-05-29:** Manter implementação actual em produção/dev sem refactor visual imediato.  
-> Este documento fica como **contrato de alinhamento** para quando a faturação for retomada.
+> **2026-05-29:** Pausa refactor visual.  
+> **2026-06-03:** MVP listagem + editor entregue; este doc = padrões UX; disparidades = lacunas e roadmap.
 
 ---
 
@@ -374,7 +317,7 @@ Aplicar em **todos** os ecrãs de faturação quando se retomar o alinhamento:
 |------|--------|------|
 | Menu | `WSMenus.asmx.cs` → `case "Faturacao"` | `config/menu-items.ts` → `area-financeira` |
 | Lista | `TfaturaLst.*` | `listagem-faturacao-*` |
-| Editor | `TfaturaEdt.*` | `novo-documento-*` (provisório) |
+| Editor | `TfaturaEdt.*` | `documento-editor.tsx`, `novo-documento-page.tsx`, `documento-edicao-page.tsx` |
 | DTO lista | `TFaturaLst` em `TFatura.cs` | `DocumentoTableDTO.cs` |
 | Domínio | `TFatura` / `TFaturaLinha` | `Documento` / `DocumentoLinha` |
 | Plano geral | — | `plano-area-financeira-legado-vs-novo.md` |
@@ -386,3 +329,4 @@ Aplicar em **todos** os ecrãs de faturação quando se retomar o alinhamento:
 | Data | Alteração |
 |------|-----------|
 | 2026-05-29 | Documento inicial de alinhamento FE legado ↔ novo (Faturação / Faturação) |
+| 2026-06-03 | Sincronizado com auditoria código; estado MVP; removidas listas obsoletas de gaps BE; referência a disparidades.md |

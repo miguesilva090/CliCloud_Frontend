@@ -10,6 +10,10 @@ import type {
     EmitirDocumentoDesdeAdmissaoRequest,
     EmitirDocumentoDesdeConsultaRequest,
     EmitirDocumentoRequest,
+    FaturaGlobalObterRequest,
+    FaturaGlobalObterResponse,
+    SinistradosInfoFaturacaoRequest,
+    SinistradosInfoFaturacaoResponse,
 } from '@/types/dtos/faturacao/documento-emissao.dtos'
 
 const BASE = '/client/documentos/DocumentoEmissao'
@@ -17,6 +21,26 @@ const BASE = '/client/documentos/DocumentoEmissao'
 export class DocumentoEmissaoClient extends BaseApiClient {
     async getOpcoesPagamento(): Promise<ResponseApi<GSResponse<DocumentoEmissaoOpcoesPagamentoDTO>>> {
         return this.httpClient.getRequest(state.URL, `${BASE}/opcoes/pagamento`)
+    }
+
+    async sinistradosInfoFaturacao(
+        payload: SinistradosInfoFaturacaoRequest,
+    ): Promise<ResponseApi<GSResponse<SinistradosInfoFaturacaoResponse>>> {
+        return this.httpClient.postRequest(
+            state.URL,
+            `${BASE}/sinistrados/info-faturacao`,
+            payload,
+        )
+    }
+
+    async faturaGlobalObter(
+        payload: FaturaGlobalObterRequest,
+    ): Promise<ResponseApi<GSResponse<FaturaGlobalObterResponse>>> {
+        return this.httpClient.postRequest(
+            state.URL,
+            `${BASE}/fatura-global/obter`,
+            payload,
+        )
     }
 
     async emitirDocumento(

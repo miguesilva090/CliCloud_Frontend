@@ -9,6 +9,7 @@ import type { DocumentoEditorState } from '../types/documento-editor.types'
 import { linhaDocumentoTemConteudo } from '../utils/documento-linha-utils'
 import { isConsumidorFinalNif } from '../utils/documento-cliente-utils'
 import { DocumentoCabecalhoSection } from './documento-cabecalho-section'
+import { DocumentoTabObservacoesBancoSection } from './documento-tab-observacoes-banco-section'
 import { DocumentoTabClienteSection } from './documento-tab-cliente-section'
 import { DocumentoTabLinhasSection } from './documento-tab-linhas-section'
 import { DocumentoTabRetencaoSection } from './documento-tab-retencao-section'
@@ -17,6 +18,10 @@ import { DocumentoTabMovimentosUtenteSection } from './documento-tab-movimentos-
 import { DocumentoTotaisPanel } from './documento-totais-panel'
 import { DocumentoEditorToolbar } from './documento-editor-toolbar'
 import { DocumentoDescontosModal } from './documento-descontos-modal'
+import { DocumentoFaturaGlobalDialog } from './documento-fatura-global-dialog'
+import { DocumentoSinistradosInfoDialog } from './documento-sinistrados-info-dialog'
+import { mapFaturaGlobalObterToEditorPatch } from '../utils/map-fatura-global-obter'
+import { mapSinistradosInfoToEditorPatch } from '../utils/map-sinistrados-info-faturacao'
 
 export function DocumentoEditor({
   tipo,
@@ -35,6 +40,8 @@ export function DocumentoEditor({
 }) {
   const readOnly = mode === 'view'
   const [descontosOpen, setDescontosOpen] = useState(false)
+  const [faturaGlobalOpen, setFaturaGlobalOpen] = useState(false)
+  const [sinistradosOpen, setSinistradosOpen] = useState(false)
 
   const {
     state,
@@ -116,9 +123,25 @@ export function DocumentoEditor({
       <DocumentoEditorToolbar
         readOnly={readOnly}
         onDescontos={readOnly ? undefined : () => setDescontosOpen(true)}
+        onFaturaGlobal={readOnly ? undefined : () => setFaturaGlobalOpen(true)}
+        onSinistrados={readOnly ? undefined : () => setSinistradosOpen(true)}
         onGuardar={handleGuardar}
         onVoltar={onCancel}
         isSubmitting={isSubmitting}
+      />
+
+      <DocumentoFaturaGlobalDialog
+        open={faturaGlobalOpen}
+        onOpenChange={setFaturaGlobalOpen}
+        organismoId={state.organismoId}
+        dataDe={state.faturaGlobalDesde}
+        dataAte={state.faturaGlobalAte}
+        onApply={(data) => patch(mapFaturaGlobalObterToEditorPatch(data))}
+      />
+      <DocumentoSinistradosInfoDialog
+        open={sinistradosOpen}
+        onOpenChange={setSinistradosOpen}
+        onApply={(data) => patch(mapSinistradosInfoToEditorPatch(data))}
       />
 
       <DocumentoDescontosModal
@@ -142,6 +165,11 @@ export function DocumentoEditor({
             condicaoPagamentoItems={condicaoPagamentoItems}
             modoPagamentoItems={modoPagamentoItems}
             tipoSerieItems={tipoSerieItems}
+          />
+          <DocumentoTabObservacoesBancoSection
+            state={state}
+            onChange={patch}
+            readOnly={readOnly}
           />
           <Tabs defaultValue='cliente'>
             <TabsList className='flex h-auto flex-wrap'>

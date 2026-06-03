@@ -1,10 +1,12 @@
 # Auditoria — Menu Faturação (Área Financeira)
 
-**Data:** 2026-05-29  
+**Última atualização:** 2026-06-03  
 **Âmbito:** apenas o ramo **Área Financeira → menu Faturação** (`WSMenus.asmx.cs` → `case "Faturacao"`).  
 **Fora de âmbito:** Contas Correntes, Tesouraria, Configurações (módulo separado no novo).
 
 **Fontes:** `CliCloud.ASPcli/Services/WSMenus.asmx.cs`, `Frontend/src/config/menu-items.ts`, `Frontend/src/routes/area-financeira/areaFinanceira.tsx`, `Backend/CliCloud.WebApi/Controllers/Documentos/*`.
+
+> **Subgrupo Faturação → Faturação (listagem + editor):** estado e disparidades em **[`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md)** — MVP ✅ fechado. Este ficheiro cobre o **menu completo** (~55 ecrãs legado).
 
 ---
 
@@ -13,11 +15,11 @@
 | Indicador | Legado | Novo | Gap |
 |-----------|--------|------|-----|
 | Grupos de 1.º nível no menu Faturação | **9** | **9** (estrutura espelhada) | Navegação ✅ |
-| Itens folha (ecrãs distintos) | **~55+** | **2** implementados + 7 placeholders | **~95% por fazer** |
-| Backend API dedicado (fora Documento) | WSFaturacao + dezenas de `.asmx` | Quase só `Documento*` / `TipoDocumento*` / `Recibo*` | Fases B–F sem BE |
+| Itens folha (ecrãs distintos) | **~55+** | **4 rotas** Faturação/Faturação (listagem, novo, ver, liquidação) + 7 placeholders | **~95% menu por fazer** |
+| Backend API dedicado (fora Documento) | WSFaturacao + dezenas de `.asmx` | `Documento*` / `TipoDocumento*` / `Recibo*` + emissão | Fases B–H sem BE dedicado |
 | Permissões granulares | `AppControl.Funcionalidades.Faturacao_*` | 1 GUID por grupo no `area-financeira-module` | Mapeamento licença a validar |
 
-**Conclusão:** O **menu novo está desenhado** (URLs + permissões por grupo), mas só o subgrupo **Faturação → Novo Documento / Faturação** tem implementação real — e mesmo esse está **parcial** (BE-1 ✅, BE-2 ⏳, FE 🟡).
+**Conclusão:** O **menu novo está desenhado** (URLs + permissões). O subgrupo **Faturação → Novo Documento / Faturação** está **operacional (MVP)** — ver disparidades.md. O resto do menu (B–H) continua ⏳.
 
 ---
 
@@ -29,8 +31,10 @@ Legenda: ✅ implementado · 🟡 parcial · ⏳ placeholder · 🔗 reutilizar 
 
 | Item menu | Legado | Novo (rota) | FE | BE | Avançar |
 |-----------|--------|-------------|----|----|---------|
-| **Novo Documento** | `TfaturaEdt.aspx` | `/faturacao/novo-documento` | 🟡 form mínimo | BE-1 emitir ✅ | BE-2 + editor `TfaturaEdt` |
-| **Faturação** (listagem) | `TfaturaLst.aspx` | `/faturacao/faturacao` | 🟡 listagem mínima | BE-1 listar ✅, BE-2 ⏳ | BE-2 + listagem legado |
+| **Novo Documento** | `TfaturaEdt.aspx` | `/faturacao/novo-documento` | ✅ editor + modal tipo | Emissão ✅ | Pós-MVP: `FaturaGlobalObter`, sinistro no doc |
+| **Faturação** (listagem) | `TfaturaLst.aspx` | `/faturacao/faturacao` | ✅ grelha + ações | Listagem ✅ | Pós-MVP: filtro nome de/até, tesouraria |
+| **Ver documento** | `TfaturaEdt.aspx?oper=ver` | `/faturacao/documento/:id` | ✅ read-only | GET documento ✅ | Reabrir emitido ⏳ |
+| **Liquidação** | fluxos legado | `/liquidacao-utente`, `/liquidacao-organismo` | 🟡 mínimo | `liquidar` ✅ | Épico tesouraria |
 
 **Hub** `/area-financeira/faturacao` → `AreaFinanceiraHomePage` vazio (legado não tinha hub; abria submenus).
 
@@ -172,48 +176,43 @@ Este é o único bloco com trabalho BE+FE já iniciado.
 
 | Área | Legado | Novo | Estado |
 |------|--------|------|--------|
-| Colunas grelha | 10 + tipo implícito | 6 visíveis | ❌ |
-| Filtros | 5 pares de/até + pesquisa | 5 campos simples | ❌ |
-| Toolbar | Novo (modal tipo+série), listagens Crystal, refresh, e-mails série | Novo directo, listagens vazio, refresh | 🟡 |
-| Ações linha | ~15+ (dropdown tarefas) | Ver, anular, NC | 🟡 |
-| API | `WSFaturacao.asmx/TfaturaLst` | `POST Documento/paginated` | ✅ diferente modelo |
+| Colunas grelha | 10 + implícitos | Colunas legado em `listagem-faturacao-table.colums.tsx` | ✅ |
+| Filtros | 5 pares de/até | nº/data de/até ✅; nome 🟡 | 🟡 |
+| Toolbar | Novo, Crystal, refresh | Novo + modal tipo ✅; Crystal fora âmbito | ✅ / — |
+| Ações linha | dropdown ~15 itens | ícones (email, print, liquidar, …) | ✅ (sem SMS/ARS/Crystal) |
+| API | `WSFaturacao.asmx/TfaturaLst` | `POST Documento/paginated` | ✅ |
 
 ### 3.2 Legado `TfaturaEdt` — capacidades
 
 | Área | Legado | Novo | Estado |
 |------|--------|------|--------|
-| Tabs | Cliente, Linhas, Condições, Admissões, Retenção, MB | Form único simples | ❌ |
-| Linhas | Artigo, IVA, descontos, armazém, NC | desc/qtd/preço | ❌ |
-| Cálculos | Totais, resumo IVA | — | ❌ |
-| Emitir | WSFaturacao grava TFatura | `DocumentoEmissao/emitir` | ✅ BE |
+| Tabs | Cliente, Linhas, Admissões, Retenção, MB, … | `documento-editor` + tabs | ✅ núcleo |
+| Sinistrados / fatura global | `SinistradosInfoFaturacao`, `FaturaGlobalObter` | sinistrados ✅; global só datas ⏳ | 🟡 |
+| Emitir | WSFaturacao | `DocumentoEmissao/emitir` | ✅ |
+| Reabrir emitido | `oper=chg` | só `view` | ⏳ |
 
-### 3.3 Backend — checklist **Faturação / Faturação**
-
-| ID | Tarefa | Estado |
-|----|--------|--------|
-| BE-1a | `Documento` paginated / get | ✅ |
-| BE-1b | `DocumentoEmissao` emitir / anular / NC | ✅ |
-| BE-1c | `TipoDocumento` light | ✅ |
-| BE-1d | Scope clínica, transacções | ✅ |
-| BE-2a | `DocumentoTableDTO`: `Anulado`, `NumeroExibicao`, `TotalDesconto`, `Origem`… | ⏳ |
-| BE-2b | Excluir `Recibo` da listagem Documento | ⏳ |
-| BE-2c | Filtro `anulado` + intervalos de/até | ⏳ |
-| BE-2d | `DocumentoDTO` detalhe + `Linhas[]` | ⏳ |
-| BE-2e | AutoMapper | ⏳ |
-
-### 3.4 Frontend — checklist **Faturação / Faturação**
+### 3.3 Backend — **Faturação / Faturação** (2026-06-03)
 
 | ID | Tarefa | Estado |
 |----|--------|--------|
-| FE-1 | Rotas + menu | ✅ |
-| FE-2 | Listagem ligada à API | 🟡 |
-| FE-3 | Paridade grelha/filtros legado | ⏳ |
-| FE-4 | Dropdown tarefas + regras por tipo doc | ⏳ |
-| FE-5 | Editor (substituir `novo-documento-form`) | ⏳ |
-| FE-6 | Modal tipo (+ série) antes de criar | ⏳ |
-| FE-7 | `form-styles` + padrão admissões | ⏳ |
+| BE-1 | Core documento + emissão + tipos + clínica | ✅ |
+| BE-2a | `DocumentoTableDTO` completo (anulado, exibição, origem, admissões, totais) | ✅ |
+| BE-2b | Excluir recibos na listagem | ✅ `DocumentoSearchTable` |
+| BE-2c | Filtros `anulado`, `liquidado`, de/até | ✅ |
+| Pós-MVP | `FaturaGlobalObter`, `Documento.SinistradoId`, reabrir | ⏳ — ver disparidades §4 |
 
-Ver detalhe: [`alinhamento-fe-faturacao-legado-vs-novo.md`](./alinhamento-fe-faturacao-legado-vs-novo.md).
+### 3.4 Frontend — **Faturação / Faturação** (2026-06-03)
+
+| ID | Tarefa | Estado |
+|----|--------|--------|
+| FE-1 | Rotas + menu (listagem, novo, documento, liquidação) | ✅ |
+| FE-2 | Listagem + API + ações | ✅ |
+| FE-3 | Grelha/filtros legado (exc. nome de/até, Crystal) | ✅ 🟡 nome |
+| FE-4 | Editor tabs + sinistrados + totais | ✅ |
+| FE-5 | Modal tipo antes de criar | ✅ |
+| Pós-MVP | `FaturaGlobalObter` FE, dropdown tarefas (opcional) | ⏳ |
+
+**Checklist único de lacunas:** [`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md) §4.
 
 ---
 
@@ -275,7 +274,7 @@ flowchart LR
 
 | Prioridade | Código | Escopo | BE | FE | Estimativa relativa |
 |------------|--------|--------|----|----|---------------------|
-| **P0** | **FA** | Faturação → Novo Doc + Faturação | BE-2 | FE paridade | Alta — **fechar primeiro** |
+| **P0** | **FA** | Faturação → Novo Doc + Faturação | ✅ MVP | Pós-MVP disparidades §7 | **MVP fechado** — não reimplementar |
 | P1 | F1 | Entidades → links área comum | — | Rotas/menu | Baixa |
 | P2 | F2 | Tabelas (tipo doc, IVA, pagamentos…) | Parcial | Listagens | Média-alta |
 | P3 | B | Ficheiros eletrónicos (5) | Novo | Novo | Alta |
@@ -289,11 +288,11 @@ flowchart LR
 
 ## 7. Onde avançar agora (decisão)
 
-Se o objectivo é **fechar o que recomendaste** (Faturação / Faturação):
+Se o objectivo é **Faturação / Faturação**:
 
-1. **BE-2** (secção 3.3) — sem isto a listagem nunca fica certa.  
-2. **FE FA** — grelha + filtros + editor mínimo credível.  
-3. **Não** abrir Ficheiros SNS/ADSE/Mapas em paralelo — menu já tem placeholder; zero BE.
+1. **Não** repetir listagem/editor — MVP fechado.  
+2. Seguir **pós-MVP** em [`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md) §7 (`FaturaGlobalObter`, `SinistradoId`, filtro nome, tesouraria).  
+3. **Não** abrir Ficheiros SNS/ADSE/Mapas em paralelo sem decisão de produto.
 
 Se o objectivo é **paridade do menu Faturação inteiro**:
 
@@ -307,7 +306,7 @@ Se o objectivo é **paridade do menu Faturação inteiro**:
 |---------|-------|
 | Grupos 1.º nível menu Faturação (legado) | 9 |
 | Itens folha legado (aprox., activos) | ~55 |
-| Itens folha novo implementados | 2 |
+| Rotas FE operacionais Faturação/Faturação | 4 (listagem, novo, documento, liquidação×2) |
 | Controllers BE específicos faturação (fora Documento/Tipo/Recibo) | 0 |
 | Rotas FE placeholder em `areaFinanceira.tsx` | 7 |
 
@@ -318,3 +317,4 @@ Se o objectivo é **paridade do menu Faturação inteiro**:
 | Data | Nota |
 |------|------|
 | 2026-05-29 | Auditoria inicial menu Faturação completo |
+| 2026-06-03 | Subgrupo FA: MVP fechado; secções 3.x alinhadas ao código; referência a disparidades.md |

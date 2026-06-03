@@ -5,8 +5,16 @@ import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { toast } from '@/utils/toast-utils'
-import { useEmitirDocumentoMutation } from '@/pages/area-financeira/documentos/queries/documento-emissao-queries'
-import type { EmitirDocumentoRequest } from '@/types/dtos/faturacao/documento-emissao.dtos'
+import {
+  useEmitirDocumentoDesdeAdmissaoMutation,
+  useEmitirDocumentoDesdeConsultaMutation,
+  useEmitirDocumentoMutation,
+} from '@/pages/area-financeira/documentos/queries/documento-emissao-queries'
+import type {
+  EmitirDocumentoDesdeAdmissaoRequest,
+  EmitirDocumentoDesdeConsultaRequest,
+  EmitirDocumentoRequest,
+} from '@/types/dtos/faturacao/documento-emissao.dtos'
 import type { TipoDocumentoLightDTO } from '@/types/dtos/faturacao/tipo-documento.dtos'
 import { useGetTiposDocumentoLight } from '../queries/tipo-documento-queries'
 import { useInvalidateDocumentosMutation } from '../queries/documento-queries'
@@ -19,10 +27,38 @@ import {
 
 const ID_FUNCIONALIDADE = 'documentos'
 
+function mapEmitirRequestParaOrigem(
+  payload: EmitirDocumentoRequest,
+): EmitirDocumentoDesdeAdmissaoRequest & EmitirDocumentoDesdeConsultaRequest {
+  return {
+    tipoDocumentoId: payload.tipoDocumentoId,
+    anoFiscal: payload.anoFiscal,
+    dataDocumento: payload.dataDocumento ?? null,
+    dataVencimentoPagamento: payload.dataVencimentoPagamento ?? null,
+    funcionarioId: payload.funcionarioId ?? null,
+    condicaoPagamento: payload.condicaoPagamento ?? null,
+    tipoModoPagamento: payload.tipoModoPagamento ?? null,
+    moedaId: payload.moedaId ?? null,
+    bancoId: payload.bancoId ?? null,
+    descontoCliente: payload.descontoCliente ?? null,
+    descontoPagamento: payload.descontoPagamento ?? null,
+    outros: payload.outros ?? null,
+    isentoIva: payload.isentoIva ?? false,
+    ivaCaixa: payload.ivaCaixa ?? false,
+    codigoTipoDocSaft: payload.codigoTipoDocSaft ?? null,
+    nomeCliente: payload.nomeCliente ?? null,
+    moradaCliente: payload.moradaCliente ?? null,
+    localidadeCliente: payload.localidadeCliente ?? null,
+    numeroContribuinteCliente: payload.numeroContribuinteCliente ?? null,
+  }
+}
+
 export function NovoDocumentoPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const tipoIdParam = searchParams.get('tipoDocumentoId') ?? ''
+  const admissaoId = searchParams.get('admissaoId') ?? ''
+  const consultaId = searchParams.get('consultaId') ?? ''
 
   const { data, isError, error } = useGetTiposDocumentoLight('', ID_FUNCIONALIDADE)
   const tipos = useMemo(() => {
@@ -54,16 +90,36 @@ export function NovoDocumentoPage() {
   const [modalAberto, setModalAberto] = useState(!tipoIdParam)
 
   const emitirMutation = useEmitirDocumentoMutation(ID_FUNCIONALIDADE)
+  const emitirAdmissaoMutation = useEmitirDocumentoDesdeAdmissaoMutation(ID_FUNCIONALIDADE)
+  const emitirConsultaMutation = useEmitirDocumentoDesdeConsultaMutation(ID_FUNCIONALIDADE)
   const invalidateMutation = useInvalidateDocumentosMutation()
 
+  const isSubmitting =
+    emitirMutation.isPending ||
+    emitirAdmissaoMutation.isPending ||
+    emitirConsultaMutation.isPending
+
   const handleTipoConfirmado = (tipo: TipoDocumentoLightDTO) => {
-    setSearchParams({ tipoDocumentoId: tipo.id })
+    const next = new URLSearchParams(searchParams)
+    next.set('tipoDocumentoId', tipo.id)
+    setSearchParams(next)
     setModalAberto(false)
   }
 
   const handleSubmit = async (payload: EmitirDocumentoRequest) => {
     try {
-      const res = await emitirMutation.mutateAsync(payload)
+      const res = admissaoId
+        ? await emitirAdmissaoMutation.mutateAsync({
+            admissaoId,
+            payload: mapEmitirRequestParaOrigem(payload),
+          })
+        : consultaId
+          ? await emitirConsultaMutation.mutateAsync({
+              consultaId,
+              payload: mapEmitirRequestParaOrigem(payload),
+            })
+          : await emitirMutation.mutateAsync(payload)
+
       if (isFaturacaoApiSuccess(res.info)) {
         const d = res.info.data
         let msg = 'Documento emitido com sucesso.'
@@ -110,7 +166,7 @@ export function NovoDocumentoPage() {
               tipo={tipoSeleccionado}
               onSubmit={handleSubmit}
               onCancel={() => navigate('/area-financeira/faturacao/faturacao')}
-              isSubmitting={emitirMutation.isPending}
+              isSubmitting={isSubmitting}
             />
           ) : null}
         </AreaComumListagemPageShell>

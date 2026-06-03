@@ -59,6 +59,7 @@ export function DocumentoCabecalhoSection({
           className={inputClass}
           value={state.dataDocumento}
           onChange={(e) => onChange({ dataDocumento: e.target.value })}
+          readOnly={readOnly}
         />
       </div>
       <div className={fieldGap}>
@@ -68,6 +69,7 @@ export function DocumentoCabecalhoSection({
           className={inputClass}
           value={state.dataVencimentoPagamento}
           onChange={(e) => onChange({ dataVencimentoPagamento: e.target.value })}
+          readOnly={readOnly}
         />
       </div>
       <div className={fieldGap}>
@@ -77,6 +79,7 @@ export function DocumentoCabecalhoSection({
           onValueChange={(v) =>
             onChange({ condicaoPagamento: v ? Number(v) : null })
           }
+          disabled={readOnly}
         >
           <SelectTrigger className={selectTriggerClass}>
             <SelectValue placeholder='Selecionar…' />
@@ -97,6 +100,7 @@ export function DocumentoCabecalhoSection({
           onValueChange={(v) =>
             onChange({ tipoModoPagamento: v ? Number(v) : null })
           }
+          disabled={readOnly}
         >
           <SelectTrigger className={selectTriggerClass}>
             <SelectValue placeholder='Selecionar…' />
@@ -115,6 +119,7 @@ export function DocumentoCabecalhoSection({
         <Select
           value={state.tipoSerie}
           onValueChange={(v) => onChange({ tipoSerie: v as 'N' | 'D' | 'M' })}
+          disabled={readOnly}
         >
           <SelectTrigger className={selectTriggerClass}>
             <SelectValue placeholder='Selecionar…' />
@@ -153,7 +158,7 @@ export function DocumentoCabecalhoSection({
             <Label className={labelClass}>Código Validação Transporte</Label>
             <Input
               className={inputClass}
-              value={state.codigoValidacaoTransporte}
+              value={state.codigoValidacaoTransporte ?? ''}
               onChange={(e) =>
                 onChange({ codigoValidacaoTransporte: e.target.value })
               }
@@ -167,6 +172,7 @@ export function DocumentoCabecalhoSection({
           id='isento-iva'
           checked={state.isentoIva}
           onCheckedChange={(v) => onChange({ isentoIva: v })}
+          disabled={readOnly}
         />
         <Label htmlFor='isento-iva' className={labelClass}>
           Isento IVA
@@ -178,6 +184,7 @@ export function DocumentoCabecalhoSection({
           <Select
             value={state.motivoIsencaoId ?? ''}
             onValueChange={(v) => onChange({ motivoIsencaoId: v || null })}
+            disabled={readOnly}
           >
             <SelectTrigger className={selectTriggerClass}>
               <SelectValue placeholder='Selecionar motivo…' />

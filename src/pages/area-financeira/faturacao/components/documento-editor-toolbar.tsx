@@ -11,18 +11,18 @@ import { toast } from '@/utils/toast-utils'
 type Props = {
   readOnly: boolean
   onDescontos?: () => void
+  onFaturaGlobal?: () => void
+  onSinistrados?: () => void
   onGuardar?: () => void
   onVoltar?: () => void
   isSubmitting?: boolean
 }
 
-function emBreve(label: string) {
-  toast.info(`${label} — disponível em breve (legado).`)
-}
-
 export function DocumentoEditorToolbar({
   readOnly,
   onDescontos,
+  onFaturaGlobal,
+  onSinistrados,
   onGuardar,
   onVoltar,
   isSubmitting,
@@ -60,7 +60,8 @@ export function DocumentoEditorToolbar({
               type='button'
               variant='outline'
               size='sm'
-              onClick={() => emBreve('Fatura Global')}
+              onClick={onFaturaGlobal}
+              disabled={!onFaturaGlobal}
             >
               Fatura Global
             </Button>
@@ -68,7 +69,8 @@ export function DocumentoEditorToolbar({
               type='button'
               variant='outline'
               size='sm'
-              onClick={() => emBreve('Sinistrados')}
+              onClick={onSinistrados}
+              disabled={!onSinistrados}
             >
               Sinistrados
             </Button>

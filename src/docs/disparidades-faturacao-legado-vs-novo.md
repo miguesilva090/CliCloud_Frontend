@@ -1,291 +1,257 @@
 # Disparidades — Faturação (Legado vs Novo)
 
-**Data:** 2026-06-02  
-**Âmbito:** núcleo **documentos de faturação** — `TfaturaLst.aspx` / `TfaturaEdt.js` (legado) vs `area-financeira/faturacao` + `DocumentoEmissaoService` (novo).  
-**Fora de âmbito neste documento:** stocks, liquidações, ADSE, ficheiro eletrónico, mapas, contas correntes (ver `auditoria-menu-faturacao-legado-vs-novo.md`).
+**Última atualização:** 2026-06-03 (auditoria ao código — estado real)  
+**Âmbito:** **Faturação → Faturação** — `TfaturaLst` / `TfaturaEdt` vs `area-financeira/faturacao` + `DocumentoEmissaoService`.  
+**Não inclui:** resto do menu Faturação (ADSE, mapas, ficheiro eletrónico, etc.) nem **reports / Crystal**.
 
-**Documentos relacionados (podem estar desatualizados em detalhe):**
+**Princípio:** paridade **funcional** no fluxo principal — **não** réplica espelhada do ASP (UI, WS, nomes de campos).
 
-- `Frontend/src/docs/alinhamento-fe-faturacao-legado-vs-novo.md` — plano FE por ecrã
-- `Frontend/src/docs/auditoria-menu-faturacao-legado-vs-novo.md` — menu completo Área Financeira
+> **Fonte de verdade** para este ramo. Os ficheiros `alinhamento-fe-faturacao-legado-vs-novo.md`, `auditoria-menu-faturacao-legado-vs-novo.md` e `plano-area-financeira-legado-vs-novo.md` devem **alinhar-se** a este documento (não duplicar checklists contraditórios).
 
-Este ficheiro é a **fonte de disparidades** para as próximas atualizações, de forma incremental e alinhada ao legado.
+---
+
+## Hierarquia da documentação
+
+| Documento | Papel |
+|-----------|--------|
+| **Este ficheiro** | Disparidades reais, MVP fechado, checklist pós-MVP |
+| `plano-area-financeira-legado-vs-novo.md` | Roadmap Área Financeira, estrutura de pastas, fases B–H |
+| `auditoria-menu-faturacao-legado-vs-novo.md` | Menu completo legado (~55 ecrãs) vs placeholders |
+| `alinhamento-fe-faturacao-legado-vs-novo.md` | Padrões FE (form-styles, componentes); **não** usar estados de implementação desatualizados das secções antigas |
+
+---
+
+## FECHADO — Faturação / Faturação (MVP operacional)
+
+**Estado:** ✅ **FECHADO** para uso diário de documentos de faturação, com exclusões e checklist pós-MVP abaixo.
+
+### Fora de âmbito (não conta para este fecho)
+
+| Item | Motivo |
+|------|--------|
+| Impressão completa (ARS, ticket, todos os modos Crystal) | Reports — épico à parte (`GET .../print` existe; não é paridade Crystal) |
+| `TfaturaListagemReport`, Excel resumo FA | Reports |
+| SMS / WhatsApp na listagem | Opcional / outro módulo |
+| Menu ADSE, mapas, ficheiro eletrónico, stocks, CC global | Outros sub-módulos — ver auditoria menu |
+| Paridade espelhada (Metronic, `oper=`, dropdown único «Tarefas») | Stack React + REST por desenho |
+| `FaturaGlobalObter` (importar linhas em massa) | ⏳ pós-MVP — ver secção 4 |
+| Liquidação profunda vs `LiquidacaoDocumento*` | 🟡 API + páginas mínimas; tesouraria = épico à parte |
+| Reabrir / alterar documento já emitido | ⏳ `documento-edicao-page` só `mode=view` |
+
+### Incluído no fecho (confirmado no código, 2026-06-03)
+
+| Área | O quê |
+|------|--------|
+| **Emissão** | Emitir, anular (mês corrente, exc. FP), NC, desde admissão/consulta |
+| **Ver** | `documento-edicao-page.tsx` read-only com `DocumentoEditor` |
+| **Listagem** | Colunas legado, filtros ocultos, ações (email, print, print original, liquidar, transporte, emitir fatura GT/GR, detalhes admissões, anular, NC) |
+| **Editor** | `documento-editor.tsx` + tabs (cliente, linhas, movimentos, retenção, MB, observações/banco, totais) |
+| **A1** | Beneficiário, motivo isenção, tipo série, moeda, observações, banco, CP, datas global no emit |
+| **Sinistrados** | `POST .../sinistrados/info-faturacao`, dialog, aplicar linhas, marcar linhas no emit; `CONS-`/`TRAT-`; F09 `ServicoId` |
+| **Fatura global** | Apenas **intervalo de datas** (`FaturaGlobalDataInicio/Fim` + `documento-fatura-global-datas-dialog.tsx`) |
+| **Novo documento** | `SelecionarTipoDocumentoDialog` + `novo-documento-page` + editor (não `novo-documento-form` mínimo) |
+| **BE listagem** | `DocumentoTableDTO`: `Anulado`, `NumeroExibicao`, totais, `ReferenciaDocumento`, `AdmissoesResumo`, `OrigemLabel`; exclusão RC/FR/REC em `DocumentoSearchTable` |
+| **BE filtros** | `numerodocumento_de/ate`, `data_de/ate`, `nomecliente` / `nomecliente_de/ate`, `anulado`, `liquidado`, `tipodocumentoid` |
+
+### UAT mínimo (equipa)
+
+1. Emitir FA com organismo + intervalo global → ver documento e confirmar datas/beneficiário.  
+2. Anular no mês vs mês anterior.  
+3. GT/GR → emitir fatura na listagem.  
+4. Importar admissão nas linhas.  
+5. Sinistrado → Aplicar → emitir → preços/organismo e linha observação.  
+6. Listagem: colunas visíveis; Ref./Admissões quando existirem dados; filtros nº/data de/até no painel.
+
+---
+
+### Legenda
+
+| Símbolo | Significado |
+|---------|-------------|
+| ✅ | Feito (MVP ou pós-MVP concluído) |
+| 🟡 | Parcial — usar com nota do que falta |
+| ⏳ | Não implementado / épico futuro |
+| — | Não aplicável / fora de âmbito |
 
 ---
 
 ## 1. Resumo executivo
 
-| Camada | Estimativa vs legado (`Tfatura`) | Situação |
-|--------|----------------------------------|----------|
-| **Backend — emissão e regras** | ~80–85% | Emitir, anular, NC, SAFT/ATCUD, MB, cálculos, sync admissão |
-| **Frontend — listagem** | ~55–60% | Grelha + filtros base; falta menu operacional do legado |
-| **Frontend — editor** | ~55–65% | Fluxo criar/ver utilizável; lacunas de campos e integrações |
-| **Resto do menu Faturação** | ~5% | Rotas placeholder |
-
-**Conclusão:** O **caminho feliz** (novo documento → cliente → linhas → guardar → listar → ver → anular/NC) está coberto. Falta sobretudo **operações pós-emissão** (impressão, email, liquidação), **fluxos em massa** (fatura global, sinistrados) e **paridade fina** de campos do `TfaturaEdt`.
-
----
-
-## 2. Referências
-
-### Legado (`CliCloud.ASPcli`)
-
-| Função | Ficheiros |
-|--------|-----------|
-| Listagem | `Client/Faturacao/TfaturaLst.aspx`, `TfaturaLst.js` |
-| Editor | `Client/Faturacao/TfaturaEdt.aspx`, `TfaturaEdt.js` |
-| API gravação | `Client/Faturacao/Services/TFatura.cs` |
-| Regra clínica (invisível no editor) | `window.RegraFaturacao` em `TfaturaEdt.aspx` (config clínica) |
-| Descontos | Modal `modalDesconto` — **não** no cabeçalho |
-| Linhas | `TFaturaLinha` em `TfaturaEdt.js` (`dados[]` começa **vazio**) |
-
-### Novo
-
-| Função | Ficheiros |
-|--------|-----------|
-| Listagem FE | `Frontend/src/pages/area-financeira/faturacao/pages/listagem-faturacao-page.tsx` |
-| Editor FE | `.../components/documento-editor.tsx` e tabs/modais |
-| Emissão BE | `Backend/CliCloud.Application/.../DocumentoEmissaoService/` |
-| API | `Backend/CliCloud.WebApi/Controllers/Documentos/DocumentoEmissaoController.cs` |
-| Débitos admissão | `AdmissaoAdministrativoController.GetDebitoFaturacao` |
+| Camada | vs legado Tfatura |
+|--------|-------------------|
+| **Backend emissão** | ✅ núcleo + sinistrados |
+| **Backend listagem** | ✅ DTO + filtros + exclui recibos |
+| **Frontend editor** | ✅ núcleo; ⏳ import linhas fatura global |
+| **Frontend listagem** | ✅ operacional; 🟡 filtro nome (ver #2) |
+| **Ver / reabrir emitido** | 🟡 só ver; ⏳ reabrir BE-06 |
+| **Resto menu Faturação** | ⏳ placeholders (~95% menu) |
 
 ---
 
-## 3. Implementado (paridade aceitável)
+## 2. Mapa legado ↔ novo (implementação actual)
 
-### 3.1 Backend
+### Ecrãs
 
-- [x] `POST .../emitir` — documento + linhas + totais
-- [x] Numeração, série, ano fiscal
-- [x] Validação ATCUD (documentos após 2022)
-- [x] Hash SAFT (`GlobalHash`) quando clínica com SAFT
-- [x] `DocumentoEmissaoCalculoHelper` — descontos compostos (cliente × cond. pagamento × D1–D3 × global); regra faturação 1/2 **só em cálculo**
-- [x] `DocumentoEmissaoPerfilValidator` — GT/GR, NC/DV origem, retenção, MB, consumidor final > 1000€
-- [x] `POST emitir/admissao/{id}`, `emitir/consulta/{id}` (atalhos)
-- [x] `POST anular/{id}`, `POST nota-credito`
-- [x] Referências MB na emissão (`GerarReferenciaMb`)
-- [x] `GetDebitoFaturacao` — exclui serviços já em documentos não anulados
-- [x] `DocumentoEmissaoClinicaSyncHelper` — flag `Admissao.Faturado` parcial/total
-- [x] Listagem documentos paginada (`Documento/paginated`)
+| Legado | Novo (caminho principal) |
+|--------|--------------------------|
+| `TfaturaLst.aspx/js` | `pages/.../listagem-faturacao-page.tsx` + `listagem-faturacao-table*.tsx` + `listagem-faturacao-filter-controls.tsx` |
+| `TfaturaEdt.aspx/js` (inserção) | `novo-documento-page.tsx` + `documento-editor.tsx` |
+| `TfaturaEdt.aspx/js` (ver) | `documento-edicao-page.tsx` (`mode='view'`) |
+| `TFatura.cs` / `WSFaturacao` | `DocumentoEmissaoService` + `DocumentoService` |
+| `SinistradosInfoFaturacao` | `SinistradosInfoFaturacaoHelper` + `POST .../sinistrados/info-faturacao` |
+| `FaturaGlobalObter` | ⏳ — hoje: `documento-fatura-global-datas-dialog.tsx` + campos no emit |
 
-### 3.2 Frontend — listagem
+### API REST (Faturação / Faturação)
 
-- [x] Colunas principais: tipo, n.º exibição, data, cliente, origem, descontos, IVA, total, estado, liquidado
-- [x] Filtros: tipo, datas, nome, n.º documento, anulado
-- [x] Novo documento, Ver (`/documento/:id`), Anular, Nota de crédito
+| Operação | Endpoint |
+|----------|----------|
+| Listagem | `POST /client/documentos/Documento/paginated` |
+| Detalhe | `GET /client/documentos/Documento/{id}` |
+| Print / email | `GET .../{id}/print`, `.../print/original`, `POST .../email` |
+| Liquidação | `GET .../liquidacao-contexto`, `POST .../liquidar` |
+| Emitir / NC / anular | `DocumentoEmissaoController` |
+| Tipos | `GET /client/documentos/TipoDocumento/light` |
 
-### 3.3 Frontend — editor (`TfaturaEdt`)
+### Estrutura FE (`pages/area-financeira/faturacao/`)
 
-- [x] Cabeçalho: tipo, datas, condição/modo pagamento, isento IVA, transporte (perfil), origem NC/DV/RG
-- [x] **Sem** regra faturação visível (correto vs legado)
-- [x] Modal **Descontos** (cliente, cond. pagamento, acerto) — não no cabeçalho
-- [x] Tab **Cliente**: utente/organismo, subsistema, snapshot, consumidor final (badge NIF)
-- [x] Tab **Linhas**: grelha vazia inicial, Inserir ▼, modal edição, remover selecionadas
-- [x] Tab **Movimentos do Utente** + importação admissões (activo/histórico)
-- [x] Tab **Retenção na fonte**, **Ref. MB / MBWay**
-- [x] Painel **Totais** + resumo IVA (cálculo alinhado ao BE)
-- [x] Perfis por tipo (`documento-tipo-editor-profile.ts`)
-- [x] Modo consulta documento emitido
+```
+faturacao/
+├── pages/          listagem, novo-documento, documento-edicao, liquidacao-*
+├── components/     editor, tabs, dialogs (sinistrados, NC, anular, filtros, …)
+├── queries/        documento-queries, documento-editor-queries, tipo-documento-queries
+├── hooks/          use-documento-editor
+├── utils/          cálculos, mappers, acções listagem, display
+└── types/          documento-editor.types
+```
 
-### 3.4 Correções recentes (registo)
+**Clients:** `lib/services/faturacao/documento-service`, `documento-emissao-service`, `tipo-documento-service`  
+**DTOs:** `types/dtos/faturacao/documento*.ts`, `documento-emissao.dtos.ts`  
+**Emissão queries partilhadas:** `pages/area-financeira/documentos/queries/documento-emissao-queries.ts`
 
-| Data | Assunto | Estado |
-|------|---------|--------|
-| 2026-06 | Regra faturação / desconto pagamento **removidos do cabeçalho** | ✅ |
-| 2026-06 | Linha fantasma ao abrir documento (`linhas: []`) | ✅ |
-| 2026-06 | Modal linha em formulário vertical (legibilidade) | ✅ |
-| 2026-06 | `codigoPostal` em `UtenteDTO` — lookup por `codigoPostalId` | ✅ |
+**Não recriar:** ficheiros acima já existem. Próximo trabalho = **estender** (ex. `FaturaGlobalObter`), não duplicar pasta `faturacao/`.
 
 ---
 
-## 4. Disparidades — Backend
+## 3. Implementado (✅) — inventário verificado
 
-| ID | Legado | Novo | Prioridade | Notas |
-|----|--------|------|------------|-------|
-| BE-01 | `ObterDebitoAdmiss` (Dados) | `GetDebitoFaturacao` MVP | **Alta** | Soma/serviços por faturar; não replica toda a lógica legado |
-| BE-02 | Emitir desde admissão/consulta com IVA/preço serviço | Linhas com `TaxaIvaPercentagem = 0` em atalhos | **Alta** | Usar mesmo mapeamento que `mapAdmissaoServicoToLinha` |
-| BE-03 | Beneficiário no documento | Campo entidade/DTO em falta ou não mapeado | Média | `modFldBeneficiario` no legado |
-| BE-04 | Motivo isenção (cabeçalho + linha) | Não validado/gravado na emissão | Média | Legado: `modFldCodigoMotivoIsencao` |
-| BE-05 | Global desde/até, n.º sinistrado no doc. | Não em `EmitirDocumentoRequest` | Baixa/Média | Só relevante se negócio exigir persistência |
-| BE-06 | Edição de documento emitido (reabrir) | Só criar + anular | Baixa | Legado edita conforme série/estado |
-| BE-07 | MBWay (modo 2) com fluxo dedicado | Integração parcial/ambígua no serviço de referências | **Alta** | Rever `ReferenciasMbService` para separar MB vs MBWay corretamente |
-| BE-08 | Retenção por taxa sem valor | Não calcula automaticamente valor de retenção | **Alta** | Risco financeiro/fiscal em retenção ativa |
-| BE-09 | Numeração concorrente por tipo/ano/série | Cálculo `último + 1` sujeito a colisão sob carga | **Alta** | Reforçar locking/estratégia transacional e testes de concorrência |
-| BE-10 | Chave SAFT segura e rotativa | Chave embebida no código utilitário | Média | Migrar para configuração segura por ambiente |
+### Backend
 
----
+- `DocumentoEmissaoService`: emitir, anular, NC, ATCUD, SAFT, MB, cálculos, sync admissão/consulta  
+- Sinistrados: helper, specs, resolver clínico, `EmitirDocumentoRequest.SinistradoId` + `SinistradoLinhaServicoId` no emit  
+- `DocumentoService`: paginated, detalhe, print, email, detalhes-admissões, validação transporte, liquidar  
+- `DocumentoTableDTO` + mapping: `ReferenciaDocumento`, `AdmissoesResumo`, `Anulado`, `NumeroExibicao`, totais, `OrigemLabel`, `EstadoDocumentoLabel`  
+- `DocumentoSearchTable`: filtros de/até; **exclui** tipos recibo (RC/FR/REC)  
+- Migrations relevantes: F06 beneficiário, F08 `CodigoServico`, F09 `ServicoId`  
 
-## 5. Disparidades — Frontend editor
+### Frontend
 
-| ID | Legado (`TfaturaEdt`) | Novo | Prioridade | Risco |
-|----|----------------------|------|------------|-------|
-| FE-E01 | Motivo isenção + autocomplete | Só switch isento IVA | **Alta** | Emissão sem motivo AT |
-| FE-E02 | Beneficiário (readonly) | Ausente | Média | |
-| FE-E03 | Conta bancária, cheque, pré-datado, 2.ª data venc. | Ausente | Média | Pagamento FS/FA |
-| FE-E04 | Tipo série (N/D/M) | Ausente no FE | **Alta** | BE aceita `TipoSerie` |
-| FE-E05 | Moeda + câmbio (select dinâmico) | UI EUR/câmbio; **não envia** `MoedaId`/`TaxaCambio` | **Alta** | Dados não gravados |
-| FE-E06 | Observações documento | Estado existe; sem campo UI | Média | `observacoes` no request |
-| FE-E07 | Tab morada de entrega | Ausente | Baixa | |
-| FE-E08 | Modal linha completo (armazém, motivo NC linha, etc.) | Modal simplificado | Média | |
-| FE-E09 | Inserir artigos (stock) | Ref. manual / sem armazém | Média | Perfis GT/GR |
-| FE-E10 | Fatura Global | Botão placeholder | Baixa (épico) | `modalFaturaGlobal` |
-| FE-E11 | Sinistrados | Botão placeholder; campos cliente só texto | Baixa (épico) | `modalSinistrados` |
-| FE-E12 | Condição/modo pagamento autocomplete | Listas estáticas `documento-editor-opcoes.ts` | Média | IDs podem não coincidir com BD |
-| FE-E13 | Editar rascunho / documento não emitido | Não existe | Baixa | |
-| FE-E14 | `codigoPostalTexto` | UI; emissão usa `codigoPostalId` | Média | Resolver CP ao guardar |
-| FE-E15 | Global desde/até, sinistrado, limite crédito | UI; **não** em `toEmitirRequest` | **Alta** | **Falso positivo UX** — remover ou persistir |
-| FE-E16 | IVA de caixa | Removido da UI (legado também não tem em TfaturaEdt) | — | OK manter só no API se necessário |
+- Listagem completa + `FATURACAO_HIDDEN_FILTER_COLUMNS`  
+- Editor com tabs + toolbar (descontos, fatura global datas, sinistrados)  
+- `SelecionarTipoDocumentoDialog` (tipo; série via `numeroSerie` no rótulo do tipo)  
+- Integração admissão/consulta: `?admissaoId=` / `?consultaId=` em `novo-documento-page`  
+- Liquidação: páginas `liquidacao-utente` / `liquidacao-organismo` (fluxo mínimo)
 
 ---
 
-## 6. Disparidades — Frontend listagem
+## 4. Disparidades reais (checklist pós-MVP)
 
-| ID | Legado (`TfaturaLst`) | Novo | Prioridade |
-|----|----------------------|------|------------|
-| FE-L01 | Filtros intervalo (data, nome, n.º TFatura) | Intervalo parcial / campos únicos | Média |
-| FE-L02 | Coluna Admissões | Ausente | Média |
-| FE-L03 | Coluna Ref. | Ausente ou incompleta | Baixa |
-| FE-L04 | Imprimir (normal, original, ARS, ticket) | Ausente | **Alta** operacional |
-| FE-L05 | Enviar email / SMS / WhatsApp | Ausente | Média |
-| FE-L06 | Pagamento / liquidar FS/FA | Ausente | **Alta** |
-| FE-L07 | GT/GR → Emitir fatura | Ausente | Média |
-| FE-L08 | Atribuir código validação transporte | Ausente | Média |
-| FE-L09 | E-Fatura / E-NC | Ausente | Baixa (módulo AT) |
-| FE-L10 | Resumo FA / Excel | Ausente | Baixa |
-| FE-L11 | Detalhes admissões do documento | Ausente | Média |
-| FE-L12 | Listagens/report (`TfaturaListagemReport`) | Toast “em preparação” | Baixa |
-| FE-L13 | Tipo série na listagem/filtro | Ausente | Baixa |
+**Apenas itens que ainda diferem do legado ou têm lacuna técnica.** Não repetir o que está na secção 3.
 
----
+### Alta prioridade
 
-## 7. Disparidades — Módulos Área Financeira (menu)
+| # | Disparidade | Legado | Novo (estado) | Próximo passo |
+|---|-------------|--------|---------------|---------------|
+| 1 | **Importar linhas fatura global** | `FaturaGlobalObter` (`TFatura.cs`) | ⏳ Só datas no documento | `POST .../fatura-global/obter` + dialog «Aplicar linhas» no editor |
+| 2 | **Filtro nome cliente** | `Nome_de` / `Nome_ate` | 🟡 Painel: nº e data de/até ✅; nome: campo único `nomeCliente` — **id pode não chegar ao BE** (`nomecliente`); colunas ocultas `nomecliente_de/ate` **sem UI** | Alinhar id do filtro a `nomecliente` ou expor par de/até no painel |
+| 3 | **Liquidação tesouraria** | `LiquidacaoDocumento*` completo | 🟡 `liquidar` + página resumo | Épico tesouraria; não duplicar na listagem |
+| 4 | **`Documento.SinistradoId`** | Cabeçalho liga sinistro | ⏳ Só em `EmitirDocumentoRequest` + linhas sinistro | Migration + persistir no emit |
 
-O menu novo **espelha** o legado, mas quase tudo excepto **Faturação / Novo documento** é placeholder.
+### Média prioridade
 
-| Grupo menu | Legado (exemplos) | Novo | Gap |
-|------------|-------------------|------|-----|
-| Faturação | TfaturaLst, TfaturaEdt | Implementado parcial | Ver secções 4–6 |
-| Ficheiros eletrónicos | Vários `.aspx` | Placeholder | 100% |
-| Credenciais SNS | Listagens | Placeholder | 100% |
-| Faturação ADSE | ADSE | Placeholder | 100% |
-| Mapas | Mapas | Placeholder | 100% |
-| Entidades / Tabelas | CRUD apoio | Placeholder / área comum | — |
-| Stocks | Artigo, entradas, saídas | Não no âmbito faturação doc. | Épico separado |
-| Liquidações / CC | Liquidacao*Lst | Placeholder tesouraria/CC | Épico separado |
+| # | Disparidade | Estado | Notas |
+|---|-------------|--------|-------|
+| 5 | `filtroSinistrado` / ACOR cross-clínica | ⏳ | Legado `TfaturaEdt.js`; API sem parâmetro |
+| 6 | Lista `Admissoes` na resposta sinistrados | ⏳ | Campo extra legado |
+| 7 | Texto `AdmissoesResumo` vs agregado legado | 🟡 | BE `ResolveDocumentoAdmissoesResumo` — aceitável se negócio validar |
+| 8 | Ref. NC e `VerRefNotaCredito` | 🟡 | Hoje sempre `DocumentoOrigem` em `ResolveDocumentoReferenciaListagem` |
+| 9 | Estados «Por Descarregar» / «Descarregada» | 🟡 | Badge por `EstadoDocumentoLabel`, não ints legado |
+| 10 | Série fiscal explícita antes de criar | 🟡 | Modal de **tipo** ✅; escolha de série separada como legado ⏳ se obrigatório |
 
-Detalhe: `auditoria-menu-faturacao-legado-vs-novo.md`.
+### Editor / BE — só se negócio pedir
 
----
+| # | Item | Estado |
+|---|------|--------|
+| 11 | Cheque / pré-datado / 2.ª data vencimento | ⏳ |
+| 12 | Morada entrega | ⏳ |
+| 13 | Linha: armazém, lote, motivo NC linha | 🟡 |
+| 14 | Combos condição/modo 100% alinhados BD | 🟡 (`GetOpcoesPagamento`) |
+| 15 | Reabrir / alterar emitido | ⏳ BE-06 |
 
-## 8. Riscos de regressão (atualização responsável)
+### Backend técnico (não bloqueia MVP)
 
-1. **Não adicionar campos ao ecrã sem DTO + BE + migração** — evitar repetir FE-E15.
-2. **Legado primeiro** — cada tarefa deve citar ficheiro `.aspx`/`.js` e método `TFatura.cs` equivalente.
-3. **Uma disparidade por PR** (ou grupo pequeno homogéneo): ex. só FE-E01+BE-04 motivo isenção.
-4. **Testar contra clínica real**: ATCUD activo, SAFT, MB mínimo, perfil FA vs GT.
-5. **Sem framer-motion** (regra repositório).
-6. **Cálculos**: alterações em FE devem manter `documento-editor-calculos.ts` alinhado a `DocumentoEmissaoCalculoHelper.cs`.
-7. **Não expor regra faturação** no UI — apenas carregar da clínica em background.
-8. **Concorrência de emissão**: qualquer alteração na numeração fiscal deve ser testada com cenários paralelos.
-9. **Integrações MB/MBWay**: validar callbacks/idempotência antes de ativar em produção.
+| ID | Assunto | Estado |
+|----|---------|--------|
+| BE-01 | Débito admissão completo | 🟡 |
+| BE-06 | Reabrir documento emitido | ⏳ |
+| BE-07 | MBWay dedicado | 🟡 |
+| BE-09 | Locking numeração extra | 🟡 |
+| BE-10 | Chave SAFT em config | ⏳ ops |
 
----
+### Explicitamente fora desta checklist
 
-## 9A. Auditoria profunda (02-06-2026)
-
-### Ações legadas críticas ainda sem paridade
-
-- `TfaturaLst.js`: impressão (normal/original/ARS/ticket), envio email/SMS/WhatsApp, pagamento, emissão a partir de GT/GR, validação transporte, detalhes de admissões.
-- `TfaturaEdt.aspx/js`: modais reais de **Fatura Global** e **Sinistrados**, motivo de isenção, tipo série e campos avançados de pagamento.
-- Serviço legado `TFatura.cs`: regras distribuídas com validações contextuais por sessão/tipo/série.
-
-### Lacunas de dados detectadas
-
-- FE com campos de UI ainda não persistidos (`globalDesde`, `globalAte`, `numeroSinistrado`, `limiteCredito`, parte de moeda/câmbio).
-- Falta motivo de isenção no contrato de emissão (header/linha).
-- Beneficiário não mapeado ponta-a-ponta.
-
-### Riscos fiscais/contabilísticos prioritários (P0)
-
-1. `BE-02` IVA em emissão por admissão/consulta.
-2. `BE-09` colisão de numeração em carga concorrente.
-3. `BE-08` retenção ativa com taxa sem cálculo de valor.
-4. `BE-07` fluxo MBWay incompleto/ambíguo.
+- Reports Crystal, ticket, ARS, Excel resumo FA  
+- SMS / WhatsApp, dropdown único «Tarefas»  
+- Sub-menus ADSE, mapas, ficheiro eletrónico, credenciais SNS, etc.
 
 ---
 
-## 9. Plano de atualização sugerido (fases)
+## 5. Listagem — colunas (estado)
 
-### Fase A — Integridade emissão (crítico)
-
-| Tarefa | IDs | Entregável |
-|--------|-----|------------|
-| Motivo isenção | FE-E01, BE-04 | Campo + gravação + validação se isento |
-| Moeda/câmbio no payload | FE-E05 | `MoedaId`, `TaxaCambio` no `toEmitirRequest` |
-| Tipo série | FE-E04 | Combo + envio `TipoSerie` |
-| Observações | FE-E06 | Campo cabeçalho ou tab |
-| Limpar ou persistir campos cliente extra | FE-E14, FE-E15, BE-05 | Decisão explícita documentada |
-| IVA em emitir admissão/consulta | BE-02 | Testes com admissão real |
-| Concorrência de numeração fiscal | BE-09 | Teste de carga + hardening transacional |
-| Retenção por taxa/valor | BE-08 | Regra única de cálculo/validação |
-| MBWay fim-a-fim | BE-07 | Fluxo dedicado + callback validado |
-
-**Critério de done:** emitir FA de teste com isento+motivo, moeda, série; comparar totais com legado no mesmo cenário.
-
-### Fase B — Editor legado (médio)
-
-| Tarefa | IDs |
-|--------|-----|
-| Conta bancária / cheque | FE-E03 |
-| Beneficiário | FE-E02, BE-03 |
-| Autocomplete condição/modo pagamento | FE-E12 |
-| Modal linha (armazém / NC linha) | FE-E08, FE-E09 |
-| Código postal → `codigoPostalId` ao guardar | FE-E14 |
-
-### Fase C — Listagem operacional
-
-| Tarefa | IDs |
-|--------|-----|
-| Imprimir | FE-L04 |
-| Pagamento / liquidar | FE-L06 |
-| Email (se API existir) | FE-L05 |
-| GT/GR → fatura | FE-L07 |
-| Filtros intervalo | FE-L01 |
-
-### Fase D — Épicos de negócio
-
-| Tarefa | IDs |
-|--------|-----|
-| Fatura global | FE-E10 + BE novo |
-| Sinistrados | FE-E11 + integração consultas |
-| Débito admissão completo | BE-01 |
-
-### Fase E — Outros módulos menu
-
-Conforme `auditoria-menu-faturacao-legado-vs-novo.md` (Fases B–F do plano global).
+| Coluna legado | Novo | Estado |
+|---------------|------|--------|
+| N.º documento | `numeroExibicao` / `getDocumentoNumeroLabel` | ✅ |
+| Data | `data` | ✅ |
+| Cliente | `nomeCliente` / `utenteNome` | ✅ |
+| Origem | `origemLabel` | ✅ |
+| Ref. | `referenciaDocumento` | ✅ 🟡 regra NC (#8) |
+| Admissões | `admissoesResumo` | ✅ 🟡 texto (#7) |
+| Total descontos / imposto / total | DTO | ✅ |
+| Estado | `getDocumentoEstadoBadge` | ✅ 🟡 textos (#9) |
+| Opções | ícones + acções (não dropdown legado) | ✅ — por desenho |
 
 ---
 
-## 10. Checklist antes de fechar cada tarefa
+## 6. Sinistrados
 
-- [ ] Identificador disparidade (ex. FE-E05) referenciado no PR/commit
-- [ ] Comportamento legado reproduzido ou **diferença documentada** com motivo
-- [ ] `dotnet build` / `tsc` sem erros nos módulos tocados
-- [ ] Teste manual: criar documento + listar + (se aplicável) anular/NC
-- [ ] Sem campos novos “só UI”
-- [ ] Atualizar secção 3 ou 4 deste `.md` (estado ✅)
-
----
-
-## 11. Como usar este documento
-
-1. Escolher **uma fase** (recomendado: **Fase A**).
-2. Implementar tarefas na ordem da tabela.
-3. Marcar disparidades como resolvidas na secção 3 ou riscar na 4–6.
-4. Não misturar Fase C (impressão) com Fase A (payload emissão) no mesmo PR.
-
-Quando avançarmos para código, cada pedido deve indicar: **ID da disparidade** (ex. `FE-E05`) + **ficheiros a alterar**.
+| Aspeto | Estado |
+|--------|--------|
+| API + aplicar linhas + emit | ✅ |
+| Preços, `CONS-`/`TRAT-`, F09 `ServicoId`, linha observação | ✅ |
+| `filtroSinistrado`, ACOR, `Admissoes` na resposta | ⏳ (#5, #6) |
+| `SinistradoId` no `Documento` fiscal | ⏳ (#4) |
 
 ---
 
-*Documento gerado para auditoria e planeamento. Atualizar após cada marco de implementação.*
+## 7. Roadmap pós-MVP (ordem sugerida)
+
+1. `FaturaGlobalObter` → endpoint + FE aplicar linhas.  
+2. `Documento.SinistradoId` + polish sinistrados (#5–6).  
+3. Corrigir filtro nome (#2).  
+4. Liquidação — épico tesouraria (#3).  
+5. BE-06 / campos editor (#11–15) conforme pedido.
+
+**Menu Faturação completo:** fases B–H em `auditoria-menu-faturacao-legado-vs-novo.md` — **não** misturar com este checklist.
+
+---
+
+## 8. Registo de alterações
+
+| Data | Alteração |
+|------|-----------|
+| 2026-06-03 | Marco A1 + F06; fecho MVP Tfatura (sem reports). |
+| 2026-06-03 | Sinistrados + listagem (colunas, hiddenColumns, Ref./Admissões). |
+| 2026-06-03 | **Auditoria código:** secção 4 só com lacunas reais; mapa estrutura; hierarquia docs; corrigidos itens já implementados (filtros nº/data, modal tipo, BE-2, editor, ações listagem). |
+
+---
+
+*Para reabrir o fecho MVP: alterar secção «FECHADO» e registar motivo.*

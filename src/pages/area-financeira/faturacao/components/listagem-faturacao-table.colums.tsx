@@ -11,44 +11,35 @@ import {
   getDocumentoNumeroLabel,
 } from '../utils/faturacao-documento-display'
 
+/** Colunas só para filtros (ocultas na grelha — ver `hiddenColumns` no DataTable). */
+export const FATURACAO_HIDDEN_FILTER_COLUMNS = [
+  'tipoDocumentoId',
+  'data_de',
+  'data_ate',
+  'nomecliente_de',
+  'nomecliente_ate',
+  'numerodocumento_de',
+  'numerodocumento_ate',
+  'anulado',
+  'liquidado',
+] as const
+
 const hiddenFilterColumn = (
-  accessorKey: string,
+  id: string,
 ): DataTableColumnDef<DocumentoTableDTO> => ({
-  accessorKey,
-  header: accessorKey,
+  id,
+  accessorKey: id,
+  header: '',
   enableSorting: false,
   enableHiding: false,
   meta: { hidden: true },
   cell: () => null,
 })
 
-const baseColumns: DataTableColumnDef<DocumentoTableDTO>[] = [
-  hiddenFilterColumn('tipoDocumentoId'),
-  hiddenFilterColumn('data_de'),
-  hiddenFilterColumn('data_ate'),
-  hiddenFilterColumn('nomecliente_de'),
-  hiddenFilterColumn('nomecliente_ate'),
-  hiddenFilterColumn('numerodocumento_de'),
-  hiddenFilterColumn('numerodocumento_ate'),
-  hiddenFilterColumn('anulado'),
-  hiddenFilterColumn('liquidado'),
-  {
-    accessorKey: 'tipoDocumentoAbreviatura',
-    header: 'Tipo',
-    sortKey: 'tipoDocumentoAbreviatura',
-    enableSorting: true,
-    cell: ({ row }) => row.original.tipoDocumentoAbreviatura ?? '-',
-  },
-  {
-    accessorKey: 'tipoSerie',
-    header: 'Série',
-    sortKey: 'tipoSerie',
-    enableSorting: true,
-    cell: ({ row }) => row.original.tipoSerie ?? '-',
-  },
+const visibleColumns: DataTableColumnDef<DocumentoTableDTO>[] = [
   {
     accessorKey: 'numeroExibicao',
-    header: 'N.º TFatura',
+    header: 'N.º documento',
     sortKey: 'numeroExibicao',
     enableSorting: true,
     cell: ({ row }) => getDocumentoNumeroLabel(row.original),
@@ -58,6 +49,7 @@ const baseColumns: DataTableColumnDef<DocumentoTableDTO>[] = [
     header: 'Data',
     sortKey: 'data',
     enableSorting: true,
+    meta: { align: 'left' as const },
     cell: ({ row }) => formatDatePt(row.original.data),
   },
   {
@@ -65,19 +57,37 @@ const baseColumns: DataTableColumnDef<DocumentoTableDTO>[] = [
     header: 'Cliente',
     sortKey: 'nomeCliente',
     enableSorting: true,
+    meta: { align: 'left' as const },
     cell: ({ row }) =>
-      row.original.nomeCliente ?? row.original.utenteNome ?? '-',
+      row.original.nomeCliente ?? row.original.utenteNome ?? '—',
   },
   {
     accessorKey: 'origemLabel',
     header: 'Origem',
     sortKey: 'origemLabel',
     enableSorting: true,
-    cell: ({ row }) => row.original.origemLabel ?? '-',
+    meta: { align: 'left' as const },
+    cell: ({ row }) => row.original.origemLabel ?? '—',
+  },
+  {
+    id: 'referenciaDocumento',
+    accessorKey: 'referenciaDocumento',
+    header: 'Ref.',
+    enableSorting: false,
+    meta: { align: 'left' as const },
+    cell: ({ row }) => row.original.referenciaDocumento?.trim() || '—',
+  },
+  {
+    id: 'admissoesResumo',
+    accessorKey: 'admissoesResumo',
+    header: 'Admissões',
+    enableSorting: false,
+    meta: { align: 'left' as const },
+    cell: ({ row }) => row.original.admissoesResumo?.trim() || '—',
   },
   {
     accessorKey: 'totalDesconto',
-    header: 'Total desconto',
+    header: 'Total descontos',
     sortKey: 'totalDesconto',
     enableSorting: true,
     meta: { align: 'right' as const },
@@ -85,7 +95,7 @@ const baseColumns: DataTableColumnDef<DocumentoTableDTO>[] = [
   },
   {
     accessorKey: 'totalIva',
-    header: 'Total IVA',
+    header: 'Total imposto',
     sortKey: 'totalIva',
     enableSorting: true,
     meta: { align: 'right' as const },
@@ -93,36 +103,33 @@ const baseColumns: DataTableColumnDef<DocumentoTableDTO>[] = [
   },
   {
     accessorKey: 'totalDocumento',
-    header: 'Total fatura',
+    header: 'Total',
     sortKey: 'totalDocumento',
     enableSorting: true,
     meta: { align: 'right' as const },
     cell: ({ row }) => formatMoneyPt(row.original.totalDocumento),
   },
   {
+    id: 'estado',
     accessorKey: 'estadoDocumentoLabel',
     header: 'Estado',
-    enableSorting: false,
+    sortKey: 'estadoDocumentoLabel',
+    enableSorting: true,
+    meta: { align: 'left' as const },
     cell: ({ row }) => {
       const { label, variant } = getDocumentoEstadoBadge(row.original)
       return <Badge variant={variant}>{label}</Badge>
     },
   },
-  {
-    accessorKey: 'liquidado',
-    header: 'Liquidado',
-    sortKey: 'liquidado',
-    enableSorting: true,
-    cell: ({ row }) =>
-      row.original.liquidado ? (
-        <Badge variant='default'>Sim</Badge>
-      ) : (
-        <Badge variant='outline'>Não</Badge>
-      ),
-  },
 ]
 
-export const faturacaoColumns = baseColumns
+const filterColumns: DataTableColumnDef<DocumentoTableDTO>[] =
+  FATURACAO_HIDDEN_FILTER_COLUMNS.map((id) => hiddenFilterColumn(id))
+
+export const faturacaoColumns: DataTableColumnDef<DocumentoTableDTO>[] = [
+  ...visibleColumns,
+  ...filterColumns,
+]
 
 export function getFaturacaoColumnsWithActions(
   onOpenView: (data: DocumentoTableDTO) => void,
@@ -130,12 +137,13 @@ export function getFaturacaoColumnsWithActions(
   rowActionPermissions?: AreaComumListRowActionPermissions,
 ): DataTableColumnDef<DocumentoTableDTO>[] {
   return [
-    ...baseColumns,
+    ...visibleColumns,
     createAreaComumListActionsColumnDef<DocumentoTableDTO>({
       onOpenView,
       rowActionPermissions,
       omitDelete: true,
       renderExtraActions,
     }),
+    ...filterColumns,
   ]
 }

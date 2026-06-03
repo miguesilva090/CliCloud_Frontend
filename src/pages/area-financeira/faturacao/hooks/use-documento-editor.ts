@@ -55,11 +55,14 @@ function estadoInicial(
     numeroContribuinteCliente: '',
     codigoPostalId: null,
     codigoPostalTexto: '',
-    globalDesde: '',
-    globalAte: '',
-    numeroSinistrado: '',
-    limiteCredito: null,
+    beneficiario: '',
+    limiteCreditoExibicao: '',
+    faturaGlobalDesde: '',
+    faturaGlobalAte: '',
+    sinistradoId: null,
+    codigoSinistro: '',
     observacoes: '',
+    bancoId: null,
     moedaId: null,
     moedaCodigo: 'EUR',
     cambio: 1,
@@ -260,6 +263,14 @@ export function useDocumentoEditor(
       localidadeCliente: state.localidadeCliente.trim() || null,
       numeroContribuinteCliente: state.numeroContribuinteCliente.trim() || null,
       codigoPostalId: state.codigoPostalId,
+      beneficiario: state.beneficiario.trim() || null,
+      bancoId: state.bancoId ?? null,
+      faturaGlobalDataInicio: state.faturaGlobalDesde
+        ? `${state.faturaGlobalDesde}T00:00:00`
+        : null,
+      faturaGlobalDataFim: state.faturaGlobalAte
+        ? `${state.faturaGlobalAte}T00:00:00`
+        : null,
       condicaoPagamento: state.condicaoPagamento ?? null,
       tipoModoPagamento: state.tipoModoPagamento ?? null,
       moedaId: state.moedaId ?? null,
@@ -290,6 +301,7 @@ export function useDocumentoEditor(
       identificadorUnicoDocumentoOrigem:
         state.identificadorUnicoDocumentoOrigem.trim() || null,
       dataDocumentoOrigem: state.dataDocumentoOrigem || null,
+      sinistradoId: state.sinistradoId,
       anulado: false,
       liquidado: false,
       linhas: linhasValidas.map((l, i) => ({

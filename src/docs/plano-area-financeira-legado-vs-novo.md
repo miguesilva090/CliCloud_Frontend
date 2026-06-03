@@ -1,9 +1,10 @@
 # Plano de Implementacao - Area Financeira (Legado -> Novo)
 
-**Ultima atualizacao:** 2026-05-29
+**Ultima atualizacao:** 2026-06-03
 
-> **Alinhamento FE detalhado (legado ↔ novo):** [`alinhamento-fe-faturacao-legado-vs-novo.md`](./alinhamento-fe-faturacao-legado-vs-novo.md)  
-> **Auditoria menu Faturação (legado ↔ novo):** [`auditoria-menu-faturacao-legado-vs-novo.md`](./auditoria-menu-faturacao-legado-vs-novo.md)
+> **Fonte de verdade — Faturação/Faturação:** [`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md) (MVP fechado + checklist pós-MVP).  
+> **Alinhamento FE (padrões UX):** [`alinhamento-fe-faturacao-legado-vs-novo.md`](./alinhamento-fe-faturacao-legado-vs-novo.md)  
+> **Menu completo (~55 ecrãs):** [`auditoria-menu-faturacao-legado-vs-novo.md`](./auditoria-menu-faturacao-legado-vs-novo.md)
 
 ## Objetivo
 
@@ -33,9 +34,9 @@ Migrar a Area Financeira do legado (`CliCloud.ASPcli` + `Dados`) para o projeto 
 
 | Fase | Backend | Frontend | Notas |
 |------|---------|----------|-------|
-| **Infra / geral** | 🟡 | 🟡 | Migration `F02` e smoke test API pendentes |
-| **Fase A** — Faturacao > Faturacao | ✅ + ⚠️ ajustes UI | ⏳ | BE core fechado; ver blueprint abaixo |
-| **Fases B–F** | ⏳ | ⏳ | Fora do escopo imediato |
+| **Infra / geral** | 🟡 | 🟡 | Migrations F01–F09; smoke test contínuo |
+| **Fase A** — Faturacao > Faturacao | ✅ MVP | ✅ MVP | Pós-MVP: ver disparidades §4 e §7 |
+| **Fases B–H** (menu) | ⏳ | ⏳ placeholders | Auditoria menu |
 
 ---
 
@@ -67,28 +68,15 @@ Referencia de padrao FE: listagem de recibos em `pages/area-financeira/recibos/`
 
 ---
 
-## 2. Backend — alteracoes recomendadas para a Fase A (UI)
+## 2. Backend — ajustes Fase A (estado 2026-06-03)
 
-Nao bloqueiam o arranque do FE, mas evitam bugs na listagem e no detalhe.
-
-### 2.1 Excluir recibos da listagem de documentos ⚠️
-
-**Problema:** Com TPT (`Documento` + `Recibo`), linhas de recibo existem na tabela `Documento`. `DocumentoSearchTable` devolve **tambem recibos**, o que mistura Faturacao com Recibos.
-
-| Acao | Ficheiro | Alteracao |
-|------|----------|-----------|
-| Filtrar recibos nas specs de listagem | `DocumentoService/Specifications/DocumentoSearchTable.cs` | `Where(d => !EF.Set<Recibo>().Select(r => r.Id).Contains(d.Id))` ou spec dedicada `DocumentoFaturacaoSearchTable` |
-| Idem lista simples | `DocumentoService/Specifications/DocumentoSearchList.cs` | Mesmo filtro |
-
-### 2.2 Campos para tabela e detalhe ⚠️
-
-| Acao | Ficheiro | Alteracao |
-|------|----------|-----------|
-| Coluna estado anulado na grelha | `DocumentoService/DTOs/DocumentoTableDTO.cs` | Adicionar `bool Anulado` (e opcional `EstadoDocumento?`) |
-| Detalhe / regras UI (desativar NC se anulado) | `DocumentoService/DTOs/DocumentoDTO.cs` | Adicionar `Anulado`, `MotivoAnulacao`, `DataAnulacao`, `AnoFiscal`, `NumeroExibicao` |
-| Linhas no detalhe (opcional Fase A) | Novo `DocumentoLinhaDTO` + include em get | `DocumentoByIdClinicaSpec` com `.Include(x => x.Linhas)` ou endpoint `GET .../detalhe` |
-| Filtro grelha "anulado" | `DocumentoSearchTable.cs` | `case "anulado":` → `Query.Where(x => x.Anulado == ...)` |
-| AutoMapper | Perfil de mapping Documento (Application) | Mapear novos campos |
+| Item | Estado | Notas |
+|------|--------|-------|
+| 2.1 Excluir recibos na listagem | ✅ | `DocumentoSearchTable` filtra RC/FR/REC |
+| 2.2 `DocumentoTableDTO` (anulado, exibição, totais, origem, ref., admissões) | ✅ | Mapping em `MappingProfiles` |
+| 2.2 Filtros `anulado`, `liquidado`, de/até | ✅ | `DocumentoSearchTable` |
+| 2.2 Detalhe com linhas | 🟡 | Validar `DocumentoDTO` + includes conforme uso do editor view |
+| Pós-MVP | ⏳ | `FaturaGlobalObter`, `Documento.SinistradoId` — disparidades §4 |
 
 ### 2.3 Tipos documento no FE (combo)
 
@@ -99,78 +87,51 @@ Nao bloqueiam o arranque do FE, mas evitam bugs na listagem e no detalhe.
 
 ---
 
-## 3. Frontend — ficheiros a CRIAR
+## 3. Frontend Fase A — inventário (✅ criado — não duplicar)
 
-### 3.1 Camada API / tipos
+### 3.1 Camada API / tipos — ✅
 
-| Ficheiro | Descricao |
-|----------|-----------|
-| `Frontend/src/types/dtos/faturacao/documento.dtos.ts` | `DocumentoDTO`, `DocumentoTableDTO`, `DocumentoLightDTO`, `DocumentoTableFilter`, `DocumentoAllFilter` — espelhar BE |
-| `Frontend/src/types/dtos/faturacao/tipo-documento.dtos.ts` | `TipoDocumentoLightDTO`, etc. — espelhar BE |
-| `Frontend/src/lib/services/faturacao/documento-service/documento-client.ts` | `BASE = '/client/documentos/Documento'` — `getPaginated`, `getById`, `getLight` |
-| `Frontend/src/lib/services/faturacao/documento-service/index.ts` | `export const DocumentoService = (idFuncionalidade) => new DocumentoClient(...)` |
-| `Frontend/src/lib/services/faturacao/tipo-documento-service/tipo-documento-client.ts` | `BASE = '/client/documentos/TipoDocumento'` — `getLight` para combos |
-| `Frontend/src/lib/services/faturacao/tipo-documento-service/index.ts` | Factory do client |
+- `types/dtos/faturacao/documento.dtos.ts`, `tipo-documento.dtos.ts`, `documento-emissao.dtos.ts`
+- `lib/services/faturacao/documento-service/`, `tipo-documento-service/`, `documento-emissao-service/`
 
-**Ja existem (nao recriar):**
+### 3.2 Queries — ✅
 
-- `types/dtos/faturacao/documento-emissao.dtos.ts`
-- `lib/services/faturacao/documento-emissao-service/`
-- `pages/area-financeira/documentos/queries/documento-emissao-queries.ts`
+- `faturacao/queries/documento-queries.ts`, `documento-editor-queries.ts`, `tipo-documento-queries.ts`
+- `documentos/queries/documento-emissao-queries.ts` (emitir / anular / NC)
 
-### 3.2 Queries React Query
+### 3.3 Listagem — ✅
 
-| Ficheiro | Descricao |
-|----------|-----------|
-| `Frontend/src/pages/area-financeira/faturacao/queries/documento-queries.ts` | `documentoQueryKeys`, `useGetDocumentosPaginated`, `useGetDocumentoById`, `usePrefetchAdjacentDocumentos`, `useInvalidateDocumentosMutation` — copiar padrao de `recibo-queries.ts` |
-| `Frontend/src/pages/area-financeira/faturacao/queries/tipo-documento-queries.ts` | `useGetTiposDocumentoLight` para filtros e formulario |
+- `listagem-faturacao-page.tsx`, `listagem-faturacao-table.tsx`, `listagem-faturacao-table.colums.tsx`, `listagem-faturacao-filter-controls.tsx`
+- Dialogs: `anular-documento-dialog`, `nota-credito-dialog`, `validacao-transporte-dialog`, `detalhes-admissoes-dialog`
 
-**Alterar / estender:**
+### 3.4 Editor — ✅ (fluxo principal)
 
-| Ficheiro | Descricao |
-|----------|-----------|
-| `pages/area-financeira/documentos/queries/documento-emissao-queries.ts` | Adicionar `onSuccess` invalidate `documentoQueryKeys` apos emitir/anular/NC |
+- `novo-documento-page.tsx` + `SelecionarTipoDocumentoDialog`
+- `documento-editor.tsx` + `documento-tab-*.tsx` + `use-documento-editor.ts`
+- `documento-edicao-page.tsx` (ver)
+- Dialogs: sinistrados, fatura global datas, linha, descontos
 
-### 3.3 Listagem Faturacao (`faturacao/faturacao`)
+### 3.5 Não recriar / legado do plano
 
-| Ficheiro | Descricao |
-|----------|-----------|
-| `pages/area-financeira/faturacao/pages/listagem-faturacao-page.tsx` | Shell `AreaComumListagemPageShell` + `usePageData` |
-| `pages/area-financeira/faturacao/components/listagem-faturacao-table.tsx` | DataTable (padrao `listagem-recibos-table.tsx`) |
-| `pages/area-financeira/faturacao/components/listagem-faturacao-table.columns.tsx` | Colunas: tipo, n. doc, data, cliente, total, liquidado, **anulado** |
-| `pages/area-financeira/faturacao/components/listagem-faturacao-filter-controls.tsx` | Filtros: `numeroDocumento`, `data`, `nomeCliente`, `tipodocumentoid`, `estado`, `anulado` (ids = BE `DocumentoSearchTable`) |
+| Ficheiro planeado | Situação |
+|-------------------|----------|
+| `novo-documento-form.tsx` | Existe; **não** é o fluxo principal — usar `documento-editor` |
+| `documento-linhas-editor.tsx` | Substituído por `documento-tab-linhas-section` + `documento-linha-modal` |
+| `faturacao-row-actions.tsx` | Lógica em `listagem-faturacao-acoes.ts` + ícones na page |
 
-### 3.4 Dialogs / acoes na listagem
+### 3.6 Próximas extensões FE (pós-MVP)
 
-| Ficheiro | Descricao |
-|----------|-----------|
-| `pages/area-financeira/faturacao/components/documento-detalhe-dialog.tsx` | `useGetDocumentoById` — campos principais + linhas se BE expuser |
-| `pages/area-financeira/faturacao/components/anular-documento-dialog.tsx` | Form: motivo, data; `useAnularDocumentoMutation` |
-| `pages/area-financeira/faturacao/components/nota-credito-dialog.tsx` | Form: tipo NC, ano fiscal, motivo, credito total/parcial; `useCriarNotaCreditoMutation` |
-| `pages/area-financeira/faturacao/components/faturacao-row-actions.tsx` | (opcional) Ver / Anular / NC com permissoes `useAreaComumEntityListPermissions` |
-
-### 3.5 Novo Documento (`faturacao/novo-documento`)
-
-| Ficheiro | Descricao |
-|----------|-----------|
-| `pages/area-financeira/faturacao/pages/novo-documento-page.tsx` | Pagina com formulario |
-| `pages/area-financeira/faturacao/components/novo-documento-form.tsx` | Campos minimos Fase A (ver secao 5) |
-| `pages/area-financeira/faturacao/components/documento-linhas-editor.tsx` | Grid editavel de linhas (`EmitirDocumentoLinhaRequest[]`) |
-| `pages/area-financeira/faturacao/hooks/use-novo-documento-form.ts` | (opcional) estado + validacao zod |
-
-**Fora de Fase A (manter para depois):**
-
-- Emissao desde admissao/consulta na UI (BE ja existe; ligar quando houver fluxo clinico na area financeira).
+Ver [`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md) §7 — ex.: `fatura-global-import-dialog`, corrigir filtro `nomecliente`.
 
 ---
 
-## 4. Frontend — ficheiros a ALTERAR
+## 4. Frontend — rotas (✅ feito)
 
-| Ficheiro | Alteracao |
-|----------|-----------|
-| `Frontend/src/routes/area-financeira/areaFinanceira.tsx` | Substituir `AreaFinanceiraPlaceholderPage` por lazy de `ListagemFaturacaoPage` e `NovoDocumentoPage` nas rotas `faturacao/faturacao` e `faturacao/novo-documento` |
-| `Frontend/src/config/menu-items.ts` | ✅ Ja aponta para URLs corretas — sem alteracao obrigatoria |
-| `Frontend/src/config/modules/financeiro/area-financeira-module.ts` | ✅ Sem alteracao na Fase A |
+| Ficheiro | Estado |
+|----------|--------|
+| `areaFinanceira.tsx` | ✅ `ListagemFaturacaoPage`, `NovoDocumentoPage`, `DocumentoEdicaoPage`, liquidação |
+| `menu-items.ts` | ✅ URLs Faturação |
+| Placeholders B–H | ⏳ manter até épicos respectivos |
 
 **Nao alterar na Fase A:**
 
@@ -202,7 +163,11 @@ Body: { pageNumber, pageSize, filters: [{ id, value }], sorting?: [...] }
 | `estado` | int |
 | `liquidado` | `true` / `false` |
 | `condicaopagamento` | enum string |
-| `anulado` | ⏳ apos alteracao BE 2.2 |
+| `numerodocumento_de` / `_ate` | intervalo |
+| `data_de` / `_ate` | intervalo |
+| `nomecliente` / `nomecliente_de` / `_ate` | texto / intervalo (FE: 🟡 ver disparidades #2) |
+| `anulado` | `true` / `false` |
+| `liquidado` | `true` / `false` |
 
 ### Detalhe
 
@@ -234,38 +199,22 @@ Payload `EmitirDocumentoRequest`:
 
 ---
 
-## 6. Arvore de pastas sugerida (Fase A FE)
+## 6. Árvore actual (Fase A — referência)
 
 ```
 Frontend/src/
-├── types/dtos/faturacao/
-│   ├── documento.dtos.ts                    ⏳ CRIAR
-│   ├── tipo-documento.dtos.ts               ⏳ CRIAR
-│   ├── documento-emissao.dtos.ts            ✅
-│   └── recibo.dtos.ts                       ✅ (outro fluxo)
-├── lib/services/faturacao/
-│   ├── documento-service/                   ⏳ CRIAR
-│   ├── tipo-documento-service/              ⏳ CRIAR
-│   ├── documento-emissao-service/           ✅
-│   └── recibo-service/                      ✅
+├── types/dtos/faturacao/          ✅ documento, tipo-documento, documento-emissao, recibo
+├── lib/services/faturacao/        ✅ documento, tipo-documento, documento-emissao, recibo
 └── pages/area-financeira/
-    ├── documentos/queries/
-    │   └── documento-emissao-queries.ts     🟡 ESTENDER invalidate
-    ├── faturacao/                           ⏳ CRIAR pasta
-    │   ├── pages/
-    │   │   ├── listagem-faturacao-page.tsx
-    │   │   └── novo-documento-page.tsx
-    │   ├── components/
-    │   │   ├── listagem-faturacao-*.tsx
-    │   │   ├── documento-detalhe-dialog.tsx
-    │   │   ├── anular-documento-dialog.tsx
-    │   │   ├── nota-credito-dialog.tsx
-    │   │   └── novo-documento-form.tsx (+ linhas)
-    │   └── queries/
-    │       ├── documento-queries.ts
-    │       └── tipo-documento-queries.ts
-    └── recibos/                             🟡 manter, nao usar no menu Faturacao
+    ├── documentos/queries/        ✅ documento-emissao-queries
+    ├── faturacao/                 ✅ ver disparidades.md §2 (mapa completo)
+    │   ├── pages/                 listagem, novo-documento, documento-edicao, liquidacao-*
+    │   ├── components/            editor, tabs, dialogs, table
+    │   ├── queries/, hooks/, utils/, types/
+    └── recibos/                   separado do menu Faturação
 ```
+
+**Não criar segunda pasta `faturacao/` nem duplicar clients.**
 
 ---
 
@@ -303,27 +252,20 @@ flowchart TD
 | Rotas Faturacao + placeholders B–F | ✅ | `areaFinanceira.tsx` |
 | Header Faturacao sem Recibos | ✅ | |
 | Redirect `/recibos` → `/faturacao` | ✅ | |
-| Rotas Fase A → paginas reais | ⏳ | Ver secao 4 |
+| Rotas Fase A → paginas reais | ✅ | listagem, novo, documento, liquidação |
 
 ---
 
 ## Estado atual — Backend Fase A
 
-**Core:** ✅ fechado | **Ajustes UI (secao 2):** ⚠️ recomendados
-
-Ver tabelas em **secao 1** e **secao 2**.
+**MVP:** ✅ (secção 1 + 2). **Pós-MVP:** disparidades §4.
 
 ---
 
 ## Estado atual — Frontend Fase A
 
-| Item | Estado |
-|------|--------|
-| `documento-emissao-service` + queries | ✅ |
-| `documento-service` + listagem UI | ⏳ |
-| `tipo-documento-service` | ⏳ |
-| Paginas `faturacao/faturacao` e `novo-documento` | ⏳ |
-| Dialogs anular / NC / detalhe | ⏳ |
+**MVP:** ✅ listagem, editor, novo documento, ver documento, dialogs, sinistrados.  
+**Pós-MVP:** disparidades §4 e §7.
 
 ---
 
@@ -331,15 +273,17 @@ Ver tabelas em **secao 1** e **secao 2**.
 
 ### Fase A — Faturacao > Faturacao
 
-**Backend:** ✅ core + ⚠️ ajustes secao 2  
-**Frontend:** ⏳ — blueprint completo nas secoes 3–7
+**Backend:** ✅ MVP  
+**Frontend:** ✅ MVP  
+**Pós-MVP:** [`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md)
 
 #### Criterios de aceite
 
-- [ ] `Faturacao > Faturacao` → listagem de documentos (sem recibos misturados).
-- [ ] `Novo Documento` → emissao com pelo menos uma linha.
-- [ ] Detalhe, anular e NC funcionam sem erro de contrato.
-- [x] Backend core: listagem, emissao, anulacao, NC, scope clinica.
+- [x] `Faturacao > Faturacao` → listagem (sem recibos misturados).
+- [x] `Novo Documento` → emissao com linhas (editor).
+- [x] Ver documento, anular e NC.
+- [x] Backend: listagem, emissao, anulacao, NC, scope clinica.
+- [ ] Pós-MVP: `FaturaGlobalObter`, `SinistradoId` no documento, filtro nome de/até (se exigido).
 
 ### Fases B–F
 
@@ -364,7 +308,7 @@ Detalhe de B–F mantido no legado (`WSMenus.asmx.cs`); abrir apos aceite da Fas
 
 ## Notas de risco
 
-- **TPT:** listagem `Documento` pode incluir recibos até aplicar filtro BE (secao 2.1).
+- **TPT:** listagem filtra recibos em `DocumentoSearchTable` (secao 2.1 ✅).
 - Nao expor listagem `recibos/` no menu Faturacao.
 - `idFuncionalidade: 'documentos'` nas chamadas HTTP.
 - Aplicar migration `F02` antes de testar tipos de documento.
@@ -378,3 +322,4 @@ Detalhe de B–F mantido no legado (`WSMenus.asmx.cs`); abrir apos aceite da Fas
 |------|-------|
 | 2026-05-28 | Backend Fase A core fechado |
 | 2026-05-28 | Plano atualizado com blueprint BE/FE Fase A (ficheiros + contratos + ordem) |
+| 2026-06-03 | Fase A MVP fechado no código; secções 2–3/6 actualizadas; inventário «não duplicar»; link disparidades.md |

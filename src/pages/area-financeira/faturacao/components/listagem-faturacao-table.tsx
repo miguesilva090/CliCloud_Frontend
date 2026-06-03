@@ -2,6 +2,7 @@ import React from 'react'
 import { DataTable } from '@/components/shared/data-table'
 import type { DocumentoTableDTO } from '@/types/dtos/faturacao/documento.dtos'
 import {
+    FATURACAO_HIDDEN_FILTER_COLUMNS,
     faturacaoColumns,
     getFaturacaoColumnsWithActions,
 } from './listagem-faturacao-table.colums'
@@ -73,8 +74,9 @@ export function ListagemFaturacaoTable({
             toolbarActions={toolbarActions}
             selectedRows={selectedRows}
             onRowSelectionChange={onRowSelectionChange}
+            hiddenColumns={[...FATURACAO_HIDDEN_FILTER_COLUMNS]}
             globalSearchColumnId='numeroExibicao'
-            globalSearchPlaceholder='Procurar por n.º TFatura...'
+            globalSearchPlaceholder='Procurar por n.º documento...'
         />
     )
 }

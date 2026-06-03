@@ -44,7 +44,32 @@ export type DocumentoDTO = {
   estaEmitido: boolean
   nomeCliente?: string | null
   moradaCliente?: string | null
+  localidadeCliente?: string | null
+  codigoPostalId?: string | null
+  codigoPostalCodigo?: string | null
   numeroContribuinteCliente?: string | null
+  beneficiario?: string | null
+  tipoSerie?: string | null
+  condicaoPagamento?: number | null
+  tipoModoPagamento?: number | null
+  isentoIva?: boolean
+  ivaCaixa?: boolean
+  motivoIsencaoId?: string | null
+  moedaId?: string | null
+  taxaCambio?: number | null
+  bancoId?: string | null
+  dataVencimentoPagamento?: string | null
+  faturaGlobalDataInicio?: string | null
+  faturaGlobalDataFim?: string | null
+  descontoCliente?: number | null
+  outros?: number | null
+  retencaoImposto?: string | null
+  retencaoTaxa?: number | null
+  retencaoValor?: number | null
+  retencaoMotivo?: string | null
+  codigoValidacaoTransporte?: string | null
+  dataTransporte?: string | null
+  horaTransporte?: string | null
   observacoes?: string | null
   documentoOrigemId?: string | null
   identificadorUnicoDocumentoOrigem?: string | null
@@ -98,6 +123,10 @@ export type DocumentoTableDTO = {
   estaEmitido: boolean
   nomeCliente?: string | null
   numeroContribuinteCliente?: string | null
+  /** NC / documento com origem — equivalente legado coluna Ref. */
+  referenciaDocumento?: string | null
+  /** Resumo C-/T- admissões — equivalente legado coluna Admissões */
+  admissoesResumo?: string | null
   createdOn: string
 }
 

@@ -4,6 +4,8 @@ export type EmitirDocumentoLinhaRequest = {
     codigoArtigo?: string | null
     servicoId?: string | null
     admissaoServicoId?: string | null
+    /** Vários serviços na mesma linha (fatura global resumo). */
+    admissaoServicosIds?: string[] | null
     quantidade: number
     precoUnitario: number
     percentagemDesconto?: number | null
@@ -14,6 +16,7 @@ export type EmitirDocumentoLinhaRequest = {
     taxaIvaId?: string | null
     taxaIvaPercentagem: number
     motivoIsencaoId?: string | null
+    sinistradoLinhaServicoId?: string | null
 }
 
 export type EmitirDocumentoRequest = {
@@ -28,6 +31,9 @@ export type EmitirDocumentoRequest = {
     localidadeCliente?: string | null
     numeroContribuinteCliente?: string | null
     codigoPostalId?: string | null
+    beneficiario?: string | null
+    faturaGlobalDataInicio?: string | null
+    faturaGlobalDataFim?: string | null
     condicaoPagamento?: number | null
     tipoModoPagamento?: number | null
     moedaId?: string | null
@@ -64,6 +70,91 @@ export type EmitirDocumentoRequest = {
     identificadorUnicoDocumentoOrigem?: string | null
     dataDocumentoOrigem?: string | null
     gerarReferenciaMb?: number | null
+    sinistradoId?: string | null
+}
+
+export type FaturaGlobalObterRequest = {
+    organismoId: string
+    tipoFatura: string
+    dataDe: string
+    dataAte: string
+    opcaoTipo?: number | null
+    utenteId?: string | null
+    codigoRequisicao?: string | null
+    numeroProcesso?: string | null
+}
+
+export type FaturaGlobalLinhaDTO = {
+    servicoId?: string | null
+    codigoArtigo?: string | null
+    descricao: string
+    quantidade: number
+    precoUnitario: number
+    precoUtente: number
+    precoOrganismo: number
+    taxaIvaId?: string | null
+    taxaIvaPercentagem: number
+    motivoIsencaoId?: string | null
+    admissaoServicosIds: string[]
+}
+
+export type FaturaGlobalObterResponse = {
+    organismoId: string
+    utenteId?: string | null
+    cliente: {
+        nome: string
+        morada: string
+        localidade?: string | null
+        numeroContribuinte?: string | null
+        codigoPostalId?: string | null
+    }
+    dataDe: string
+    dataAte: string
+    linhas: FaturaGlobalLinhaDTO[]
+    admissoes: Array<{
+        admissaoId: string
+        moduloOrigem: number
+        codigoExibicao: string
+        ordem?: number | null
+    }>
+}
+
+export type SinistradosInfoFaturacaoRequest = {
+    sinistradoId: string
+    dataDesde?: string | null
+    dataAte?: string | null
+    clinicaOrigemServicosId?: string | null
+}
+
+export type SinistradosInfoFaturacaoLinhaDTO = {
+    sinistradoLinhaServicoId: string
+    servicoId?: string | null
+    descricao: string
+    codigoServico?: string | null
+    quantidade: number
+    precoUnitario: number
+    precoUtente: number
+    precoOrganismo: number
+    taxaIvaId?: string | null
+    taxaIvaPercentagem: number
+    motivoIsencaoId?: string | null
+}
+
+export type SinistradosInfoFaturacaoResponse = {
+    sinistradoId: string
+    codigoSinistro: string
+    organismoId: string
+    utenteId?: string | null
+    cliente: {
+        nome: string
+        morada: string
+        localidade?: string | null
+        numeroContribuinte?: string | null
+        codigoPostalId?: string | null
+    }
+    linhaObservacao: string
+    numeroProcesso?: string | null
+    linhas: SinistradosInfoFaturacaoLinhaDTO[]
 }
 
 export type EmitirDocumentoDesdeAdmissaoRequest = {

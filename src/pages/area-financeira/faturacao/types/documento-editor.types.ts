@@ -34,14 +34,20 @@ export type DocumentoEditorState = {
   numeroContribuinteCliente: string
   codigoPostalId: string | null
   codigoPostalTexto: string
-  globalDesde: string
-  globalAte: string
-  numeroSinistrado: string
-  limiteCredito: number | null
+  /** Legado modFldBeneficiario (readonly na UI). */
+  beneficiario: string
+  /** Legado modFldLimiteCredito — só exibição, não grava na fatura. */
+  limiteCreditoExibicao: string
+  /** Legado modFldDataDeFaturaGlobal / Ate (readonly; modal fatura global em A1b). */
+  faturaGlobalDesde: string
+  faturaGlobalAte: string
+  sinistradoId: string | null
+  codigoSinistro: string
   observacoes: string
   moedaId: string | null
   moedaCodigo: string
   cambio: number
+  bancoId: string | null
   movimentosUtente: MovimentoUtenteEditor[]
   regraFaturacao: number
   descontoCliente: number

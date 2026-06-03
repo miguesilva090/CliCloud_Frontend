@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { ResponseStatus } from '@/types/api/responses'
 import type { PaginatedResponse } from '@/types/api/responses'
 import { ClinicaService } from '@/lib/services/core/clinica-service'
@@ -17,6 +17,18 @@ import { MoedaService } from '@/lib/services/moedas/moeda-service'
 import { MotivoIsencaoService } from '@/lib/services/taxas-iva/motivo-isencao-service'
 import type { MotivoIsencaoLightDTO } from '@/types/dtos/taxas-iva/motivo-isencao.dtos'
 import { DocumentoEmissaoService } from '@/lib/services/faturacao/documento-emissao-service'
+import type {
+  FaturaGlobalObterRequest,
+  SinistradosInfoFaturacaoRequest,
+} from '@/types/dtos/faturacao/documento-emissao.dtos'
+import { useAuthStore } from '@/stores/auth-store'
+import type { ClinicaDTO } from '@/types/dtos/core/clinica.dtos'
+
+function resolveClinicaId(clinica: ClinicaDTO | null | undefined): string {
+  if (!clinica) return ''
+  const raw = clinica as ClinicaDTO & { Id?: string }
+  return raw.id || raw.Id || ''
+}
 
 const ID = 'documentos'
 
@@ -29,7 +41,11 @@ export function useClinicaFaturacaoConfig() {
       const res = await ClinicaService(ID).getClinicaCurrent()
       const clinica =
         res.info?.status === ResponseStatus.Success ? res.info.data : null
+      const clinicaId =
+        resolveClinicaId(clinica) || useAuthStore.getState().clientId || ''
       return {
+        clinicaId,
+        clinicaNome: clinica?.nome ?? '',
         regraFaturacao: parseRegraFaturacao(clinica?.regrafaturacao),
         regrafaturacao: clinica?.regrafaturacao ?? '1',
       }
@@ -128,6 +144,20 @@ export function useOpcoesPagamentoDocumento() {
       return res.info.data
     },
     staleTime: 120_000,
+  })
+}
+
+export function useSinistradosInfoFaturacaoMutation() {
+  return useMutation({
+    mutationFn: (payload: SinistradosInfoFaturacaoRequest) =>
+      DocumentoEmissaoService(ID).sinistradosInfoFaturacao(payload),
+  })
+}
+
+export function useFaturaGlobalObterMutation() {
+  return useMutation({
+    mutationFn: (payload: FaturaGlobalObterRequest) =>
+      DocumentoEmissaoService(ID).faturaGlobalObter(payload),
   })
 }
 
