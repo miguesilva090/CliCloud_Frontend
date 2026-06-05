@@ -49,6 +49,17 @@ export class DocumentoEmissaoClient extends BaseApiClient {
         return this.httpClient.postRequest(state.URL, `${BASE}/emitir`, payload)
     }
 
+    async atualizarDocumento(
+        documentoId: string,
+        payload: EmitirDocumentoRequest,
+    ): Promise<ResponseApi<GSResponse<DocumentoEmissaoDTO>>> {
+        return this.httpClient.putRequest(
+            state.URL,
+            `${BASE}/atualizar/${documentoId}`,
+            payload,
+        )
+    }
+
     async emitirDocumentoDesdeAdmissao(
         admissaoId: string,
         payload: EmitirDocumentoDesdeAdmissaoRequest,

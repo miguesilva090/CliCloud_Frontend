@@ -22,14 +22,19 @@ export class OrganismoClient extends BaseApiClient {
   }
 
   public async getOrganismoLight(
-    keyword = ''
+    keyword = '',
+    siglaFicheiro?: string,
   ): Promise<ResponseApi<GSResponse<OrganismoLightDTO[]>>> {
-    const url = keyword
-      ? `${BASE}/light?keyword=${encodeURIComponent(keyword)}`
-      : `${BASE}/light`
+    const params = new URLSearchParams()
+    if (keyword) params.set('keyword', keyword)
+    if (siglaFicheiro) params.set('siglaFicheiro', siglaFicheiro)
+
+    const query = params.toString()
+    const url = query ? `${BASE}/light?${query}` : `${BASE}/light`
+
     return this.httpClient.getRequest<GSResponse<OrganismoLightDTO[]>>(
       state.URL,
-      url
+      url,
     )
   }
 

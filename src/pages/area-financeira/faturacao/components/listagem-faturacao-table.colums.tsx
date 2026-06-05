@@ -10,6 +10,7 @@ import {
   getDocumentoEstadoBadge,
   getDocumentoNumeroLabel,
 } from '../utils/faturacao-documento-display'
+import { podeEditarDocumento } from '../utils/listagem-faturacao-acoes'
 
 /** Colunas só para filtros (ocultas na grelha — ver `hiddenColumns` no DataTable). */
 export const FATURACAO_HIDDEN_FILTER_COLUMNS = [
@@ -22,6 +23,7 @@ export const FATURACAO_HIDDEN_FILTER_COLUMNS = [
   'numerodocumento_ate',
   'anulado',
   'liquidado',
+  'siglaficheiro',
 ] as const
 
 const hiddenFilterColumn = (
@@ -133,6 +135,7 @@ export const faturacaoColumns: DataTableColumnDef<DocumentoTableDTO>[] = [
 
 export function getFaturacaoColumnsWithActions(
   onOpenView: (data: DocumentoTableDTO) => void,
+  onOpenEdit: (data: DocumentoTableDTO) => void,
   renderExtraActions?: (data: DocumentoTableDTO) => ReactNode,
   rowActionPermissions?: AreaComumListRowActionPermissions,
 ): DataTableColumnDef<DocumentoTableDTO>[] {
@@ -140,8 +143,10 @@ export function getFaturacaoColumnsWithActions(
     ...visibleColumns,
     createAreaComumListActionsColumnDef<DocumentoTableDTO>({
       onOpenView,
+      onOpenEdit,
       rowActionPermissions,
       omitDelete: true,
+      isRowActionsLocked: (data) => !podeEditarDocumento(data),
       renderExtraActions,
     }),
     ...filterColumns,

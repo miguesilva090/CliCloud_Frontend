@@ -39,6 +39,12 @@ const LiquidacaoOrganismoPage = lazy(() =>
   ),
 )
 
+const FicheiroEletronicoListagemPage = lazy(() =>
+  import('@/pages/area-financeira/ficheiros-eletronicos/pages/ficheiro-eletronico-listagem-page').then(
+    (m) => ({ default: m.FicheiroEletronicoListagemPage }),
+  ),
+)
+
 export const areaFinanceiraRoutes = [
   {
     path: 'area-financeira',
@@ -188,16 +194,51 @@ export const areaFinanceiraRoutes = [
   {
     path: 'area-financeira/faturacao/ficheiros-eletronicos',
     element: (
+      <Navigate to='/area-financeira/faturacao/ficheiros-eletronicos/sad-gnr' replace />
+    ),
+    manageWindow: false,
+  },
+  {
+    path: 'area-financeira/faturacao/ficheiros-eletronicos/:siglaSlug',
+    element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
         requiredPermission={modules.areaFinanceira.permissions.ficheirosEletronicos.id}
         actionType={actionTypes.AuthVer}
       >
-        <AreaFinanceiraPlaceholderPage title='Ficheiros Eletrónicos' />
+        <FicheiroEletronicoListagemPage />
       </LicenseGuard>
     ),
     manageWindow: true,
-    windowName: 'Ficheiros Eletrónicos',
+    windowName: 'Ficheiro Eletrónico',
+  },
+  {
+    path: 'area-financeira/faturacao/ficheiro-saft',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.ficheirosEletronicos.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <AreaFinanceiraPlaceholderPage title='Geração de Ficheiro SAFT PT' />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Geração de Ficheiro SAFT PT',
+  },
+  {
+    path: 'area-financeira/faturacao/exportar-contabilidade',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.ficheirosEletronicos.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <AreaFinanceiraPlaceholderPage title='Exportar Ficheiro Contabilidade' />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Exportar Ficheiro Contabilidade',
   },
   {
     path: 'area-financeira/faturacao/credenciais-sns',

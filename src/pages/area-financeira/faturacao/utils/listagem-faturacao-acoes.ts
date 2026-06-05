@@ -1,5 +1,9 @@
 import type { DocumentoTableDTO } from '@/types/dtos/faturacao/documento.dtos'
 
+export function podeEditarDocumento(doc: DocumentoTableDTO): boolean {
+  return !doc.anulado
+}
+
 export function podeAnularDocumento(doc: DocumentoTableDTO): boolean {
   if (doc.anulado) return false
   if (!doc.estaEmitido) return false

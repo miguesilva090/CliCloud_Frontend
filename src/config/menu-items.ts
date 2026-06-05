@@ -400,8 +400,35 @@ export const roleHeaderMenus = {
       },
       {
         label: 'Ficheiros Eletrónicos',
-        href: '/area-financeira/faturacao/ficheiros-eletronicos',
+        href: '/area-financeira/faturacao/ficheiros-eletronicos/sad-gnr',
         funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+        items: [
+          {
+            label: 'SAD/GNR',
+            href: '/area-financeira/faturacao/ficheiros-eletronicos/sad-gnr',
+            funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+          },
+          {
+            label: 'ADM',
+            href: '/area-financeira/faturacao/ficheiros-eletronicos/adm',
+            funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+          },
+          {
+            label: 'SAD/PSP',
+            href: '/area-financeira/faturacao/ficheiros-eletronicos/sad-psp',
+            funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+          },
+          {
+            label: 'Ficheiro Saft',
+            href: '/area-financeira/faturacao/ficheiro-saft',
+            funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+          },
+          {
+            label: 'Exportar Contabilidade',
+            href: '/area-financeira/faturacao/exportar-contabilidade',
+            funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+          },
+        ],
       },
       {
         label: 'Credenciais S.N.S.',

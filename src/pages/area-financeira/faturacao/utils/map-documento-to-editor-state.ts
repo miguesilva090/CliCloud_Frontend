@@ -76,6 +76,7 @@ export function mapDocumentoToEditorState(
       percentagemDesconto: l.percentagemDesconto ?? 0,
       valorDesconto: l.valorDesconto ?? null,
       servicoId: l.servicoId ?? null,
+      admissaoServicoId: l.admissaoServicoId ?? null,
       codigoArtigo: l.codigoArtigo ?? null,
       taxaIvaId: null,
       motivoIsencaoId: null,

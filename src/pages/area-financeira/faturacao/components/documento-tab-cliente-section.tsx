@@ -31,6 +31,7 @@ import {
   resolveBeneficiarioApolice,
 } from '@/pages/area-administrativa/consultas/admissoes/modals/admissao-form-utils'
 import type { OrganismoLightDTO } from '@/types/dtos/saude/organismos.dtos'
+import type { FicheiroEletronicoSiglaSlug } from '@/pages/area-financeira/ficheiros-eletronicos/constants/ficheiro-eletronico-siglas'
 import type { DocumentoEditorState } from '../types/documento-editor.types'
 
 const ID_FUNCIONALIDADE = 'documentos'
@@ -40,10 +41,12 @@ export function DocumentoTabClienteSection({
   state,
   onChange,
   clienteBloqueado,
+  contextoFicheiroEletronicoSiglaSlug,
 }: {
   state: DocumentoEditorState
   onChange: (p: Partial<DocumentoEditorState>) => void
   clienteBloqueado: boolean
+  contextoFicheiroEletronicoSiglaSlug?: FicheiroEletronicoSiglaSlug | null
 }) {
   const [utenteSearch, setUtenteSearch] = useState('')
   const [orgSearch, setOrgSearch] = useState('')
@@ -54,8 +57,18 @@ export function DocumentoTabClienteSection({
 
   const utentesQ = useUtentesLight(debUt)
   const orgsQ = useQuery({
-    queryKey: ['organismos', 'light', 'faturacao', debOrg],
-    queryFn: () => OrganismoService(ID_FUNCIONALIDADE).getOrganismoLight(debOrg),
+    queryKey: [
+      'organismos',
+      'light',
+      'faturacao',
+      debOrg,
+      contextoFicheiroEletronicoSiglaSlug ?? '',
+    ],
+    queryFn: () =>
+      OrganismoService(ID_FUNCIONALIDADE).getOrganismoLight(
+        debOrg,
+        contextoFicheiroEletronicoSiglaSlug ?? undefined,
+      ),
     enabled: state.tipoCliente === 'organismo',
   })
   const codigosPostaisQ = useCodigosPostaisLight(debCp)
@@ -82,6 +95,7 @@ export function DocumentoTabClienteSection({
       ((orgsQ.data?.info?.data ?? []) as OrganismoLightDTO[]).map((o) => ({
         value: o.id,
         label: o.nome ?? o.abreviatura ?? o.id,
+        secondary: o.numeroContribuinte ?? undefined,
       })),
     [orgsQ.data],
   )
@@ -137,10 +151,14 @@ export function DocumentoTabClienteSection({
       aplicarBeneficiario(state.utenteId, organismoId)
       return
     }
-    const org = orgItemsGlobal.find((o) => o.value === organismoId)
+    const orgDto = ((orgsQ.data?.info?.data ?? []) as OrganismoLightDTO[]).find(
+      (o) => o.id === organismoId,
+    )
+    const orgItem = orgItemsGlobal.find((o) => o.value === organismoId)
     onChange({
       organismoId,
-      nomeCliente: org?.label ?? state.nomeCliente,
+      nomeCliente: orgDto?.nome ?? orgItem?.label ?? state.nomeCliente,
+      numeroContribuinteCliente: orgDto?.numeroContribuinte ?? '',
       beneficiario: '',
     })
   }
@@ -156,6 +174,39 @@ export function DocumentoTabClienteSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot organismo
   }, [state.tipoCliente, state.organismoId, organismoUtenteItems, orgItemsGlobal])
 
+  useEffect(() => {
+    if (!contextoFicheiroEletronicoSiglaSlug) return
+    if (state.tipoCliente === 'organismo') return
+
+    onChange({
+      tipoCliente: 'organismo',
+      utenteId: null,
+      organismoId: null,
+      beneficiario: '',
+      nomeCliente: '',
+      moradaCliente: '',
+      localidadeCliente: '',
+      numeroContribuinteCliente: '',
+      codigoPostalId: null,
+      codigoPostalTexto: '',
+      limiteCreditoExibicao: '',
+    })
+    setCpSearch('')
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- forçar organismo no contexto FE
+  }, [contextoFicheiroEletronicoSiglaSlug])
+
+  useEffect(() => {
+    if (!contextoFicheiroEletronicoSiglaSlug || state.organismoId) return
+    if (orgsQ.isFetching || orgItemsGlobal.length !== 1) return
+    aplicarSnapshotOrganismo(orgItemsGlobal[0].value)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-seleção único organismo
+  }, [
+    contextoFicheiroEletronicoSiglaSlug,
+    state.organismoId,
+    orgItemsGlobal,
+    orgsQ.isFetching,
+  ])
+
   return (
     <div className='grid gap-4 md:grid-cols-2'>
       <div className={`md:col-span-2 ${fieldGap}`}>
@@ -164,6 +215,7 @@ export function DocumentoTabClienteSection({
           type='single'
           value={state.tipoCliente}
           onValueChange={(v) => {
+            if (contextoFicheiroEletronicoSiglaSlug) return
             if (v !== 'utente' && v !== 'organismo') return
             if (v === 'organismo') {
               onChange({
@@ -196,11 +248,21 @@ export function DocumentoTabClienteSection({
             })
             setCpSearch('')
           }}
-          disabled={clienteBloqueado}
+          disabled={clienteBloqueado || !!contextoFicheiroEletronicoSiglaSlug}
         >
-          <ToggleGroupItem value='utente'>Utente</ToggleGroupItem>
+          <ToggleGroupItem
+            value='utente'
+            disabled={!!contextoFicheiroEletronicoSiglaSlug}
+          >
+            Utente
+          </ToggleGroupItem>
           <ToggleGroupItem value='organismo'>Organismo</ToggleGroupItem>
         </ToggleGroup>
+        {contextoFicheiroEletronicoSiglaSlug ? (
+          <p className='text-xs text-muted-foreground'>
+            Contexto Ficheiro Eletrónico — apenas organismos com a flag desta sigla.
+          </p>
+        ) : null}
       </div>
 
       <div className={`md:col-span-2 ${fieldGap}`}>

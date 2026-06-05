@@ -22,6 +22,7 @@ import { DocumentoFaturaGlobalDialog } from './documento-fatura-global-dialog'
 import { DocumentoSinistradosInfoDialog } from './documento-sinistrados-info-dialog'
 import { mapFaturaGlobalObterToEditorPatch } from '../utils/map-fatura-global-obter'
 import { mapSinistradosInfoToEditorPatch } from '../utils/map-sinistrados-info-faturacao'
+import type { FicheiroEletronicoSiglaSlug } from '@/pages/area-financeira/ficheiros-eletronicos/constants/ficheiro-eletronico-siglas'
 
 export function DocumentoEditor({
   tipo,
@@ -30,6 +31,7 @@ export function DocumentoEditor({
   onSubmit,
   onCancel,
   isSubmitting,
+  contextoFicheiroEletronicoSiglaSlug,
 }: {
   tipo: TipoDocumentoLightDTO
   mode?: 'create' | 'view'
@@ -37,6 +39,7 @@ export function DocumentoEditor({
   onSubmit?: (payload: EmitirDocumentoRequest) => void
   onCancel?: () => void
   isSubmitting?: boolean
+  contextoFicheiroEletronicoSiglaSlug?: FicheiroEletronicoSiglaSlug | null
 }) {
   const readOnly = mode === 'view'
   const [descontosOpen, setDescontosOpen] = useState(false)
@@ -192,6 +195,9 @@ export function DocumentoEditor({
                 state={state}
                 onChange={patch}
                 clienteBloqueado={clienteBloqueado}
+                contextoFicheiroEletronicoSiglaSlug={
+                  contextoFicheiroEletronicoSiglaSlug
+                }
               />
             </TabsContent>
             <TabsContent value='linhas' className='pt-4'>

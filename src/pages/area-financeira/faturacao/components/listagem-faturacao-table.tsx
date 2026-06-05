@@ -29,6 +29,7 @@ export function ListagemFaturacaoTable({
     toolbarActions,
     FilterControls,
     onOpenView,
+    onOpenEdit,
     renderExtraActions,
     selectedRows,
     onRowSelectionChange,
@@ -46,14 +47,18 @@ export function ListagemFaturacaoTable({
     onSortingChange: (sorting: Array<{ id: string; desc: boolean }>) => void
     toolbarActions?: React.ComponentProps<typeof DataTable>['toolbarActions']
     FilterControls: FilterControlsComponent
-    onOpenView: (data: DocumentoTableDTO) => void 
+    onOpenView: (data: DocumentoTableDTO) => void
+    onOpenEdit: (data: DocumentoTableDTO) => void
     renderExtraActions?: (data: DocumentoTableDTO) => React.ReactNode
     selectedRows?: string[]
     onRowSelectionChange?: (selectedRows: string[]) => void
 }) {
     const tableColumns =
         renderExtraActions
-            ? getFaturacaoColumnsWithActions(onOpenView, renderExtraActions, { canView: true })
+            ? getFaturacaoColumnsWithActions(onOpenView, onOpenEdit, renderExtraActions, {
+                canView: true,
+                canChange: true,
+              })
             : faturacaoColumns
 
     return (

@@ -1,25 +1,41 @@
 import { useMemo } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
+import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { ResponseStatus } from '@/types/api/responses'
+import type { EmitirDocumentoRequest } from '@/types/dtos/faturacao/documento-emissao.dtos'
 import type { TipoDocumentoLightDTO } from '@/types/dtos/faturacao/tipo-documento.dtos'
-import { useGetDocumentoById } from '../queries/documento-queries'
+import { toast } from '@/utils/toast-utils'
+import { useAtualizarDocumentoEmissaoMutation } from '@/pages/area-financeira/documentos/queries/documento-emissao-queries'
+import {
+  useGetDocumentoById,
+  useInvalidateDocumentosMutation,
+} from '../queries/documento-queries'
 import { useGetTiposDocumentoLight } from '../queries/tipo-documento-queries'
 import { useClinicaFaturacaoConfig } from '../queries/documento-editor-queries'
 import { DocumentoEditor } from '../components/documento-editor'
 import { mapDocumentoToEditorState } from '../utils/map-documento-to-editor-state'
+import {
+  getFaturacaoApiErrorMessage,
+  isFaturacaoApiSuccess,
+} from '../utils/faturacao-api-utils'
+import { getDocumentoNumeroLabel } from '../utils/faturacao-documento-display'
 
 const ID_FUNCIONALIDADE = 'documentos'
 
 export function DocumentoEdicaoPage() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const editMode = searchParams.get('edit') === '1'
+  const closeLikeTabBar = useCloseCurrentWindowLikeTabBar()
 
   const docQ = useGetDocumentoById(id ?? '', ID_FUNCIONALIDADE)
   const tiposQ = useGetTiposDocumentoLight('', ID_FUNCIONALIDADE)
   const clinicaQ = useClinicaFaturacaoConfig()
+  const atualizarMutation = useAtualizarDocumentoEmissaoMutation(ID_FUNCIONALIDADE)
+  const invalidateMutation = useInvalidateDocumentosMutation()
 
   const documento = docQ.data?.info?.data
   const tipos =
@@ -49,14 +65,58 @@ export function DocumentoEdicaoPage() {
     )
   }, [documento, tipo, clinicaQ.data?.regraFaturacao])
 
+  const documentoLabel = documento
+    ? getDocumentoNumeroLabel({
+        numeroExibicao: documento.numeroExibicao,
+        tipoDocumentoAbreviatura: documento.tipoDocumento?.abreviatura,
+        numeroDocumento: documento.numeroDocumento,
+      })
+    : 'Documento'
+
+  const canEdit = editMode && !!documento && !documento.anulado
+  const pageTitle = canEdit
+    ? `Editar — ${documentoLabel}`
+    : `Ver — ${documentoLabel}`
+
   const isLoading = docQ.isLoading || tiposQ.isLoading
+
+  const handleSubmit = async (payload: EmitirDocumentoRequest) => {
+    if (!id || !documento) return
+    try {
+      const res = await atualizarMutation.mutateAsync({
+        documentoId: id,
+        payload: {
+          ...payload,
+          liquidado: documento.liquidado,
+          rectificado: documento.rectificado,
+        },
+      })
+      if (isFaturacaoApiSuccess(res.info)) {
+        toast.success('Documento atualizado com sucesso.')
+        await invalidateMutation.mutateAsync()
+        closeLikeTabBar()
+      } else {
+        toast.error(
+          getFaturacaoApiErrorMessage(
+            res.info,
+            'Não foi possível atualizar o documento.',
+          ),
+        )
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Erro inesperado ao atualizar.',
+      )
+    }
+  }
 
   return (
     <>
       <PageHead title='Documento | Área Financeira | CliCloud' />
       <DashboardPageContainer>
         <AreaComumListagemPageShell
-          title='Faturação — Ver documento'
+          title={pageTitle}
+          onBack={closeLikeTabBar}
           onRefresh={() => docQ.refetch()}
         >
           {isLoading ? (
@@ -65,12 +125,18 @@ export function DocumentoEdicaoPage() {
             <p className='text-sm text-muted-foreground'>
               Documento não encontrado.
             </p>
+          ) : editMode && documento.anulado ? (
+            <p className='text-sm text-muted-foreground'>
+              Documento anulado — só consulta.
+            </p>
           ) : (
             <DocumentoEditor
               tipo={tipo}
-              mode='view'
+              mode={canEdit ? 'create' : 'view'}
               initialState={initialState}
-              onCancel={() => navigate('/area-financeira/faturacao/faturacao')}
+              onSubmit={canEdit ? handleSubmit : undefined}
+              onCancel={closeLikeTabBar}
+              isSubmitting={atualizarMutation.isPending}
             />
           )}
         </AreaComumListagemPageShell>

@@ -4,6 +4,8 @@ import { areaComumRoutes } from '@/routes/area-comum/areaComum'
 import { areaClinicaRoutes } from '@/routes/area-clinica/areaClinica'
 import { reportsRoutes } from '@/routes/reports/reports-routes'
 import { areaAdministrativaRoutes } from '@/routes/area-administrativa/areaAdministrativa'
+import { areaFinanceiraRoutes } from '@/routes/area-financeira/areaFinanceira'
+import { matchPath } from 'react-router-dom'
 import { X, ChevronLeft, ChevronRight, XCircle } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMapStore } from '@/stores/use-map-store'
@@ -272,11 +274,15 @@ export function WindowManager({ children }: WindowManagerProps) {
       ...areaClinicaRoutes,
       ...reportsRoutes,
       ...areaAdministrativaRoutes,
+      ...areaFinanceiraRoutes,
     ]
 
-    const matchingRoute = allRoutes.find(
-      (route) => route.path === normalized && route.manageWindow
-    )
+    const matchingRoute = allRoutes.find((route) => {
+      if (!route.manageWindow) return false
+      if (route.path === normalized) return true
+      const pattern = route.path.startsWith('/') ? route.path : `/${route.path}`
+      return !!matchPath({ path: pattern, end: true }, pathname)
+    })
     if (matchingRoute) {
       return {
         label: matchingRoute.windowName || matchingRoute.path,

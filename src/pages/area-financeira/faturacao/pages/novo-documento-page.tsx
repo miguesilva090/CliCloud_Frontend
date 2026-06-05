@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ResponseStatus } from '@/types/api/responses'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
+import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
@@ -24,6 +25,10 @@ import {
   getFaturacaoApiErrorMessage,
   isFaturacaoApiSuccess,
 } from '../utils/faturacao-api-utils'
+import {
+  resolveSiglaFromSlug,
+  type FicheiroEletronicoSiglaSlug,
+} from '@/pages/area-financeira/ficheiros-eletronicos/constants/ficheiro-eletronico-siglas'
 
 const ID_FUNCIONALIDADE = 'documentos'
 
@@ -54,11 +59,23 @@ function mapEmitirRequestParaOrigem(
 }
 
 export function NovoDocumentoPage() {
-  const navigate = useNavigate()
+  const closeLikeTabBar = useCloseCurrentWindowLikeTabBar()
   const [searchParams, setSearchParams] = useSearchParams()
   const tipoIdParam = searchParams.get('tipoDocumentoId') ?? ''
   const admissaoId = searchParams.get('admissaoId') ?? ''
   const consultaId = searchParams.get('consultaId') ?? ''
+  const siglaFicheiroSlug = searchParams.get(
+    'siglaFicheiro',
+  ) as FicheiroEletronicoSiglaSlug | null
+  const origemFicheiroEletronico =
+    searchParams.get('origem') === 'ficheiro-eletronico'
+  const siglaFicheiroLabel = resolveSiglaFromSlug(siglaFicheiroSlug ?? undefined)
+  const emContextoFicheiroEletronico =
+    origemFicheiroEletronico && !!siglaFicheiroLabel
+
+  const pageTitle = emContextoFicheiroEletronico
+    ? `Novo Documento — Ficheiro Eletrónico ${siglaFicheiroLabel}`
+    : 'Novo Documento'
 
   const { data, isError, error } = useGetTiposDocumentoLight('', ID_FUNCIONALIDADE)
   const tipos = useMemo(() => {
@@ -130,7 +147,7 @@ export function NovoDocumentoPage() {
         }
         toast.success(msg)
         await invalidateMutation.mutateAsync()
-        navigate('/area-financeira/faturacao/faturacao')
+        closeLikeTabBar()
       } else {
         toast.error(
           getFaturacaoApiErrorMessage(
@@ -148,25 +165,28 @@ export function NovoDocumentoPage() {
 
   return (
     <>
-      <PageHead title='Novo Documento | Área Financeira | CliCloud' />
+      <PageHead title={`${pageTitle} | Área Financeira | CliCloud`} />
       <DashboardPageContainer>
         <AreaComumListagemPageShell
-          title='Faturação'
-          onRefresh={() => navigate('/area-financeira/faturacao/faturacao')}
+          title={pageTitle}
+          onBack={closeLikeTabBar}
         >
           <SelecionarTipoDocumentoDialog
             open={modalAberto || !tipoSeleccionado}
             tipos={tipos}
             onConfirm={handleTipoConfirmado}
-            onCancel={() => navigate('/area-financeira/faturacao/faturacao')}
+            onCancel={closeLikeTabBar}
           />
 
           {tipoSeleccionado ? (
             <DocumentoEditor
               tipo={tipoSeleccionado}
               onSubmit={handleSubmit}
-              onCancel={() => navigate('/area-financeira/faturacao/faturacao')}
+              onCancel={closeLikeTabBar}
               isSubmitting={isSubmitting}
+              contextoFicheiroEletronicoSiglaSlug={
+                emContextoFicheiroEletronico ? siglaFicheiroSlug : null
+              }
             />
           ) : null}
         </AreaComumListagemPageShell>

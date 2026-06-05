@@ -18,6 +18,7 @@ import { areaComumRoutes } from '@/routes/area-comum/areaComum'
 import { areaClinicaRoutes } from '@/routes/area-clinica/areaClinica'
 import { reportsRoutes } from '@/routes/reports/reports-routes'
 import { areaAdministrativaRoutes } from '@/routes/area-administrativa/areaAdministrativa'
+import { areaFinanceiraRoutes } from '@/routes/area-financeira/areaFinanceira'
 import {
   clearPathnameKeySyncPending,
   suppressPathnameKeyUrlChange,
@@ -82,6 +83,14 @@ export function pickRestoreWindowAfterClose(
     )
     if (adm) return adm
   }
+
+  if (closedWindow?.parentWindowId) {
+    const parent = remainingWindows.find(
+      (w) => w.id === closedWindow.parentWindowId,
+    )
+    if (parent) return parent
+  }
+
   return remainingWindows[remainingWindows.length - 1]
 }
 
@@ -254,6 +263,7 @@ export function shouldManageWindow(pathname: string): boolean {
     ...areaClinicaRoutes,
     ...reportsRoutes,
     ...areaAdministrativaRoutes,
+    ...areaFinanceiraRoutes,
   ]
 
   for (const route of allRoutes) {
@@ -299,6 +309,9 @@ export function getContextualHomePath(pathname: string): string {
   if (pathname.startsWith('/utilitarios')) {
     return '/utilitarios'
   }
+  if (pathname.startsWith('/area-financeira')) {
+    return '/area-financeira/faturacao'
+  }
   return '/'
 }
 
@@ -308,6 +321,7 @@ export function getNavigationAreaPrefix(pathname: string): string {
   if (pathname.startsWith('/area-comum')) return 'area-comum'
   if (pathname.startsWith('/area-clinica')) return 'area-clinica'
   if (pathname.startsWith('/utilitarios')) return 'utilitarios'
+  if (pathname.startsWith('/area-financeira')) return 'area-financeira'
   return ''
 }
 
@@ -504,11 +518,14 @@ export function openPathInApp(
   navigate: NavigateFunction,
   addWindow: AddWindowFn,
   href: string,
-  title: string
+  title: string,
+  options?: { parentWindowId?: string }
 ): void {
   const { path, searchParams } = parseAppHref(href)
   const instanceId = generateInstanceId()
   const windowId = generateInstanceId()
+  const parentWindowId =
+    options?.parentWindowId ?? getActiveWindowState()?.id
 
   addWindow({
     id: windowId,
@@ -518,6 +535,7 @@ export function openPathInApp(
     hasFormData: false,
     searchParams:
       Object.keys(searchParams).length > 0 ? searchParams : undefined,
+    parentWindowId,
   })
 
   const params = new URLSearchParams(searchParams)

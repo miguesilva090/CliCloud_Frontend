@@ -5,6 +5,7 @@ export type DocumentoLinhaDTO = {
   numeroLinha: number
   codigoArtigo?: string | null
   servicoId?: string | null
+  admissaoServicoId?: string | null
   descricao: string
   quantidade: number
   precoUnitario: number

@@ -23,11 +23,27 @@ type AnularDocumentoArgs = {
     payload: AnularDocumentoRequest
 }
 
+type AtualizarDocumentoArgs = {
+    documentoId: string
+    payload: EmitirDocumentoRequest
+}
+
 export function useEmitirDocumentoMutation(idFuncionalidade = '')
 {
     return useMutation({
         mutationFn: (payload: EmitirDocumentoRequest) => 
             DocumentoEmissaoService(idFuncionalidade).emitirDocumento(payload),
+    })
+}
+
+export function useAtualizarDocumentoEmissaoMutation(idFuncionalidade = '')
+{
+    return useMutation({
+        mutationFn: ({ documentoId, payload }: AtualizarDocumentoArgs) =>
+            DocumentoEmissaoService(idFuncionalidade).atualizarDocumento(
+                documentoId,
+                payload,
+            ),
     })
 }
 

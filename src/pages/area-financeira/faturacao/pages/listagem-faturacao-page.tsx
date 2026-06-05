@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Ban,
   CreditCard,
+  FileDown,
   FileQuestion,
   FileText,
   History,
@@ -27,6 +28,25 @@ import type {
   DocumentoTableDTO,
 } from '@/types/dtos/faturacao/documento.dtos'
 import { toast } from '@/utils/toast-utils'
+import {
+  getCurrentWindowId,
+  navigateManagedWindow,
+  useCloseCurrentWindowLikeTabBar,
+} from '@/utils/window-utils'
+import { useWindowsStore } from '@/stores/use-windows-store'
+import {
+  buildNovoDocumentoFicheiroEletronicoUrl,
+  resolveSiglaFromSlug,
+  type FicheiroEletronicoSiglaSlug,
+} from '@/pages/area-financeira/ficheiros-eletronicos/constants/ficheiro-eletronico-siglas'
+import { modules } from '@/config/modules'
+import { FicheirosEletronicosService } from '@/lib/services/faturacao/ficheiros-eletronicos-service'
+import { downloadFicheiroEletronicoGerado } from '@/pages/area-financeira/ficheiros-eletronicos/utils/ficheiro-eletronico-download'
+import {
+  getFaturacaoApiErrorMessage,
+  isFaturacaoApiSuccess,
+} from '../utils/faturacao-api-utils'
+import type { PageFilter } from '@/utils/page-data-utils'
 import { ListagemFaturacaoTable } from '../components/listagem-faturacao-table'
 import { ListagemFaturacaoFilterControls } from '../components/listagem-faturacao-filter-controls'
 import { AnularDocumentoDialog } from '../components/anular-documento-dialog'
@@ -47,6 +67,7 @@ import {
 } from '../queries/documento-queries'
 import {
   podeAnularDocumento,
+  podeEditarDocumento,
   podeCriarNotaCredito,
   podeEnviarEmailDocumento,
   podeImprimirOriginalDocumento,
@@ -57,10 +78,36 @@ import {
 } from '../utils/listagem-faturacao-acoes'
 
 const ID_FUNCIONALIDADE = 'documentos'
+const ID_FUNCIONALIDADE_FE =
+  modules.areaFinanceira.permissions.ficheirosEletronicos.id
 
 export function ListagemFaturacaoPage() {
   const navigate = useNavigate()
+  const closeLikeTabBar = useCloseCurrentWindowLikeTabBar()
+  const [searchParams] = useSearchParams()
   const queryClient = useQueryClient()
+  const updateWindowState = useWindowsStore((s) => s.updateWindowState)
+  const siglaFicheiroSlug = searchParams.get('siglaFicheiro')
+  const origemFicheiroEletronico =
+    searchParams.get('origem') === 'ficheiro-eletronico'
+  const siglaFicheiroLabel = resolveSiglaFromSlug(siglaFicheiroSlug ?? undefined)
+  const emContextoFicheiroEletronico =
+    origemFicheiroEletronico && !!siglaFicheiroLabel
+
+  const defaultFilters = useMemo((): PageFilter[] => {
+    if (!siglaFicheiroSlug) return []
+    return [{ id: 'siglaficheiro', value: siglaFicheiroSlug }]
+  }, [siglaFicheiroSlug])
+
+  useEffect(() => {
+    if (!emContextoFicheiroEletronico || !siglaFicheiroLabel) return
+    const windowId = getCurrentWindowId()
+    if (windowId) {
+      updateWindowState(windowId, {
+        title: `Ficheiro Eletrónico - ${siglaFicheiroLabel}`,
+      })
+    }
+  }, [emContextoFicheiroEletronico, siglaFicheiroLabel, updateWindowState])
   const [anularDocumento, setAnularDocumento] = useState<DocumentoTableDTO | null>(
     null,
   )
@@ -98,6 +145,7 @@ export function ListagemFaturacaoPage() {
       useGetDocumentosPaginatedPageData(p, ps, f, s, ID_FUNCIONALIDADE),
     usePrefetchAdjacentData: (p, ps, f, s) =>
       usePrefetchAdjacentDocumentos(p, ps, f, s, ID_FUNCIONALIDADE),
+    defaultFilters,
   })
 
   const documentos = data?.info?.data ?? []
@@ -108,10 +156,14 @@ export function ListagemFaturacaoPage() {
 
   const refresh = () => {
     setSelectedRows([])
-    handleFiltersChange([])
+    handleFiltersChange(defaultFilters)
     handlePaginationChange(1, pageSize)
     queryClient.invalidateQueries({ queryKey: documentoQueryKeys.all })
   }
+
+  const pageTitle = emContextoFicheiroEletronico
+    ? `Ficheiro Eletrónico - ${siglaFicheiroLabel}`
+    : 'Faturação'
 
   const selectedDocumentos = documentos.filter((d: DocumentoTableDTO) =>
     selectedRows.includes(d.id),
@@ -120,13 +172,84 @@ export function ListagemFaturacaoPage() {
     podeEnviarEmailDocumento(d),
   )
 
+  const gerarFicheiroMutation = useMutation({
+    mutationFn: (documentoId: string) =>
+      FicheirosEletronicosService(ID_FUNCIONALIDADE_FE).gerar({
+        documentoId,
+        sigla: siglaFicheiroLabel!,
+      }),
+    onSuccess: (res) => {
+      const info = res.info
+      if (!info || !isFaturacaoApiSuccess(info) || !info.data) {
+        toast.error(getFaturacaoApiErrorMessage(info, 'Falha ao gerar ficheiro.'))
+        return
+      }
+
+      downloadFicheiroEletronicoGerado(info.data)
+
+      if (info.data.erros?.length) {
+        toast.warning(
+          `Ficheiro gerado com avisos: ${info.data.erros.join(' · ')}`,
+        )
+      } else {
+        toast.success('Ficheiro eletrónico gerado.')
+      }
+
+      void queryClient.invalidateQueries({ queryKey: ['ficheiros-eletronicos'] })
+    },
+    onError: () => toast.error('Falha ao gerar ficheiro eletrónico.'),
+  })
+
   const toolbarActions: DataTableAction[] = [
     {
-      label: 'Novo Documento',
+      label: emContextoFicheiroEletronico ? 'Adicionar' : 'Novo Documento',
       icon: <Plus className='h-4 w-4' />,
-      onClick: () => navigate('/area-financeira/faturacao/novo-documento'),
+      onClick: () => {
+        const path =
+          emContextoFicheiroEletronico && siglaFicheiroSlug
+            ? buildNovoDocumentoFicheiroEletronicoUrl(
+                siglaFicheiroSlug as FicheiroEletronicoSiglaSlug,
+              )
+            : '/area-financeira/faturacao/novo-documento'
+
+        navigateManagedWindow(navigate, path, {
+          title: emContextoFicheiroEletronico
+            ? `Novo Documento — ${siglaFicheiroLabel}`
+            : 'Novo Documento',
+          forceNewInstance: true,
+        })
+      },
       variant: 'destructive',
     },
+    ...(emContextoFicheiroEletronico
+      ? [
+          {
+            label: 'Gerar ficheiro',
+            icon: <FileDown className='h-4 w-4' />,
+            onClick: () => {
+              if (selectedRows.length !== 1) {
+                toast.error('Selecione exactamente uma fatura.')
+                return
+              }
+              const doc = documentos.find((d) => d.id === selectedRows[0])
+              if (!doc?.organismoId) {
+                toast.error('A fatura seleccionada não é a organismo.')
+                return
+              }
+              if (!doc.estaEmitido || doc.anulado) {
+                toast.error('Seleccione uma fatura emitida e não anulada.')
+                return
+              }
+              gerarFicheiroMutation.mutate(doc.id)
+            },
+            variant: 'secondary' as const,
+            className:
+              'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600',
+            disabled:
+              selectedRows.length !== 1 || gerarFicheiroMutation.isPending,
+          },
+        ]
+      : []),
     {
       label: 'Enviar emails (seleção)',
       icon: <Mail className='h-4 w-4' />,
@@ -180,9 +303,19 @@ export function ListagemFaturacaoPage() {
 
   return (
     <>
-      <PageHead title='Faturação | Área Financeira | CliCloud' />
+      <PageHead
+        title={
+          emContextoFicheiroEletronico
+            ? `${pageTitle} | Área Financeira | CliCloud`
+            : 'Faturação | Área Financeira | CliCloud'
+        }
+      />
       <DashboardPageContainer>
-        <AreaComumListagemPageShell title='Faturação' onRefresh={refresh}>
+        <AreaComumListagemPageShell
+          title={pageTitle}
+          onBack={closeLikeTabBar}
+          onRefresh={refresh}
+        >
           {isError ? (
             <Alert variant='destructive' className='mb-4'>
               <AlertTitle>Falha ao carregar documentos</AlertTitle>
@@ -208,8 +341,29 @@ export function ListagemFaturacaoPage() {
             selectedRows={selectedRows}
             onRowSelectionChange={setSelectedRows}
             onOpenView={(row) =>
-              navigate(`/area-financeira/faturacao/documento/${row.id}`)
+              navigateManagedWindow(
+                navigate,
+                `/area-financeira/faturacao/documento/${row.id}`,
+                {
+                  title: `Ver — ${row.numeroExibicao ?? row.id}`,
+                  forceNewInstance: true,
+                },
+              )
             }
+            onOpenEdit={(row) => {
+              if (!podeEditarDocumento(row)) {
+                toast.error('Documento anulado não pode ser editado.')
+                return
+              }
+              navigateManagedWindow(
+                navigate,
+                `/area-financeira/faturacao/documento/${row.id}?edit=1`,
+                {
+                  title: `Editar — ${row.numeroExibicao ?? row.id}`,
+                  forceNewInstance: true,
+                },
+              )
+            }}
             renderExtraActions={(row) => {
               const canAnular = podeAnularDocumento(row)
               const canNc = podeCriarNotaCredito(row)
