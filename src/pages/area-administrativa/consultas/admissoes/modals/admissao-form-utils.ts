@@ -176,13 +176,13 @@ export function computeLinhaTotal(
   const desconto = (subtotal * descClinica) / 100
   const totalLinhaServico = Math.max(0, subtotal - desconto)
 
-  /** Isento: utente não paga; o total da linha continua a ser o valor do serviço (soma no registo / fatura). */
+  /** Isento (legado AdmissoesEdt): utente=0, organismo assume valor total do serviço. */
   if (taxaModeradoraAtiva && taxaModeradora === 'isento') {
     return {
       total: totalLinhaServico,
       valorUtente: 0,
       percentagem: 100,
-      valorOrganismo: 0,
+      valorOrganismo: totalLinhaServico,
     }
   }
 
@@ -218,6 +218,14 @@ export function computeLinhaTotal(
   }
 }
 
+export function resolveCodigoArtigoServico(
+  servico: { ean?: string | null } | undefined,
+): string {
+  const ean = servico?.ean?.trim()
+  if (!ean || ean.length > 10) return ''
+  return ean
+}
+
 export function linhaFromSubsistema(
   subsistema: SubsistemaServicoDTO,
   servicoCodigo: string,
@@ -230,6 +238,7 @@ export function linhaFromSubsistema(
   row.servicoId = subsistema.servicoId
   row.subsistemaLinhaLabel = `${servicoDesignacao} — ${formatMoneyPt(subsistema.valorServico)}`
   row.codigoServico = servicoCodigo
+  row.codigoArtigo = servicoCodigo
   row.descricao = servicoDesignacao
   row.valorUnitario = formatDecimalInput(subsistema.valorServico)
 
@@ -239,7 +248,9 @@ export function linhaFromSubsistema(
       ? (subsistema.valorOrganismo / subsistema.valorServico) * 100
       : 0
   row.percentagem = formatDecimalInput(isIsento ? 100 : perc)
-  row.valorOrganismo = formatDecimalInput(isIsento ? 0 : subsistema.valorOrganismo)
+  row.valorOrganismo = formatDecimalInput(
+    isIsento ? subsistema.valorServico : subsistema.valorOrganismo,
+  )
   row.valorUtente = formatDecimalInput(isIsento ? 0 : subsistema.valorUtente)
 
   const totals = computeLinhaTotal(row, taxaModeradora, taxaModeradoraAtiva)

@@ -1,20 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  Ban,
-  CreditCard,
-  FileDown,
-  FileQuestion,
-  FileText,
-  History,
-  List,
-  Mail,
-  Plus,
-  Printer,
-  RotateCw,
-  Truck,
-} from 'lucide-react'
+import { FileDown, List, Mail, Plus, RotateCw } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -49,6 +36,7 @@ import {
 import type { PageFilter } from '@/utils/page-data-utils'
 import { ListagemFaturacaoTable } from '../components/listagem-faturacao-table'
 import { ListagemFaturacaoFilterControls } from '../components/listagem-faturacao-filter-controls'
+import { ListagemFaturacaoRowActions } from '../components/listagem-faturacao-row-actions'
 import { AnularDocumentoDialog } from '../components/anular-documento-dialog'
 import { NotaCreditoDialog } from '../components/nota-credito-dialog'
 import { ValidacaoTransporteDialog } from '../components/validacao-transporte-dialog'
@@ -65,17 +53,7 @@ import {
   useGetDocumentosPaginatedPageData,
   usePrefetchAdjacentDocumentos,
 } from '../queries/documento-queries'
-import {
-  podeAnularDocumento,
-  podeEditarDocumento,
-  podeCriarNotaCredito,
-  podeEnviarEmailDocumento,
-  podeImprimirOriginalDocumento,
-  podeEmitirFaturaDocumento,
-  podeLiquidarDocumento,
-  podeReimprimirDocumento,
-  podeValidarTransporteDocumento,
-} from '../utils/listagem-faturacao-acoes'
+import { podeEditarDocumento, podeEnviarEmailDocumento } from '../utils/listagem-faturacao-acoes'
 
 const ID_FUNCIONALIDADE = 'documentos'
 const ID_FUNCIONALIDADE_FE =
@@ -148,7 +126,7 @@ export function ListagemFaturacaoPage() {
     defaultFilters,
   })
 
-  const documentos = data?.info?.data ?? []
+  const documentos: DocumentoTableDTO[] = data?.info?.data ?? []
   const pageCount = data?.info?.totalPages ?? 0
   const totalRows = data?.info?.totalCount ?? 0
   const errorMessage =
@@ -161,14 +139,149 @@ export function ListagemFaturacaoPage() {
     queryClient.invalidateQueries({ queryKey: documentoQueryKeys.all })
   }
 
+  const handleEnviarEmail = async (row: DocumentoTableDTO) => {
+    try {
+      await emailMutation.mutateAsync({ id: row.id, payload: {} })
+      toast.success('Documento enviado por email com sucesso.')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Falha ao enviar email.'
+      toast.error(msg)
+    }
+  }
+
+  const handleHistoricoReimpressao = async (row: DocumentoTableDTO) => {
+    try {
+      const res = await getDocumentoByIdMutation.mutateAsync(row.id)
+      const obs = res.info?.data?.observacoes ?? ''
+      const linhas = obs
+        .split(/\r?\n/)
+        .map((x) => x.trim())
+        .filter((x) => x.startsWith('[REIMP_ORIGINAL]'))
+
+      if (linhas.length === 0) {
+        toast.info('Sem histórico de reimpressão original.')
+        return
+      }
+
+      toast.info(linhas.join(' | '))
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : 'Falha ao obter histórico de reimpressão.'
+      toast.error(msg)
+    }
+  }
+
+  const handleEmitirFatura = async (row: DocumentoTableDTO) => {
+    try {
+      const res = await getDetalhesAdmissoesMutation.mutateAsync(row.id)
+      const itens = res.info?.data?.itens ?? []
+      const primeiroComAdmissao = itens.find((i) => !!i.admissaoId)
+      if (primeiroComAdmissao?.admissaoId) {
+        navigate(
+          `/area-financeira/faturacao/novo-documento?admissaoId=${primeiroComAdmissao.admissaoId}`,
+        )
+        return
+      }
+
+      const primeiroComConsulta = itens.find((i) => !!i.consultaId)
+      if (primeiroComConsulta?.consultaId) {
+        navigate(
+          `/area-financeira/faturacao/novo-documento?consultaId=${primeiroComConsulta.consultaId}`,
+        )
+        return
+      }
+
+      toast.error('Sem origem clínica associada para conversão automática em fatura.')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Falha ao preparar emissão de fatura.'
+      toast.error(msg)
+    }
+  }
+
+  const handleDetalhesAdmissoes = async (row: DocumentoTableDTO) => {
+    try {
+      const res = await getDetalhesAdmissoesMutation.mutateAsync(row.id)
+      setDetalhesAdmissoes(res.info?.data ?? null)
+      setDetalhesAdmissoesOpen(true)
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : 'Falha ao obter detalhes de admissões.'
+      toast.error(msg)
+    }
+  }
+
+  const handleMotivoAnulacao = async (row: DocumentoTableDTO) => {
+    try {
+      const res = await getDocumentoByIdMutation.mutateAsync(row.id)
+      const motivo =
+        res.info?.data?.motivoAnulacao?.trim() || 'Sem motivo de anulação registado.'
+      toast.info(motivo)
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : 'Falha ao obter motivo de anulação.'
+      toast.error(msg)
+    }
+  }
+
+  const handleImprimirOriginal = async (row: DocumentoTableDTO) => {
+    try {
+      const res = await printOriginalMutation.mutateAsync(row.id)
+      const template = res.info?.data?.template ?? 'TFatura'
+      navigate(
+        `/area-financeira/faturacao/documento/${row.id}?print=1&original=1&template=${encodeURIComponent(template)}`,
+      )
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : 'Falha ao preparar impressão original.'
+      toast.error(msg)
+    }
+  }
+
+  const handleReimprimir = async (row: DocumentoTableDTO) => {
+    try {
+      const res = await printMutation.mutateAsync(row.id)
+      const template = res.info?.data?.template ?? 'TFatura'
+      navigate(
+        `/area-financeira/faturacao/documento/${row.id}?print=1&template=${encodeURIComponent(template)}`,
+      )
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Falha ao preparar reimpressão.'
+      toast.error(msg)
+    }
+  }
+
+  const handleLiquidar = async (row: DocumentoTableDTO) => {
+    try {
+      const res = await liquidacaoMutation.mutateAsync(row.id)
+      const ctx = res.info?.data
+      if (!ctx) {
+        toast.error('Não foi possível obter contexto de liquidação.')
+        return
+      }
+
+      if (ctx.isUtente && ctx.utenteId) {
+        navigate(`/area-financeira/faturacao/liquidacao-utente?documentoId=${row.id}`)
+        return
+      }
+
+      if (!ctx.isUtente && ctx.organismoId) {
+        navigate(`/area-financeira/faturacao/liquidacao-organismo?documentoId=${row.id}`)
+        return
+      }
+
+      toast.error('Documento sem entidade para liquidação.')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Falha ao preparar liquidação.'
+      toast.error(msg)
+    }
+  }
+
   const pageTitle = emContextoFicheiroEletronico
     ? `Ficheiro Eletrónico - ${siglaFicheiroLabel}`
     : 'Faturação'
 
-  const selectedDocumentos = documentos.filter((d: DocumentoTableDTO) =>
-    selectedRows.includes(d.id),
-  )
-  const selectedEmailDocumentos = selectedDocumentos.filter((d: DocumentoTableDTO) =>
+  const selectedDocumentos = documentos.filter((d) => selectedRows.includes(d.id))
+  const selectedEmailDocumentos = selectedDocumentos.filter((d) =>
     podeEnviarEmailDocumento(d),
   )
 
@@ -364,266 +477,22 @@ export function ListagemFaturacaoPage() {
                 },
               )
             }}
-            renderExtraActions={(row) => {
-              const canAnular = podeAnularDocumento(row)
-              const canNc = podeCriarNotaCredito(row)
-              const canReimprimir = podeReimprimirDocumento(row)
-              const canOriginal = podeImprimirOriginalDocumento(row)
-              const canEmail = podeEnviarEmailDocumento(row)
-              const canLiquidar = podeLiquidarDocumento(row)
-              const canValidarTransporte = podeValidarTransporteDocumento(row)
-              const canEmitirFatura = podeEmitirFaturaDocumento(row)
-
-              return (
-                <>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    title='Histórico reimpressão original'
-                    disabled={!canOriginal}
-                    onClick={async () => {
-                      try {
-                        const res = await getDocumentoByIdMutation.mutateAsync(row.id)
-                        const obs = res.info?.data?.observacoes ?? ''
-                        const linhas = obs
-                          .split(/\r?\n/)
-                          .map((x) => x.trim())
-                          .filter((x) => x.startsWith('[REIMP_ORIGINAL]'))
-
-                        if (linhas.length === 0) {
-                          toast.info('Sem histórico de reimpressão original.')
-                          return
-                        }
-
-                        toast.info(linhas.join(' | '))
-                      } catch (e) {
-                        const msg =
-                          e instanceof Error
-                            ? e.message
-                            : 'Falha ao obter histórico de reimpressão.'
-                        toast.error(msg)
-                      }
-                    }}
-                  >
-                    <History className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    title='Emitir fatura'
-                    disabled={!canEmitirFatura}
-                    onClick={async () => {
-                      try {
-                        const res = await getDetalhesAdmissoesMutation.mutateAsync(row.id)
-                        const itens = res.info?.data?.itens ?? []
-                        const primeiroComAdmissao = itens.find((i) => !!i.admissaoId)
-                        if (primeiroComAdmissao?.admissaoId) {
-                          navigate(
-                            `/area-financeira/faturacao/novo-documento?admissaoId=${primeiroComAdmissao.admissaoId}`,
-                          )
-                          return
-                        }
-
-                        const primeiroComConsulta = itens.find((i) => !!i.consultaId)
-                        if (primeiroComConsulta?.consultaId) {
-                          navigate(
-                            `/area-financeira/faturacao/novo-documento?consultaId=${primeiroComConsulta.consultaId}`,
-                          )
-                          return
-                        }
-
-                        toast.error(
-                          'Sem origem clínica associada para conversão automática em fatura.',
-                        )
-                      } catch (e) {
-                        const msg =
-                          e instanceof Error ? e.message : 'Falha ao preparar emissão de fatura.'
-                        toast.error(msg)
-                      }
-                    }}
-                  >
-                    <FileText className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    title='Detalhes admissões'
-                    onClick={async () => {
-                      try {
-                        const res = await getDetalhesAdmissoesMutation.mutateAsync(row.id)
-                        setDetalhesAdmissoes(res.info?.data ?? null)
-                        setDetalhesAdmissoesOpen(true)
-                      } catch (e) {
-                        const msg =
-                          e instanceof Error ? e.message : 'Falha ao obter detalhes de admissões.'
-                        toast.error(msg)
-                      }
-                    }}
-                  >
-                    <List className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    title='Ver motivo de anulação'
-                    disabled={!row.anulado}
-                    onClick={async () => {
-                      try {
-                        const res = await getDocumentoByIdMutation.mutateAsync(row.id)
-                        const motivo =
-                          res.info?.data?.motivoAnulacao?.trim() ||
-                          'Sem motivo de anulação registado.'
-                        toast.info(motivo)
-                      } catch (e) {
-                        const msg =
-                          e instanceof Error ? e.message : 'Falha ao obter motivo de anulação.'
-                        toast.error(msg)
-                      }
-                    }}
-                  >
-                    <FileQuestion className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    title='Validação de transporte'
-                    disabled={!canValidarTransporte}
-                    onClick={() => setValidacaoTransporteDocumento(row)}
-                  >
-                    <Truck className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    title='Imprimir original'
-                    disabled={!canOriginal}
-                    onClick={async () => {
-                      try {
-                        const res = await printOriginalMutation.mutateAsync(row.id)
-                        const template = res.info?.data?.template ?? 'TFatura'
-                        navigate(
-                          `/area-financeira/faturacao/documento/${row.id}?print=1&original=1&template=${encodeURIComponent(template)}`,
-                        )
-                      } catch (e) {
-                        const msg =
-                          e instanceof Error ? e.message : 'Falha ao preparar impressão original.'
-                        toast.error(msg)
-                      }
-                    }}
-                  >
-                    <Printer className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    title='Enviar email'
-                    disabled={!canEmail}
-                    onClick={async () => {
-                      try {
-                        await emailMutation.mutateAsync({ id: row.id, payload: {} })
-                        toast.success('Documento enviado por email com sucesso.')
-                      } catch (e) {
-                        const msg = e instanceof Error ? e.message : 'Falha ao enviar email.'
-                        toast.error(msg)
-                      }
-                    }}
-                  >
-                    <Mail className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    title='Liquidar/Pagamento'
-                    disabled={!canLiquidar}
-                    onClick={async () => {
-                      try {
-                        const res = await liquidacaoMutation.mutateAsync(row.id)
-                        const ctx = res.info?.data
-                        if (!ctx) {
-                          toast.error('Não foi possível obter contexto de liquidação.')
-                          return
-                        }
-
-                        if (ctx.isUtente && ctx.utenteId) {
-                          navigate(`/area-financeira/faturacao/liquidacao-utente?documentoId=${row.id}`)
-                          return
-                        }
-
-                        if (!ctx.isUtente && ctx.organismoId) {
-                          navigate(`/area-financeira/faturacao/liquidacao-organismo?documentoId=${row.id}`)
-                          return
-                        }
-
-                        toast.error('Documento sem entidade para liquidação.')
-                      } catch (e) {
-                        const msg = e instanceof Error ? e.message : 'Falha ao preparar liquidação.'
-                        toast.error(msg)
-                      }
-                    }}
-                  >
-                    <CreditCard className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    title='Reimprimir'
-                    disabled={!canReimprimir}
-                    onClick={async () => {
-                      try {
-                        const res = await printMutation.mutateAsync(row.id)
-                        const template = res.info?.data?.template ?? 'TFatura'
-                        navigate(`/area-financeira/faturacao/documento/${row.id}?print=1&template=${encodeURIComponent(template)}`)
-                      } catch (e) {
-                        const msg = e instanceof Error ? e.message : 'Falha ao preparar reimpressão.'
-                        toast.error(msg)
-                      }
-                    }}
-                  >
-                    <Printer className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    title='Anular'
-                    disabled={!canAnular}
-                    onClick={() => setAnularDocumento(row)}
-                  >
-                    <Ban className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    title='Nota de Crédito'
-                    disabled={!canNc}
-                    onClick={() => setNotaCreditoDocumento(row)}
-                  >
-                    <FileText className='h-4 w-4' />
-                  </Button>
-                </>
-              )
-            }}
+            renderExtraActions={(row) => (
+              <ListagemFaturacaoRowActions
+                row={row}
+                onEnviarEmail={handleEnviarEmail}
+                onHistoricoReimpressao={handleHistoricoReimpressao}
+                onEmitirFatura={handleEmitirFatura}
+                onDetalhesAdmissoes={handleDetalhesAdmissoes}
+                onMotivoAnulacao={handleMotivoAnulacao}
+                onValidacaoTransporte={setValidacaoTransporteDocumento}
+                onImprimirOriginal={handleImprimirOriginal}
+                onReimprimir={handleReimprimir}
+                onLiquidar={handleLiquidar}
+                onAnular={setAnularDocumento}
+                onNotaCredito={setNotaCreditoDocumento}
+              />
+            )}
           />
           <AnularDocumentoDialog
             documento={anularDocumento}

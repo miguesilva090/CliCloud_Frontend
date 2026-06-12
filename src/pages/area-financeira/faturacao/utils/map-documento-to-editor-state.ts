@@ -33,6 +33,7 @@ export function mapDocumentoToEditorState(
     tipoCliente: doc.organismoId && !doc.utenteId ? 'organismo' : 'utente',
     utenteId: doc.utenteId ?? null,
     organismoId: doc.organismoId ?? null,
+    organismoRestringeDescontos: false,
     nomeCliente: doc.nomeCliente ?? '',
     moradaCliente: doc.moradaCliente ?? '',
     localidadeCliente: doc.localidadeCliente ?? '',

@@ -29,6 +29,7 @@ import {
   linhaFromSubsistema,
   newLinhaServicoForm,
   parseDecimal,
+  resolveCodigoArtigoServico,
   type LinhaServicoForm,
   type TaxaModeradora,
 } from './admissao-form-utils'
@@ -145,7 +146,8 @@ export function AdmissaoServicoLinhaModal({
     patchLinha({
       servicoId,
       subsistemaServicoId: '',
-      codigoServico: servico.id.slice(0, 8),
+      codigoServico: resolveCodigoArtigoServico(servico),
+      codigoArtigo: resolveCodigoArtigoServico(servico),
       descricao: servico.designacao,
       subsistemaLinhaLabel: servico.designacao,
       valorUnitario: formatDecimalInput((servico as { preco?: number }).preco),

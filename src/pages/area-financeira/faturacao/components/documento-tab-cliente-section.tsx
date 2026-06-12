@@ -30,12 +30,26 @@ import {
   buildUtenteOrganismoOptions,
   resolveBeneficiarioApolice,
 } from '@/pages/area-administrativa/consultas/admissoes/modals/admissao-form-utils'
-import type { OrganismoLightDTO } from '@/types/dtos/saude/organismos.dtos'
 import type { FicheiroEletronicoSiglaSlug } from '@/pages/area-financeira/ficheiros-eletronicos/constants/ficheiro-eletronico-siglas'
+import { toast } from '@/utils/toast-utils'
 import type { DocumentoEditorState } from '../types/documento-editor.types'
+import {
+  mergePatchComRestricaoDescontos,
+  organismoRestringeDescontos,
+  organismoRestringeDescontosPorSiglaFicheiro,
+} from '../utils/organismo-desconto-utils'
+import { ResponseStatus } from '@/types/api/responses'
+import type { OrganismoDTO, OrganismoLightDTO } from '@/types/dtos/saude/organismos.dtos'
 
 const ID_FUNCIONALIDADE = 'documentos'
 const ORG_NENHUM = '__nenhum__'
+
+function buildMoradaOrganismo(org: OrganismoDTO): string {
+  const rua = org.rua?.nome?.trim() ?? ''
+  const porta = org.numeroPorta?.trim()
+  if (rua && porta) return `${rua}, ${porta}`
+  return rua
+}
 
 export function DocumentoTabClienteSection({
   state,
@@ -69,7 +83,8 @@ export function DocumentoTabClienteSection({
         debOrg,
         contextoFicheiroEletronicoSiglaSlug ?? undefined,
       ),
-    enabled: state.tipoCliente === 'organismo',
+    enabled:
+      state.tipoCliente === 'organismo' || !!contextoFicheiroEletronicoSiglaSlug,
   })
   const codigosPostaisQ = useCodigosPostaisLight(debCp)
 
@@ -140,27 +155,75 @@ export function DocumentoTabClienteSection({
       codigoPostalTexto: cpLabel,
       beneficiario,
       limiteCreditoExibicao: '',
+      organismoRestringeDescontos: false,
     })
     setCpSearch(cpLabel)
   }
 
-  const aplicarSnapshotOrganismo = (organismoId: string) => {
-    const fromUtente = organismoUtenteItems.find((o) => o.value === organismoId)
-    if (fromUtente) {
-      onChange({ organismoId, nomeCliente: fromUtente.label })
-      aplicarBeneficiario(state.utenteId, organismoId)
-      return
-    }
+  const aplicarSnapshotOrganismoLight = (organismoId: string) => {
     const orgDto = ((orgsQ.data?.info?.data ?? []) as OrganismoLightDTO[]).find(
       (o) => o.id === organismoId,
     )
     const orgItem = orgItemsGlobal.find((o) => o.value === organismoId)
-    onChange({
-      organismoId,
-      nomeCliente: orgDto?.nome ?? orgItem?.label ?? state.nomeCliente,
-      numeroContribuinteCliente: orgDto?.numeroContribuinte ?? '',
-      beneficiario: '',
-    })
+    const restringe = organismoRestringeDescontosPorSiglaFicheiro(
+      contextoFicheiroEletronicoSiglaSlug,
+    )
+    onChange(
+      mergePatchComRestricaoDescontos(state, {
+        organismoId,
+        nomeCliente: orgDto?.nome ?? orgItem?.label ?? state.nomeCliente,
+        numeroContribuinteCliente: orgDto?.numeroContribuinte ?? '',
+        beneficiario: '',
+        organismoRestringeDescontos: restringe,
+      }),
+    )
+  }
+
+  const aplicarSnapshotOrganismo = async (organismoId: string) => {
+    const fromUtente = organismoUtenteItems.find((o) => o.value === organismoId)
+    if (fromUtente) {
+      onChange({
+        organismoId,
+        nomeCliente: fromUtente.label,
+        organismoRestringeDescontos: false,
+      })
+      aplicarBeneficiario(state.utenteId, organismoId)
+      return
+    }
+
+    try {
+      const res = await OrganismoService(ID_FUNCIONALIDADE).getOrganismo(organismoId)
+      const org =
+        res.info?.status === ResponseStatus.Success ? res.info.data : null
+
+      if (org) {
+        const cpLabel =
+          org.codigoPostal?.codigo?.trim() ??
+          (await resolveCodigoPostalTexto(org.codigoPostalId, ID_FUNCIONALIDADE))
+
+        const restringe = organismoRestringeDescontos(org)
+        onChange(
+          mergePatchComRestricaoDescontos(state, {
+            organismoId,
+            nomeCliente: org.nome ?? '',
+            numeroContribuinteCliente: org.numeroContribuinte ?? '',
+            moradaCliente: buildMoradaOrganismo(org),
+            localidadeCliente: org.codigoPostal?.localidade?.trim() ?? '',
+            codigoPostalId: org.codigoPostalId ?? null,
+            codigoPostalTexto: cpLabel,
+            beneficiario: '',
+            organismoRestringeDescontos: restringe,
+          }),
+        )
+        setCpSearch(cpLabel)
+        return
+      }
+    } catch {
+      aplicarSnapshotOrganismoLight(organismoId)
+      return
+    }
+
+    aplicarSnapshotOrganismoLight(organismoId)
   }
 
   useEffect(() => {
@@ -170,7 +233,7 @@ export function DocumentoTabClienteSection({
 
   useEffect(() => {
     if (state.tipoCliente !== 'organismo' || !state.organismoId) return
-    aplicarSnapshotOrganismo(state.organismoId)
+    void aplicarSnapshotOrganismo(state.organismoId)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot organismo
   }, [state.tipoCliente, state.organismoId, organismoUtenteItems, orgItemsGlobal])
 
@@ -190,6 +253,7 @@ export function DocumentoTabClienteSection({
       codigoPostalId: null,
       codigoPostalTexto: '',
       limiteCreditoExibicao: '',
+      organismoRestringeDescontos: false,
     })
     setCpSearch('')
     // eslint-disable-next-line react-hooks/exhaustive-deps -- forçar organismo no contexto FE
@@ -197,14 +261,27 @@ export function DocumentoTabClienteSection({
 
   useEffect(() => {
     if (!contextoFicheiroEletronicoSiglaSlug || state.organismoId) return
-    if (orgsQ.isFetching || orgItemsGlobal.length !== 1) return
-    aplicarSnapshotOrganismo(orgItemsGlobal[0].value)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-seleção único organismo
+    if (state.tipoCliente !== 'organismo') return
+    if (orgsQ.isFetching) return
+
+    if (orgItemsGlobal.length === 0) {
+      if (orgsQ.isSuccess) {
+        toast.error(
+          'Nenhum organismo com a flag desta sigla. Verifique o registo em Tabelas → Organismos.',
+        )
+      }
+      return
+    }
+
+    void aplicarSnapshotOrganismo(orgItemsGlobal[0].value)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-seleção organismo FE
   }, [
     contextoFicheiroEletronicoSiglaSlug,
     state.organismoId,
+    state.tipoCliente,
     orgItemsGlobal,
     orgsQ.isFetching,
+    orgsQ.isSuccess,
   ])
 
   return (
@@ -230,6 +307,7 @@ export function DocumentoTabClienteSection({
                 codigoPostalId: null,
                 codigoPostalTexto: '',
                 limiteCreditoExibicao: '',
+                organismoRestringeDescontos: false,
               })
               setCpSearch('')
               return
@@ -245,6 +323,7 @@ export function DocumentoTabClienteSection({
               codigoPostalId: null,
               codigoPostalTexto: '',
               limiteCreditoExibicao: '',
+              organismoRestringeDescontos: false,
             })
             setCpSearch('')
           }}
@@ -320,7 +399,7 @@ export function DocumentoTabClienteSection({
             value={state.organismoId ?? ''}
             onChange={(id) => {
               onChange({ organismoId: id || null })
-              if (id) aplicarSnapshotOrganismo(id)
+              if (id) void aplicarSnapshotOrganismo(id)
             }}
             items={orgItemsGlobal}
             isLoading={orgsQ.isFetching}

@@ -3,6 +3,7 @@ import type { ServicoLightDTO } from '@/types/dtos/servicos/servico.dtos'
 import type { SubsistemaServicoDTO } from '@/types/dtos/servicos/subsistema-servico.dtos'
 import {
   linhaFromSubsistema,
+  resolveCodigoArtigoServico,
   type LinhaServicoForm,
   type TaxaModeradora,
 } from './admissao-form-utils'
@@ -36,7 +37,7 @@ export function buildLinhasFromSubsistemasSelecionados(
   for (const row of rows) {
     if (row.inativo) continue
     const servico = servicoMap.get(row.servicoId)
-    const codigo = servico?.id.slice(0, 8) || row.servicoId.slice(0, 8)
+    const codigo = resolveCodigoArtigoServico(servico)
     const designacao = servico?.designacao ?? row.servicoId
     const base = linhaFromSubsistema(
       tableRowToSubsistemaDto(row),

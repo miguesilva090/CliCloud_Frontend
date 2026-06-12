@@ -34,6 +34,18 @@ const ID = 'documentos'
 
 export { useTaxasIvaLight as useTaxasIvaDocumento }
 
+import { fetchReciboAdmissaoPrecarga } from '../utils/map-recibo-admissao-precarga'
+
+export function usePrecargaReciboAdmissao(admissaoId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['documento-editor', 'recibo-admissao', admissaoId],
+    queryFn: () => fetchReciboAdmissaoPrecarga(admissaoId),
+    enabled: enabled && !!admissaoId,
+    staleTime: 0,
+    retry: false,
+  })
+}
+
 export function useClinicaFaturacaoConfig() {
   return useQuery({
     queryKey: ['documento-editor', 'clinica-current'],

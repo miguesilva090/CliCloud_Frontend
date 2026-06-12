@@ -27,8 +27,10 @@ export function ListagemFaturacaoFilterControls({
     (table.getColumn('numerodocumento_de')?.getFilterValue() as string) ?? ''
   const numeroAte =
     (table.getColumn('numerodocumento_ate')?.getFilterValue() as string) ?? ''
-  const nomeCliente =
-    (table.getColumn('nomeCliente')?.getFilterValue() as string) ?? ''
+  const nomeClienteDe =
+    (table.getColumn('nomecliente_de')?.getFilterValue() as string) ?? ''
+  const nomeClienteAte =
+    (table.getColumn('nomecliente_ate')?.getFilterValue() as string) ?? ''
   const dataDe =
     (table.getColumn('data_de')?.getFilterValue() as string) ?? ''
   const dataAte =
@@ -88,13 +90,24 @@ export function ListagemFaturacaoFilterControls({
           className={inputClass}
         />
       </div>
-      <div className='space-y-2 sm:col-span-2'>
-        <Label>Cliente</Label>
+      <div className='space-y-2'>
+        <Label>Nome cliente de</Label>
         <Input
-          value={nomeCliente}
-          placeholder='Nome do cliente'
+          value={nomeClienteDe}
+          placeholder='Nome de…'
           onChange={(e) =>
-            table.getColumn('nomeCliente')?.setFilterValue(e.target.value)
+            table.getColumn('nomecliente_de')?.setFilterValue(e.target.value)
+          }
+          className={inputClass}
+        />
+      </div>
+      <div className='space-y-2'>
+        <Label>Nome cliente até</Label>
+        <Input
+          value={nomeClienteAte}
+          placeholder='Nome até…'
+          onChange={(e) =>
+            table.getColumn('nomecliente_ate')?.setFilterValue(e.target.value)
           }
           className={inputClass}
         />

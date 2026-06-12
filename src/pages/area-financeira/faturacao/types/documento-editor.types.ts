@@ -28,6 +28,8 @@ export type DocumentoEditorState = {
   tipoCliente: TipoClienteDocumento
   utenteId: string | null
   organismoId: string | null
+  /** ADM / SADGNR / SADPSP — legado: sem descontos em fatura a organismo. */
+  organismoRestringeDescontos: boolean
   nomeCliente: string
   moradaCliente: string
   localidadeCliente: string

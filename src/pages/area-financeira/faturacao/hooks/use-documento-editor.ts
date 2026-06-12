@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { TipoDocumentoLightDTO } from '@/types/dtos/faturacao/tipo-documento.dtos'
 import type {
   EmitirDocumentoLinhaRequest,
@@ -49,6 +49,7 @@ function estadoInicial(
     tipoCliente: 'utente',
     utenteId: null,
     organismoId: null,
+    organismoRestringeDescontos: false,
     nomeCliente: '',
     moradaCliente: '',
     localidadeCliente: '',
@@ -89,9 +90,21 @@ function estadoInicial(
 export type UseDocumentoEditorOptions = {
   /** Estado pré-carregado (modo ver documento emitido). */
   initialState?: DocumentoEditorState | null
+  /** Campos iniciais extra (ex.: contexto ficheiro electrónico → organismo). */
+  initialPatch?: Partial<DocumentoEditorState> | null
   /** Não repor o formulário quando o tipo muda (modo ver). */
   freezeTipoReset?: boolean
 }
+
+function mergeEstadoEditor(
+  tipo: TipoDocumentoLightDTO,
+  regraFaturacao: number,
+  options?: UseDocumentoEditorOptions,
+): DocumentoEditorState {
+  const base = options?.initialState ?? estadoInicial(tipo, regraFaturacao)
+  return options?.initialPatch ? { ...base, ...options.initialPatch } : base
+}
+
 export function useDocumentoEditor(
   tipo: TipoDocumentoLightDTO,
   options?: UseDocumentoEditorOptions,
@@ -101,20 +114,28 @@ export function useDocumentoEditor(
   const moedasQ = useMoedasDocumento()
   const motivosQ = useMotivosIsencaoDocumento()
   const opcoesPagamentoQ = useOpcoesPagamentoDocumento()
+  const tipoIdAnteriorRef = useRef(tipo.id)
   const [state, setState] = useState<DocumentoEditorState>(() =>
-    options?.initialState ?? estadoInicial(tipo, regraClinica),
+    mergeEstadoEditor(tipo, regraClinica, options),
   )
 
   useEffect(() => {
     if (options?.freezeTipoReset) return
-    setState(estadoInicial(tipo, regraClinica))
-  }, [tipo.id, regraClinica, options?.freezeTipoReset])
+    if (tipoIdAnteriorRef.current === tipo.id) return
+    tipoIdAnteriorRef.current = tipo.id
+    setState(mergeEstadoEditor(tipo, regraClinica, options))
+  }, [tipo.id, regraClinica, options?.freezeTipoReset, options?.initialPatch, options?.initialState])
 
   useEffect(() => {
     if (options?.initialState) {
       setState(options.initialState)
     }
   }, [options?.initialState])
+
+  useEffect(() => {
+    if (!options?.initialPatch || options.freezeTipoReset) return
+    setState((s) => ({ ...s, ...options.initialPatch! }))
+  }, [options?.initialPatch, options?.freezeTipoReset])
 
   useEffect(() => {
     if (clinicaQ.data?.regraFaturacao != null) {
@@ -161,10 +182,16 @@ export function useDocumentoEditor(
   )
   const motivoIsencaoItems = useMemo(
     () =>
-      (motivosQ.data ?? []).map((m) => ({
-        id: m.id,
-        label: `${m.codigo} — ${m.descricao}`,
-      })),
+      (motivosQ.data ?? []).map((m) => {
+        const saft = m.codigoSaft?.trim()
+        const motivo = m.descricao?.trim() ?? ''
+        const norma = m.norma?.trim()
+        const mencao = m.mencao?.trim()
+        let label = saft ? `${saft} - ${motivo}` : `${m.codigo} — ${motivo}`
+        if (norma) label += ` (${norma})`
+        else if (mencao) label += ` (${mencao})`
+        return { id: m.id, label }
+      }),
     [motivosQ.data],
   )
   const condicaoPagamentoItems = useMemo(

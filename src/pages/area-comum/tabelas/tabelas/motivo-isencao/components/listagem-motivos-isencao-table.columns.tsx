@@ -3,39 +3,47 @@ import { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { createAreaComumListActionsColumnDef } from '@/components/shared/area-comum-list-actions-column'
 import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 
+/** Colunas alinhadas ao legado MotivoIsencaoLst (Número, Motivo, Norma, Menção, Opções). */
 export const columns: DataTableColumnDef<MotivoIsencaoTableDTO>[] = [
   {
     accessorKey: 'codigo',
-    header: 'Código',
+    header: 'Número',
     sortKey: 'codigo',
     enableSorting: true,
-    enableHiding: true,
-    meta: { align: 'left' as const },
+    enableHiding: false,
+    meta: {
+      align: 'center' as const,
+      width: 'w-[80px] min-w-[80px] max-w-[100px]',
+    },
   },
   {
     accessorKey: 'descricao',
-    header: 'Descrição',
+    header: 'Motivo',
     sortKey: 'descricao',
     enableSorting: true,
     enableHiding: true,
     meta: { align: 'left' as const },
   },
   {
-    accessorKey: 'createdOn',
-    header: 'Criado em',
-    sortKey: 'createdOn',
+    accessorKey: 'norma',
+    header: 'Norma',
+    sortKey: 'norma',
     enableSorting: true,
     enableHiding: true,
     meta: { align: 'left' as const },
-    cell: ({ row }) => {
-      const raw = row.original.createdOn
-      if (!raw) return '—'
-      try {
-        return new Date(raw).toLocaleString()
-      } catch {
-        return String(raw)
-      }
+    cell: ({ row }) => row.original.norma?.trim() ?? '',
+  },
+  {
+    accessorKey: 'mencao',
+    header: 'Menção',
+    sortKey: 'mencao',
+    enableSorting: true,
+    enableHiding: true,
+    meta: {
+      align: 'left' as const,
+      width: 'w-[200px] min-w-[160px]',
     },
+    cell: ({ row }) => row.original.mencao?.trim() ?? '',
   },
 ]
 

@@ -7,7 +7,9 @@ import type {
 import type { ResponseApi } from '@/types/responses'
 import { BaseApiClient } from '@/lib/base-client'
 import type {
+  MotivoIsencaoDTO,
   MotivoIsencaoLightDTO,
+  MotivoIsencaoSaveBody,
   MotivoIsencaoTableDTO,
 } from '@/types/dtos/taxas-iva/motivo-isencao.dtos'
 
@@ -39,30 +41,31 @@ export class MotivoIsencaoClient extends BaseApiClient {
     )
   }
 
-  async createMotivoIsencao(body: {
-    codigo: string
-    descricao: string
-  }): Promise<ResponseApi<GSResponse<string>>> {
-    return this.httpClient.postRequest<
-      { codigo: string; descricao: string },
-      GSResponse<string>
-    >(state.URL, BASE, body)
+  async createMotivoIsencao(
+    body: MotivoIsencaoSaveBody
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest<MotivoIsencaoSaveBody, GSResponse<string>>(
+      state.URL,
+      BASE,
+      body
+    )
   }
 
   async updateMotivoIsencao(
     id: string,
-    body: { codigo: string; descricao: string }
+    body: MotivoIsencaoSaveBody
   ): Promise<ResponseApi<GSResponse<string>>> {
-    return this.httpClient.putRequest<
-      { codigo: string; descricao: string },
-      GSResponse<string>
-    >(state.URL, `${BASE}/${id}`, body)
+    return this.httpClient.putRequest<MotivoIsencaoSaveBody, GSResponse<string>>(
+      state.URL,
+      `${BASE}/${id}`,
+      body
+    )
   }
 
   async getMotivoIsencaoById(
     id: string
-  ): Promise<ResponseApi<GSResponse<MotivoIsencaoTableDTO>>> {
-    return this.httpClient.getRequest<GSResponse<MotivoIsencaoTableDTO>>(
+  ): Promise<ResponseApi<GSResponse<MotivoIsencaoDTO>>> {
+    return this.httpClient.getRequest<GSResponse<MotivoIsencaoDTO>>(
       state.URL,
       `${BASE}/${id}`
     )

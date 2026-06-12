@@ -1578,7 +1578,9 @@ export function AdmissaoViewEditModal({
                             return
                           }
 
-                          navigate(`/area-financeira/faturacao/novo-documento?admissaoId=${admissaoId}`)
+                          navigate(
+                            `/area-financeira/faturacao/novo-documento?admissaoId=${admissaoId}&origem=recibo-admissao`,
+                          )
                         }}
                       >
                         <Receipt className='mr-1.5 h-3.5 w-3.5' />

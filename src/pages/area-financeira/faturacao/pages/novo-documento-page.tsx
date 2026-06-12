@@ -29,13 +29,24 @@ import {
   resolveSiglaFromSlug,
   type FicheiroEletronicoSiglaSlug,
 } from '@/pages/area-financeira/ficheiros-eletronicos/constants/ficheiro-eletronico-siglas'
+import { usePrecargaReciboAdmissao } from '../queries/documento-editor-queries'
 
 const ID_FUNCIONALIDADE = 'documentos'
 
+const SAFT_FATURA_RECIBO = 3
+
+function isTipoFaturaRecibo(tipo: TipoDocumentoLightDTO): boolean {
+  return (
+    tipo.codigoTipoDocumentoSaft === SAFT_FATURA_RECIBO
+    || tipo.abreviatura?.trim().toUpperCase() === 'FR'
+  )
+}
+
 function mapEmitirRequestParaOrigem(
   payload: EmitirDocumentoRequest,
+  options?: { reciboAdmissao?: boolean },
 ): EmitirDocumentoDesdeAdmissaoRequest & EmitirDocumentoDesdeConsultaRequest {
-  return {
+  const base = {
     tipoDocumentoId: payload.tipoDocumentoId,
     anoFiscal: payload.anoFiscal,
     dataDocumento: payload.dataDocumento ?? null,
@@ -56,6 +67,12 @@ function mapEmitirRequestParaOrigem(
     localidadeCliente: payload.localidadeCliente ?? null,
     numeroContribuinteCliente: payload.numeroContribuinteCliente ?? null,
   }
+
+  if (options?.reciboAdmissao) {
+    return { ...base, pago: true, faturado: false }
+  }
+
+  return base
 }
 
 export function NovoDocumentoPage() {
@@ -64,6 +81,7 @@ export function NovoDocumentoPage() {
   const tipoIdParam = searchParams.get('tipoDocumentoId') ?? ''
   const admissaoId = searchParams.get('admissaoId') ?? ''
   const consultaId = searchParams.get('consultaId') ?? ''
+  const origemReciboAdmissao = searchParams.get('origem') === 'recibo-admissao'
   const siglaFicheiroSlug = searchParams.get(
     'siglaFicheiro',
   ) as FicheiroEletronicoSiglaSlug | null
@@ -75,7 +93,9 @@ export function NovoDocumentoPage() {
 
   const pageTitle = emContextoFicheiroEletronico
     ? `Novo Documento — Ficheiro Eletrónico ${siglaFicheiroLabel}`
-    : 'Novo Documento'
+    : origemReciboAdmissao && admissaoId
+      ? 'Fatura recibo — Admissão'
+      : 'Novo Documento'
 
   const { data, isError, error } = useGetTiposDocumentoLight('', ID_FUNCIONALIDADE)
   const tipos = useMemo(() => {
@@ -104,7 +124,42 @@ export function NovoDocumentoPage() {
     [tipos, tipoIdParam],
   )
 
-  const [modalAberto, setModalAberto] = useState(!tipoIdParam)
+  const modoReciboAdmissao = Boolean(admissaoId && origemReciboAdmissao)
+
+  const precargaReciboQ = usePrecargaReciboAdmissao(admissaoId, modoReciboAdmissao)
+
+  useEffect(() => {
+    if (!modoReciboAdmissao || !precargaReciboQ.isError) return
+    const msg =
+      precargaReciboQ.error instanceof Error
+        ? precargaReciboQ.error.message
+        : 'Não foi possível carregar a admissão para fatura recibo.'
+    toast.error(msg)
+  }, [modoReciboAdmissao, precargaReciboQ.isError, precargaReciboQ.error])
+
+  useEffect(() => {
+    const aviso = precargaReciboQ.data?.aviso
+    if (aviso) toast.info(aviso)
+  }, [precargaReciboQ.data?.aviso])
+
+  const [modalAberto, setModalAberto] = useState(
+    !tipoIdParam && !modoReciboAdmissao,
+  )
+
+  useEffect(() => {
+    if (!modoReciboAdmissao || tipoIdParam || tipos.length === 0) return
+    const fr = tipos.find(isTipoFaturaRecibo)
+    if (!fr) {
+      toast.error(
+        'Tipo Fatura-Recibo (FR) não encontrado. Configure o tipo de documento na clínica.',
+      )
+      return
+    }
+    const next = new URLSearchParams(searchParams)
+    next.set('tipoDocumentoId', fr.id)
+    setSearchParams(next, { replace: true })
+    setModalAberto(false)
+  }, [modoReciboAdmissao, tipoIdParam, tipos, searchParams, setSearchParams])
 
   const emitirMutation = useEmitirDocumentoMutation(ID_FUNCIONALIDADE)
   const emitirAdmissaoMutation = useEmitirDocumentoDesdeAdmissaoMutation(ID_FUNCIONALIDADE)
@@ -124,11 +179,17 @@ export function NovoDocumentoPage() {
   }
 
   const handleSubmit = async (payload: EmitirDocumentoRequest) => {
+    const reciboAdmissao = Boolean(
+      admissaoId
+        && (modoReciboAdmissao
+          || (tipoSeleccionado != null && isTipoFaturaRecibo(tipoSeleccionado))),
+    )
+
     try {
       const res = admissaoId
         ? await emitirAdmissaoMutation.mutateAsync({
             admissaoId,
-            payload: mapEmitirRequestParaOrigem(payload),
+            payload: mapEmitirRequestParaOrigem(payload, { reciboAdmissao }),
           })
         : consultaId
           ? await emitirConsultaMutation.mutateAsync({
@@ -178,9 +239,11 @@ export function NovoDocumentoPage() {
             onCancel={closeLikeTabBar}
           />
 
-          {tipoSeleccionado ? (
+          {tipoSeleccionado &&
+          (!modoReciboAdmissao || precargaReciboQ.isSuccess) ? (
             <DocumentoEditor
               tipo={tipoSeleccionado}
+              initialPatch={precargaReciboQ.data?.patch ?? null}
               onSubmit={handleSubmit}
               onCancel={closeLikeTabBar}
               isSubmitting={isSubmitting}
@@ -188,6 +251,10 @@ export function NovoDocumentoPage() {
                 emContextoFicheiroEletronico ? siglaFicheiroSlug : null
               }
             />
+          ) : modoReciboAdmissao && precargaReciboQ.isLoading ? (
+            <p className='text-sm text-muted-foreground'>
+              A carregar serviços da admissão…
+            </p>
           ) : null}
         </AreaComumListagemPageShell>
       </DashboardPageContainer>

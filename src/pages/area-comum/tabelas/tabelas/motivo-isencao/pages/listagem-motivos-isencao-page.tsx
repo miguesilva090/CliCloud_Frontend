@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Plus, List, RotateCw } from 'lucide-react'
+import { Plus, RotateCw } from 'lucide-react'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -94,12 +94,6 @@ export function ListagemMotivosIsencaoPage() {
         ]
       : []),
     {
-      label: 'Listagens',
-      icon: <List className='h-4 w-4' />,
-      onClick: () => {},
-      variant: 'outline' as const,
-    },
-    {
       label: 'Atualizar',
       icon: <RotateCw className='h-4 w-4' />,
       onClick: () => {
@@ -151,10 +145,10 @@ export function ListagemMotivosIsencaoPage() {
 
   return (
     <>
-      <PageHead title='Motivos de isenção | Tabelas | Área Comum | CliCloud' />
+      <PageHead title='Motivos de Retenção de Imposto | Tabelas | CliCloud' />
       <DashboardPageContainer>
         <AreaComumListagemPageShell
-          title='Motivos de isenção'
+          title='Motivos de Retenção de Imposto'
           onRefresh={() => {
             handleFiltersChange([])
             handlePaginationChange(1, pageSize)
@@ -184,8 +178,9 @@ export function ListagemMotivosIsencaoPage() {
             onFiltersChange={handleFiltersChange}
             onSortingChange={handleSortingChange}
             toolbarActions={toolbarActions}
-            globalSearchColumnId='descricao'
-            globalSearchPlaceholder='Procurar...'
+            globalSearchColumnId='codigo'
+            globalSearchPlaceholder='Pesquisa...'
+            expandableSearch
             FilterControls={ListagemMotivosIsencaoFilterControls}
             hiddenColumns={[]}
             onOpenView={(row) => {

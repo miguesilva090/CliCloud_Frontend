@@ -13,6 +13,16 @@ const AreaFinanceiraPlaceholderPage = lazy(() =>
     (m) => ({ default: m.AreaFinanceiraPlaceholderPage }),
   ),
 )
+const ListagemNaturezaDocumentoPage = lazy(() =>
+  import(
+    '@/pages/area-financeira/faturacao/tabelas/documentos/natureza-documento/pages/listagem-natureza-documento-page'
+  ).then((m) => ({ default: m.ListagemNaturezaDocumentoPage })),
+)
+const ListagemSeriesDocumentoPage = lazy(() =>
+  import(
+    '@/pages/area-financeira/faturacao/tabelas/documentos/series-documento/pages/listagem-series-documento-page'
+  ).then((m) => ({ default: m.ListagemSeriesDocumentoPage })),
+)
 const ListagemFaturacaoPage = lazy(() =>
   import('@/pages/area-financeira/faturacao/pages/listagem-faturacao-page').then(
     (m) => ({ default: m.ListagemFaturacaoPage }),
@@ -309,6 +319,34 @@ export const areaFinanceiraRoutes = [
     ),
     manageWindow: true,
     windowName: 'Tabelas',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/documentos/natureza-documento',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemNaturezaDocumentoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Natureza dos Documentos',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/documentos/series-documento',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemSeriesDocumentoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Séries dos Documentos',
   },
   {
     path: 'area-financeira/faturacao/emails',

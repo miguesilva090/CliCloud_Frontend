@@ -353,6 +353,11 @@ const ListagemPaisesPage = lazy(() =>
       '@/pages/area-comum/tabelas/tabelas/bancos/pages/listagem-bancos-page'
     ).then((m) => ({ default: m.ListagemBancosPage }))
   )
+  const ListagemContasBancariasPage = lazy(() =>
+    import(
+      '@/pages/area-comum/tabelas/tabelas/contas-bancarias/pages/listagem-contas-bancarias-page'
+    ).then((m) => ({ default: m.ListagemContasBancariasPage }))
+  )
   const ListagemCategoriasEspecialidadesPage = lazy(() =>
     import(
       '@/pages/area-comum/tabelas/tabelas/categorias-das-especialidades/pages/listagem-categorias-especialidades-page'
@@ -979,6 +984,20 @@ export const areaComumRoutes = [
               ),
               manageWindow: true,
               windowName: areaComum?.permissions?.bancos?.name,
+            },
+            {
+              path: 'area-comum/tabelas/tabelas/contas-bancarias',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.bancos?.id}
+                  actionType={actionTypes.AuthVer}
+                >
+                  <ListagemContasBancariasPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: 'Contas Bancárias',
             },
             {
               path: 'area-comum/tabelas/tabelas/categorias-das-especialidades',

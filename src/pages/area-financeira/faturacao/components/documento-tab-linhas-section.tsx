@@ -42,11 +42,13 @@ export function DocumentoTabLinhasSection({
   state,
   perfil,
   opcoesCalculo,
+  descontosBloqueados = false,
   onChange,
 }: {
   state: DocumentoEditorState
   perfil: DocumentoEditorProfile
   opcoesCalculo: OpcoesCalculoDocumento
+  descontosBloqueados?: boolean
   onChange: (p: Partial<DocumentoEditorState>) => void
 }) {
   const [selected, setSelected] = useState<Set<number>>(new Set())
@@ -281,6 +283,12 @@ export function DocumentoTabLinhasSection({
           <Input
             type='number'
             className={inputClass}
+            disabled={descontosBloqueados}
+            title={
+              descontosBloqueados
+                ? 'Este organismo não pode ter descontos'
+                : undefined
+            }
             value={state.percentagemDescontoGlobal}
             onChange={(e) =>
               onChange({ percentagemDescontoGlobal: Number(e.target.value) })
@@ -297,6 +305,7 @@ export function DocumentoTabLinhasSection({
         perfil={perfil}
         opcoesCalculo={opcoesCalculo}
         organismoId={organismoId}
+        descontosBloqueados={descontosBloqueados}
         onSave={guardarLinhaModal}
       />
     </div>

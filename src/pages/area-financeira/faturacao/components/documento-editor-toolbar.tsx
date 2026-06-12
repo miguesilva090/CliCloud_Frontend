@@ -10,6 +10,7 @@ import { toast } from '@/utils/toast-utils'
 
 type Props = {
   readOnly: boolean
+  descontosBloqueados?: boolean
   onDescontos?: () => void
   onFaturaGlobal?: () => void
   onSinistrados?: () => void
@@ -20,6 +21,7 @@ type Props = {
 
 export function DocumentoEditorToolbar({
   readOnly,
+  descontosBloqueados = false,
   onDescontos,
   onFaturaGlobal,
   onSinistrados,
@@ -51,6 +53,12 @@ export function DocumentoEditorToolbar({
                 type='button'
                 variant='outline'
                 size='sm'
+                disabled={descontosBloqueados}
+                title={
+                  descontosBloqueados
+                    ? 'Este organismo não pode ter descontos'
+                    : undefined
+                }
                 onClick={onDescontos}
               >
                 Descontos

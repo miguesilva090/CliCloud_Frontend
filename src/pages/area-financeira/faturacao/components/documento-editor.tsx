@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { toast } from '@/utils/toast-utils'
@@ -23,6 +23,11 @@ import { DocumentoSinistradosInfoDialog } from './documento-sinistrados-info-dia
 import { mapFaturaGlobalObterToEditorPatch } from '../utils/map-fatura-global-obter'
 import { mapSinistradosInfoToEditorPatch } from '../utils/map-sinistrados-info-faturacao'
 import type { FicheiroEletronicoSiglaSlug } from '@/pages/area-financeira/ficheiros-eletronicos/constants/ficheiro-eletronico-siglas'
+import {
+  ORGANISMO_DESCONTO_BLOQUEADO_MSG,
+  descontosBloqueadosNoEditor,
+  organismoRestringeDescontosPorSiglaFicheiro,
+} from '../utils/organismo-desconto-utils'
 
 export function DocumentoEditor({
   tipo,
@@ -32,10 +37,12 @@ export function DocumentoEditor({
   onCancel,
   isSubmitting,
   contextoFicheiroEletronicoSiglaSlug,
+  initialPatch: initialPatchProp,
 }: {
   tipo: TipoDocumentoLightDTO
   mode?: 'create' | 'view'
   initialState?: DocumentoEditorState
+  initialPatch?: Partial<DocumentoEditorState> | null
   onSubmit?: (payload: EmitirDocumentoRequest) => void
   onCancel?: () => void
   isSubmitting?: boolean
@@ -45,6 +52,20 @@ export function DocumentoEditor({
   const [descontosOpen, setDescontosOpen] = useState(false)
   const [faturaGlobalOpen, setFaturaGlobalOpen] = useState(false)
   const [sinistradosOpen, setSinistradosOpen] = useState(false)
+
+  const contextoInitialPatch = useMemo(() => {
+    const base = contextoFicheiroEletronicoSiglaSlug
+      ? {
+          tipoCliente: 'organismo' as const,
+          utenteId: null,
+          organismoRestringeDescontos: organismoRestringeDescontosPorSiglaFicheiro(
+            contextoFicheiroEletronicoSiglaSlug,
+          ),
+        }
+      : null
+    if (!base && !initialPatchProp) return null
+    return { ...base, ...initialPatchProp }
+  }, [contextoFicheiroEletronicoSiglaSlug, initialPatchProp])
 
   const {
     state,
@@ -62,10 +83,12 @@ export function DocumentoEditor({
     impostosRetencaoItems,
   } = useDocumentoEditor(tipo, {
       initialState: initialState ?? null,
+      initialPatch: contextoInitialPatch,
       freezeTipoReset: readOnly,
     })
 
   const clienteBloqueado = readOnly || state.linhas.some(linhaDocumentoTemConteudo)
+  const descontosBloqueados = descontosBloqueadosNoEditor(state)
 
   const handleGuardar = () => {
     if (!onSubmit) return
@@ -109,6 +132,10 @@ export function DocumentoEditor({
       )
       return
     }
+    if (descontosBloqueados && totais.descontos > 0) {
+      toast.error(ORGANISMO_DESCONTO_BLOQUEADO_MSG)
+      return
+    }
     onSubmit(payload)
   }
 
@@ -125,6 +152,7 @@ export function DocumentoEditor({
 
       <DocumentoEditorToolbar
         readOnly={readOnly}
+        descontosBloqueados={descontosBloqueados}
         onDescontos={readOnly ? undefined : () => setDescontosOpen(true)}
         onFaturaGlobal={readOnly ? undefined : () => setFaturaGlobalOpen(true)}
         onSinistrados={readOnly ? undefined : () => setSinistradosOpen(true)}
@@ -151,6 +179,7 @@ export function DocumentoEditor({
         open={descontosOpen}
         onOpenChange={setDescontosOpen}
         state={state}
+        descontosBloqueados={descontosBloqueados}
         onChange={patch}
       />
 
@@ -205,6 +234,7 @@ export function DocumentoEditor({
                 state={state}
                 perfil={perfil}
                 opcoesCalculo={opcoesCalculo}
+                descontosBloqueados={descontosBloqueados}
                 onChange={patch}
               />
             </TabsContent>

@@ -45,6 +45,7 @@ type Props = {
   perfil: DocumentoEditorProfile
   opcoesCalculo: OpcoesCalculoDocumento
   organismoId: string | null
+  descontosBloqueados?: boolean
   onSave: (linha: EmitirDocumentoLinhaRequest) => void
 }
 
@@ -57,6 +58,7 @@ export function DocumentoLinhaModal({
   perfil,
   opcoesCalculo,
   organismoId,
+  descontosBloqueados = false,
   onSave,
 }: Props) {
   const [linha, setLinha] = useState(linhaProp)
@@ -272,13 +274,14 @@ export function DocumentoLinhaModal({
               </div>
             ) : null}
 
-            {perfil.mostraDescontosAvancados ? (
+            {perfil.mostraDescontosAvancados && !descontosBloqueados ? (
               <div className='grid gap-4 sm:grid-cols-3'>
                 <div className={fieldGap}>
                   <Label className={labelClass}>D1 %</Label>
                   <Input
                     type='number'
                     className={inputClass}
+                    disabled={descontosBloqueados}
                     value={linha.descontoTipo1 ?? ''}
                     onChange={(e) =>
                       patch({

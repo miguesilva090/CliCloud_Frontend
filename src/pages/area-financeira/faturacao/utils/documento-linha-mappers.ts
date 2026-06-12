@@ -43,9 +43,22 @@ export function mapAdmissaoServicoToLinha(
   s: AdmissaoServicoDTO,
   taxas: TaxaIvaLightDTO[],
   servico?: ServicoDTO | null,
+  opts?: { usarValorUtRecibo?: boolean },
 ): EmitirDocumentoLinhaRequest {
   const qty = s.quantidade && s.quantidade > 0 ? s.quantidade : 1
-  const preco = s.valorServico ?? s.valorArtigo ?? servico?.preco ?? 0
+  const totalUt = s.valorUt ?? 0
+  const precoUnitUt =
+    opts?.usarValorUtRecibo && totalUt >= 0
+      ? qty > 0
+        ? totalUt / qty
+        : totalUt
+      : null
+  const preco =
+    precoUnitUt ??
+    s.valorServico ??
+    s.valorArtigo ??
+    servico?.preco ??
+    0
   const descricao =
     (s.nomeArtigo?.trim() || servico?.designacao?.trim() || 'Serviço de admissão') ?? ''
 
@@ -70,7 +83,10 @@ export function mapAdmissaoServicoToLinha(
   }
 }
 
-export function mapAdmissaoToEditorCliente(admissao: AdmissaoDTO): {
+export function mapAdmissaoToEditorCliente(
+  admissao: AdmissaoDTO,
+  opts?: { faturaRecibo?: boolean },
+): {
   tipoCliente: 'utente' | 'organismo'
   utenteId: string | null
   organismoId: string | null
@@ -79,20 +95,21 @@ export function mapAdmissaoToEditorCliente(admissao: AdmissaoDTO): {
   const utenteId = admissao.utenteId ?? null
   const organismoId = admissao.organismoId ?? null
 
-  if (organismoId) {
+  /** FR (legado): cliente do documento é o utente; organismo fica como subsistema. */
+  if (opts?.faturaRecibo || !organismoId) {
     return {
-      tipoCliente: 'organismo',
+      tipoCliente: 'utente',
       utenteId,
       organismoId,
-      nomeCliente: admissao.organismoNome ?? admissao.utenteNome ?? '',
+      nomeCliente: admissao.utenteNome ?? '',
     }
   }
 
   return {
-    tipoCliente: 'utente',
+    tipoCliente: 'organismo',
     utenteId,
-    organismoId: null,
-    nomeCliente: admissao.utenteNome ?? '',
+    organismoId,
+    nomeCliente: admissao.organismoNome ?? admissao.utenteNome ?? '',
   }
 }
 

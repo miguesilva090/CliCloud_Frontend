@@ -12,29 +12,53 @@ export function ListagemMotivosIsencaoFilterControls({
   const codigo = (table.getColumn('codigo')?.getFilterValue() as string) ?? ''
   const descricao =
     (table.getColumn('descricao')?.getFilterValue() as string) ?? ''
+  const norma = (table.getColumn('norma')?.getFilterValue() as string) ?? ''
+  const mencao = (table.getColumn('mencao')?.getFilterValue() as string) ?? ''
 
   return (
-    <div className='space-y-4'>
+    <div className='grid gap-4 sm:grid-cols-2'>
       <div className='space-y-2'>
-        <Label>Código:</Label>
+        <Label>Número:</Label>
         <Input
-          placeholder='Procurar por código...'
+          placeholder='De...'
           value={codigo}
           onChange={(e) =>
             table.getColumn('codigo')?.setFilterValue(e.target.value)
           }
-          className='w-full max-w-[240px] bg-background border border-input shadow-sm'
+          className='w-full bg-background border border-input shadow-sm'
         />
       </div>
       <div className='space-y-2'>
-        <Label>Descrição:</Label>
+        <Label>Motivo:</Label>
         <Input
-          placeholder='Procurar por descrição...'
+          placeholder='Procurar por motivo...'
           value={descricao}
           onChange={(e) =>
             table.getColumn('descricao')?.setFilterValue(e.target.value)
           }
-          className='w-full max-w-[240px] bg-background border border-input shadow-sm'
+          className='w-full bg-background border border-input shadow-sm'
+        />
+      </div>
+      <div className='space-y-2'>
+        <Label>Norma:</Label>
+        <Input
+          placeholder='Procurar por norma...'
+          value={norma}
+          onChange={(e) =>
+            table.getColumn('norma')?.setFilterValue(e.target.value)
+          }
+          className='w-full bg-background border border-input shadow-sm'
+        />
+      </div>
+      <div className='space-y-2'>
+        <Label>Menção:</Label>
+        <Input
+          placeholder='Procurar por menção...'
+          value={mencao}
+          onChange={(e) =>
+            table.getColumn('mencao')?.setFilterValue(e.target.value)
+          }
+          className='w-full bg-background border border-input shadow-sm'
         />
       </div>
     </div>

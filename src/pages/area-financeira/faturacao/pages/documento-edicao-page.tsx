@@ -80,6 +80,15 @@ export function DocumentoEdicaoPage() {
 
   const isLoading = docQ.isLoading || tiposQ.isLoading
 
+  const loadErrorMessage = useMemo(() => {
+    if (docQ.isError && docQ.error instanceof Error) return docQ.error.message
+    const info = docQ.data?.info
+    if (info && info.status !== ResponseStatus.Success) {
+      return getFaturacaoApiErrorMessage(info, 'Documento não encontrado.')
+    }
+    return null
+  }, [docQ.isError, docQ.error, docQ.data?.info])
+
   const handleSubmit = async (payload: EmitirDocumentoRequest) => {
     if (!id || !documento) return
     try {
@@ -121,9 +130,9 @@ export function DocumentoEdicaoPage() {
         >
           {isLoading ? (
             <p className='text-sm text-muted-foreground'>A carregar documento…</p>
-          ) : !documento || !tipo || !initialState ? (
+          ) : loadErrorMessage || !documento || !tipo || !initialState ? (
             <p className='text-sm text-muted-foreground'>
-              Documento não encontrado.
+              {loadErrorMessage ?? 'Documento não encontrado.'}
             </p>
           ) : editMode && documento.anulado ? (
             <p className='text-sm text-muted-foreground'>

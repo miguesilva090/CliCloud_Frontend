@@ -634,7 +634,7 @@ export function openOrganismoCreationInApp(
   openPathInApp(
     navigate,
     addWindow,
-    '/area-comum/tabelas/entidades/organismos/novo',
+    '/organismos/novo',
     'Novo organismo'
   )
 }
@@ -1322,7 +1322,7 @@ export const openMedicoCreationWindow = createEntityCreationWindow(
 
 
 export const openOrganismoCreationWindow = createEntityCreationWindow(
-  '/area-comum/tabelas/entidades/organismos/novo'
+  '/organismos/novo'
 )
 
 export const openMedicoExternoCreationWindow = createEntityCreationWindow(

@@ -63,7 +63,7 @@ export function DocumentoFaturaGlobalDialog({
     setDataDe(dataDeProp)
     setDataAte(dataAteProp)
     setTipoFatura(TIPOS_FATURA[0].value)
-    setOpcaoTipo('1')
+    setOpcaoTipo('2')
   }, [open, dataDeProp, dataAteProp])
 
   const handleConfirm = async () => {
@@ -113,8 +113,8 @@ export function DocumentoFaturaGlobalDialog({
           <DialogTitle>Fatura global</DialogTitle>
         </DialogHeader>
         <p className='text-muted-foreground text-sm'>
-          Legado: <code>FaturaGlobalObter</code> — consultas por organismo e intervalo de
-          datas. Tratamentos, utente, especialidade e ARS ficam para a Fase 2.
+          Importa admissões do organismo no intervalo indicado. Para SAD GNR, a admissão
+          tem de ter o recibo (FR) emitido antes de faturar ao organismo.
         </p>
         <div className='grid gap-4'>
           <div className='grid gap-4 sm:grid-cols-2'>
@@ -165,8 +165,8 @@ export function DocumentoFaturaGlobalDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='1'>Resumo (linha única)</SelectItem>
                 <SelectItem value='2'>Por admissão</SelectItem>
+                <SelectItem value='1'>Resumo (linha única)</SelectItem>
               </SelectContent>
             </Select>
           </div>
