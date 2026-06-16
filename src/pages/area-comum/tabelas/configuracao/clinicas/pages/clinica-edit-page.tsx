@@ -43,7 +43,7 @@ import { MoedaService } from '@/lib/services/moedas/moeda-service'
 import { MotivoIsencaoService } from '@/lib/services/taxas-iva/motivo-isencao-service'
 import { TaxaIvaService } from '@/lib/services/taxas-iva/taxa-iva-service'
 import { ClinicaService } from '@/lib/services/core/clinica-service'
-import { useGetCodigosPostaisSelect } from '@/pages/base/codigospostais/queries/codigospostais-queries'
+import { useGetCodigosPostaisSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/queries/codigospostais-queries'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { ImageUploader } from '@/components/shared/image-uploader'
 import {

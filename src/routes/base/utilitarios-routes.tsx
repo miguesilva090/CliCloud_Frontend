@@ -11,96 +11,96 @@ const UtilitariosDashboardPage = lazy(() =>
 )
 
 const PaisesPage = lazy(() =>
-  import('@/pages/base/paises/pages/paises-page').then((m) => ({
+  import('@/pages/area-comum/tabelas/tabelas/geograficas/paises/pages/paises-page').then((m) => ({
     default: m.PaisesPage,
   }))
 )
 const PaisesCreatePage = lazy(() =>
   import(
-    '@/pages/base/paises/pages/paises-create-page'
+    '@/pages/area-comum/tabelas/tabelas/geograficas/paises/pages/paises-create-page'
   ).then((m) => ({ default: m.PaisesCreatePage }))
 )
 const PaisesUpdatePage = lazy(() =>
   import(
-    '@/pages/base/paises/pages/paises-update-page'
+    '@/pages/area-comum/tabelas/tabelas/geograficas/paises/pages/paises-update-page'
   ).then((m) => ({ default: m.PaisesUpdatePage }))
 )
 
 const DistritosPage = lazy(() =>
-  import('@/pages/base/distritos/pages/distritos-page').then((m) => ({
+  import('@/pages/area-comum/tabelas/tabelas/geograficas/distritos/pages/distritos-page').then((m) => ({
     default: m.DistritosPage,
   }))
 )
 const DistritosCreatePage = lazy(() =>
   import(
-    '@/pages/base/distritos/pages/distritos-create-page'
+    '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/pages/distritos-create-page'
   ).then((m) => ({ default: m.DistritosCreatePage }))
 )
 const DistritosUpdatePage = lazy(() =>
   import(
-    '@/pages/base/distritos/pages/distritos-update-page'
+    '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/pages/distritos-update-page'
   ).then((m) => ({ default: m.DistritosUpdatePage }))
 )
 
 const ConcelhosPage = lazy(() =>
-  import('@/pages/base/concelhos/pages/concelhos-page').then((m) => ({
+  import('@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/pages/concelhos-page').then((m) => ({
     default: m.ConcelhosPage,
   }))
 )
 const ConcelhosCreatePage = lazy(() =>
   import(
-    '@/pages/base/concelhos/pages/concelhos-create-page'
+    '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/pages/concelhos-create-page'
   ).then((m) => ({ default: m.ConcelhosCreatePage }))
 )
 const ConcelhosUpdatePage = lazy(() =>
   import(
-    '@/pages/base/concelhos/pages/concelhos-update-page'
+    '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/pages/concelhos-update-page'
   ).then((m) => ({ default: m.ConcelhosUpdatePage }))
 )
 
 const FreguesiasPage = lazy(() =>
-  import('@/pages/base/freguesias/pages/freguesias-page').then((m) => ({
+  import('@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/pages/freguesias-page').then((m) => ({
     default: m.FreguesiasPage,
   }))
 )
 const FreguesiasCreatePage = lazy(() =>
   import(
-    '@/pages/base/freguesias/pages/freguesias-create-page'
+    '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/pages/freguesias-create-page'
   ).then((m) => ({ default: m.FreguesiasCreatePage }))
 )
 const FreguesiasUpdatePage = lazy(() =>
   import(
-    '@/pages/base/freguesias/pages/freguesias-update-page'
+    '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/pages/freguesias-update-page'
   ).then((m) => ({ default: m.FreguesiasUpdatePage }))
 )
 
 const RuasPage = lazy(() =>
-  import('@/pages/base/ruas/pages/ruas-page').then((m) => ({ default: m.RuasPage }))
+  import('@/pages/area-comum/tabelas/tabelas/geograficas/ruas/pages/ruas-page').then((m) => ({ default: m.RuasPage }))
 )
 const RuasCreatePage = lazy(() =>
-  import('@/pages/base/ruas/pages/ruas-create-page').then(
+  import('@/pages/area-comum/tabelas/tabelas/geograficas/ruas/pages/ruas-create-page').then(
     (m) => ({ default: m.RuasCreatePage })
   )
 )
 const RuasUpdatePage = lazy(() =>
-  import('@/pages/base/ruas/pages/ruas-update-page').then(
+  import('@/pages/area-comum/tabelas/tabelas/geograficas/ruas/pages/ruas-update-page').then(
     (m) => ({ default: m.RuasUpdatePage })
   )
 )
 
 const CodigosPostaisPage = lazy(() =>
-  import('@/pages/base/codigospostais/pages/codigospostais-page').then((m) => ({
+  import('@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/pages/codigospostais-page').then((m) => ({
     default: m.CodigosPostaisPage,
   }))
 )
 const CodigosPostaisCreatePage = lazy(() =>
   import(
-    '@/pages/base/codigospostais/pages/codigospostais-create-page'
+    '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/pages/codigospostais-create-page'
   ).then((m) => ({ default: m.CodigosPostaisCreatePage }))
 )
 const CodigosPostaisUpdatePage = lazy(() =>
   import(
-    '@/pages/base/codigospostais/pages/codigospostais-update-page'
+    '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/pages/codigospostais-update-page'
   ).then((m) => ({ default: m.CodigosPostaisUpdatePage }))
 )
 

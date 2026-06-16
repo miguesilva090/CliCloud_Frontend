@@ -19,7 +19,7 @@ export interface FornecedorEditFormValues {
   numeroConta: string
   plafond: string
   desconto: string
-  condicaoPagamento: string
+  condicaoPagamentoId: string
   moeda: string
   numeroNib: string
   enderecoWeb: string

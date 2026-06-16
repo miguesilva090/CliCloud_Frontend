@@ -23,6 +23,8 @@ export interface EmpresaEditFormValues {
   prazoPagamento?: string
   desconto?: string
   descontoUtente?: string
+  condicaoPagamentoId?: string
+  modoPagamentoId?: string
   categoria?: string
   // Legado: CInstit (Organismo associado à Empresa)
   organismoId?: string

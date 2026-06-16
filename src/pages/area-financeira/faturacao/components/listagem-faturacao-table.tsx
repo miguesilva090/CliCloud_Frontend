@@ -5,7 +5,7 @@ import {
     FATURACAO_HIDDEN_FILTER_COLUMNS,
     faturacaoColumns,
     getFaturacaoColumnsWithActions,
-} from './listagem-faturacao-table.colums'
+} from './listagem-faturacao-table.columns'
 
 type FilterControlsComponent = React.ComponentType<{
     table: any

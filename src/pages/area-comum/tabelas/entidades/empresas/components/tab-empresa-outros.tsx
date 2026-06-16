@@ -17,6 +17,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useOrganismosLight } from '@/lib/services/utility/entity-quick-create/entity-quick-create-queries'
+import {
+  formatModoPagamentoOptionLabel,
+  useCondicoesPagamentoLight,
+  useModosPagamentoLight,
+} from '@/lib/services/pagamentos/pagamentos-lookups-queries'
+
+const ID_FUNCIONALIDADE = 'empresas'
 
 export function TabEmpresaOutros({
   form,
@@ -27,6 +34,10 @@ export function TabEmpresaOutros({
 }) {
   const organismosQuery = useOrganismosLight('')
   const organismos = organismosQuery.data?.info?.data ?? []
+  const condicoesPagamentoQ = useCondicoesPagamentoLight(ID_FUNCIONALIDADE)
+  const modosPagamentoQ = useModosPagamentoLight(ID_FUNCIONALIDADE, '', true)
+  const condicoesPagamento = condicoesPagamentoQ.data ?? []
+  const modosPagamento = modosPagamentoQ.data ?? []
 
   return (
     <div className='space-y-4'>
@@ -68,6 +79,62 @@ export function TabEmpresaOutros({
                     {...field}
                     value={field.value ?? ''}
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='condicaoPagamentoId'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Condição Pagamento</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value ?? ''}
+                    onValueChange={field.onChange}
+                    disabled={readOnly || condicoesPagamentoQ.isLoading}
+                  >
+                    <SelectTrigger className='h-7'>
+                      <SelectValue placeholder='Condição...' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {condicoesPagamento.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.descricao}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='modoPagamentoId'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Modo Pagamento</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value ?? ''}
+                    onValueChange={field.onChange}
+                    disabled={readOnly || modosPagamentoQ.isLoading}
+                  >
+                    <SelectTrigger className='h-7'>
+                      <SelectValue placeholder='Modo...' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {modosPagamento.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {formatModoPagamentoOptionLabel(m)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>

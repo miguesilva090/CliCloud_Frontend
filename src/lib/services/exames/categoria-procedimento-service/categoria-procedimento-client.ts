@@ -8,7 +8,7 @@ import type {
     CategoriaProcedimentoTableDTO,
     CreateCategoriaProcedimentoRequest,
     UpdateCategoriaProcedimentoRequest,
-} from '@/types/dtos/exames/categoria-procedimento'
+} from '@/types/dtos/exames/categoria-procedimento.dtos'
 
 const BASE = '/client/exames/CategoriaProcedimento'
 

@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import { toast } from '@/utils/toast-utils'
 import { ResponseStatus } from '@/types/api/responses'
 import { EstadoSinistroService } from '@/lib/services/sinistrados/estado-sinistro-service'
-import type { EstadoSinistroDTO } from '@/types/dtos/sinistrados/estado-sinistro.dto'
+import type { EstadoSinistroDTO } from '@/types/dtos/sinistrados/estado-sinistro.dtos'
 
 type ModalMode = 'view' | 'create' | 'edit'
 

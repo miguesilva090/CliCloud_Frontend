@@ -11,21 +11,14 @@ import {
 } from '@/components/ui/select'
 import type { FornecedorEditFormValues } from '@/pages/fornecedores/types/fornecedor-edit-form-types'
 import { MoedaService } from '@/lib/services/moedas/moeda-service'
+import { useCondicoesPagamentoLight } from '@/lib/services/pagamentos/pagamentos-lookups-queries'
+
+const ID_FUNCIONALIDADE = 'fornecedores'
 
 const ORIGEM_OPTIONS = [
   { value: '1', label: 'Nacional' },
   { value: '2', label: 'Internacional' },
   { value: '3', label: 'IntraComunitário' },
-]
-
-const CONDICAO_PAGAMENTO_OPTIONS = [
-  { value: '1', label: 'À Vista' },
-  { value: '2', label: '30 Dias' },
-  { value: '3', label: '60 Dias' },
-  { value: '4', label: '90 Dias' },
-  { value: '5', label: '120 Dias' },
-  { value: '6', label: 'Pré-pagamento' },
-  { value: '7', label: 'Outro' },
 ]
 
 export function TabFornecedorOutros({
@@ -41,6 +34,8 @@ export function TabFornecedorOutros({
     staleTime: 5 * 60_000,
   })
   const moedas = moedasQuery.data?.info?.data ?? []
+  const condicoesPagamentoQ = useCondicoesPagamentoLight(ID_FUNCIONALIDADE)
+  const condicoesPagamento = condicoesPagamentoQ.data ?? []
 
   return (
     <div className='space-y-4'>
@@ -108,14 +103,14 @@ export function TabFornecedorOutros({
           />
           <FormField
             control={form.control}
-            name='condicaoPagamento'
+            name='condicaoPagamentoId'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Pagamento</FormLabel>
                 <Select
                   value={field.value ?? ''}
                   onValueChange={field.onChange}
-                  disabled={readOnly}
+                  disabled={readOnly || condicoesPagamentoQ.isLoading}
                 >
                   <FormControl>
                     <SelectTrigger className='h-7'>
@@ -123,9 +118,9 @@ export function TabFornecedorOutros({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {CONDICAO_PAGAMENTO_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
+                    {condicoesPagamento.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.descricao}
                       </SelectItem>
                     ))}
                   </SelectContent>

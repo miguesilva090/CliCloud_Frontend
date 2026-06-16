@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import type { AcordosTableDTO } from '@/types/dtos/exames/acordos'
+import type { AcordosTableDTO } from '@/types/dtos/exames/acordos.dtos'
 import {
   Dialog,
   DialogContent,

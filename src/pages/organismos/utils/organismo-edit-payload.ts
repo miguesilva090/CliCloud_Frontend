@@ -123,8 +123,8 @@ export function buildCreatePayload(
     limitarConsultas: values.limitarConsultas ?? false,
     numeroConsultas: parseNum(values.numeroConsultas),
     contabilizarFaltas: values.contabilizarFaltas ?? false,
-    condicaoPagamento: parseNum(values.condicaoPagamento),
-    tipoModoPagamento: parseNum(values.tipoModoPagamento),
+    condicaoPagamentoId: values.condicaoPagamentoId?.trim() || null,
+    modoPagamentoId: values.modoPagamentoId?.trim() || null,
     bloqueio: values.inactivo ? 1 : 0,
   }
 }

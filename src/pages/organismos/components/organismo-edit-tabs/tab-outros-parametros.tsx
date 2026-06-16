@@ -15,28 +15,14 @@ import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Plus } from 'lucide-react'
 import { BancosService } from '@/lib/services/utility/bancos-service'
+import {
+  formatModoPagamentoOptionLabel,
+  useCondicoesPagamentoLight,
+  useModosPagamentoLight,
+} from '@/lib/services/pagamentos/pagamentos-lookups-queries'
 import type { OrganismoEditFormValues } from '@/pages/organismos/types/organismo-edit-form-types'
 
-const CONDICOES_PAGAMENTO = [
-  { value: '1', label: 'À Vista' },
-  { value: '2', label: '30 Dias' },
-  { value: '3', label: '60 Dias' },
-  { value: '4', label: '90 Dias' },
-  { value: '5', label: '120 Dias' },
-  { value: '6', label: 'Pré-pagamento' },
-  { value: '7', label: 'Outro' },
-]
-
-const MODOS_PAGAMENTO = [
-  { value: '1', label: 'Dinheiro' },
-  { value: '2', label: 'Transferência Bancária' },
-  { value: '3', label: 'Cheque' },
-  { value: '4', label: 'Multibanco' },
-  { value: '5', label: 'Cartão de Crédito' },
-  { value: '6', label: 'Cartão de Débito' },
-  { value: '7', label: 'Débito Direto' },
-  { value: '8', label: 'Outro' },
-]
+const ID_FUNCIONALIDADE = 'organismos'
 
 /** Agrupa checkboxes (legado): só título + corpo denso */
 function OrganismoConsultasConfigCard({
@@ -103,6 +89,10 @@ export function TabOutrosParametros({
     staleTime: 5 * 60_000,
   })
   const bancos = bancosQuery.data?.info?.data ?? []
+  const condicoesPagamentoQ = useCondicoesPagamentoLight(ID_FUNCIONALIDADE)
+  const modosPagamentoQ = useModosPagamentoLight(ID_FUNCIONALIDADE, '', true)
+  const condicoesPagamento = condicoesPagamentoQ.data ?? []
+  const modosPagamento = modosPagamentoQ.data ?? []
 
   return (
     <div className='space-y-3'>
@@ -302,20 +292,26 @@ export function TabOutrosParametros({
           />
           <FormField
             control={form.control}
-            name='condicaoPagamento'
+            name='condicaoPagamentoId'
             render={({ field }) => (
               <FormItem>
                 <FormLabel className='text-xs'>Condição Pagamento</FormLabel>
                 <div className='flex gap-1'>
-                  <Select value={field.value ?? ''} onValueChange={field.onChange} disabled={readOnly}>
+                  <Select
+                    value={field.value ?? ''}
+                    onValueChange={field.onChange}
+                    disabled={readOnly || condicoesPagamentoQ.isLoading}
+                  >
                     <FormControl>
                       <SelectTrigger className='h-7 flex-1'>
                         <SelectValue placeholder='Selecionar...' />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {CONDICOES_PAGAMENTO.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                      {condicoesPagamento.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.descricao}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -331,20 +327,26 @@ export function TabOutrosParametros({
           />
           <FormField
             control={form.control}
-            name='tipoModoPagamento'
+            name='modoPagamentoId'
             render={({ field }) => (
               <FormItem>
                 <FormLabel className='text-xs'>Modo Pagamento</FormLabel>
                 <div className='flex gap-1'>
-                  <Select value={field.value ?? ''} onValueChange={field.onChange} disabled={readOnly}>
+                  <Select
+                    value={field.value ?? ''}
+                    onValueChange={field.onChange}
+                    disabled={readOnly || modosPagamentoQ.isLoading}
+                  >
                     <FormControl>
                       <SelectTrigger className='h-7 flex-1'>
                         <SelectValue placeholder='Selecionar...' />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {MODOS_PAGAMENTO.map((m) => (
-                        <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                      {modosPagamento.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {formatModoPagamentoOptionLabel(m)}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

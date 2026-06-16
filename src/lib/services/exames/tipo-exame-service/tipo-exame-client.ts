@@ -8,7 +8,7 @@ import type {
     TipoExameTableDTO,
     CreateTipoExameRequest,
     UpdateTipoExameRequest,
-} from '@/types/dtos/exames/tipo-exame'
+} from '@/types/dtos/exames/tipo-exame.dtos'
 
 const BASE = '/client/exames/TipoExame'
 

@@ -55,6 +55,68 @@ const FicheiroEletronicoListagemPage = lazy(() =>
   ),
 )
 
+/** Rotas alias — mesmas páginas da área comum, prefixo financeiro para navegação correcta. */
+const ListagemContasBancariasPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/tabelas/contas-bancarias/pages/listagem-contas-bancarias-page'
+  ).then((m) => ({ default: m.ListagemContasBancariasPage })),
+)
+const ListagemBancosPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/tabelas/bancos/pages/listagem-bancos-page').then(
+    (m) => ({ default: m.ListagemBancosPage }),
+  ),
+)
+const ListagemCodigosPostaisPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/pages/listagem-codigospostais-page'
+  ).then((m) => ({ default: m.ListagemCodigosPostaisPage })),
+)
+const ListagemConcelhosPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/pages/listagem-concelhos-page'
+  ).then((m) => ({ default: m.ListagemConcelhosPage })),
+)
+const ListagemDistritosPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/pages/listagem-distritos-page'
+  ).then((m) => ({ default: m.ListagemDistritosPage })),
+)
+const ListagemPaisesPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/tabelas/geograficas/paises/pages/listagem-paises-page').then(
+    (m) => ({ default: m.ListagemPaisesPage }),
+  ),
+)
+const ListagemMotivosIsencaoPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/tabelas/motivo-isencao/pages/listagem-motivos-isencao-page'
+  ).then((m) => ({ default: m.ListagemMotivosIsencaoPage })),
+)
+const ListagemMotivosRetencaoPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/tabelas/motivo-retencao/pages/listagem-motivos-retencao-page'
+  ).then((m) => ({ default: m.ListagemMotivosRetencaoPage })),
+)
+const ListagemTaxasIvaPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/tabelas/taxas-iva/pages/listagem-taxas-iva-page').then(
+    (m) => ({ default: m.ListagemTaxasIvaPage }),
+  ),
+)
+const ListagemMoedasPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/tabelas/moedas/pages/listagem-moedas-page').then(
+    (m) => ({ default: m.ListagemMoedasPage }),
+  ),
+)
+const ListagemCondicoesPagamentoPage = lazy(() =>
+  import(
+    '@/pages/area-financeira/faturacao/tabelas/pagamentos/condicao-pagamento/pages/listagem-condicoes-pagamento-page'
+  ).then((m) => ({ default: m.ListagemCondicoesPagamentoPage })),
+)
+const ListagemModosPagamentoPage = lazy(() =>
+  import(
+    '@/pages/area-financeira/faturacao/tabelas/pagamentos/modo-pagamento/pages/listagem-modos-pagamento-page'
+  ).then((m) => ({ default: m.ListagemModosPagamentoPage })),
+)
+
 export const areaFinanceiraRoutes = [
   {
     path: 'area-financeira',
@@ -347,6 +409,174 @@ export const areaFinanceiraRoutes = [
     ),
     manageWindow: true,
     windowName: 'Séries dos Documentos',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/contas-bancarias',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemContasBancariasPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Contas Bancárias',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/bancos',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemBancosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Instituições Financeiras',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/geograficas/codigospostais',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemCodigosPostaisPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Código Postal',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/geograficas/concelhos',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemConcelhosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Concelhos',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/geograficas/distritos',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemDistritosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Distritos',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/geograficas/paises',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemPaisesPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Países',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/impostos/motivos-isencao',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemMotivosIsencaoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Motivos de Isenção',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/impostos/taxas-iva',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemTaxasIvaPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Taxa de Imposto',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/impostos/motivos-retencao',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemMotivosRetencaoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Motivos de Retenção',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/moedas',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemMoedasPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Moedas',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/pagamentos/condicoes-pagamento',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemCondicoesPagamentoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Condições de Pagamento',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/pagamentos/modos-pagamento',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemModosPagamentoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Modos de Pagamento',
   },
   {
     path: 'area-financeira/faturacao/emails',

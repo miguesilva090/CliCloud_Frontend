@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { CreateExameRequest, UpdateExameRequest } from '@/types/dtos/exames/exame'
+import type { CreateExameRequest, UpdateExameRequest } from '@/types/dtos/exames/exame.dtos'
 import type { PaginatedRequest } from '@/types/api/responses'
 import { ExameService } from '@/lib/services/exames/exame-service'
 import { ResponseStatus } from '@/types/api/responses'

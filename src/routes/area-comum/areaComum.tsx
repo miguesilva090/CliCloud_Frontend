@@ -250,71 +250,71 @@ const FichaClinicaSecoesPage = lazy(() =>
 
 const ListagemPaisesPage = lazy(() =>
     import(
-      '@/pages/area-comum/tabelas/tabelas/geograficas/pages/listagem-paises-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/paises/pages/listagem-paises-page'
     ).then((m) => ({ default: m.ListagemPaisesPage }))
   )
   const PaisesCreatePage = lazy(() =>
     import(
-      '@/pages/base/paises/pages/paises-create-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/paises/pages/paises-create-page'
     ).then((m) => ({ default: m.PaisesCreatePage }))
   )
   const PaisesUpdatePage = lazy(() =>
     import(
-      '@/pages/base/paises/pages/paises-update-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/paises/pages/paises-update-page'
     ).then((m) => ({ default: m.PaisesUpdatePage }))
   )
   
   const ListagemDistritosPage = lazy(() =>
     import(
-      '@/pages/area-comum/tabelas/tabelas/geograficas/pages/listagem-distritos-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/pages/listagem-distritos-page'
     ).then((m) => ({ default: m.ListagemDistritosPage }))
   )
 
   const DistritosCreatePage = lazy(() =>
     import(
-      '@/pages/base/distritos/pages/distritos-create-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/pages/distritos-create-page'
     ).then((m) => ({ default: m.DistritosCreatePage }))
   )
 
   const DistritosUpdatePage = lazy(() =>
     import(
-      '@/pages/base/distritos/pages/distritos-update-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/pages/distritos-update-page'
     ).then((m) => ({ default: m.DistritosUpdatePage }))
   )
   
   const ListagemConcelhosPage = lazy(() =>
     import(
-      '@/pages/area-comum/tabelas/tabelas/geograficas/pages/listagem-concelhos-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/pages/listagem-concelhos-page'
     ).then((m) => ({ default: m.ListagemConcelhosPage }))
   )
 
   const ConcelhosCreatePage = lazy(() =>
     import(
-      '@/pages/base/concelhos/pages/concelhos-create-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/pages/concelhos-create-page'
     ).then((m) => ({ default: m.ConcelhosCreatePage }))
   )
 
   const ConcelhosUpdatePage = lazy(() =>
     import(
-      '@/pages/base/concelhos/pages/concelhos-update-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/pages/concelhos-update-page'
     ).then((m) => ({ default: m.ConcelhosUpdatePage }))
   )
   
   const ListagemFreguesiasPage = lazy(() =>
     import(
-      '@/pages/area-comum/tabelas/tabelas/geograficas/pages/listagem-freguesias-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/pages/listagem-freguesias-page'
     ).then((m) => ({ default: m.ListagemFreguesiasPage }))
   )
 
   const FreguesiasCreatePage = lazy(() =>
     import(
-      '@/pages/base/freguesias/pages/freguesias-create-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/pages/freguesias-create-page'
     ).then((m) => ({ default: m.FreguesiasCreatePage }))
   )
 
   const FreguesiasUpdatePage = lazy(() =>
     import(
-      '@/pages/base/freguesias/pages/freguesias-update-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/pages/freguesias-update-page'
     ).then((m) => ({ default: m.FreguesiasUpdatePage }))
   )
 
@@ -330,22 +330,22 @@ const ListagemPaisesPage = lazy(() =>
   )
   const ListagemCodigosPostaisPage = lazy(() =>
     import(
-      '@/pages/area-comum/tabelas/tabelas/geograficas/pages/listagem-codigospostais-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/pages/listagem-codigospostais-page'
     ).then((m) => ({ default: m.ListagemCodigosPostaisPage }))
   )
   const ListagemRuasPage = lazy(() =>
     import(
-      '@/pages/area-comum/tabelas/tabelas/geograficas/pages/listagem-ruas-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/ruas/pages/listagem-ruas-page'
     ).then((m) => ({ default: m.ListagemRuasPage }))
   )
   const RuasCreatePage = lazy(() =>
     import(
-      '@/pages/base/ruas/pages/ruas-create-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/ruas/pages/ruas-create-page'
     ).then((m) => ({ default: m.RuasCreatePage }))
   )
   const RuasUpdatePage = lazy(() =>
     import(
-      '@/pages/base/ruas/pages/ruas-update-page'
+      '@/pages/area-comum/tabelas/tabelas/geograficas/ruas/pages/ruas-update-page'
     ).then((m) => ({ default: m.RuasUpdatePage }))
   )
   const ListagemBancosPage = lazy(() =>
@@ -432,6 +432,11 @@ const ListagemPaisesPage = lazy(() =>
     import(
       '@/pages/area-comum/tabelas/tabelas/motivo-isencao/pages/listagem-motivos-isencao-page'
     ).then((m) => ({ default: m.ListagemMotivosIsencaoPage }))
+  )
+  const ListagemMotivosRetencaoPage = lazy(() =>
+    import(
+      '@/pages/area-comum/tabelas/tabelas/motivo-retencao/pages/listagem-motivos-retencao-page'
+    ).then((m) => ({ default: m.ListagemMotivosRetencaoPage }))
   )
   const ListagemProvenienciasUtentesPage = lazy(() =>
     import(
@@ -1212,7 +1217,21 @@ export const areaComumRoutes = [
                 </LicenseGuard>
               ),
               manageWindow: true,
-              windowName: 'Motivos de isenção',
+              windowName: 'Motivos de Isenção',
+            },
+            {
+              path: 'area-comum/tabelas/tabelas/motivos-retencao',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.taxasIva?.id}
+                  actionType={actionTypes.AuthVer}
+                >
+                  <ListagemMotivosRetencaoPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: 'Motivos de Retenção',
             },
             {
               path: 'area-comum/tabelas/tabelas/proveniencias-utentes',

@@ -16,7 +16,13 @@ import { extractSubsistemaServicoRows } from '@/pages/area-administrativa/consul
 import { MoedaService } from '@/lib/services/moedas/moeda-service'
 import { MotivoIsencaoService } from '@/lib/services/taxas-iva/motivo-isencao-service'
 import type { MotivoIsencaoLightDTO } from '@/types/dtos/taxas-iva/motivo-isencao.dtos'
+import { MotivoRetencaoService } from '@/lib/services/taxas-iva/motivo-retencao-service'
+import type { MotivoRetencaoLightDTO } from '@/types/dtos/taxas-iva/motivo-retencao.dtos'
 import { DocumentoEmissaoService } from '@/lib/services/faturacao/documento-emissao-service'
+import { CondicaoPagamentoService } from '@/lib/services/pagamentos/condicao-pagamento-service'
+import { ModoPagamentoService } from '@/lib/services/pagamentos/modo-pagamento-service'
+import type { CondicaoPagamentoLightDTO } from '@/types/dtos/pagamentos/condicao-pagamento.dtos'
+import type { ModoPagamentoLightDTO } from '@/types/dtos/pagamentos/modo-pagamento.dtos'
 import type {
   FaturaGlobalObterRequest,
   SinistradosInfoFaturacaoRequest,
@@ -139,6 +145,34 @@ export function useMoedasDocumento() {
   })
 }
 
+export function useCondicoesPagamentoDocumento(keyword = '') {
+  return useQuery({
+    queryKey: ['documento-editor', 'condicoes-pagamento-light', keyword],
+    queryFn: async () => {
+      const res =
+        await CondicaoPagamentoService(ID).getCondicoesPagamentoLight(keyword)
+      if (res.info?.status !== ResponseStatus.Success) return []
+      return (res.info.data ?? []) as CondicaoPagamentoLightDTO[]
+    },
+    staleTime: 120_000,
+  })
+}
+
+export function useModosPagamentoDocumento(keyword = '', apenasAtivos = true) {
+  return useQuery({
+    queryKey: ['documento-editor', 'modos-pagamento-light', keyword, apenasAtivos],
+    queryFn: async () => {
+      const res = await ModoPagamentoService(ID).getModosPagamentoLight(
+        keyword,
+        apenasAtivos,
+      )
+      if (res.info?.status !== ResponseStatus.Success) return []
+      return (res.info.data ?? []) as ModoPagamentoLightDTO[]
+    },
+    staleTime: 120_000,
+  })
+}
+
 export function useOpcoesPagamentoDocumento() {
   return useQuery({
     queryKey: ['documento-editor', 'opcoes-pagamento'],
@@ -146,14 +180,16 @@ export function useOpcoesPagamentoDocumento() {
       const res = await DocumentoEmissaoService(ID).getOpcoesPagamento()
       if (res.info?.status !== ResponseStatus.Success || !res.info.data) {
         return {
-          condicoesPagamento: [],
-          modosPagamento: [],
           tiposSerie: [],
           impostosRetencao: [],
           referenciasMb: [],
         }
       }
-      return res.info.data
+      return {
+        tiposSerie: res.info.data.tiposSerie ?? [],
+        impostosRetencao: res.info.data.impostosRetencao ?? [],
+        referenciasMb: res.info.data.referenciasMb ?? [],
+      }
     },
     staleTime: 120_000,
   })
@@ -183,6 +219,22 @@ export function useMotivosIsencaoDocumento(keyword = '') {
     },
     staleTime: 120_000,
   })
-} 
+}
+
+export function useMotivosRetencaoDocumento(tipoImposto: string, keyword = '') {
+  return useQuery({
+    queryKey: ['documento-editor', 'motivos-retencao', tipoImposto, keyword],
+    enabled: !!tipoImposto,
+    queryFn: async () => {
+      const res = await MotivoRetencaoService(ID).getMotivosRetencaoLight(
+        keyword,
+        tipoImposto,
+      )
+      if (res.info?.status !== ResponseStatus.Success) return []
+      return (res.info.data ?? []) as MotivoRetencaoLightDTO[]
+    },
+    staleTime: 120_000,
+  })
+}
 
 export type SubsistemaPrecoRow = SubsistemaServicoDTO

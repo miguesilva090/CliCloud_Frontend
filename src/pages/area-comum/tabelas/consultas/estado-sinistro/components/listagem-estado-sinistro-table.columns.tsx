@@ -1,4 +1,4 @@
-import type { EstadoSinistroDTO } from '@/types/dtos/sinistrados/estado-sinistro.dto'
+import type { EstadoSinistroDTO } from '@/types/dtos/sinistrados/estado-sinistro.dtos'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { createAreaComumListActionsColumnDef } from '@/components/shared/area-comum-list-actions-column'
 import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'

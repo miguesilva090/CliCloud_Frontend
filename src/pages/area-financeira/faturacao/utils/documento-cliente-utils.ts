@@ -63,8 +63,3 @@ export async function resolveCodigoPostalIdFromTexto(
   }
   return { id: null, label: q }
 }
-
-/** Modos de pagamento que exigem banco no legado (CH/TB/MB → Cheque/Transf/Multibanco). */
-export function modoPagamentoRequerBanco(modo?: number | null): boolean {
-  return modo === 2 || modo === 3 || modo === 4
-}

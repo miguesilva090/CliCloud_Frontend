@@ -306,6 +306,9 @@ export function DocumentoTabLinhasSection({
         opcoesCalculo={opcoesCalculo}
         organismoId={organismoId}
         descontosBloqueados={descontosBloqueados}
+        motivoIsencaoDocumentoId={
+          state.isentoIva ? state.motivoIsencaoId : null
+        }
         onSave={guardarLinhaModal}
       />
     </div>

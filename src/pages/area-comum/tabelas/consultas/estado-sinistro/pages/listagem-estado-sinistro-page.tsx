@@ -11,7 +11,7 @@ import { modules } from '@/config/modules'
 import { ResponseStatus } from '@/types/api/responses'
 import { EstadoSinistroService } from '@/lib/services/sinistrados/estado-sinistro-service'
 import { toast } from '@/utils/toast-utils'
-import type { EstadoSinistroDTO } from '@/types/dtos/sinistrados/estado-sinistro.dto'
+import type { EstadoSinistroDTO } from '@/types/dtos/sinistrados/estado-sinistro.dtos'
 import { ListagemEstadoSinistroTable } from '../components/listagem-estado-sinistro-table'
 import { EstadoSinistroViewEditModal } from '../modals/estado-sinistro-view-edit-modal'
 import {

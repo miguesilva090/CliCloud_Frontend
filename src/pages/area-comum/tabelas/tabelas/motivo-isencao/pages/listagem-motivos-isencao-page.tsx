@@ -145,10 +145,10 @@ export function ListagemMotivosIsencaoPage() {
 
   return (
     <>
-      <PageHead title='Motivos de Retenção de Imposto | Tabelas | CliCloud' />
+      <PageHead title='Motivos de Isenção | Tabelas | CliCloud' />
       <DashboardPageContainer>
         <AreaComumListagemPageShell
-          title='Motivos de Retenção de Imposto'
+          title='Motivos de Isenção'
           onRefresh={() => {
             handleFiltersChange([])
             handlePaginationChange(1, pageSize)

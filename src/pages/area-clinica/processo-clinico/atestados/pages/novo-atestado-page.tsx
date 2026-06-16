@@ -27,10 +27,10 @@ import {
   useFreguesiasLight,
   usePaisesLight,
 } from '@/lib/services/utility/lookups/lookups-queries'
-import { PaisViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/modals/pais-view-create-modal'
-import { DistritoViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/modals/distrito-view-create-modal'
-import { ConcelhoViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/modals/concelho-view-create-modal'
-import { FreguesiaViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/modals/freguesia-view-create-modal'
+import { PaisViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/modals/pais-view-create-modal'
+import { DistritoViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/modals/distrito-view-create-modal'
+import { ConcelhoViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/modals/concelho-view-create-modal'
+import { FreguesiaViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/modals/freguesia-view-create-modal'
 import { useGetUtente, useUtentesLight } from '@/pages/utentes/queries/utentes-queries'
 import { MedicosService } from '@/lib/services/saude/medicos-service'
 import { useAuthStore } from '@/stores/auth-store'

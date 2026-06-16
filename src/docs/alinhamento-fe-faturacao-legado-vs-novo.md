@@ -52,14 +52,14 @@ Documento complementar a `plano-area-financeira-legado-vs-novo.md`.
 |------|---------|
 | Página | `Frontend/src/pages/area-financeira/faturacao/pages/listagem-faturacao-page.tsx` |
 | Tabela | `.../components/listagem-faturacao-table.tsx` |
-| Colunas | `.../components/listagem-faturacao-table.colums.tsx` |
+| Colunas | `.../components/listagem-faturacao-table.columns.tsx` |
 | Filtros | `.../components/listagem-faturacao-filter-controls.tsx` |
 | Queries | `.../queries/documento-queries.ts` |
 | API | `POST /client/documentos/Documento/paginated` |
 
 ### 3.3 Colunas da grelha
 
-**Estado 2026-06-03:** alinhadas em `listagem-faturacao-table.colums.tsx`. Detalhe e lacunas residuais: [`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md) §5.
+**Estado 2026-06-03:** alinhadas em `listagem-faturacao-table.columns.tsx`. Detalhe e lacunas residuais: [`disparidades-faturacao-legado-vs-novo.md`](./disparidades-faturacao-legado-vs-novo.md) §5.
 
 | Coluna legado | Novo `DocumentoTableDTO` / FE | Estado |
 |---------------|-------------------------------|--------|

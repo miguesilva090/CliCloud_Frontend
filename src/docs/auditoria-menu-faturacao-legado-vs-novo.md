@@ -176,7 +176,7 @@ Este é o único bloco com trabalho BE+FE já iniciado.
 
 | Área | Legado | Novo | Estado |
 |------|--------|------|--------|
-| Colunas grelha | 10 + implícitos | Colunas legado em `listagem-faturacao-table.colums.tsx` | ✅ |
+| Colunas grelha | 10 + implícitos | Colunas legado em `listagem-faturacao-table.columns.tsx` | ✅ |
 | Filtros | 5 pares de/até | nº/data de/até ✅; nome 🟡 | 🟡 |
 | Toolbar | Novo, Crystal, refresh | Novo + modal tipo ✅; Crystal fora âmbito | ✅ / — |
 | Ações linha | dropdown ~15 itens | ícones (email, print, liquidar, …) | ✅ (sem SMS/ARS/Crystal) |

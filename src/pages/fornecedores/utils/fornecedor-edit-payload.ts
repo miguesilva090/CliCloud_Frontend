@@ -72,7 +72,7 @@ export function buildCreatePayload(
     numeroConta: values.numeroConta?.trim() || null,
     plafond: parseFloatSafe(values.plafond) ?? null,
     desconto: parseFloatSafe(values.desconto) ?? null,
-    condicaoPagamento: parseNum(values.condicaoPagamento) ?? null,
+    condicaoPagamentoId: values.condicaoPagamentoId?.trim() || null,
     moeda: parseNum(values.moeda) ?? null,
     numeroNib: values.numeroNib?.trim() || null,
     enderecoWeb: values.enderecoWeb?.trim() || null,

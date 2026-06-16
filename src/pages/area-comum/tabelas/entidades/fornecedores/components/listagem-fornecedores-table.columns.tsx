@@ -77,10 +77,7 @@ export const columns: DataTableColumnDef<FornecedorTableDTO>[] = [
   {
     id: 'pagamento',
     header: 'Pagamento',
-    cell: ({ row }) => {
-      const v = row.original.condicaoPagamento
-      return v != null ? String(v) : '—'
-    },
+    cell: ({ row }) => (row.original.condicaoPagamentoId ? 'Sim' : '—'),
     enableSorting: false,
     enableHiding: true,
     meta: { align: 'left' as const },

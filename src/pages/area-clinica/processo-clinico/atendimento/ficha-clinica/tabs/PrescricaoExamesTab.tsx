@@ -25,7 +25,7 @@ import {
   useDeleteExame,
 } from '../queries/prescricao-exames-queries'
 import { useGetResultadosByExame, useUpsertResultadoExame } from '../queries/resultado-exames-queries'
-import type { CreateExameRequest, UpdateExameRequest } from '@/types/dtos/exames/exame'
+import type { CreateExameRequest, UpdateExameRequest } from '@/types/dtos/exames/exame.dtos'
 import { useOrganismosLight } from '@/lib/services/utility/entity-quick-create/entity-quick-create-queries'
 import { PrioridadeService } from '@/lib/services/prioridades/prioridade-service'
 import { inputClass, selectTriggerClass, textareaClass } from '@/lib/form-styles'

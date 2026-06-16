@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/utils/toast-utils'
-import type { TipoExameTableDTO } from '@/types/dtos/exames/tipo-exame'
+import type { TipoExameTableDTO } from '@/types/dtos/exames/tipo-exame.dtos'
 import { ListagemTiposExameTable } from '@/pages/area-comum/tabelas/exames/tipos-exame/components/listagem-tipos-exame-table'
 import { ListagemTiposExameFilterControls } from '@/pages/area-comum/tabelas/exames/tipos-exame/components/listagem-tipos-exame-filter-controls'
 import {

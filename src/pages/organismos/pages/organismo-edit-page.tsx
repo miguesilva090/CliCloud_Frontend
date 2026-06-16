@@ -165,14 +165,8 @@ export function OrganismoEditPage() {
           : '',
       contabilizarFaltas: organismo.contabilizarFaltas ?? false,
       faturaCredencial: organismo.faturaCredencial ?? 0,
-      condicaoPagamento:
-        organismo.condicaoPagamento != null
-          ? String(organismo.condicaoPagamento)
-          : '',
-      tipoModoPagamento:
-        organismo.tipoModoPagamento != null
-          ? String(organismo.tipoModoPagamento)
-          : '',
+      condicaoPagamentoId: organismo.condicaoPagamentoId ?? '',
+      modoPagamentoId: organismo.modoPagamentoId ?? '',
       assinarPagaDocumento: organismo.assinarPagaDocumento === 1,
       admissaoCC: organismo.admissaoCC === 1,
       inactivo: organismo.bloqueio === 1,

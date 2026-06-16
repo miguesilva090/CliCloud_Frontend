@@ -8,7 +8,7 @@ import type {
   AcordosTableDTO,
   CreateAcordosRequest,
   UpdateAcordosRequest,
-} from '@/types/dtos/exames/acordos'
+} from '@/types/dtos/exames/acordos.dtos'
 
 const BASE = '/client/exames/Acordos'
 

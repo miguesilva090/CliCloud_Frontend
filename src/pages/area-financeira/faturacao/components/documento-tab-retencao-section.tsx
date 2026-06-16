@@ -2,9 +2,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { useMemo, useState } from 'react'
+import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { fieldGap, formBlockGap, inputClass, labelClass } from '@/lib/form-styles'
-import type { DocumentoEditorState } from '../types/documento-editor.types'
-import type { DocumentoEditorTotais } from '../types/documento-editor.types'
+import type { DocumentoEditorState, DocumentoEditorTotais } from '../types/documento-editor.types'
+import { useMotivosRetencaoDocumento } from '../queries/documento-editor-queries'
 
 export function DocumentoTabRetencaoSection({
   state,
@@ -18,6 +20,18 @@ export function DocumentoTabRetencaoSection({
   impostos: Array<{ value: 'IRS' | 'IRC' | 'IS'; label: string }>
 }) {
   const baseRetencao = totais.total + totais.acerto
+  const imposto = state.retencaoImposto || impostos[0]?.value || ''
+  const [motivoSearch, setMotivoSearch] = useState('')
+  const motivosQ = useMotivosRetencaoDocumento(imposto, motivoSearch)
+
+  const motivoItems = useMemo(
+    () =>
+      (motivosQ.data ?? []).map((m) => ({
+        value: String(m.codigo),
+        label: m.descricao,
+      })),
+    [motivosQ.data],
+  )
 
   const aplicarTaxa = (taxa: number) => {
     if (taxa <= 0) {
@@ -44,6 +58,7 @@ export function DocumentoTabRetencaoSection({
                     retencaoTaxa: 0,
                     retencaoValor: 0,
                     retencaoMotivo: '',
+                    retencaoCodigoMotivo: null,
                   }),
             })
           }
@@ -58,9 +73,13 @@ export function DocumentoTabRetencaoSection({
           <div className={fieldGap}>
             <Label className={labelClass}>Imposto</Label>
             <RadioGroup
-              value={state.retencaoImposto || impostos[0]?.value || ''}
+              value={imposto}
               onValueChange={(v) =>
-                onChange({ retencaoImposto: v as DocumentoEditorState['retencaoImposto'] })
+                onChange({
+                  retencaoImposto: v as DocumentoEditorState['retencaoImposto'],
+                  retencaoCodigoMotivo: null,
+                  retencaoMotivo: '',
+                })
               }
               className='flex flex-wrap gap-4'
             >
@@ -75,11 +94,24 @@ export function DocumentoTabRetencaoSection({
 
           <div className={fieldGap}>
             <Label className={labelClass}>Motivo</Label>
-            <Input
-              className={inputClass}
-              value={state.retencaoMotivo}
-              onChange={(e) => onChange({ retencaoMotivo: e.target.value })}
-              placeholder='Motivo da retenção (obrigatório)'
+            <AsyncCombobox
+              value={
+                state.retencaoCodigoMotivo != null
+                  ? String(state.retencaoCodigoMotivo)
+                  : ''
+              }
+              onChange={(id) => {
+                const item = motivoItems.find((m) => m.value === id)
+                onChange({
+                  retencaoCodigoMotivo: id ? Number(id) : null,
+                  retencaoMotivo: item?.label ?? '',
+                })
+              }}
+              items={motivoItems}
+              isLoading={motivosQ.isFetching}
+              placeholder='Seleccionar motivo…'
+              searchValue={motivoSearch}
+              onSearchValueChange={setMotivoSearch}
             />
           </div>
 

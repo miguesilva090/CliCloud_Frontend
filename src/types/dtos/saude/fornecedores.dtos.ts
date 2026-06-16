@@ -17,7 +17,7 @@ export interface FornecedorTableDTO {
   freguesia?: { nome?: string | null } | null
   rua?: { nome?: string | null } | null
   origem?: number | null
-  condicaoPagamento?: number | null
+  condicaoPagamentoId?: string | null
   moeda?: number | null
 }
 
@@ -50,13 +50,13 @@ export interface FornecedorDTO {
   // Campos Fornecedor
   numeroConta?: string | null
   plafond?: number | null
-  condicaoPagamento?: number | null
+  condicaoPagamentoId?: string | null
   desconto?: number | null
   moeda?: number | null
   totalDebito?: number | null
   origem?: number | null
   tipoFornecedor?: number | null
-  tipoModoPagamento?: number | null
+  modoPagamentoId?: string | null
   numeroNib?: string | null
   aprovado?: number | null
   dataAprovacao?: string | null
@@ -89,13 +89,13 @@ export interface CreateFornecedorRequest {
   entidadeContactos: CreateEntidadeContactoItem[]
   numeroConta?: string | null
   plafond?: number | null
-  condicaoPagamento?: number | null
+  condicaoPagamentoId?: string | null
   desconto?: number | null
   moeda?: number | null
   totalDebito?: number | null
   origem?: number | null
   tipoFornecedor?: number | null
-  tipoModoPagamento?: number | null
+  modoPagamentoId?: string | null
   numeroNib?: string | null
   aprovado?: number | null
   dataAprovacao?: string | null
@@ -128,13 +128,13 @@ export interface UpdateFornecedorRequest {
   entidadeContactos: UpsertEntidadeContactoItem[]
   numeroConta?: string | null
   plafond?: number | null
-  condicaoPagamento?: number | null
+  condicaoPagamentoId?: string | null
   desconto?: number | null
   moeda?: number | null
   totalDebito?: number | null
   origem?: number | null
   tipoFornecedor?: number | null
-  tipoModoPagamento?: number | null
+  modoPagamentoId?: string | null
   numeroNib?: string | null
   aprovado?: number | null
   dataAprovacao?: string | null

@@ -6,7 +6,7 @@ import type {
   EstadoSinistroDTO,
   CreateEstadoSinistroRequest,
   UpdateEstadoSinistroRequest,
-} from '@/types/dtos/sinistrados/estado-sinistro.dto'
+} from '@/types/dtos/sinistrados/estado-sinistro.dtos'
 
 const BASE = '/client/sinistrados/EstadoSinistro'
 

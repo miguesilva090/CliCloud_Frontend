@@ -1,4 +1,4 @@
-import type { TipoExameTableDTO } from '@/types/dtos/exames/tipo-exame'
+import type { TipoExameTableDTO } from '@/types/dtos/exames/tipo-exame.dtos'
 import { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { createAreaComumListActionsColumnDef } from '@/components/shared/area-comum-list-actions-column'
 import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'

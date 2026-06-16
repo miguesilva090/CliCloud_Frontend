@@ -8,7 +8,7 @@ import type {
     AnaliseTableDTO, 
     CreateAnaliseRequest, 
     UpdateAnaliseRequest,
-} from '@/types/dtos/exames/analises'
+} from '@/types/dtos/exames/analises.dtos'
 
 const BASE = '/client/exames/Analises'
 

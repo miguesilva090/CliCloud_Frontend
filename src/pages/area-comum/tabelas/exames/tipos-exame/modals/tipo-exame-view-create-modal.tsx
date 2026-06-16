@@ -5,14 +5,14 @@ import type {
   TipoExameTableDTO,
   CreateTipoExameRequest,
   UpdateTipoExameRequest,
-} from '@/types/dtos/exames/tipo-exame'
+} from '@/types/dtos/exames/tipo-exame.dtos'
 import type {
   GrupoAnaliseLinhaDTO,
   CreateGrupoAnaliseLinhaRequest,
   UpdateGrupoAnaliseLinhaRequest,
-} from '@/types/dtos/exames/grupo-analise-linha'
-import type { AnaliseLightDTO } from '@/types/dtos/exames/analises'
-import type { CategoriaProcedimentoLightDTO } from '@/types/dtos/exames/categoria-procedimento'
+} from '@/types/dtos/exames/grupo-analise-linha.dtos'
+import type { AnaliseLightDTO } from '@/types/dtos/exames/analises.dtos'
+import type { CategoriaProcedimentoLightDTO } from '@/types/dtos/exames/categoria-procedimento.dtos'
 import type { TaxaIvaLightDTO } from '@/types/dtos/taxas-iva/taxa-iva.dtos'
 import type { MotivoIsencaoLightDTO } from '@/types/dtos/taxas-iva/motivo-isencao.dtos'
 import {

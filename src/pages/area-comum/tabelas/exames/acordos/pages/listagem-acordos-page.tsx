@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from '@/utils/toast-utils'
 import type { DataTableAction } from '@/components/shared/data-table'
-import type { AcordosTableDTO } from '@/types/dtos/exames/acordos'
+import type { AcordosTableDTO } from '@/types/dtos/exames/acordos.dtos'
 import { ListagemAcordosTable } from '../components/listagem-acordos-table'
 import { ListagemAcordosFilterControls } from '../components/listagem-acordos-filter-controls'
 import {

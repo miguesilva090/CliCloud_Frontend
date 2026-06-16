@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { AnaliseTableDTO } from '@/types/dtos/exames/analises'
+import type { AnaliseTableDTO } from '@/types/dtos/exames/analises.dtos'
 import {
   Dialog,
   DialogContent,

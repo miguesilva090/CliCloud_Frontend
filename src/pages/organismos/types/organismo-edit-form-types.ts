@@ -45,8 +45,8 @@ export interface OrganismoEditFormValues {
   numeroConsultas: string
   contabilizarFaltas: boolean
   faturaCredencial: number
-  condicaoPagamento: string
-  tipoModoPagamento: string
+  condicaoPagamentoId: string
+  modoPagamentoId: string
   assinarPagaDocumento: boolean
   admissaoCC: boolean
   inactivo: boolean

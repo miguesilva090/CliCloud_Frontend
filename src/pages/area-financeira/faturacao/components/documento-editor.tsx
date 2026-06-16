@@ -78,6 +78,8 @@ export function DocumentoEditor({
     motivoIsencaoItems,
     condicaoPagamentoItems,
     modoPagamentoItems,
+    condicoesPagamento,
+    modosPagamento,
     tipoSerieItems,
     referenciaMbItems,
     impostosRetencaoItems,
@@ -94,7 +96,11 @@ export function DocumentoEditor({
     if (!onSubmit) return
     const payload = toEmitirRequest()
     if (!payload) {
-      if (state.retencaoAtiva && !state.retencaoMotivo.trim()) {
+      if (
+        state.retencaoAtiva &&
+        !state.retencaoMotivo.trim() &&
+        state.retencaoCodigoMotivo == null
+      ) {
         toast.error('Preencha o motivo da retenção na fonte.')
         return
       }
@@ -116,6 +122,19 @@ export function DocumentoEditor({
       }
       if (state.isentoIva && !state.motivoIsencaoId) {
         toast.error('Indique o motivo de isenção de IVA.')
+        return
+      }
+      const linhaSemMotivoIsencao = state.linhas.some(
+        (l) =>
+          linhaDocumentoTemConteudo(l) &&
+          l.taxaIvaPercentagem === 0 &&
+          !l.motivoIsencaoId &&
+          !state.motivoIsencaoId,
+      )
+      if (linhaSemMotivoIsencao) {
+        toast.error(
+          'Indique o motivo de isenção nas linhas com taxa IVA 0%.',
+        )
         return
       }
       toast.error(
@@ -196,12 +215,15 @@ export function DocumentoEditor({
             motivoIsencaoItems={motivoIsencaoItems}
             condicaoPagamentoItems={condicaoPagamentoItems}
             modoPagamentoItems={modoPagamentoItems}
+            condicoesPagamento={condicoesPagamento}
+            modosPagamento={modosPagamento}
             tipoSerieItems={tipoSerieItems}
           />
           <DocumentoTabObservacoesBancoSection
             state={state}
             onChange={patch}
             readOnly={readOnly}
+            modosPagamento={modosPagamento}
           />
           <Tabs defaultValue='cliente'>
             <TabsList className='flex h-auto flex-wrap'>

@@ -82,10 +82,7 @@ export function FornecedorEditPage() {
       numeroConta: fornecedor.numeroConta ?? '',
       plafond: fornecedor.plafond != null ? String(fornecedor.plafond) : '',
       desconto: fornecedor.desconto != null ? String(fornecedor.desconto) : '',
-      condicaoPagamento:
-        fornecedor.condicaoPagamento != null
-          ? String(fornecedor.condicaoPagamento)
-          : '',
+      condicaoPagamentoId: fornecedor.condicaoPagamentoId ?? '',
       moeda: fornecedor.moeda != null ? String(fornecedor.moeda) : '',
       numeroNib: fornecedor.numeroNib ?? '',
       enderecoWeb: fornecedor.enderecoWeb ?? '',

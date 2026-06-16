@@ -1,6 +1,6 @@
 import React from 'react'
 import { DataTable } from '@/components/shared/data-table'
-import type { CategoriaProcedimentoTableDTO } from '@/types/dtos/exames/categoria-procedimento'
+import type { CategoriaProcedimentoTableDTO } from '@/types/dtos/exames/categoria-procedimento.dtos'
 import {
   columns,
   getColumnsWithViewCallback,

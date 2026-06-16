@@ -53,8 +53,8 @@ export interface EmpresaDTO {
   prazoPagamento?: number | null
   desconto?: number | null
   descontoUtente?: number | null
-  condicaoPagamento?: number | null
-  tipoModoPagamento?: number | null
+  condicaoPagamentoId?: string | null
+  modoPagamentoId?: string | null
   bancoId?: string | null
   numeroIdentificacaoBancaria?: string | null
   apolice?: string | null
@@ -98,8 +98,8 @@ export interface CreateEmpresaRequest {
   prazoPagamento?: number | null
   desconto?: number | null
   descontoUtente?: number | null
-  condicaoPagamento?: number | null
-  tipoModoPagamento?: number | null
+  condicaoPagamentoId?: string | null
+  modoPagamentoId?: string | null
   bancoId?: string | null
   numeroIdentificacaoBancaria?: string | null
   apolice?: string | null
@@ -143,8 +143,8 @@ export interface UpdateEmpresaRequest {
   prazoPagamento?: number | null
   desconto?: number | null
   descontoUtente?: number | null
-  condicaoPagamento?: number | null
-  tipoModoPagamento?: number | null
+  condicaoPagamentoId?: string | null
+  modoPagamentoId?: string | null
   bancoId?: string | null
   numeroIdentificacaoBancaria?: string | null
   apolice?: string | null

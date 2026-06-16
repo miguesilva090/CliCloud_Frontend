@@ -479,7 +479,7 @@ export const roleHeaderMenus = {
             items: [
               {
                 label: 'Contas Bancárias',
-                href: '/area-comum/tabelas/tabelas/contas-bancarias',
+                href: '/area-financeira/faturacao/tabelas/contas-bancarias',
                 funcionalidadeId: modules.areaComum.permissions.bancos.id,
                 funcionalidadeFallbackIds: [
                   modules.areaFinanceira.permissions.tabelas.id,
@@ -487,7 +487,7 @@ export const roleHeaderMenus = {
               },
               {
                 label: 'Instituições Financeiras',
-                href: '/area-comum/tabelas/tabelas/bancos',
+                href: '/area-financeira/faturacao/tabelas/bancos',
                 funcionalidadeId: modules.areaComum.permissions.bancos.id,
                 funcionalidadeFallbackIds: [
                   modules.areaFinanceira.permissions.tabelas.id,
@@ -502,7 +502,7 @@ export const roleHeaderMenus = {
             items: [
               {
                 label: 'Código Postal',
-                href: '/area-comum/tabelas/tabelas/geograficas/codigospostais',
+                href: '/area-financeira/faturacao/tabelas/geograficas/codigospostais',
                 funcionalidadeId: modules.areaComum.permissions.codigospostais.id,
                 funcionalidadeFallbackIds: [
                   modules.areaFinanceira.permissions.tabelas.id,
@@ -510,7 +510,7 @@ export const roleHeaderMenus = {
               },
               {
                 label: 'Concelhos',
-                href: '/area-comum/tabelas/tabelas/geograficas/concelhos',
+                href: '/area-financeira/faturacao/tabelas/geograficas/concelhos',
                 funcionalidadeId: modules.areaComum.permissions.concelhos.id,
                 funcionalidadeFallbackIds: [
                   modules.areaFinanceira.permissions.tabelas.id,
@@ -518,7 +518,7 @@ export const roleHeaderMenus = {
               },
               {
                 label: 'Distritos',
-                href: '/area-comum/tabelas/tabelas/geograficas/distritos',
+                href: '/area-financeira/faturacao/tabelas/geograficas/distritos',
                 funcionalidadeId: modules.areaComum.permissions.distritos.id,
                 funcionalidadeFallbackIds: [
                   modules.areaFinanceira.permissions.tabelas.id,
@@ -526,7 +526,7 @@ export const roleHeaderMenus = {
               },
               {
                 label: 'Países',
-                href: '/area-comum/tabelas/tabelas/geograficas/paises',
+                href: '/area-financeira/faturacao/tabelas/geograficas/paises',
                 funcionalidadeId: modules.areaComum.permissions.paises.id,
                 funcionalidadeFallbackIds: [
                   modules.areaFinanceira.permissions.tabelas.id,
@@ -540,8 +540,8 @@ export const roleHeaderMenus = {
             funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
             items: [
               {
-                label: 'Motivos de Retenção de Imposto',
-                href: '/area-comum/tabelas/tabelas/motivos-isencao',
+                label: 'Motivos de Isenção',
+                href: '/area-financeira/faturacao/tabelas/impostos/motivos-isencao',
                 funcionalidadeId: modules.areaComum.permissions.taxasIva.id,
                 funcionalidadeFallbackIds: [
                   modules.areaFinanceira.permissions.tabelas.id,
@@ -549,11 +549,42 @@ export const roleHeaderMenus = {
               },
               {
                 label: 'Taxa de Imposto',
-                href: '/area-comum/tabelas/tabelas/taxas-iva',
+                href: '/area-financeira/faturacao/tabelas/impostos/taxas-iva',
                 funcionalidadeId: modules.areaComum.permissions.taxasIva.id,
                 funcionalidadeFallbackIds: [
                   modules.areaFinanceira.permissions.tabelas.id,
                 ],
+              },
+              {
+                label: 'Motivos de Retenção',
+                href: '/area-financeira/faturacao/tabelas/impostos/motivos-retencao',
+                funcionalidadeId: modules.areaComum.permissions.taxasIva.id,
+                funcionalidadeFallbackIds: [
+                  modules.areaFinanceira.permissions.tabelas.id,
+                ],
+              },
+            ],
+          },
+          {
+            label: 'Moedas',
+            href: '/area-financeira/faturacao/tabelas/moedas',
+            funcionalidadeId: modules.areaComum.permissions.moedas.id,
+            funcionalidadeFallbackIds: [
+              modules.areaFinanceira.permissions.tabelas.id,
+            ],
+          },
+          {
+            label: 'Pagamentos',
+            items: [
+              {
+                label: 'Condições de Pagamento',
+                href: '/area-financeira/faturacao/tabelas/pagamentos/condicoes-pagamento',
+                funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
+              },
+              {
+                label: 'Modos de Pagamento',
+                href: '/area-financeira/faturacao/tabelas/pagamentos/modos-pagamento',
+                funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
               },
             ],
           },
@@ -853,7 +884,8 @@ export const roleHeaderMenus = {
           { label: 'Sexos', href: '/area-comum/tabelas/tabelas/sexos', funcionalidadeId: modules.areaComum.permissions.sexos.id },
           { label: 'Graus Parentesco', href: '/area-comum/tabelas/tabelas/graus-parentesco', funcionalidadeId: modules.areaComum.permissions.grausParentesco.id },
           { label: 'Taxas IVA', href: '/area-comum/tabelas/tabelas/taxas-iva', funcionalidadeId: modules.areaComum.permissions.taxasIva.id },
-          { label: 'Motivos de Retenção de Imposto', href: '/area-comum/tabelas/tabelas/motivos-isencao', funcionalidadeId: modules.areaComum.permissions.taxasIva.id },
+          { label: 'Motivos de Isenção', href: '/area-comum/tabelas/tabelas/motivos-isencao', funcionalidadeId: modules.areaComum.permissions.taxasIva.id },
+          { label: 'Motivos de Retenção', href: '/area-comum/tabelas/tabelas/motivos-retencao', funcionalidadeId: modules.areaComum.permissions.taxasIva.id },
           { label: 'Proveniências Utentes', href: '/area-comum/tabelas/tabelas/proveniencias-utentes', funcionalidadeId: modules.areaComum.permissions.provenienciasUtentes.id },    
         ]
       

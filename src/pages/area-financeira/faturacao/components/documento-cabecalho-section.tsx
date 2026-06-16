@@ -17,6 +17,12 @@ import {
 } from '@/lib/form-styles'
 import type { DocumentoEditorState } from '../types/documento-editor.types'
 import type { DocumentoEditorProfile } from '../utils/documento-tipo-editor-profile'
+import type { CondicaoPagamentoLightDTO } from '@/types/dtos/pagamentos/condicao-pagamento.dtos'
+import type { ModoPagamentoLightDTO } from '@/types/dtos/pagamentos/modo-pagamento.dtos'
+import {
+  buildPatchCondicaoPagamento,
+  buildPatchModoPagamento,
+} from '../utils/documento-pagamento-utils'
 import { DocumentoTabOrigemSection } from './documento-tab-origem-section'
 
 export function DocumentoCabecalhoSection({
@@ -27,6 +33,8 @@ export function DocumentoCabecalhoSection({
   motivoIsencaoItems = [],
   condicaoPagamentoItems = [],
   modoPagamentoItems = [],
+  condicoesPagamento = [],
+  modosPagamento = [],
   tipoSerieItems = [],
 }: {
   state: DocumentoEditorState
@@ -36,6 +44,8 @@ export function DocumentoCabecalhoSection({
   motivoIsencaoItems?: Array<{ id: string; label: string }>
   condicaoPagamentoItems?: Array<{ value: string; label: string }>
   modoPagamentoItems?: Array<{ value: string; label: string }>
+  condicoesPagamento?: CondicaoPagamentoLightDTO[]
+  modosPagamento?: ModoPagamentoLightDTO[]
   tipoSerieItems?: Array<{ value: 'N' | 'D' | 'M'; label: string }>
 }) {
   return (
@@ -75,9 +85,15 @@ export function DocumentoCabecalhoSection({
       <div className={fieldGap}>
         <Label className={labelClass}>Condição Pagamento</Label>
         <Select
-          value={state.condicaoPagamento != null ? String(state.condicaoPagamento) : ''}
+          value={state.condicaoPagamentoId ?? ''}
           onValueChange={(v) =>
-            onChange({ condicaoPagamento: v ? Number(v) : null })
+            onChange(
+              buildPatchCondicaoPagamento(
+                v || null,
+                condicoesPagamento,
+                state.dataDocumento,
+              ),
+            )
           }
           disabled={readOnly}
         >
@@ -96,9 +112,9 @@ export function DocumentoCabecalhoSection({
       <div className={fieldGap}>
         <Label className={labelClass}>Modo Pagamento</Label>
         <Select
-          value={state.tipoModoPagamento != null ? String(state.tipoModoPagamento) : ''}
+          value={state.modoPagamentoId ?? ''}
           onValueChange={(v) =>
-            onChange({ tipoModoPagamento: v ? Number(v) : null })
+            onChange(buildPatchModoPagamento(v || null, modosPagamento))
           }
           disabled={readOnly}
         >

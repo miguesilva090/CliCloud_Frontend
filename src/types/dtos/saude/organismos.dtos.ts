@@ -108,8 +108,8 @@ export interface OrganismoDTO {
   limitarConsultas?: boolean
   numeroConsultas?: number | null
   contabilizarFaltas?: boolean
-  condicaoPagamento?: number | null
-  tipoModoPagamento?: number | null
+  condicaoPagamentoId?: string | null
+  modoPagamentoId?: string | null
 }
 
 export interface CreateEntidadeContactoItem {
@@ -183,8 +183,8 @@ export interface CreateOrganismoRequest {
   limitarConsultas?: boolean
   numeroConsultas?: number | null
   contabilizarFaltas?: boolean
-  condicaoPagamento?: number | null
-  tipoModoPagamento?: number | null
+  condicaoPagamentoId?: string | null
+  modoPagamentoId?: string | null
 }
 
 export interface UpdateOrganismoRequest extends CreateOrganismoRequest {}

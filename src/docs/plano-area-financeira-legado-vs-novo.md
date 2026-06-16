@@ -101,7 +101,7 @@ Referencia de padrao FE: listagem de recibos em `pages/area-financeira/recibos/`
 
 ### 3.3 Listagem — ✅
 
-- `listagem-faturacao-page.tsx`, `listagem-faturacao-table.tsx`, `listagem-faturacao-table.colums.tsx`, `listagem-faturacao-filter-controls.tsx`
+- `listagem-faturacao-page.tsx`, `listagem-faturacao-table.tsx`, `listagem-faturacao-table.columns.tsx`, `listagem-faturacao-filter-controls.tsx`
 - Dialogs: `anular-documento-dialog`, `nota-credito-dialog`, `validacao-transporte-dialog`, `detalhes-admissoes-dialog`
 
 ### 3.4 Editor — ✅ (fluxo principal)

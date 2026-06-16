@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { fieldGap, inputClass, labelClass } from '@/lib/form-styles'
 import { BancosService } from '@/lib/services/utility/bancos-service'
-import { modoPagamentoRequerBanco } from '../utils/documento-cliente-utils'
+import { modoPagamentoRequerBanco } from '../utils/documento-pagamento-utils'
+import type { ModoPagamentoLightDTO } from '@/types/dtos/pagamentos/modo-pagamento.dtos'
 import type { DocumentoEditorState } from '../types/documento-editor.types'
 
 const ID_FUNCIONALIDADE = 'documentos'
@@ -15,10 +16,12 @@ export function DocumentoTabObservacoesBancoSection({
   state,
   onChange,
   readOnly,
+  modosPagamento = [],
 }: {
   state: DocumentoEditorState
   onChange: (p: Partial<DocumentoEditorState>) => void
   readOnly?: boolean
+  modosPagamento?: ModoPagamentoLightDTO[]
 }) {
   const [bankSearch, setBankSearch] = useState('')
   const [debBank] = useDebounce(bankSearch, 300)
@@ -29,7 +32,7 @@ export function DocumentoTabObservacoesBancoSection({
       const res = await BancosService(ID_FUNCIONALIDADE).getBancosLight(debBank)
       return res.info?.data ?? []
     },
-    enabled: modoPagamentoRequerBanco(state.tipoModoPagamento),
+    enabled: modoPagamentoRequerBanco(state.modoPagamentoId, modosPagamento),
   })
 
   const bankItems = (bancosQ.data ?? []).map((b) => ({
@@ -49,7 +52,7 @@ export function DocumentoTabObservacoesBancoSection({
           readOnly={readOnly}
         />
       </div>
-      {modoPagamentoRequerBanco(state.tipoModoPagamento) ? (
+      {modoPagamentoRequerBanco(state.modoPagamentoId, modosPagamento) ? (
         <div className={`md:col-span-2 ${fieldGap}`}>
           <Label className={labelClass}>Banco</Label>
           <AsyncCombobox

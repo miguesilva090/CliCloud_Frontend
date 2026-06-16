@@ -1,4 +1,4 @@
-import type { CategoriaProcedimentoTableDTO } from '@/types/dtos/exames/categoria-procedimento'
+import type { CategoriaProcedimentoTableDTO } from '@/types/dtos/exames/categoria-procedimento.dtos'
 import { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { createAreaComumListActionsColumnDef } from '@/components/shared/area-comum-list-actions-column'
 import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'

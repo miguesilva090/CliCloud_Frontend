@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from '@/utils/toast-utils'
 import type { DataTableAction } from '@/components/shared/data-table'
-import type { TipoExameTableDTO } from '@/types/dtos/exames/tipo-exame'
+import type { TipoExameTableDTO } from '@/types/dtos/exames/tipo-exame.dtos'
 import { ListagemTiposExameTable } from '../components/listagem-tipos-exame-table'
 import { ListagemTiposExameFilterControls } from '../components/listagem-tipos-exame-filter-controls'
 import {

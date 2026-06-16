@@ -51,8 +51,8 @@ export type DocumentoDTO = {
   numeroContribuinteCliente?: string | null
   beneficiario?: string | null
   tipoSerie?: string | null
-  condicaoPagamento?: number | null
-  tipoModoPagamento?: number | null
+  condicaoPagamentoId?: string | null
+  modoPagamentoId?: string | null
   isentoIva?: boolean
   ivaCaixa?: boolean
   motivoIsencaoId?: string | null

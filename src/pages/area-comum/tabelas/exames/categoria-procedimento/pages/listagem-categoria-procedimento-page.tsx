@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from '@/utils/toast-utils'
 import type { DataTableAction } from '@/components/shared/data-table'
-import type { CategoriaProcedimentoTableDTO } from '@/types/dtos/exames/categoria-procedimento'
+import type { CategoriaProcedimentoTableDTO } from '@/types/dtos/exames/categoria-procedimento.dtos'
 import { ListagemCategoriaProcedimentoTable } from '../components/listagem-categoria-procedimento-table'
 import { ListagemCategoriaProcedimentoFilterControls } from '../components/listagem-categoria-procedimento-filter-controls'
 import {

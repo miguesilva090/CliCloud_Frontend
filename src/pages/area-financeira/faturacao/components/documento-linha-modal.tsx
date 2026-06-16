@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { useDebounce } from 'use-debounce'
 import {
   Dialog,
@@ -31,6 +32,7 @@ import {
   useServicosLightDocumento,
   useSubsistemasOrganismoDocumento,
   useTaxasIvaDocumento,
+  useMotivosIsencaoDocumento,
 } from '../queries/documento-editor-queries'
 
 const ID = 'documentos'
@@ -46,6 +48,7 @@ type Props = {
   opcoesCalculo: OpcoesCalculoDocumento
   organismoId: string | null
   descontosBloqueados?: boolean
+  motivoIsencaoDocumentoId?: string | null
   onSave: (linha: EmitirDocumentoLinhaRequest) => void
 }
 
@@ -59,13 +62,16 @@ export function DocumentoLinhaModal({
   opcoesCalculo,
   organismoId,
   descontosBloqueados = false,
+  motivoIsencaoDocumentoId = null,
   onSave,
 }: Props) {
   const [linha, setLinha] = useState(linhaProp)
   const [servicoSearch, setServicoSearch] = useState('')
   const [taxaSearch, setTaxaSearch] = useState('')
+  const [motivoIsencaoSearch, setMotivoIsencaoSearch] = useState('')
   const [debServico] = useDebounce(servicoSearch, 300)
   const [debTaxa] = useDebounce(taxaSearch, 300)
+  const [debMotivoIsencao] = useDebounce(motivoIsencaoSearch, 300)
 
   useEffect(() => {
     if (open) setLinha(linhaProp)
@@ -73,6 +79,7 @@ export function DocumentoLinhaModal({
 
   const servicosQ = useServicosLightDocumento(debServico)
   const taxasQ = useTaxasIvaDocumento(debTaxa)
+  const motivosIsencaoQ = useMotivosIsencaoDocumento(debMotivoIsencao)
   const subsistemasQ = useSubsistemasOrganismoDocumento(organismoId)
   const subsistemaRows = subsistemasQ.data ?? []
 
@@ -100,6 +107,23 @@ export function DocumentoLinhaModal({
       })),
     [taxas],
   )
+
+  const motivoIsencaoItems = useMemo(
+    () =>
+      (motivosIsencaoQ.data ?? []).map((m) => {
+        const saft = m.codigoSaft?.trim()
+        const motivo = m.descricao?.trim() ?? ''
+        const norma = m.norma?.trim()
+        const mencao = m.mencao?.trim()
+        let label = saft ? `${saft} - ${motivo}` : `${m.codigo} — ${motivo}`
+        if (norma) label += ` (${norma})`
+        else if (mencao) label += ` (${mencao})`
+        return { value: m.id, label }
+      }),
+    [motivosIsencaoQ.data],
+  )
+
+  const mostraMotivoIsencao = linha.taxaIvaPercentagem === 0
 
   const patch = (p: Partial<EmitirDocumentoLinhaRequest>) =>
     setLinha((prev) => ({ ...prev, ...p }))
@@ -153,6 +177,14 @@ export function DocumentoLinhaModal({
 
   const handleGuardar = () => {
     if (!linha.descricao.trim()) return
+    if (
+      mostraMotivoIsencao &&
+      !linha.motivoIsencaoId &&
+      !motivoIsencaoDocumentoId
+    ) {
+      toast.error('Indique o motivo de isenção de IVA.')
+      return
+    }
     onSave(linha)
     onOpenChange(false)
   }
@@ -330,7 +362,12 @@ export function DocumentoLinhaModal({
                   const pct = opcoesCalculo.isentoIva
                     ? 0
                     : taxaPercentagemFromId(id, taxas)
-                  patch({ taxaIvaId: id || null, taxaIvaPercentagem: pct })
+                  setLinha((prev) => ({
+                    ...prev,
+                    taxaIvaId: id || null,
+                    taxaIvaPercentagem: pct,
+                    motivoIsencaoId: pct === 0 ? prev.motivoIsencaoId : null,
+                  }))
                 }}
                 items={taxaItems}
                 isLoading={taxasQ.isFetching}
@@ -345,6 +382,28 @@ export function DocumentoLinhaModal({
                   : `Taxa aplicada: ${linha.taxaIvaPercentagem}%`}
               </p>
             </div>
+
+            {mostraMotivoIsencao ? (
+              <div className={fieldGap}>
+                <Label className={labelClass}>Motivo de isenção de IVA</Label>
+                <AsyncCombobox
+                  value={linha.motivoIsencaoId ?? ''}
+                  onChange={(id) =>
+                    patch({ motivoIsencaoId: id || null })
+                  }
+                  items={motivoIsencaoItems}
+                  isLoading={motivosIsencaoQ.isFetching}
+                  placeholder='Seleccionar motivo…'
+                  searchValue={motivoIsencaoSearch}
+                  onSearchValueChange={setMotivoIsencaoSearch}
+                />
+                {motivoIsencaoDocumentoId && !linha.motivoIsencaoId ? (
+                  <p className='text-xs text-muted-foreground'>
+                    Se não seleccionar, aplica o motivo do cabeçalho do documento.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className='rounded-md border bg-muted/40 px-4 py-3'>
               <div className='flex items-center justify-between gap-4'>

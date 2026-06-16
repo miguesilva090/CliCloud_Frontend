@@ -43,7 +43,7 @@ const emptyValues: FormValues = {
   mencao: '',
 }
 
-const MODAL_TITLE = 'Motivos de Retenção de Imposto'
+const MODAL_TITLE = 'Motivos de Isenção'
 
 function resolveRowId(data: MotivoIsencaoTableDTO | null): string {
   if (!data) return ''
@@ -186,7 +186,7 @@ export function MotivoIsencaoViewCreateModal({
         <DialogHeader>
           <DialogTitle>{MODAL_TITLE}</DialogTitle>
           <DialogDescription className='sr-only'>
-            Formulário de motivos de retenção de imposto (isenção IVA).
+            Formulário de motivos de isenção de IVA.
           </DialogDescription>
         </DialogHeader>
 

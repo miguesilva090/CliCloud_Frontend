@@ -1,5 +1,5 @@
 import { DataTable } from '@/components/shared/data-table'
-import type { EstadoSinistroDTO } from '@/types/dtos/sinistrados/estado-sinistro.dto'
+import type { EstadoSinistroDTO } from '@/types/dtos/sinistrados/estado-sinistro.dtos'
 import { getEstadoSinistroColumns } from './listagem-estado-sinistro-table.columns'
 import type { DataTableAction } from '@/components/shared/data-table'
 

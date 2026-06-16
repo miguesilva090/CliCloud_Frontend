@@ -12,6 +12,8 @@ import {
 import type { DocumentoEditorState } from '../types/documento-editor.types'
 import {
   useClinicaFaturacaoConfig,
+  useCondicoesPagamentoDocumento,
+  useModosPagamentoDocumento,
   useMoedasDocumento,
   useMotivosIsencaoDocumento,
   useOpcoesPagamentoDocumento,
@@ -75,6 +77,7 @@ function estadoInicial(
     ivaCaixa: false,
     retencaoAtiva: false,
     retencaoImposto: '',
+    retencaoCodigoMotivo: null,
     retencaoMotivo: '',
     retencaoTaxa: 0,
     retencaoValor: 0,
@@ -113,6 +116,8 @@ export function useDocumentoEditor(
   const regraClinica = clinicaQ.data?.regraFaturacao ?? REGRA_PRECOS_SEM_IVA_INCLUIDO
   const moedasQ = useMoedasDocumento()
   const motivosQ = useMotivosIsencaoDocumento()
+  const condicoesPagamentoQ = useCondicoesPagamentoDocumento()
+  const modosPagamentoQ = useModosPagamentoDocumento('', true)
   const opcoesPagamentoQ = useOpcoesPagamentoDocumento()
   const tipoIdAnteriorRef = useRef(tipo.id)
   const [state, setState] = useState<DocumentoEditorState>(() =>
@@ -196,19 +201,23 @@ export function useDocumentoEditor(
   )
   const condicaoPagamentoItems = useMemo(
     () =>
-      (opcoesPagamentoQ.data?.condicoesPagamento ?? []).map((o) => ({
-        value: String(o.valor),
-        label: o.descricao,
+      (condicoesPagamentoQ.data ?? []).map((c) => ({
+        value: c.id,
+        label: c.descricao,
       })),
-    [opcoesPagamentoQ.data?.condicoesPagamento],
+    [condicoesPagamentoQ.data],
   )
   const modoPagamentoItems = useMemo(
     () =>
-      (opcoesPagamentoQ.data?.modosPagamento ?? []).map((o) => ({
-        value: String(o.valor),
-        label: o.descricao,
+      (modosPagamentoQ.data ?? []).map((m) => ({
+        value: m.id,
+        label: m.autocompleteLabel?.trim()
+          ? m.autocompleteLabel
+          : m.abreviatura?.trim()
+            ? `${m.descricao} (${m.abreviatura})`
+            : m.descricao,
       })),
-    [opcoesPagamentoQ.data?.modosPagamento],
+    [modosPagamentoQ.data],
   )
   const tipoSerieItems = useMemo(
     () =>
@@ -268,7 +277,8 @@ export function useDocumentoEditor(
     )
     if (!linhasValidas.length) return null
     if (!state.nomeCliente.trim() || !state.moradaCliente.trim()) return null
-    if (state.retencaoAtiva && !state.retencaoMotivo.trim()) return null
+    if (state.retencaoAtiva && !state.retencaoMotivo.trim() && state.retencaoCodigoMotivo == null)
+      return null
     if (state.isentoIva && !state.motivoIsencaoId) return null
     if (
       state.retencaoAtiva &&
@@ -298,8 +308,8 @@ export function useDocumentoEditor(
       faturaGlobalDataFim: state.faturaGlobalAte
         ? `${state.faturaGlobalAte}T00:00:00`
         : null,
-      condicaoPagamento: state.condicaoPagamento ?? null,
-      tipoModoPagamento: state.tipoModoPagamento ?? null,
+      condicaoPagamentoId: state.condicaoPagamentoId ?? null,
+      modoPagamentoId: state.modoPagamentoId ?? null,
       moedaId: state.moedaId ?? null,
       taxaCambio: state.moedaId ? state.cambio : null,
       tipoCambio: null,
@@ -317,6 +327,7 @@ export function useDocumentoEditor(
       outros: state.outros || null,
       retencaoAtiva: state.retencaoAtiva,
       retencaoImposto: state.retencaoAtiva ? state.retencaoImposto || null : null,
+      retencaoCodigoMotivo: state.retencaoAtiva ? state.retencaoCodigoMotivo : null,
       retencaoMotivo: state.retencaoAtiva ? state.retencaoMotivo.trim() || null : null,
       retencaoTaxa: state.retencaoAtiva ? state.retencaoTaxa : null,
       retencaoValor: state.retencaoAtiva ? state.retencaoValor : null,
@@ -334,9 +345,10 @@ export function useDocumentoEditor(
       linhas: linhasValidas.map((l, i) => ({
         ...l,
         numeroLinha: i + 1,
-        motivoIsencaoId: state.isentoIva
-          ? (l.motivoIsencaoId ?? state.motivoIsencaoId)
-          : null,
+        motivoIsencaoId:
+          l.taxaIvaPercentagem === 0 || state.isentoIva
+            ? (l.motivoIsencaoId ?? state.motivoIsencaoId)
+            : null,
       })),
     }
   }
@@ -350,6 +362,8 @@ export function useDocumentoEditor(
     motivoIsencaoItems,
     condicaoPagamentoItems,
     modoPagamentoItems,
+    condicoesPagamento: condicoesPagamentoQ.data ?? [],
+    modosPagamento: modosPagamentoQ.data ?? [],
     tipoSerieItems,
     referenciaMbItems,
     impostosRetencaoItems,

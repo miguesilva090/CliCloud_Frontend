@@ -18,8 +18,8 @@ export type DocumentoEditorState = {
   dataDocumento: string
   dataVencimentoPagamento: string
   tipoSerie: 'N' | 'D' | 'M'
-  condicaoPagamento?: number | null
-  tipoModoPagamento?: number | null
+  condicaoPagamentoId?: string | null
+  modoPagamentoId?: string | null
   isentoIva: boolean
   motivoIsencaoId: string | null
   codigoValidacaoTransporte: string | null
@@ -58,6 +58,7 @@ export type DocumentoEditorState = {
   ivaCaixa: boolean
   retencaoAtiva: boolean
   retencaoImposto: 'IRS' | 'IRC' | 'IS' | ''
+  retencaoCodigoMotivo: number | null
   retencaoMotivo: string
   retencaoTaxa: number
   retencaoValor: number

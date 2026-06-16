@@ -36,6 +36,8 @@ export function mapServicoToLinhaPatch(
     precoUnitario: opts?.precoUnitario ?? servico.preco ?? 0,
     taxaIvaId: servico.taxaIvaId ?? null,
     taxaIvaPercentagem: taxaPct,
+    motivoIsencaoId:
+      taxaPct === 0 ? (servico.motivoIsencaoId ?? null) : null,
   }
 }
 

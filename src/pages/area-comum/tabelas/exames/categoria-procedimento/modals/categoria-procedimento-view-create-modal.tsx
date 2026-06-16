@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { CategoriaProcedimentoTableDTO } from '@/types/dtos/exames/categoria-procedimento'
+import type { CategoriaProcedimentoTableDTO } from '@/types/dtos/exames/categoria-procedimento.dtos'
 import {
   Dialog,
   DialogContent,

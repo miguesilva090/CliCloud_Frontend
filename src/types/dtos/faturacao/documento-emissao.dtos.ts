@@ -34,8 +34,8 @@ export type EmitirDocumentoRequest = {
     beneficiario?: string | null
     faturaGlobalDataInicio?: string | null
     faturaGlobalDataFim?: string | null
-    condicaoPagamento?: number | null
-    tipoModoPagamento?: number | null
+    condicaoPagamentoId?: string | null
+    modoPagamentoId?: string | null
     moedaId?: string | null
     bancoId?: string | null
     taxaCambio?: number | null
@@ -163,8 +163,8 @@ export type EmitirDocumentoDesdeAdmissaoRequest = {
     dataDocumento?: string | null
     dataVencimentoPagamento?: string | null
     funcionarioId?: string | null
-    condicaoPagamento?: number | null
-    tipoModoPagamento?: number | null
+    condicaoPagamentoId?: string | null
+    modoPagamentoId?: string | null
     moedaId?: string | null
     bancoId?: string | null
     descontoCliente?: number | null
@@ -187,8 +187,8 @@ export type EmitirDocumentoDesdeConsultaRequest = {
     dataDocumento?: string | null
     dataVencimentoPagamento?: string | null
     funcionarioId?: string | null
-    condicaoPagamento?: number | null
-    tipoModoPagamento?: number | null
+    condicaoPagamentoId?: string | null
+    modoPagamentoId?: string | null
     moedaId?: string | null
     bancoId?: string | null
     descontoCliente?: number | null

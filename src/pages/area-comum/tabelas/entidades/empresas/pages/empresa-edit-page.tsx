@@ -54,6 +54,8 @@ const schema = z
     prazoPagamento: z.string().optional(),
     desconto: z.string().optional(),
     descontoUtente: z.string().optional(),
+    condicaoPagamentoId: z.string().optional(),
+    modoPagamentoId: z.string().optional(),
     categoria: z.string().optional(),
     organismoId: z.string().optional(),
     codigoClinica: z.string().optional(),
@@ -144,8 +146,8 @@ function buildCreatePayload(values: EmpresaEditFormValues): CreateEmpresaRequest
     prazoPagamento: parseNum(values.prazoPagamento),
     desconto: parseFloatSafe(values.desconto),
     descontoUtente: parseFloatSafe(values.descontoUtente),
-    condicaoPagamento: null,
-    tipoModoPagamento: null,
+    condicaoPagamentoId: values.condicaoPagamentoId?.trim() || null,
+    modoPagamentoId: values.modoPagamentoId?.trim() || null,
     bancoId: values.bancoId?.trim() || null,
     numeroIdentificacaoBancaria:
       values.numeroIdentificacaoBancaria?.trim() || null,
@@ -231,6 +233,8 @@ export function EmpresaEditPage() {
       prazoPagamento: '',
       desconto: '',
       descontoUtente: '',
+      condicaoPagamentoId: '',
+      modoPagamentoId: '',
       categoria: '',
       organismoId: '',
       codigoClinica: '',
@@ -287,6 +291,8 @@ export function EmpresaEditPage() {
         empresa.descontoUtente != null
           ? String(empresa.descontoUtente)
           : '',
+      condicaoPagamentoId: empresa.condicaoPagamentoId ?? '',
+      modoPagamentoId: empresa.modoPagamentoId ?? '',
       categoria: empresa.categoria ?? '',
       organismoId: empresa.organismoId ?? '',
       codigoClinica: empresa.codigoClinica ?? '',

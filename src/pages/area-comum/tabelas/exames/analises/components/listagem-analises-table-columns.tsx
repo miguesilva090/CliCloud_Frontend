@@ -1,4 +1,4 @@
-import type { AnaliseTableDTO } from '@/types/dtos/exames/analises'
+import type { AnaliseTableDTO } from '@/types/dtos/exames/analises.dtos'
 import { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { createAreaComumListActionsColumnDef } from '@/components/shared/area-comum-list-actions-column'
 import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'

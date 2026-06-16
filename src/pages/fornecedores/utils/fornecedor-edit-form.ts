@@ -52,7 +52,7 @@ export const fornecedorEditDefaultValues: FornecedorEditFormValues = {
   numeroConta: '',
   plafond: '',
   desconto: '',
-  condicaoPagamento: '',
+  condicaoPagamentoId: '',
   moeda: '',
   numeroNib: '',
   enderecoWeb: '',

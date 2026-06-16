@@ -1,6 +1,6 @@
 import React from 'react'
 import { DataTable } from '@/components/shared/data-table'
-import type { AcordosTableDTO } from '@/types/dtos/exames/acordos'
+import type { AcordosTableDTO } from '@/types/dtos/exames/acordos.dtos'
 import {
   columns,
   getColumnsWithViewCallback,

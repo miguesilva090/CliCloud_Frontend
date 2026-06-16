@@ -2,14 +2,14 @@ import state from '@/states/state'
 import type { GSResponse, PaginatedRequest, PaginatedResponse } from '@/types/api/responses'
 import type { ResponseApi } from '@/types/responses'
 import { BaseApiClient } from '@/lib/base-client'
-import type { ExamePrescricaoReportDTO } from '@/types/dtos/exames/exame'
+import type { ExamePrescricaoReportDTO } from '@/types/dtos/exames/exame.dtos'
 import type {
   ExameDTO,
   ExameLightDTO,
   ExameTableDTO,
   CreateExameRequest,
   UpdateExameRequest,
-} from '@/types/dtos/exames/exame'
+} from '@/types/dtos/exames/exame.dtos'
 import type { ResultadoExameTableDTO } from '@/types/dtos/exames/resultado-exame.dtos'
 
 const BASE = '/client/exames/Exame'

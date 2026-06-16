@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from '@/utils/toast-utils'
 import type { DataTableAction } from '@/components/shared/data-table'
-import type { AnaliseTableDTO } from '@/types/dtos/exames/analises'
+import type { AnaliseTableDTO } from '@/types/dtos/exames/analises.dtos'
 import { ListagemAnalisesTable } from '../components/listagem-analises-table'
 import { ListagemAnalisesFilterControls } from '../components/listagem-analises-filter-controls'
 import {
