@@ -44,8 +44,8 @@ import {
   useGetUtentesPaginated,
   usePrefetchAdjacentUtentes,
   useDeleteUtente,
-} from '@/pages/utentes/queries/utentes-queries'
-import { UtentesTable } from '@/pages/utentes/components/utentes-table/utentes-table'
+} from '../queries/listagem-utentes-queries'
+import { ListagemUtentesTable } from '../components/listagem-utentes-table'
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { UtenteTableDTO } from '@/types/dtos/saude/utentes.dtos'
 import { ResponseStatus } from '@/types/api/responses'
@@ -274,7 +274,7 @@ export function ListagemUtentesPage() {
           </Alert>
         ) : null}
 
-        <UtentesTable
+        <ListagemUtentesTable
           data={utentes}
           isLoading={isLoading}
           pageCount={pageCount}

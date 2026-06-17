@@ -1,0 +1,7 @@
+export { TabDadosPessoais } from './tab-dados-pessoais'
+export { TabContactos } from './tab-contactos'
+export { TabDadosProfissionais } from './tab-dados-profissionais'
+export { TabHorarioFixo } from './tab-horario-fixo'
+export type { TabHorarioFixoRef } from './tab-horario-fixo'
+export { TabHorarioVariavel } from './tab-horario-variavel'
+export { TabFeriasFolgas } from './tab-ferias-folgas'

@@ -4,7 +4,7 @@
 import { useMemo } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
-import { useGetConcelhosSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/queries/concelhos-queries'
+import { useGetConcelhosSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/queries/listagem-concelhos-queries'
 import { useCreateFreguesia } from '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/queries/freguesias-mutations'
 import { Tag, Globe, Plus, Eye } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'

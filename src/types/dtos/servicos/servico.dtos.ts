@@ -23,6 +23,7 @@ export interface ServicoLightDTO {
   id: string
   designacao: string
   tipoServicoId: string
+  ean?: string
 }
 
 export interface ServicoTableDTO {

@@ -5,8 +5,8 @@ import { useUpdateConcelho } from '@/pages/area-comum/tabelas/tabelas/geografica
 import {
   useGetDistritosSelect,
   useGetDistrito,
-} from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/queries/distritos-queries'
-import { useGetPaisesSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/queries/paises-queries'
+} from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/queries/listagem-distritos-queries'
+import { useGetPaisesSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/queries/listagem-paises-queries'
 import { Tag, Globe, Plus, Eye } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useFormState, useFormsStore } from '@/stores/use-forms-store'

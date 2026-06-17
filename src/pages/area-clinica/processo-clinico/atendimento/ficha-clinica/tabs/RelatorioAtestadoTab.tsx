@@ -38,7 +38,7 @@ import {
   useUpdateModeloRelatorioAtestado,
 } from '../queries/modelos-relatorio-atestado-queries'
 import type { ModeloRelatorioAtestadoDTO } from '@/lib/services/processo-clinico/modelos-relatorio-atestado-service'
-import { useGetUtente } from '@/pages/utentes/queries/utentes-queries'
+import { useGetUtente } from '@/pages/area-comum/tabelas/entidades/utentes/queries/utentes-queries'
 import type { UtenteDTO } from '@/types/dtos/saude/utentes.dtos'
 import {
   DropdownMenu,

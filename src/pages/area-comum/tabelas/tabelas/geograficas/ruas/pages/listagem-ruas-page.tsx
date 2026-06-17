@@ -5,13 +5,13 @@ import { Plus, List, RotateCw } from 'lucide-react'
 import {
   useGetRuasPaginated,
   usePrefetchAdjacentRuas,
-} from '@/pages/area-comum/tabelas/tabelas/geograficas/ruas/queries/ruas-queries'
+} from '@/pages/area-comum/tabelas/tabelas/geograficas/ruas/queries/listagem-ruas-queries'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { RuasListagemTable } from '@/pages/area-comum/tabelas/tabelas/geograficas/ruas/components/ruas-table/ruas-listagem-table'
+import { ListagemRuasTable } from '../components/listagem-ruas-table'
 import { ListagemRuasFilterControls } from '../components/listagem-ruas-filter-controls'
 import { RuaViewCreateModal } from '../modals/rua-view-create-modal'
 import type { DataTableAction } from '@/components/shared/data-table'
@@ -122,7 +122,7 @@ export function ListagemRuasPage() {
             </Alert>
           ) : null}
 
-          <RuasListagemTable
+          <ListagemRuasTable
             data={ruas}
             isLoading={isLoading}
             pageCount={pageCount}

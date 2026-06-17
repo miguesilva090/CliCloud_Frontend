@@ -2,11 +2,12 @@ import { usePageData } from '@/utils/page-data-utils'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { DataTableSkeleton } from '@/components/shared/data-table-skeleton'
 import { PageHead } from '@/components/shared/page-head'
-import { ConcelhosTable } from '../components/concelhos-table/concelhos-table'
+import { ListagemConcelhosTable } from '../components/listagem-concelhos-table'
+import { ListagemConcelhosFilterControls } from '../components/listagem-concelhos-filter-controls'
 import {
   useGetConcelhosPaginated,
   usePrefetchAdjacentConcelhos,
-} from '../queries/concelhos-queries'
+} from '../queries/listagem-concelhos-queries'
 
 export function ConcelhosPage() {
   const {
@@ -14,6 +15,8 @@ export function ConcelhosPage() {
     isLoading,
     page,
     pageSize,
+    filters,
+    sorting,
     handleFiltersChange,
     handlePaginationChange,
     handleSortingChange,
@@ -62,19 +65,24 @@ export function ConcelhosPage() {
         ]}
       />
       <div className='mt-10'>
-        <ConcelhosTable
-          concelhos={concelhos}
+        <ListagemConcelhosTable
+          data={concelhos}
+          isLoading={isLoading}
+          pageCount={pageCount}
+          totalRows={totalConcelhos}
           page={page}
           pageSize={pageSize}
-          total={totalConcelhos}
-          pageCount={pageCount}
+          filters={filters}
+          sorting={sorting}
           onFiltersChange={handleFiltersChange}
           onPaginationChange={handlePaginationChange}
           onSortingChange={handleSortingChange}
-          isLoading={isLoading}
+          FilterControls={ListagemConcelhosFilterControls}
+          expandableSearch
+          globalSearchColumnId='nome'
+          globalSearchPlaceholder='Procurar por nome...'
         />
       </div>
     </div>
   )
 }
-

@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { entityRoutes } from '@/config/entity-routes'
 import { roleHeaderMenus } from '@/config/menu-items'
 import {
   matchPath,
@@ -575,7 +576,7 @@ export function openUtenteCreationInApp(
   navigate: NavigateFunction,
   addWindow: AddWindowFn
 ): void {
-  openPathInApp(navigate, addWindow, '/utentes/novo', 'Novo utente')
+  openPathInApp(navigate, addWindow, entityRoutes.utentes.novo, 'Novo utente')
 }
 
 export function openUtenteEditInApp(
@@ -587,7 +588,7 @@ export function openUtenteEditInApp(
   openPathInApp(
     navigate,
     addWindow,
-    `/utentes/${id}/editar`,
+    entityRoutes.utentes.editar(id),
     nome ? `Utente: ${nome}` : 'Utente'
   )
 }
@@ -596,7 +597,7 @@ export function openMedicoCreationInApp(
   navigate: NavigateFunction,
   addWindow: AddWindowFn
 ): void {
-  openPathInApp(navigate, addWindow, '/medicos/novo', 'Novo médico')
+  openPathInApp(navigate, addWindow, entityRoutes.medicos.novo, 'Novo médico')
 }
 
 export function openMedicoViewInApp(
@@ -608,7 +609,7 @@ export function openMedicoViewInApp(
   openPathInApp(
     navigate,
     addWindow,
-    `/medicos/${id}`,
+    entityRoutes.medicos.detail(id),
     nome ? `Médico: ${nome}` : 'Médico'
   )
 }
@@ -622,7 +623,7 @@ export function openMedicoEditInApp(
   openPathInApp(
     navigate,
     addWindow,
-    `/medicos/${id}/editar`,
+    entityRoutes.medicos.editar(id),
     nome ? `Médico: ${nome}` : 'Médico'
   )
 }
@@ -634,7 +635,7 @@ export function openOrganismoCreationInApp(
   openPathInApp(
     navigate,
     addWindow,
-    '/organismos/novo',
+    entityRoutes.organismos.novo,
     'Novo organismo'
   )
 }
@@ -1313,16 +1314,16 @@ export function createEntityCreationWindow(route: string) {
 }
 
 export const openUtenteCreationWindow = createEntityCreationWindow(
-  '/area-comum/tabelas/entidades/utentes/novo'
+  entityRoutes.utentes.novo
 )
 
 export const openMedicoCreationWindow = createEntityCreationWindow(
-  '/area-comum/tabelas/entidades/medicos/novo'
+  entityRoutes.medicos.novo
 )
 
 
 export const openOrganismoCreationWindow = createEntityCreationWindow(
-  '/organismos/novo'
+  entityRoutes.organismos.novo
 )
 
 export const openMedicoExternoCreationWindow = createEntityCreationWindow(

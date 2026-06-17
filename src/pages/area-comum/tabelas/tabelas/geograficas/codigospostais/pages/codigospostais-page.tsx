@@ -2,11 +2,12 @@ import { usePageData } from '@/utils/page-data-utils'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { DataTableSkeleton } from '@/components/shared/data-table-skeleton'
 import { PageHead } from '@/components/shared/page-head'
-import { CodigosPostaisTable } from '../components/codigospostais-table/codigospostais-table'
+import { ListagemCodigospostaisTable } from '../components/listagem-codigospostais-table'
+import { ListagemCodigosPostaisFilterControls } from '../components/listagem-codigospostais-filter-controls'
 import {
   useGetCodigosPostaisPaginated,
   usePrefetchAdjacentCodigosPostais,
-} from '../queries/codigospostais-queries'
+} from '../queries/listagem-codigospostais-queries'
 
 export function CodigosPostaisPage() {
   const {
@@ -14,6 +15,8 @@ export function CodigosPostaisPage() {
     isLoading,
     page,
     pageSize,
+    filters,
+    sorting,
     handleFiltersChange,
     handlePaginationChange,
     handleSortingChange,
@@ -70,19 +73,24 @@ export function CodigosPostaisPage() {
         ]}
       />
       <div className='mt-10'>
-        <CodigosPostaisTable
-          codigosPostais={codigosPostais}
+        <ListagemCodigospostaisTable
+          data={codigosPostais}
+          isLoading={isLoading}
+          pageCount={pageCount}
+          totalRows={totalCodigosPostais}
           page={page}
           pageSize={pageSize}
-          total={totalCodigosPostais}
-          pageCount={pageCount}
+          filters={filters}
+          sorting={sorting}
           onFiltersChange={handleFiltersChange}
           onPaginationChange={handlePaginationChange}
           onSortingChange={handleSortingChange}
-          isLoading={isLoading}
+          FilterControls={ListagemCodigosPostaisFilterControls}
+          expandableSearch
+          globalSearchColumnId='codigo'
+          globalSearchPlaceholder='Procurar por código...'
         />
       </div>
     </div>
   )
 }
-

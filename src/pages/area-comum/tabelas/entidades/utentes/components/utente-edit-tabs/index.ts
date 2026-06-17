@@ -1,0 +1,7 @@
+export { TabDadosPessoais } from './tab-dados-pessoais'
+export { TabContactos } from './tab-contactos'
+export { TabSubsistemaSaude } from './tab-subsistema-saude'
+export { TabInformacaoSNS } from './tab-informacao-sns'
+export { TabOutrasInformacoes } from './tab-outras-informacoes'
+export { TabAvisos } from './tab-avisos'
+export { TabDocumentos } from './tab-documentos'

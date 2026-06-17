@@ -14,7 +14,7 @@ import {
 } from '../queries/odontograma-queries'
 import { ToothSvg } from '@/components/odontograma/ToothSvg'
 import { ToothSurfaceSvg } from '@/components/odontograma/ToothSurfaceSvg'
-import { useGetConsultasEfetuadasPaginated } from '@/pages/area-clinica/processo-clinico/historico/queries/consultas-efetuadas-queries'
+import { useGetConsultasEfetuadasPaginated } from '@/pages/area-clinica/processo-clinico/historico/queries/listagem-consultas-efetuadas-queries'
 import type { ConsultaTableDTO } from '@/types/dtos/consultas/consulta.dtos'
 import type { OdontogramaDefinitivoDTO } from '@/types/dtos/odontologia/odontograma-definitivo.dtos'
 import type { ServicoLightDTO } from '@/types/dtos/servicos/servico.dtos'

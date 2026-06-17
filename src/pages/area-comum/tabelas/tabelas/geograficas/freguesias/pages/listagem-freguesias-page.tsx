@@ -4,14 +4,14 @@ import {} from 'react-router-dom'
 import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import {
   useGetFreguesiasPaginated,
-  usePrefetchAdjacentFreguesias} from '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/queries/freguesias-queries'
+  usePrefetchAdjacentFreguesias} from '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/queries/listagem-freguesias-queries'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { FreguesiasListagemTable } from '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/components/freguesias-table/freguesias-listagem-table'
+import { ListagemFreguesiasTable } from '../components/listagem-freguesias-table'
 import { ListagemFreguesiasFilterControls } from '../components/listagem-freguesias-filter-controls'
 import { FreguesiaViewCreateModal } from '../modals/freguesia-view-create-modal'
 import type { DataTableAction } from '@/components/shared/data-table'
@@ -112,7 +112,7 @@ export function ListagemFreguesiasPage() {
           </Alert>
         ) : null}
 
-        <FreguesiasListagemTable
+        <ListagemFreguesiasTable
           data={freguesias}
           isLoading={isLoading}
           pageCount={pageCount}

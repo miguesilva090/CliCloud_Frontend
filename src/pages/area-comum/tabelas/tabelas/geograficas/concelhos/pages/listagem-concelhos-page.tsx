@@ -4,14 +4,14 @@ import {} from 'react-router-dom'
 import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import {
   useGetConcelhosPaginated,
-  usePrefetchAdjacentConcelhos} from '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/queries/concelhos-queries'
+  usePrefetchAdjacentConcelhos} from '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/queries/listagem-concelhos-queries'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { ConcelhosListagemTable } from '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/components/concelhos-table/concelhos-listagem-table'
+import { ListagemConcelhosTable } from '../components/listagem-concelhos-table'
 import { ListagemConcelhosFilterControls } from '../components/listagem-concelhos-filter-controls'
 import { ConcelhoViewCreateModal } from '../modals/concelho-view-create-modal'
 import type { DataTableAction } from '@/components/shared/data-table'
@@ -112,7 +112,7 @@ export function ListagemConcelhosPage() {
           </Alert>
         ) : null}
 
-        <ConcelhosListagemTable
+        <ListagemConcelhosTable
           data={concelhos}
           isLoading={isLoading}
           pageCount={pageCount}

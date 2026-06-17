@@ -196,7 +196,7 @@ export function ListagemOrganismosPage() {
               openPathInApp(
                 navigate,
                 addWindow,
-                `/organismos/${id}`,
+                `/area-comum/tabelas/entidades/organismos/${id}`,
                 nome ? `Organismo: ${nome}` : 'Organismo'
               )
           }}
@@ -209,7 +209,7 @@ export function ListagemOrganismosPage() {
                     openEntityEditInApp(
                       navigate,
                       addWindow,
-                      `/organismos/${id}/editar`,
+                      `/area-comum/tabelas/entidades/organismos/${id}/editar`,
                       String(id),
                       nome ? `Organismo: ${nome}` : null
                     )

@@ -2,11 +2,12 @@ import { usePageData } from '@/utils/page-data-utils'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { DataTableSkeleton } from '@/components/shared/data-table-skeleton'
 import { PageHead } from '@/components/shared/page-head'
-import { DistritosTable } from '../components/distritos-table/distritos-table'
+import { ListagemDistritosTable } from '../components/listagem-distritos-table'
+import { ListagemDistritosFilterControls } from '../components/listagem-distritos-filter-controls'
 import {
   useGetDistritosPaginated,
   usePrefetchAdjacentDistritos,
-} from '../queries/distritos-queries'
+} from '../queries/listagem-distritos-queries'
 
 export function DistritosPage() {
   const {
@@ -14,6 +15,8 @@ export function DistritosPage() {
     isLoading,
     page,
     pageSize,
+    filters,
+    sorting,
     handleFiltersChange,
     handlePaginationChange,
     handleSortingChange,
@@ -58,16 +61,22 @@ export function DistritosPage() {
         ]}
       />
       <div className='mt-10'>
-        <DistritosTable
-          distritos={distritos}
+        <ListagemDistritosTable
+          data={distritos}
+          isLoading={isLoading}
+          pageCount={pageCount}
+          totalRows={totalDistritos}
           page={page}
           pageSize={pageSize}
-          total={totalDistritos}
-          pageCount={pageCount}
+          filters={filters}
+          sorting={sorting}
           onFiltersChange={handleFiltersChange}
           onPaginationChange={handlePaginationChange}
           onSortingChange={handleSortingChange}
-          isLoading={isLoading}
+          FilterControls={ListagemDistritosFilterControls}
+          expandableSearch
+          globalSearchColumnId='nome'
+          globalSearchPlaceholder='Procurar por nome...'
         />
       </div>
     </div>

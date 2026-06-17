@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { useCreateCodigoPostal } from '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/queries/codigospostais-mutations'
-import { useGetCodigosPostaisSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/queries/codigospostais-queries'
+import { useGetCodigosPostaisSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/queries/listagem-codigospostais-queries'
 import { MapPin, Tag, Building2 } from 'lucide-react'
 import { handleApiError } from '@/utils/error-handlers'
 import { handleApiResponse } from '@/utils/response-handlers'
@@ -145,7 +145,7 @@ const CodigoPostalCreateFormModal = ({
       if (result.success) {
         const newCodigoPostalId = response.info.data
 
-        if (onSuccess) {
+        if (onSuccess && newCodigoPostalId) {
           onSuccess({
             id: newCodigoPostalId,
             codigo: values.codigo,

@@ -19,7 +19,7 @@ import {
     useGetReciboById,
     useGetRecibosPaginatedPageData,
     usePrefetchAdjacentRecibos,
-} from '../queries/recibo-queries'
+} from '../queries/listagem-recibos-queries'
 
 const ID_FUNCIONALIDADE = 'documentos'
 

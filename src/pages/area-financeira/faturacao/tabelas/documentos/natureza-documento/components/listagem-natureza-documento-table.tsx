@@ -6,7 +6,12 @@ import {
   getColumnsWithViewCallback,
 } from './listagem-natureza-documento-table.columns'
 
-type FilterControlsComponent = React.ComponentType<{ table: any }>
+type FilterControlsComponent = React.ComponentType<{
+  table: any
+  columns: any[]
+  onApplyFilters: () => void
+  onClearFilters: () => void
+}>
 
 export function ListagemNaturezaDocumentoTable({
   data,

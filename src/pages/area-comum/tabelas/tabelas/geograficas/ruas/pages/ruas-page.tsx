@@ -2,11 +2,12 @@ import { usePageData } from '@/utils/page-data-utils'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { DataTableSkeleton } from '@/components/shared/data-table-skeleton'
 import { PageHead } from '@/components/shared/page-head'
-import { RuasTable } from '../components/ruas-table/ruas-table'
+import { ListagemRuasTable } from '../components/listagem-ruas-table'
+import { ListagemRuasFilterControls } from '../components/listagem-ruas-filter-controls'
 import {
   useGetRuasPaginated,
   usePrefetchAdjacentRuas,
-} from '../queries/ruas-queries'
+} from '../queries/listagem-ruas-queries'
 
 export function RuasPage() {
   const {
@@ -14,6 +15,8 @@ export function RuasPage() {
     isLoading,
     page,
     pageSize,
+    filters,
+    sorting,
     handleFiltersChange,
     handlePaginationChange,
     handleSortingChange,
@@ -70,16 +73,22 @@ export function RuasPage() {
         ]}
       />
       <div className='mt-10'>
-        <RuasTable
-          ruas={ruas}
+        <ListagemRuasTable
+          data={ruas}
+          isLoading={isLoading}
+          pageCount={pageCount}
+          totalRows={totalRuas}
           page={page}
           pageSize={pageSize}
-          total={totalRuas}
-          pageCount={pageCount}
+          filters={filters}
+          sorting={sorting}
           onFiltersChange={handleFiltersChange}
           onPaginationChange={handlePaginationChange}
           onSortingChange={handleSortingChange}
-          isLoading={isLoading}
+          FilterControls={ListagemRuasFilterControls}
+          expandableSearch
+          globalSearchColumnId='nome'
+          globalSearchPlaceholder='Procurar por nome...'
         />
       </div>
     </div>

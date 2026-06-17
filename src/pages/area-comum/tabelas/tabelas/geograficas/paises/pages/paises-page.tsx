@@ -4,13 +4,13 @@ import { Plus, List, RotateCw } from 'lucide-react'
 import {
   useGetPaisesPaginated,
   usePrefetchAdjacentPaises,
-} from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/queries/paises-queries'
+} from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/queries/listagem-paises-queries'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import Heading from '@/components/shared/heading'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { PaisesTable } from '../components/paises-table/paises-table'
+import { ListagemPaisesTable } from '../components/listagem-paises-table'
 import type { DataTableAction } from '@/components/shared/data-table'
 import { navigateManagedWindow } from '@/utils/window-utils'
 
@@ -97,7 +97,7 @@ export function PaisesPage() {
           </Alert>
         ) : null}
 
-        <PaisesTable
+        <ListagemPaisesTable
           data={paises}
           isLoading={isLoading}
           pageCount={pageCount}

@@ -4,14 +4,14 @@ import {} from 'react-router-dom'
 import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import {
   useGetCodigosPostaisPaginated,
-  usePrefetchAdjacentCodigosPostais} from '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/queries/codigospostais-queries'
+  usePrefetchAdjacentCodigosPostais} from '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/queries/listagem-codigospostais-queries'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { CodigosPostaisListagemTable } from '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/components/codigospostais-table/codigospostais-listagem-table'
+import { ListagemCodigospostaisTable } from '../components/listagem-codigospostais-table'
 import { ListagemCodigosPostaisFilterControls } from '../components/listagem-codigospostais-filter-controls'
 import { CodigoPostalViewCreateModal } from '../modals/codigopostal-view-create-modal'
 import type { DataTableAction } from '@/components/shared/data-table'
@@ -118,7 +118,7 @@ export function ListagemCodigosPostaisPage() {
           </Alert>
         ) : null}
 
-        <CodigosPostaisListagemTable
+        <ListagemCodigospostaisTable
           data={codigosPostais}
           isLoading={isLoading}
           pageCount={pageCount}

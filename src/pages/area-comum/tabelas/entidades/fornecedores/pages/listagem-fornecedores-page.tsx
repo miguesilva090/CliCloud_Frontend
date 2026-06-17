@@ -84,7 +84,7 @@ export function ListagemFornecedoresPage() {
               openPathInApp(
                 navigate,
                 addWindow,
-                '/fornecedores/novo',
+                '/area-comum/tabelas/entidades/fornecedores/novo',
                 'Novo Fornecedor'
               ),
             variant: 'destructive' as const,
@@ -205,7 +205,7 @@ export function ListagemFornecedoresPage() {
               openPathInApp(
                 navigate,
                 addWindow,
-                `/fornecedores/${id}`,
+                `/area-comum/tabelas/entidades/fornecedores/${id}`,
                 nome ? `Fornecedor: ${nome}` : 'Fornecedor'
               )
           }}
@@ -218,7 +218,7 @@ export function ListagemFornecedoresPage() {
                     openEntityEditInApp(
                       navigate,
                       addWindow,
-                      `/fornecedores/${id}/editar`,
+                      `/area-comum/tabelas/entidades/fornecedores/${id}/editar`,
                       String(id),
                       nome ? `Fornecedor: ${nome}` : null
                     )

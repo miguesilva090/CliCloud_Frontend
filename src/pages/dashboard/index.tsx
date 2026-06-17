@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { navigateManagedWindow } from '@/utils/window-utils'
+import { entityRoutes } from '@/config/entity-routes'
 import { useAuthStore } from '@/stores/auth-store'
 import { Icons } from '@/components/ui/icons'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -19,7 +20,7 @@ export function DashboardPage() {
       description: 'Utentes, consultas, médicos e tratamentos',
       icon: Icons.user,
       color: 'bg-blue-500',
-      path: '/utentes',
+      path: entityRoutes.utentes.listagem,
       gradient: 'from-blue-500 to-blue-600',
       bgGradient:
         'from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20',

@@ -21,10 +21,10 @@ import {
   MEDICO_LIST_ALLOWED_SORT_IDS,
   useGetMedicosPaginated,
   usePrefetchAdjacentMedicos,
-} from '@/pages/medicos/queries/medicos-queries'
+} from '../queries/listagem-medicos-queries'
 import type { DataTableAction } from '@/components/shared/data-table'
-import { MedicosTable } from '@/pages/medicos/components/medicos-table/medicos-table'
-import { listagemMedicosColumns } from '../components/listagem-medicos-columns'
+import { ListagemMedicosTable } from '../components/listagem-medicos-table'
+import { listagemMedicosColumns } from '../components/listagem-medicos-table.columns'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
 import { modules } from '@/config/modules'
@@ -135,7 +135,7 @@ export function ListagemMedicosPage() {
           </Alert>
         ) : null}
 
-        <MedicosTable
+        <ListagemMedicosTable
           data={medicos}
           isLoading={isLoading}
           pageCount={pageCount}

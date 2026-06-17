@@ -19,14 +19,14 @@ import { OrigemAdmissao, type AdmissaoTableDTO } from '@/types/dtos/consultas/ad
 import type { HistoricoConsultaAdministrativoRowDTO } from '@/types/dtos/consultas/historico-consulta-administrativo.dtos'
 import { AdmissaoViewEditModal } from '../../admissoes/modals/admissao-view-edit-modal'
 import type { HistoricoConsultaAdministrativoVista } from '@/lib/services/consultas/historico-consultas-administrativo-service/historico-consultas-administrativo-client'
-import { useGetHistoricoConsultasAdministrativoPaginated } from '../queries/historico-consultas-administrativo-queries'
+import { useGetHistoricoConsultasAdministrativoPaginated } from '../queries/listagem-historico-consultas-administrativo-queries'
 import {
   HistoricoConsultasAdministrativoFiltroModal,
   buildHistoricoAdmApiFilters,
   emptyHistoricoAdmCriteria,
   historicoAdmListQueryEnabled,
   type HistoricoAdmCriteria,
-} from '../components/historico-consultas-administrativo-filtro-modal'
+} from '../modals/historico-consultas-administrativo-filtro-modal'
 
 const VALID_VISTAS = new Set<HistoricoConsultaAdministrativoVista>([
   'datas',

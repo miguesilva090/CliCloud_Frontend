@@ -588,6 +588,37 @@ export const roleHeaderMenus = {
               },
             ],
           },
+          {
+            label: 'Serviços',
+            href: '#',
+            funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
+            items: [
+              {
+                label: 'Serviços',
+                href: '/area-financeira/faturacao/tabelas/servicos/servicos',
+                funcionalidadeId: modules.areaComum.permissions.servicos.id,
+                funcionalidadeFallbackIds: [
+                  modules.areaFinanceira.permissions.tabelas.id,
+                ],
+              },
+              {
+                label: 'Subsistemas de Serviços',
+                href: '/area-financeira/faturacao/tabelas/servicos/subsistemas-servicos',
+                funcionalidadeId: modules.areaComum.permissions.subsistemasServicos.id,
+                funcionalidadeFallbackIds: [
+                  modules.areaFinanceira.permissions.tabelas.id,
+                ],
+              },
+              {
+                label: 'Tipos de Serviço',
+                href: '/area-financeira/faturacao/tabelas/servicos/tipos-servico',
+                funcionalidadeId: modules.areaComum.permissions.tiposServico.id,
+                funcionalidadeFallbackIds: [
+                  modules.areaFinanceira.permissions.tabelas.id,
+                ],
+              },
+            ],
+          },
         ],
       },
       {

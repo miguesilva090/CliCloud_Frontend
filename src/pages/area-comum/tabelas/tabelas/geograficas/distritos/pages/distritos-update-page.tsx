@@ -1,4 +1,4 @@
-import { useGetDistrito } from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/queries/distritos-queries'
+import { useGetDistrito } from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/queries/listagem-distritos-queries'
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useLocation } from 'react-router-dom'

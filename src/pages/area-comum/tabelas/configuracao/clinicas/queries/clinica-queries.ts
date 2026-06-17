@@ -18,7 +18,7 @@ const getFirstErrorFromMessages = (
   return messages['$']?.[0] ?? Object.values(messages).flat()[0] ?? null
 }
 
-const getValidationMessage = (error: unknown): string => {
+const getValidationMessage = (error: unknown, fallback = 'Falha ao atualizar clínica'): string => {
   if (
     error instanceof BaseApiError &&
     error.data &&
@@ -30,7 +30,75 @@ const getValidationMessage = (error: unknown): string => {
     const first = getFirstErrorFromMessages(messages)
     if (first) return first
   }
-  return 'Falha ao atualizar clínica'
+  return fallback
+}
+
+export const useGetClinica = (id: string, options?: { enabled?: boolean }) =>
+  useQuery({
+    queryKey: ['clinica', id],
+    queryFn: () => ClinicaService('tabelas').getClinicaById(id),
+    enabled: (options?.enabled ?? true) && !!id,
+  })
+
+export const useUpdateClinica = (id: string) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: UpdateClinicaRequest) =>
+      ClinicaService('tabelas').updateClinicaById(id, payload),
+    onMutate: () => {
+      toast.info('A gravar clínica...')
+    },
+    onSuccess: async (response) => {
+      const info = response.info as { status?: number }
+
+      if (info?.status === ResponseStatus.Success) {
+        toast.success('Clínica atualizada com sucesso')
+        await queryClient.invalidateQueries({ queryKey: ['clinicas-paginated'] })
+        await queryClient.invalidateQueries({ queryKey: ['clinica', id] })
+        return
+      }
+
+      const msg =
+        (response.info as { messages?: Record<string, string[]> })?.messages
+          ?.['$']?.[0] ?? 'Falha ao atualizar clínica'
+      toast.error(msg)
+    },
+    onError: (error: unknown) => {
+      toast.error(getValidationMessage(error))
+    },
+  })
+}
+
+export const useCreateClinica = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: UpdateClinicaRequest) =>
+      ClinicaService('tabelas').createClinica(payload),
+    onMutate: () => {
+      toast.info('A criar clínica...')
+    },
+    onSuccess: async (response) => {
+      const info = response.info as { status?: number; data?: string }
+
+      if (info?.status === ResponseStatus.Success && info.data) {
+        toast.success('Clínica criada com sucesso')
+        await queryClient.invalidateQueries({ queryKey: ['clinicas-paginated'] })
+        return
+      }
+
+      const msg =
+        (response.info as { messages?: Record<string, string[]> })?.messages
+          ?.['$']?.[0] ??
+        'Falha ao criar clínica'
+      toast.error(msg)
+      return undefined
+    },
+    onError: (error: unknown) => {
+      toast.error(getValidationMessage(error, 'Falha ao processar a Clínica.'))
+    },
+  })
 }
 
 export const useUpdateClinicaCurrent = () => {

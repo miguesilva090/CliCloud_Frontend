@@ -18,8 +18,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useCreateRua, useUpdateRua } from '@/pages/area-comum/tabelas/tabelas/geograficas/ruas/queries/ruas-mutations'
-import { useGetFreguesiasSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/queries/freguesias-queries'
-import { useGetCodigosPostaisSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/queries/codigospostais-queries'
+import { useGetFreguesiasSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/queries/listagem-freguesias-queries'
+import { useGetCodigosPostaisSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/queries/listagem-codigospostais-queries'
 import {
   useConcelhosLight,
   useDistritosLight,

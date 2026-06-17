@@ -126,7 +126,9 @@ export function DocumentoEdicaoPage() {
         <AreaComumListagemPageShell
           title={pageTitle}
           onBack={closeLikeTabBar}
-          onRefresh={() => docQ.refetch()}
+          onRefresh={() => {
+            void docQ.refetch()
+          }}
         >
           {isLoading ? (
             <p className='text-sm text-muted-foreground'>A carregar documento…</p>

@@ -1,6 +1,6 @@
 import { DataTable } from '@/components/shared/data-table'
 import { getOrdemEntradaColumns } from './listagem-ordem-entrada-table.columns'
-import { OrdemEntradaFilterControls } from './ordem-entrada-filter-controls'
+import { ListagemOrdemEntradaFilterControls } from './listagem-ordem-entrada-filter-controls'
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { OrdemEntradaTableDTO } from '@/types/dtos/consultas/ordem-entrada.dtos'
 import type { PageFilter } from '@/utils/page-data-utils'
@@ -52,7 +52,7 @@ export function ListagemOrdemEntradaTable({
   consultasDesmarcadas: boolean
 }) {
   const FilterControls = () => (
-    <OrdemEntradaFilterControls filters={filters as PageFilter[]} onFiltersChange={onFiltersChange} />
+    <ListagemOrdemEntradaFilterControls filters={filters as PageFilter[]} onFiltersChange={onFiltersChange} />
   )
 
   return (

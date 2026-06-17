@@ -22,7 +22,7 @@ import {
   useCreateConcelho,
   useUpdateConcelho,
 } from '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/queries/concelhos-mutations'
-import { useGetDistritosSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/queries/distritos-queries'
+import { useGetDistritosSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/queries/listagem-distritos-queries'
 import { handleApiResponse } from '@/utils/response-handlers'
 import { toast } from '@/utils/toast-utils'
 

@@ -68,6 +68,7 @@ export type DocumentoDTO = {
   retencaoTaxa?: number | null
   retencaoValor?: number | null
   retencaoMotivo?: string | null
+  retencaoCodigoMotivo?: number | null
   codigoValidacaoTransporte?: string | null
   dataTransporte?: string | null
   horaTransporte?: string | null

@@ -2,11 +2,12 @@ import { usePageData } from '@/utils/page-data-utils'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { DataTableSkeleton } from '@/components/shared/data-table-skeleton'
 import { PageHead } from '@/components/shared/page-head'
-import { FreguesiasTable } from '../components/freguesias-table/freguesias-table'
+import { ListagemFreguesiasTable } from '../components/listagem-freguesias-table'
+import { ListagemFreguesiasFilterControls } from '../components/listagem-freguesias-filter-controls'
 import {
   useGetFreguesiasPaginated,
   usePrefetchAdjacentFreguesias,
-} from '../queries/freguesias-queries'
+} from '../queries/listagem-freguesias-queries'
 
 export function FreguesiasPage() {
   const {
@@ -14,6 +15,8 @@ export function FreguesiasPage() {
     isLoading,
     page,
     pageSize,
+    filters,
+    sorting,
     handleFiltersChange,
     handlePaginationChange,
     handleSortingChange,
@@ -66,16 +69,22 @@ export function FreguesiasPage() {
         ]}
       />
       <div className='mt-10'>
-        <FreguesiasTable
-          freguesias={freguesias}
+        <ListagemFreguesiasTable
+          data={freguesias}
+          isLoading={isLoading}
+          pageCount={pageCount}
+          totalRows={totalFreguesias}
           page={page}
           pageSize={pageSize}
-          total={totalFreguesias}
-          pageCount={pageCount}
+          filters={filters}
+          sorting={sorting}
           onFiltersChange={handleFiltersChange}
           onPaginationChange={handlePaginationChange}
           onSortingChange={handleSortingChange}
-          isLoading={isLoading}
+          FilterControls={ListagemFreguesiasFilterControls}
+          expandableSearch
+          globalSearchColumnId='nome'
+          globalSearchPlaceholder='Procurar por nome...'
         />
       </div>
     </div>

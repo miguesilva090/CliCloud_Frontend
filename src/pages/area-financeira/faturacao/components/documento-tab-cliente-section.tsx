@@ -25,7 +25,7 @@ import {
 } from '@/lib/form-styles'
 import { OrganismoService } from '@/lib/services/saude/organismo-service'
 import { useCodigosPostaisLight } from '@/lib/services/utility/lookups/lookups-queries'
-import { useGetUtente, useUtentesLight } from '@/pages/utentes/queries/utentes-queries'
+import { useGetUtente, useUtentesLight } from '@/pages/area-comum/tabelas/entidades/utentes/queries/utentes-queries'
 import {
   buildUtenteOrganismoOptions,
   resolveBeneficiarioApolice,

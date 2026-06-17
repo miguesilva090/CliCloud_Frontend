@@ -4,14 +4,14 @@ import {} from 'react-router-dom'
 import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import {
   useGetPaisesPaginated,
-  usePrefetchAdjacentPaises} from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/queries/paises-queries'
+  usePrefetchAdjacentPaises,
+} from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/queries/listagem-paises-queries'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
-import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { PaisesTable } from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/components/paises-table/paises-table'
+import { ListagemPaisesTable } from '../components/listagem-paises-table'
 import { ListagemPaisesFilterControls } from '../components/listagem-paises-filter-controls'
 import { PaisViewCreateModal } from '../modals/pais-view-create-modal'
 import type { DataTableAction } from '@/components/shared/data-table'
@@ -111,7 +111,7 @@ export function ListagemPaisesPage() {
           </Alert>
         ) : null}
 
-        <PaisesTable
+        <ListagemPaisesTable
           data={paises}
           isLoading={isLoading}
           pageCount={pageCount}

@@ -3,7 +3,7 @@ import type { EntidadeFinanceiraTableDTO } from '@/types/dtos/utility/entidade-f
 import { CondicaoSns } from '@/types/enums/condicao-sns.enum'
 import { useQuery } from '@tanstack/react-query'
 import { TipoEntidadeFinanceiraService } from '@/lib/services/utility/tipo-entidade-financeira-service'
-import { useGetPaisesSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/queries/paises-queries'
+import { useGetPaisesSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/queries/listagem-paises-queries'
 import { EntidadesFinanceirasService } from '@/lib/services/utility/entidades-financeiras-service'
 import { ResponseStatus } from '@/types/api/responses'
 import {

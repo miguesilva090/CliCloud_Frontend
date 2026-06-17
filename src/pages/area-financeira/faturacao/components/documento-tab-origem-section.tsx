@@ -4,9 +4,9 @@ import { useQuery } from '@tanstack/react-query'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ResponseStatus } from '@/types/api/responses'
 import { fieldGap, inputClass, labelClass } from '@/lib/form-styles'
 import { DocumentoService } from '@/lib/services/faturacao/documento-service'
+import type { DocumentoTableDTO } from '@/types/dtos/faturacao/documento.dtos'
 import { getDocumentoNumeroLabel } from '../utils/faturacao-documento-display'
 import type { DocumentoEditorState } from '../types/documento-editor.types'
 
@@ -35,13 +35,12 @@ export function DocumentoTabOrigemSection({
           : [],
         sorting: [{ id: 'data', desc: true }],
       })
-      if (res.info?.status !== ResponseStatus.Success) return []
-      return res.info.data?.data ?? []
+      return res.info?.data ?? []
     },
     staleTime: 30_000,
   })
 
-  const items = (docsQ.data ?? []).map((d) => ({
+  const items = (docsQ.data ?? []).map((d: DocumentoTableDTO) => ({
     value: d.id,
     label: getDocumentoNumeroLabel(d),
     secondary: d.nomeCliente ?? undefined,
@@ -54,7 +53,7 @@ export function DocumentoTabOrigemSection({
         <AsyncCombobox
           value={state.documentoOrigemId ?? ''}
           onChange={(id) => {
-            const row = (docsQ.data ?? []).find((d) => d.id === id)
+            const row = (docsQ.data ?? []).find((d: DocumentoTableDTO) => d.id === id)
             onChange({
               documentoOrigemId: id || null,
               identificadorUnicoDocumentoOrigem: row

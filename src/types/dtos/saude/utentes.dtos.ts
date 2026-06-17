@@ -23,6 +23,7 @@ export interface UtenteDTO {
   ruaId?: string | null
   rua?: { id?: string; nome?: string } | null
   codigoPostalId?: string | null
+  codigoPostal?: UtenteTableCodigoPostalDTO | null
   freguesiaId?: string | null
   freguesia?: { id: string; nome?: string | null } | null
   concelhoId?: string | null

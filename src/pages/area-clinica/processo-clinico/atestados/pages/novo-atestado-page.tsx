@@ -31,10 +31,10 @@ import { PaisViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geografi
 import { DistritoViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/modals/distrito-view-create-modal'
 import { ConcelhoViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/modals/concelho-view-create-modal'
 import { FreguesiaViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/modals/freguesia-view-create-modal'
-import { useGetUtente, useUtentesLight } from '@/pages/utentes/queries/utentes-queries'
+import { useGetUtente, useUtentesLight } from '@/pages/area-comum/tabelas/entidades/utentes/queries/utentes-queries'
 import { MedicosService } from '@/lib/services/saude/medicos-service'
 import { useAuthStore } from '@/stores/auth-store'
-import { useCreateAtestado } from '../queries/atestados-queries'
+import { useCreateAtestado } from '../queries/atestado-queries'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -58,8 +58,9 @@ import {
 } from '@/components/ui/table'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { navigateManagedWindow, useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { entityRoutes } from '@/config/entity-routes'
 import { ResponseStatus } from '@/types/api/responses'
-import { useConsultarUtenteRnu } from '@/pages/utentes/queries/utente-rnu-queries'
+import { useConsultarUtenteRnu } from '@/pages/area-comum/tabelas/entidades/utentes/queries/utente-rnu-queries'
 
 import { toast } from '@/utils/toast-utils'
 import { CATEGORIAS_GRUPO2, formatRestricaoDisplay, isRestricaoPermitidaNaCategoria, normalizeRestricaoCodigo, requiresAnotacao } from '../utils/atestado-clinica-regras'
@@ -647,7 +648,7 @@ export function NovoAtestadoPage() {
   }
 
   const handleAdicionarUtente = () => {
-    navigateManagedWindow(navigate, '/utentes/novo')
+    navigateManagedWindow(navigate, entityRoutes.utentes.novo)
   }
 
   return (

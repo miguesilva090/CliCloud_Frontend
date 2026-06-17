@@ -14,7 +14,7 @@ import {
   useGetClinicasPaginated,
   usePrefetchAdjacentClinicas,
   useSetDefaultClinica,
-} from '../queries/clinicas-queries'
+} from '../queries/listagem-clinicas-queries'
 import { openEntityEditInApp, openPathInApp } from '@/utils/window-utils'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'

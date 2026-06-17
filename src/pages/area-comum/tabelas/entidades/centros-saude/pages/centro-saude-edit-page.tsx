@@ -24,7 +24,7 @@ import {
   useGetCentroSaude,
   useUpdateCentroSaude,
 } from '../queries/centro-saude-queries'
-import { TabCentroSaudeIdentificacao } from '../components/tab-centro-saude-identificacao'
+import { TabCentroSaudeIdentificacao } from '../components/centro-saude-edit-tabs'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { useCurrentWindowId, handleWindowClose } from '@/utils/window-utils'
 

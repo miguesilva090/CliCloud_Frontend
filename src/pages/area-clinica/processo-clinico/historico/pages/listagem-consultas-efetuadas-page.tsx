@@ -21,7 +21,7 @@ import {
 import { cn } from '@/lib/utils'
 import {
   useGetConsultasEfetuadasPaginated,
-} from '../queries/consultas-efetuadas-queries'
+} from '../queries/listagem-consultas-efetuadas-queries'
 import type { ConsultaTableDTO } from '@/types/dtos/consultas/consulta.dtos'
 
 const DEFAULT_FILTERS: Array<{ id: string; value: string }> = [

@@ -4,7 +4,7 @@ import type { MargemMedicoTableDTO } from '@/types/dtos/saude/margem-medico.dtos
 import {
     margemMedicosColumns,
     getMargemMedicosColumnsWithViewCallback,
-} from './listagem-margem-medicos-table-columns'
+} from './listagem-margem-medicos-table.columns'
 
 export function ListagemMargemMedicosTable({
     data, 

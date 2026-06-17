@@ -4,11 +4,11 @@ import { useDebounce } from 'use-debounce'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
-import { useGetUtente, useUtentesLight } from '@/pages/utentes/queries/utentes-queries'
+import { useGetUtente, useUtentesLight } from '@/pages/area-comum/tabelas/entidades/utentes/queries/utentes-queries'
 import { usePageData } from '@/utils/page-data-utils'
 import { getCurrentWindowId } from '@/utils/window-utils'
 import { useWindowsStore } from '@/stores/use-windows-store'
-import { useGetConsultasEfetuadasPaginated, usePrefetchAdjacentConsultasEfetuadas } from '@/pages/area-clinica/processo-clinico/historico/queries/consultas-efetuadas-queries'
+import { useGetConsultasEfetuadasPaginated, usePrefetchAdjacentConsultasEfetuadas } from '@/pages/area-clinica/processo-clinico/historico/queries/listagem-consultas-efetuadas-queries'
 import {
   useGetHistoriasClinicasPaginated,
   usePrefetchAdjacentHistoriasClinicas,

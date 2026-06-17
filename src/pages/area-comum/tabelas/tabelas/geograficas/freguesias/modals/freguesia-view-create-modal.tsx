@@ -22,7 +22,7 @@ import {
   useCreateFreguesia,
   useUpdateFreguesia,
 } from '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/queries/freguesias-mutations'
-import { useGetConcelhosSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/queries/concelhos-queries'
+import { useGetConcelhosSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/queries/listagem-concelhos-queries'
 import { handleApiResponse } from '@/utils/response-handlers'
 import { toast } from '@/utils/toast-utils'
 

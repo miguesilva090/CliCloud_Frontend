@@ -30,7 +30,7 @@ import type {
 import type { EspecialidadeLightItem } from '@/lib/services/especialidades/especialidade-service/especialidade-client'
 import { EspecialidadeService } from '@/lib/services/especialidades/especialidade-service'
 import { HistoriaClinicaService } from '@/lib/services/historia-clinica/historia-clinica-service'
-import { useGetUtente } from '@/pages/utentes/queries/utentes-queries'
+import { useGetUtente } from '@/pages/area-comum/tabelas/entidades/utentes/queries/utentes-queries'
 import state from '@/states/state'
 import { toast } from '@/utils/toast-utils'
 import { modules } from '@/config/modules'

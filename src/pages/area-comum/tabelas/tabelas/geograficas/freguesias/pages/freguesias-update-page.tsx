@@ -1,4 +1,4 @@
-import { useGetFreguesia } from '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/queries/freguesias-queries'
+import { useGetFreguesia } from '@/pages/area-comum/tabelas/tabelas/geograficas/freguesias/queries/listagem-freguesias-queries'
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useFormsStore } from '@/stores/use-forms-store'

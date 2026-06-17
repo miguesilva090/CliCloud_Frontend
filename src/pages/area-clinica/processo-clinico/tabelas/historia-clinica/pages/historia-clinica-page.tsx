@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/alert'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useGetUtente, useUtentesLight } from '@/pages/utentes/queries/utentes-queries'
+import { useGetUtente, useUtentesLight } from '@/pages/area-comum/tabelas/entidades/utentes/queries/utentes-queries'
 import { useDebounce } from 'use-debounce'
 
 const DEFAULT_FILTERS: Array<{ id: string; value: string }> = []

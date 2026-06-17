@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Breadcrumbs } from '@/components/shared/breadcrumbs'
 import { PageContainer } from '@/components/shared/page-container'
 import { PageHead } from '@/components/shared/page-head'
-import { useGetCodigoPostal } from '../queries/codigospostais-queries'
+import { useGetCodigoPostal } from '../queries/listagem-codigospostais-queries'
 import { CodigoPostalUpdateForm } from '../components/codigospostais-forms/codigopostal-update-form'
 
 export function CodigosPostaisUpdatePage() {

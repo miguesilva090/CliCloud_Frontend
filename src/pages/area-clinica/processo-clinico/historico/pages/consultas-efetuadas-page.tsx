@@ -18,7 +18,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLocation } from 'react-router-dom'
-import { useGetConsultasEfetuadasPaginated } from '../queries/consultas-efetuadas-queries'
+import { useGetConsultasEfetuadasPaginated } from '../queries/listagem-consultas-efetuadas-queries'
 import type { ConsultaTableDTO } from '@/types/dtos/consultas/consulta.dtos'
 
 const DEFAULT_SORTING: Array<{ id: string; desc: boolean }> = [

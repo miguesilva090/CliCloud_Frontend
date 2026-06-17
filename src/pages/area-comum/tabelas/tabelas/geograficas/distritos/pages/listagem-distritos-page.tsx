@@ -4,14 +4,14 @@ import {} from 'react-router-dom'
 import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
 import {
   useGetDistritosPaginated,
-  usePrefetchAdjacentDistritos} from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/queries/distritos-queries'
+  usePrefetchAdjacentDistritos} from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/queries/listagem-distritos-queries'
 import { usePageData } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { DistritosListagemTable } from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/components/distritos-table/distritos-listagem-table'
+import { ListagemDistritosTable } from '../components/listagem-distritos-table'
 import { ListagemDistritosFilterControls } from '../components/listagem-distritos-filter-controls'
 import { DistritoViewCreateModal } from '../modals/distrito-view-create-modal'
 import type { DataTableAction } from '@/components/shared/data-table'
@@ -112,7 +112,7 @@ export function ListagemDistritosPage() {
           </Alert>
         ) : null}
 
-        <DistritosListagemTable
+        <ListagemDistritosTable
           data={distritos}
           isLoading={isLoading}
           pageCount={pageCount}

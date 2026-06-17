@@ -1,4 +1,4 @@
-import { useGetPais } from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/queries/paises-queries'
+import { useGetPais } from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/queries/listagem-paises-queries'
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useFormsStore } from '@/stores/use-forms-store'

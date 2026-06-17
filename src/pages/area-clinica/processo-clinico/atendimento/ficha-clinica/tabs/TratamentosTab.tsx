@@ -47,7 +47,7 @@ import type {
   UpdateHistoriaClinicaRequest,
 } from '@/types/dtos/saude/historia-clinica.dtos'
 import { HistoriaClinicaService } from '@/lib/services/historia-clinica/historia-clinica-service'
-import { useGetUtente } from '@/pages/utentes/queries/utentes-queries'
+import { useGetUtente } from '@/pages/area-comum/tabelas/entidades/utentes/queries/utentes-queries'
 import type { GSResponse } from '@/types/api/responses'
 import { modules } from '@/config/modules'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'

@@ -17,7 +17,7 @@ import type {
   UpdateEmpresaRequest,
   EmpresaDTO,
 } from '@/types/dtos/saude/empresas.dtos'
-import type { EmpresaEditFormValues } from '@/pages/empresas/types/empresa-edit-form-types'
+import type { EmpresaEditFormValues } from '../types/empresa-edit-form-types'
 import { ENTIDADE_TIPO, getTipoEntidadeIdForPayload } from '@/lib/entidade-tipo'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
 import {
@@ -25,8 +25,7 @@ import {
   useGetEmpresa,
   useUpdateEmpresa,
 } from '../queries/empresa-queries'
-import { TabEmpresaIdentificacao } from '../components/tab-empresa-identificacao'
-import { TabEmpresaOutros } from '../components/tab-empresa-outros'
+import { TabEmpresaIdentificacao, TabEmpresaOutros } from '../components/empresa-edit-tabs'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import {
   useCurrentWindowId,

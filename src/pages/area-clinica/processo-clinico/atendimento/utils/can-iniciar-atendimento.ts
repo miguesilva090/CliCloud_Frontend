@@ -33,5 +33,5 @@ export function canIniciarAtendimentoConsulta(
   if (options?.efetuado || options?.faltou) return false
 
   const codigo = statusConsulta ?? -1
-  return !ESTADOS_BLOQUEADOS.includes(codigo)
+  return !(ESTADOS_BLOQUEADOS as readonly number[]).includes(codigo)
 }

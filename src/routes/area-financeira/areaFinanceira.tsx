@@ -116,6 +116,21 @@ const ListagemModosPagamentoPage = lazy(() =>
     '@/pages/area-financeira/faturacao/tabelas/pagamentos/modo-pagamento/pages/listagem-modos-pagamento-page'
   ).then((m) => ({ default: m.ListagemModosPagamentoPage })),
 )
+const ListagemServicosPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/consultas/servicos/servicos/pages/listagem-servicos-page'
+  ).then((m) => ({ default: m.ListagemServicosPage })),
+)
+const ListagemSubsistemasServicosPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/consultas/servicos/subsistemas-servicos/pages/listagem-subsistemas-servicos-page'
+  ).then((m) => ({ default: m.ListagemSubsistemasServicosPage })),
+)
+const ListagemTiposServicoPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/consultas/servicos/tipos-servico/pages/listagem-tipos-servico-page'
+  ).then((m) => ({ default: m.ListagemTiposServicoPage })),
+)
 
 export const areaFinanceiraRoutes = [
   {
@@ -577,6 +592,48 @@ export const areaFinanceiraRoutes = [
     ),
     manageWindow: true,
     windowName: 'Modos de Pagamento',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/servicos/servicos',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemServicosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Serviços',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/servicos/subsistemas-servicos',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemSubsistemasServicosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Subsistemas de Serviços',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/servicos/tipos-servico',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemTiposServicoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Tipos de Serviço',
   },
   {
     path: 'area-financeira/faturacao/emails',

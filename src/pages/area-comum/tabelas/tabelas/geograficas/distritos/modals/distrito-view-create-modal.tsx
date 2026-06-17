@@ -22,7 +22,7 @@ import {
   useCreateDistrito,
   useUpdateDistrito,
 } from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/queries/distritos-mutations'
-import { useGetPaisesSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/queries/paises-queries'
+import { useGetPaisesSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/queries/listagem-paises-queries'
 import { handleApiResponse } from '@/utils/response-handlers'
 import { toast } from '@/utils/toast-utils'
 

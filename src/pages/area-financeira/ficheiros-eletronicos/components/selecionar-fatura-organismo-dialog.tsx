@@ -105,7 +105,7 @@ export function SelecionarFaturaOrganismoDialog({
   })
 
   const documentos = useMemo(() => {
-    const rows = data?.info?.data ?? []
+    const rows: DocumentoTableDTO[] = data?.info?.data ?? []
     return rows.filter(
       (d) => d.organismoId && d.estaEmitido && !d.anulado,
     )

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { isEntityTabelasPath } from '@/config/entity-routes'
 import { MenuItem } from '@/types/navigation/menu.types'
 import { useLocation } from 'react-router-dom'
 import { usePermissionsStore } from '@/stores/permissions-store'
@@ -96,12 +97,7 @@ export const HeaderNavProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const determineCurrentMenu = (pathname: string): string => {
       // Rotas de utentes/medicos/organismos devem usar o menu de Tabelas da Área Comum
-      if (
-        pathname.startsWith('/utentes') ||
-        pathname.startsWith('/medicos') ||
-        pathname.startsWith('/organismos') ||
-        pathname.startsWith('/fornecedores')
-      ) {
+      if (isEntityTabelasPath(pathname)) {
         return 'tabelas'
       }
 

@@ -47,7 +47,9 @@ const ListagemOrganismosPage = lazy(() =>
 )
 
 const OrganismoEditPage = lazy(() =>
-    import('@/pages/organismos/pages/organismo-edit-page').then((m) => ({
+    import(
+      '@/pages/area-comum/tabelas/entidades/organismos/pages/organismo-edit-page'
+    ).then((m) => ({
       default: m.OrganismoEditPage,
     }))
 )
@@ -207,7 +209,9 @@ const ReferenciasMbHistoryPage = lazy(() =>
 )
 
 const FornecedorEditPage = lazy(() =>
-    import('@/pages/fornecedores/pages/fornecedor-edit-page').then((m) => ({
+    import(
+      '@/pages/area-comum/tabelas/entidades/fornecedores/pages/fornecedor-edit-page'
+    ).then((m) => ({
       default: m.FornecedorEditPage,
     }))
 )
@@ -231,13 +235,17 @@ const MedicoExternoEditPage = lazy(() =>
 )
 
 const MedicoEditPage = lazy(() =>
-    import('@/pages/medicos/pages/medico-edit-page').then((m) => ({
+    import(
+      '@/pages/area-comum/tabelas/entidades/medicos/pages/medico-edit-page'
+    ).then((m) => ({
       default: m.MedicoEditPage,
     }))
 )
 
 const MedicoDetailsPage = lazy(() =>
-    import('@/pages/medicos/pages/medico-details-page').then((m) => ({
+    import(
+      '@/pages/area-comum/tabelas/entidades/medicos/pages/medico-details-page'
+    ).then((m) => ({
       default: m.MedicoDetailsPage,
     }))
 )
@@ -662,19 +670,25 @@ const ListagemPaisesPage = lazy(() =>
   )
   
   const UtentesPage = lazy(() =>
-    import('@/pages/utentes/pages/utentes-page').then((m) => ({
-      default: m.UtentesPage,
+    import(
+      '@/pages/area-comum/tabelas/entidades/utentes/pages/listagem-utentes-page'
+    ).then((m) => ({
+      default: m.ListagemUtentesPage,
     }))
   )
   
   const UtenteDetailsPage = lazy(() =>
-    import('@/pages/utentes/pages/utente-details-page').then((m) => ({
+    import(
+      '@/pages/area-comum/tabelas/entidades/utentes/pages/utente-details-page'
+    ).then((m) => ({
       default: m.UtenteDetailsPage,
     }))
   )
   
   const UtenteEditPage = lazy(() =>
-    import('@/pages/utentes/pages/utente-edit-page').then((m) => ({
+    import(
+      '@/pages/area-comum/tabelas/entidades/utentes/pages/utente-edit-page'
+    ).then((m) => ({
       default: m.UtenteEditPage,
     }))
   )
@@ -2154,6 +2168,48 @@ export const areaComumRoutes = [
               manageWindow: true,
               windowName: areaComum?.permissions?.utentes?.name,
             },
+            {
+              path: 'area-comum/tabelas/entidades/utentes/novo',
+              element: (
+                <LicenseGuard
+                requiredModule={areaComum.id}
+                requiredPermission={areaComum?.permissions?.utentes?.id}
+                actionType={actionTypes.AuthVer}
+                >
+                  <UtenteEditPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.utentes?.name,
+            },
+            {
+              path: 'area-comum/tabelas/entidades/utentes/:id',
+              element: (
+                <LicenseGuard
+                requiredModule={areaComum.id}
+                requiredPermission={areaComum?.permissions?.utentes?.id}
+                actionType={actionTypes.AuthVer}
+                >
+                  <UtenteDetailsPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.utentes?.name,
+            },
+            {
+              path: 'area-comum/tabelas/entidades/utentes/:id/editar',
+              element: (
+                <LicenseGuard
+                requiredModule={areaComum.id}
+                requiredPermission={areaComum?.permissions?.utentes?.id}
+                actionType={actionTypes.AuthVer}
+                >
+                  <UtenteEditPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.utentes?.name,
+            },
             // Rotas mais específicas primeiro (medicos-externos antes de medicos) para o match ser correcto
             {
               path: 'area-comum/tabelas/entidades/medicos-externos',
@@ -2184,6 +2240,48 @@ export const areaComumRoutes = [
               windowName: areaComum?.permissions?.medicos?.name,
             },
             {
+              path: 'area-comum/tabelas/entidades/medicos/novo',
+              element: (
+                <LicenseGuard
+                requiredModule={areaComum.id}
+                requiredPermission={areaComum?.permissions?.medicos?.id}
+                actionType={actionTypes.AuthVer}
+                >
+                  <MedicoEditPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.medicos?.name,
+            },
+            {
+              path: 'area-comum/tabelas/entidades/medicos/:id',
+              element: (
+                <LicenseGuard
+                requiredModule={areaComum.id}
+                requiredPermission={areaComum?.permissions?.medicos?.id}
+                actionType={actionTypes.AuthVer}
+                >
+                  <MedicoDetailsPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.medicos?.name,
+            },
+            {
+              path: 'area-comum/tabelas/entidades/medicos/:id/editar',
+              element: (
+                <LicenseGuard
+                requiredModule={areaComum.id}
+                requiredPermission={areaComum?.permissions?.medicos?.id}
+                actionType={actionTypes.AuthVer}
+                >
+                  <MedicoEditPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.medicos?.name,
+            },
+            {
               path: 'area-comum/tabelas/entidades/organismos',
               element: (
                 <LicenseGuard 
@@ -2192,6 +2290,48 @@ export const areaComumRoutes = [
                 actionType={actionTypes.AuthVer}
                 >
                   <ListagemOrganismosPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.organismos?.name,
+            },
+            {
+              path: 'area-comum/tabelas/entidades/organismos/novo',
+              element: (
+                <LicenseGuard
+                requiredModule={areaComum.id}
+                requiredPermission={areaComum?.permissions?.organismos?.id}
+                actionType={actionTypes.AuthVer}
+                >
+                  <OrganismoEditPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.organismos?.name,
+            },
+            {
+              path: 'area-comum/tabelas/entidades/organismos/:id',
+              element: (
+                <LicenseGuard
+                requiredModule={areaComum.id}
+                requiredPermission={areaComum?.permissions?.organismos?.id}
+                actionType={actionTypes.AuthVer}
+                >
+                  <OrganismoEditPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.organismos?.name,
+            },
+            {
+              path: 'area-comum/tabelas/entidades/organismos/:id/editar',
+              element: (
+                <LicenseGuard
+                requiredModule={areaComum.id}
+                requiredPermission={areaComum?.permissions?.organismos?.id}
+                actionType={actionTypes.AuthVer}
+                >
+                  <OrganismoEditPage />
                 </LicenseGuard>
               ),
               manageWindow: true,
@@ -2234,6 +2374,48 @@ export const areaComumRoutes = [
                 actionType={actionTypes.AuthVer}
                 >
                   <ListagemFornecedoresPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.fornecedores?.name,
+            },
+            {
+              path: 'area-comum/tabelas/entidades/fornecedores/novo',
+              element: (
+                <LicenseGuard
+                requiredModule={areaComum.id}
+                requiredPermission={areaComum?.permissions?.fornecedores?.id}
+                actionType={actionTypes.AuthVer}
+                >
+                  <FornecedorEditPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.fornecedores?.name,
+            },
+            {
+              path: 'area-comum/tabelas/entidades/fornecedores/:id',
+              element: (
+                <LicenseGuard
+                requiredModule={areaComum.id}
+                requiredPermission={areaComum?.permissions?.fornecedores?.id}
+                actionType={actionTypes.AuthVer}
+                >
+                  <FornecedorEditPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.fornecedores?.name,
+            },
+            {
+              path: 'area-comum/tabelas/entidades/fornecedores/:id/editar',
+              element: (
+                <LicenseGuard
+                requiredModule={areaComum.id}
+                requiredPermission={areaComum?.permissions?.fornecedores?.id}
+                actionType={actionTypes.AuthVer}
+                >
+                  <FornecedorEditPage />
                 </LicenseGuard>
               ),
               manageWindow: true,

@@ -52,7 +52,7 @@ import {
   useEnviarDocumentoEmailMutation,
   useGetDocumentosPaginatedPageData,
   usePrefetchAdjacentDocumentos,
-} from '../queries/documento-queries'
+} from '../queries/listagem-faturacao-queries'
 import { podeEditarDocumento, podeEnviarEmailDocumento } from '../utils/listagem-faturacao-acoes'
 
 const ID_FUNCIONALIDADE = 'documentos'

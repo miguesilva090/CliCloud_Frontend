@@ -43,7 +43,7 @@ import { MoedaService } from '@/lib/services/moedas/moeda-service'
 import { MotivoIsencaoService } from '@/lib/services/taxas-iva/motivo-isencao-service'
 import { TaxaIvaService } from '@/lib/services/taxas-iva/taxa-iva-service'
 import { ClinicaService } from '@/lib/services/core/clinica-service'
-import { useGetCodigosPostaisSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/queries/codigospostais-queries'
+import { useGetCodigosPostaisSelect } from '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/queries/listagem-codigospostais-queries'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { ImageUploader } from '@/components/shared/image-uploader'
 import {
@@ -68,13 +68,11 @@ import {
   useCreateClinica,
   useGetClinica,
   useUpdateClinica,
-} from '../queries/clinicas-queries'
-import {
   useGetClinicaCurrent,
   useUpdateClinicaCurrent,
 } from '../queries/clinica-queries'
-import { TabOutrosParametrosClinica } from '../components/tabs/tab-outros-parametros-clinica'
-import { TabHorarioClinica } from '../components/tabs/tab-horario-clinica'
+import { TabOutrosParametrosClinica } from '../components/clinica-edit-tabs/tab-outros-parametros-clinica'
+import { TabHorarioClinica } from '../components/clinica-edit-tabs/tab-horario-clinica'
 
 const LISTAGEM_PATH = '/area-comum/tabelas/configuracao/clinicas'
 

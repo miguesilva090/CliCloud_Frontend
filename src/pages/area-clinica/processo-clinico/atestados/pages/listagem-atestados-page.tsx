@@ -27,8 +27,8 @@ import {
   usePrefetchAdjacentAtestados,
   useReenviarAtestadoOffline,
   useReenviarPendentesOffline,
-} from '../queries/atestados-queries'
-import { AtestadosTable } from '../components/atestados-table/atestados-table'
+} from '../queries/listagem-atestados-queries'
+import { ListagemAtestadosTable } from '../components/listagem-atestados-table'
 import { AtestadoViewModal } from '../modals/atestado-view-modal'
 import { AtestadosService } from '@/lib/services/saude/atestados-service'
 import type { AtestadoTableDTO } from '@/types/dtos/saude/atestados.dtos'
@@ -194,7 +194,7 @@ export function ListagemAtestadosPage() {
             </Alert>
           ) : null}
 
-          <AtestadosTable
+          <ListagemAtestadosTable
             data={atestados}
             isLoading={isLoading}
             pageCount={pageCount}

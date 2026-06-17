@@ -17,7 +17,7 @@ import type {
   UpdateTecnicoRequest,
   TecnicoDTO,
 } from '@/types/dtos/saude/tecnicos.dtos'
-import type { TecnicoEditFormValues } from '@/pages/tecnicos/types/tecnico-edit-form-types'
+import type { TecnicoEditFormValues } from '../types/tecnico-edit-form-types'
 import { ENTIDADE_TIPO, getTipoEntidadeIdForPayload } from '@/lib/entidade-tipo'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
 import {
@@ -27,15 +27,15 @@ import {
 } from '../queries/tecnico-queries'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { useCurrentWindowId, handleWindowClose } from '@/utils/window-utils'
-import { TabTecnicoIdentificacao } from '../components/tab-tecnico-identificacao'
-import { TabTecnicoDadosProfissionais } from '../components/tab-tecnico-dados-profissionais'
-import { TabTecnicoContactos } from '../components/tab-tecnico-contactos'
 import {
+  TabTecnicoIdentificacao,
+  TabTecnicoDadosProfissionais,
+  TabTecnicoContactos,
   TabHorarioTecnicoFixo,
   type TabHorarioTecnicoFixoRef,
-} from '../components/tab-tecnico-horario-fixo'
-import { TabTecnicoHorarioVariavel } from '../components/tab-tecnico-horario-variavel'
-import { TabTecnicoFeriasFolgas } from '../components/tab-tecnico-ferias-folgas'
+  TabTecnicoHorarioVariavel,
+  TabTecnicoFeriasFolgas,
+} from '../components/tecnico-edit-tabs'
 
 const schema = z
   .object({
