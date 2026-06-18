@@ -139,7 +139,7 @@ Subgrupos legado → estado novo:
 | Pagamentos | `CondicaoPagamentoLst`, `ModoPagamentoLst` | (idem) | ❌ BE dedicado |
 | Serviços | `ServicosLst`, `Acor_InsLst`, `TipoServicoLst` | (idem) | 🔗 área comum / administrativa |
 | Zonas | `ZonaLst`, `ZonaFiscalLst` | (idem) | ❌ |
-| Artigos / stocks | `ArtigoLst`, `FamiliaArtigosLst`, `ArmazemLst`, `UnidadeLst` | (idem) | ❌ módulo stocks legado |
+| Artigos / stocks | `ArtigoLst`, `FamiliaArtigosLst`, `ArmazemLst`, `UnidadeLst` | (idem) | ❌ módulo stocks legado — ver [`auditoria-artigos-stocks-legado-vs-novo.md`](./auditoria-artigos-stocks-legado-vs-novo.md) |
 
 **~25+ ecrãs folha** no legado sob Tabelas.
 

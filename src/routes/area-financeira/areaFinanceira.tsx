@@ -131,6 +131,23 @@ const ListagemTiposServicoPage = lazy(() =>
     '@/pages/area-comum/tabelas/consultas/servicos/tipos-servico/pages/listagem-tipos-servico-page'
   ).then((m) => ({ default: m.ListagemTiposServicoPage })),
 )
+const ListagemZonasFiscaisPage = lazy(() =>
+  import(
+    '@/pages/area-financeira/faturacao/tabelas/zonas/zonas-fiscais/pages/listagem-zonas-fiscais-page'
+  ).then((m) => ({ default: m.ListagemZonasFiscaisPage })),
+)
+
+const ListagemArmazensPage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/tabelas/artigos/armazens/pages/listagem-armazens-page').then(
+    (m) => ({ default: m.ListagemArmazensPage }),
+  ),
+)
+
+const ListagemFamiliasArtigoPage = lazy(() =>
+  import(
+    '@/pages/area-financeira/faturacao/tabelas/familias-artigo/pages/listagem-familias-artigo-page'
+  ).then((m) => ({ default: m.ListagemFamiliasArtigoPage })),
+)
 
 export const areaFinanceiraRoutes = [
   {
@@ -636,6 +653,20 @@ export const areaFinanceiraRoutes = [
     windowName: 'Tipos de Serviço',
   },
   {
+    path: 'area-financeira/faturacao/tabelas/zonas/zonas-fiscais',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemZonasFiscaisPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Zonas Fiscais',
+  },
+  {
     path: 'area-financeira/faturacao/emails',
     element: (
       <LicenseGuard
@@ -662,5 +693,33 @@ export const areaFinanceiraRoutes = [
     ),
     manageWindow: true,
     windowName: 'Referências Multibanco',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/artigos/armazens',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemArmazensPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Armazéns',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/familias-artigo',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemFamiliasArtigoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Famílias de Artigos',
   },
 ]

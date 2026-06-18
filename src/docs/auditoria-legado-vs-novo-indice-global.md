@@ -100,7 +100,7 @@ Estas incongruências aparecem em mais do que um módulo. Corrigir uma vez benef
 | # | Legado | Novo | Retificação |
 |---|--------|------|-------------|
 | C1 | `ZonasLst.aspx` | ❌ | CRUD Zonas: entidade + controller + rota comum |
-| C2 | `ArtigoLst`, `FamiliaArtigosLst`, `UnidadeLst` (menu stocks) | Só vias + grupo vias | Módulo stocks/faturação: artigos, famílias, unidades |
+| C2 | `ArtigoLst`, `FamiliaArtigosLst`, `UnidadeLst` (menu stocks) | Só vias + grupo vias | Módulo stocks/faturação: artigos, famílias, unidades — ver **[`auditoria-artigos-stocks-legado-vs-novo.md`](./auditoria-artigos-stocks-legado-vs-novo.md)** |
 | C3 | `PagamentosMedicosLst`, `PagamentosTerapeutasLst` | ❌ | Ecrãs + API pagamentos (ou integrar financeira) |
 | C4 | `Acor_InsLst` vs subsistemas | `subsistemas-servicos` | Validar campos/regras 1:1; documentar mapeamento |
 | C5 | Formulários personalizados legado | Rotas referidas | Auditar `formularios-personalizados` vs `FormulariosPersonalizadosLst` |

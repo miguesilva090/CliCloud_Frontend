@@ -619,6 +619,35 @@ export const roleHeaderMenus = {
               },
             ],
           },
+          {
+            label: 'Artigos',
+            href: '#',
+            funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
+            items: [
+              {
+                label: 'Armazéns',
+                href: '/area-financeira/faturacao/tabelas/artigos/armazens',
+                funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
+              },
+              {
+                label: 'Famílias de Artigos',
+                href: '/area-financeira/faturacao/tabelas/familias-artigo',
+                funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
+              },
+            ],
+          },
+          {
+            label: 'Zonas',
+            href: '#',
+            funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
+            items: [
+              {
+                label: 'Zonas Fiscais',
+                href: '/area-financeira/faturacao/tabelas/zonas/zonas-fiscais',
+                funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
+              },
+            ],
+          },
         ],
       },
       {
