@@ -217,7 +217,6 @@ export function ListagemFamiliasArtigoPage() {
       <DashboardPageContainer>
         <AreaComumListagemPageShell
           title={pageTitle}
-          showBackButton={ancestors.length > 0}
           onBack={ancestors.length > 0 ? handleBack : undefined}
           onRefresh={() => {
             handleFiltersChange([])
@@ -225,9 +224,11 @@ export function ListagemFamiliasArtigoPage() {
             invalidateListas()
           }}
         >
-          <div className='mb-4'>
-            <Breadcrumbs items={breadcrumbItems} />
-          </div>
+          {ancestors.length > 0 ? (
+            <div className='mb-4'>
+              <Breadcrumbs items={breadcrumbItems} />
+            </div>
+          ) : null}
 
           {isError ? (
             <Alert variant='destructive' className='mb-4'>
