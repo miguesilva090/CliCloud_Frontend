@@ -1,5 +1,7 @@
 # Auditoria — Artigos / Stocks (Faturação → Tabelas)
 
+> **⚠️ Documento desactualizado (2026-06-17).** Para o estado actual e plano de implementação, ver **[`paridade-artigos-legado-vs-novo.md`](./paridade-artigos-legado-vs-novo.md)**.
+
 **Última atualização:** 2026-06-17  
 **Âmbito:** submenu **Área Financeira → Faturação → Tabelas → Artigos** (5 itens do print legado).  
 **Fora de âmbito neste documento:** movimentos de stock (entradas/saídas), lotes, mapas de artigo, aprovisionamento.

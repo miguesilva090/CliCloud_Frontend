@@ -1,5 +1,7 @@
 # Auditoria legado vs. novo — Módulo Artigos (Faturação → Tabelas)
 
+> **⚠️ Documento desactualizado.** Ver **[`paridade-artigos-legado-vs-novo.md`](./paridade-artigos-legado-vs-novo.md)** para confrontação actual e roadmap.
+
 Documento de referência para implementação no projeto novo.  
 Fontes: `CliCloud.Dados.Faturacao`, `CliCloud.Dados.Comum`, `CliCloud.ASPcli`, scripts `BDUpdate`.
 

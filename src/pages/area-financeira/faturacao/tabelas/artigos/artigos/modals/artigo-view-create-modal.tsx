@@ -60,9 +60,6 @@ const FAMILIA_VAZIA = '__none__'
 const MOTIVO_VAZIO = '__none__'
 const EAN_MAX_LENGTH = 13
 
-/** Campos do legado ainda sem colunas na BD — desactivados até migration S07 (fase B). */
-const CAMPOS_AGUARDAM_FASE_B = true
-
 interface ArtigoEditFormProps {
   mode: ModalMode
   artigoId?: string
@@ -127,6 +124,21 @@ function parseDecimal(value: string): number {
   return Number.isFinite(n) ? n : 0
 }
 
+function parseOptionalInt(value: string): number | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  const n = Number.parseInt(trimmed, 10)
+  return Number.isFinite(n) ? n : null
+}
+
+function tipoMedidaFromDto(value: ArtigoDTO['tipoMedida']): 'peso' | 'quantidade' {
+  return value === 0 ? 'peso' : 'quantidade'
+}
+
+function tipoMedidaToApi(value: 'peso' | 'quantidade'): 0 | 1 {
+  return value === 'peso' ? 0 : 1
+}
+
 function mapArtigoDtoToValues(d: ArtigoDTO): FormValues {
   return {
     codigo: d.codigo != null ? String(d.codigo) : '',
@@ -157,14 +169,16 @@ function mapArtigoDtoToValues(d: ArtigoDTO): FormValues {
     permitirAlterarPreco: d.permitirAlterarPreco ?? true,
     actHotel: d.actHotel ?? false,
     actPOS: d.actPOS ?? false,
-    numSerieUCentral: '',
-    desconto: '',
-    capacidade: '',
-    temGarantia: false,
-    mesesGarantia: '',
-    ampliacaoGarantia: '',
-    visualizarNaNet: false,
-    tipoMedida: 'quantidade',
+    numSerieUCentral: d.numSerieUCentral ?? '',
+    desconto: d.desconto != null ? String(d.desconto) : '',
+    capacidade: d.capacidade != null ? String(d.capacidade) : '',
+    temGarantia: d.temGarantia ?? false,
+    mesesGarantia:
+      d.mesesGarantia != null ? String(d.mesesGarantia) : '',
+    ampliacaoGarantia:
+      d.ampliacaoGarantia != null ? String(d.ampliacaoGarantia) : '',
+    visualizarNaNet: d.visualizarNaNet ?? false,
+    tipoMedida: tipoMedidaFromDto(d.tipoMedida),
   }
 }
 
@@ -545,6 +559,18 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
       permitirAlterarPreco: values.permitirAlterarPreco,
       actHotel: values.actHotel,
       actPOS: values.actPOS,
+      numSerieUCentral: values.numSerieUCentral?.trim() || null,
+      desconto: values.desconto.trim()
+        ? parseDecimal(values.desconto)
+        : null,
+      capacidade: values.capacidade.trim()
+        ? parseDecimal(values.capacidade)
+        : null,
+      temGarantia: values.temGarantia,
+      mesesGarantia: parseOptionalInt(values.mesesGarantia),
+      ampliacaoGarantia: parseOptionalInt(values.ampliacaoGarantia),
+      visualizarNaNet: values.visualizarNaNet,
+      tipoMedida: tipoMedidaToApi(values.tipoMedida),
     }
 
     try {
@@ -879,12 +905,6 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
               </TabsList>
 
               <TabsContent value='identificacao' className='space-y-4 pt-3'>
-                {CAMPOS_AGUARDAM_FASE_B && (
-                  <p className='text-xs text-muted-foreground rounded-md border border-dashed px-3 py-2'>
-                    Nº Série U. Central, Desconto e Capacidade serão
-                    persistidos na fase B (próxima migration).
-                  </p>
-                )}
                 <div className='space-y-1.5 max-w-md'>
                   <Label htmlFor='artigo-num-serie'>Nº Série U. Central</Label>
                   <Input
@@ -897,8 +917,6 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
                       }))
                     }
                     readOnly={isView}
-                    disabled={!isView && CAMPOS_AGUARDAM_FASE_B}
-                    className={cn(CAMPOS_AGUARDAM_FASE_B && !isView && 'bg-muted')}
                     maxLength={100}
                     placeholder='Nº Série U. Central...'
                   />
@@ -985,8 +1003,6 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
                         setValues((p) => ({ ...p, desconto: e.target.value }))
                       }
                       readOnly={isView}
-                      disabled={!isView && CAMPOS_AGUARDAM_FASE_B}
-                      className={cn(CAMPOS_AGUARDAM_FASE_B && !isView && 'bg-muted')}
                       inputMode='decimal'
                       placeholder='Desconto...'
                     />
@@ -1004,8 +1020,6 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
                         }))
                       }
                       readOnly={isView}
-                      disabled={!isView && CAMPOS_AGUARDAM_FASE_B}
-                      className={cn(CAMPOS_AGUARDAM_FASE_B && !isView && 'bg-muted')}
                       inputMode='decimal'
                       placeholder='Capacidade...'
                     />
@@ -1093,11 +1107,6 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
               <TabsContent value='outros-dados' className='pt-3'>
                 <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
                   <SectionPanel title='Garantia'>
-                    {CAMPOS_AGUARDAM_FASE_B && (
-                      <p className='text-[10px] text-muted-foreground -mt-1'>
-                        Disponível na fase B.
-                      </p>
-                    )}
                     <div className='flex items-center justify-between gap-2'>
                       <Label htmlFor='artigo-tem-garantia'>Tem</Label>
                       <Switch
@@ -1105,13 +1114,12 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
                         checked={values.temGarantia}
                         onCheckedChange={(checked) =>
                           !isView &&
-                          !CAMPOS_AGUARDAM_FASE_B &&
                           setValues((p) => ({
                             ...p,
                             temGarantia: checked === true,
                           }))
                         }
-                        disabled={isView || CAMPOS_AGUARDAM_FASE_B}
+                        disabled={isView}
                       />
                     </div>
                     <div className='space-y-1.5'>
@@ -1126,8 +1134,6 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
                           }))
                         }
                         readOnly={isView}
-                        disabled={!isView && CAMPOS_AGUARDAM_FASE_B}
-                        className={cn(CAMPOS_AGUARDAM_FASE_B && !isView && 'bg-muted')}
                         placeholder='Meses...'
                       />
                     </div>
@@ -1143,8 +1149,6 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
                           }))
                         }
                         readOnly={isView}
-                        disabled={!isView && CAMPOS_AGUARDAM_FASE_B}
-                        className={cn(CAMPOS_AGUARDAM_FASE_B && !isView && 'bg-muted')}
                         placeholder='Ampliação...'
                       />
                     </div>
@@ -1220,13 +1224,12 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
                         checked={values.visualizarNaNet}
                         onCheckedChange={(checked) =>
                           !isView &&
-                          !CAMPOS_AGUARDAM_FASE_B &&
                           setValues((p) => ({
                             ...p,
                             visualizarNaNet: checked === true,
                           }))
                         }
-                        disabled={isView || CAMPOS_AGUARDAM_FASE_B}
+                        disabled={isView}
                       />
                     </div>
                     <div className='flex items-center justify-between gap-2'>
@@ -1267,14 +1270,13 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
                         value={values.tipoMedida}
                         onValueChange={(v) =>
                           !isView &&
-                          !CAMPOS_AGUARDAM_FASE_B &&
                           setValues((p) => ({
                             ...p,
                             tipoMedida: v as 'peso' | 'quantidade',
                           }))
                         }
                         className='flex gap-4'
-                        disabled={isView || CAMPOS_AGUARDAM_FASE_B}
+                        disabled={isView}
                       >
                         <div className='flex items-center gap-2'>
                           <RadioGroupItem

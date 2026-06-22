@@ -1,5 +1,12 @@
 export type TipoArtigoStocks = 1 | 2 | 3
 
+export type TipoMedidaArtigo = 0 | 1
+
+export const TIPO_MEDIDA_OPTIONS: { value: TipoMedidaArtigo; label: string }[] = [
+  { value: 0, label: 'Peso' },
+  { value: 1, label: 'Quantidade' },
+]
+
 export const TIPO_ARTIGO_OPTIONS: { value: TipoArtigoStocks; label: string }[] = [
   { value: 1, label: 'Artigo' },
   { value: 2, label: 'Serviço' },
@@ -59,6 +66,14 @@ export interface ArtigoDTO extends ArtigoTableDTO {
   permitirAlterarPreco: boolean
   actHotel: boolean
   actPOS: boolean
+  numSerieUCentral?: string | null
+  desconto?: number | null
+  capacidade?: number | null
+  temGarantia: boolean
+  mesesGarantia?: number | null
+  ampliacaoGarantia?: number | null
+  visualizarNaNet: boolean
+  tipoMedida?: TipoMedidaArtigo | null
   lastModifiedOn: string | null
 }
 
@@ -90,6 +105,14 @@ export interface ArtigoSaveBody {
   permitirAlterarPreco: boolean
   actHotel: boolean
   actPOS: boolean
+  numSerieUCentral?: string | null
+  desconto?: number | null
+  capacidade?: number | null
+  temGarantia: boolean
+  mesesGarantia?: number | null
+  ampliacaoGarantia?: number | null
+  visualizarNaNet: boolean
+  tipoMedida?: TipoMedidaArtigo | null
 }
 
 export type ArtigoPaginatedRequest = {
