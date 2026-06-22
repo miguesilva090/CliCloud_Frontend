@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { ServicoTableDTO } from '@/types/dtos/servicos/servico.dtos'
+import type { ArtigoFormPageDraft } from '@/pages/area-financeira/faturacao/tabelas/artigos/artigos/types/artigo-form-draft'
 import { useWindowsStore } from './use-windows-store'
 
 /** Rascunho do modal Serviços ao abrir tabelas auxiliares (+) noutra tab da app. */
@@ -55,6 +56,7 @@ export type PageState = {
   dataSize: number
 
   servicoModalDraft?: ServicoModalPageDraft
+  artigoFormDraft?: ArtigoFormPageDraft
 }
 
 interface PagesState {

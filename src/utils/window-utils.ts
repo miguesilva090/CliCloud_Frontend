@@ -13,6 +13,7 @@ import {
   type ServicoModalPageDraft,
 } from '@/stores/use-pages-store'
 import { useWindowsStore, WindowState } from '@/stores/use-windows-store'
+import { artigoRoutes } from '@/pages/area-financeira/faturacao/tabelas/artigos/artigos/constants/artigo-paths'
 import { Icons } from '@/components/ui/icons'
 import { utilitariosRoutes } from '@/routes/base/utilitarios-routes'
 import { areaComumRoutes } from '@/routes/area-comum/areaComum'
@@ -665,6 +666,30 @@ export function openPatologiaEditInApp(
     addWindow,
     `/area-comum/tabelas/tratamentos/patologias/${id}/${suffix}`,
     designacao ? `Patologia: ${designacao}` : 'Patologia'
+  )
+}
+
+export function openArtigoCreationInApp(
+  navigate: NavigateFunction,
+  addWindow: AddWindowFn
+): void {
+  openPathInApp(navigate, addWindow, artigoRoutes.novo, 'Novo artigo')
+}
+
+export function openArtigoEditInApp(
+  navigate: NavigateFunction,
+  addWindow: AddWindowFn,
+  id: string,
+  descricao?: string | null,
+  mode: 'view' | 'edit' = 'edit'
+): void {
+  const path =
+    mode === 'view' ? artigoRoutes.ver(id) : artigoRoutes.editar(id)
+  openPathInApp(
+    navigate,
+    addWindow,
+    path,
+    descricao ? `Artigo: ${descricao}` : 'Artigo'
   )
 }
 

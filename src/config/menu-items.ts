@@ -625,8 +625,18 @@ export const roleHeaderMenus = {
             funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
             items: [
               {
+                label: 'Artigos',
+                href: '/area-financeira/faturacao/tabelas/artigos/artigos',
+                funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
+              },
+              {
                 label: 'Armazéns',
                 href: '/area-financeira/faturacao/tabelas/artigos/armazens',
+                funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
+              },
+              {
+                label: 'Unidades',
+                href: '/area-financeira/faturacao/tabelas/artigos/unidades',
                 funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
               },
               {

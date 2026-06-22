@@ -143,6 +143,24 @@ const ListagemArmazensPage = lazy(() =>
   ),
 )
 
+const ListagemArtigosPage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/tabelas/artigos/artigos/pages/listagem-artigos-page').then(
+    (m) => ({ default: m.ListagemArtigosPage }),
+  ),
+)
+
+const ArtigoEditPage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/tabelas/artigos/artigos/pages/artigo-edit-page').then(
+    (m) => ({ default: m.ArtigoEditPage }),
+  ),
+)
+
+const ListagemUnidadesPage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/tabelas/artigos/unidades/pages/listagem-unidades-page').then(
+    (m) => ({ default: m.ListagemUnidadesPage }),
+  ),
+)
+
 const ListagemFamiliasArtigoPage = lazy(() =>
   import(
     '@/pages/area-financeira/faturacao/tabelas/familias-artigo/pages/listagem-familias-artigo-page'
@@ -695,6 +713,62 @@ export const areaFinanceiraRoutes = [
     windowName: 'Referências Multibanco',
   },
   {
+    path: 'area-financeira/faturacao/tabelas/artigos/artigos',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemArtigosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Artigos',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/artigos/artigos/novo',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ArtigoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Novo artigo',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/artigos/artigos/:id/editar',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ArtigoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Editar artigo',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/artigos/artigos/:id/ver',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ArtigoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Artigo',
+  },
+  {
     path: 'area-financeira/faturacao/tabelas/artigos/armazens',
     element: (
       <LicenseGuard
@@ -707,6 +781,20 @@ export const areaFinanceiraRoutes = [
     ),
     manageWindow: true,
     windowName: 'Armazéns',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/artigos/unidades',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemUnidadesPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Unidades',
   },
   {
     path: 'area-financeira/faturacao/tabelas/familias-artigo',
