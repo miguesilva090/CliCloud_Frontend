@@ -167,6 +167,12 @@ const ListagemFamiliasArtigoPage = lazy(() =>
   ).then((m) => ({ default: m.ListagemFamiliasArtigoPage })),
 )
 
+const ListagemSubsistemasArtigosPage = lazy(() =>
+  import(
+    '@/pages/area-financeira/subsistemas-artigos/pages/listagem-subsistemas-artigos-page'
+  ).then((m) => ({ default: m.ListagemSubsistemasArtigosPage })),
+)
+
 export const areaFinanceiraRoutes = [
   {
     path: 'area-financeira',
@@ -795,6 +801,20 @@ export const areaFinanceiraRoutes = [
     ),
     manageWindow: true,
     windowName: 'Unidades',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/artigos/subsistemas-artigos',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemSubsistemasArtigosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Subsistemas de Artigos',
   },
   {
     path: 'area-financeira/faturacao/tabelas/familias-artigo',

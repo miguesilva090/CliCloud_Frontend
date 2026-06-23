@@ -619,24 +619,6 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
         <p className='py-6 text-sm text-muted-foreground'>A carregar...</p>
       ) : (
         <div className='space-y-4'>
-          {!isView && (
-            <div className='flex justify-end'>
-              <Button
-                type='button'
-                variant='secondary'
-                size='sm'
-                disabled={!artigoId}
-                title={
-                  artigoId
-                    ? 'Ver movimentos do artigo'
-                    : 'Disponível após guardar o artigo'
-                }
-              >
-                <Search className='mr-2 h-4 w-4' />
-                Ver movimentos
-              </Button>
-            </div>
-          )}
             {/* Cabeçalho — alinhado com ArtigoEdt.aspx */}
             <div className='flex gap-4'>
               <div className='flex-1 space-y-3 min-w-0'>
@@ -743,7 +725,26 @@ export const ArtigoEditForm = forwardRef<ArtigoEditFormHandle, ArtigoEditFormPro
                 </div>
               </div>
 
-              <div className='shrink-0 flex flex-col items-center gap-2'>
+              <div className='shrink-0 flex flex-col items-end gap-2'>
+                {!isView ? (
+                  <Button
+                    type='button'
+                    variant='secondary'
+                    size='sm'
+                    disabled={!artigoId}
+                    title={
+                      artigoId
+                        ? 'Ver movimentos do artigo'
+                        : 'Disponível após guardar o artigo'
+                    }
+                    onClick={() => {
+                      if (artigoId) setActiveTab('movimentos')
+                    }}
+                  >
+                    <Search className='mr-2 h-4 w-4' />
+                    Ver movimentos
+                  </Button>
+                ) : null}
                 <Label className='self-start'>Foto</Label>
                 <ImageUploader
                   key={`artigo-foto-${artigoId || 'new'}-${urlFoto || 'sem'}`}

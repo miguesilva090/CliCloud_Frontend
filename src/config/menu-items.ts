@@ -644,6 +644,11 @@ export const roleHeaderMenus = {
                 href: '/area-financeira/faturacao/tabelas/familias-artigo',
                 funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
               },
+              {
+                label: 'Subsistemas de Artigos',
+                href: '/area-financeira/faturacao/tabelas/artigos/subsistemas-artigos',
+                funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
+              },
             ],
           },
           {

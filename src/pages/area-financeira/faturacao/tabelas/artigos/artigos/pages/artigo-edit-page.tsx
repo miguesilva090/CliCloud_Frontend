@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Save } from 'lucide-react'
+import { Save } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
+import { AreaComumDashboardCard } from '@/components/shared/area-comum-dashboard-card'
 import { Button } from '@/components/ui/button'
 import {
   ArtigoEditForm,
@@ -36,56 +37,51 @@ export function ArtigoEditPage() {
       ? 'Artigo'
       : 'Editar artigo'
 
+  const handleBack = () => navigateManagedWindow(navigate, ARTIGO_LISTAGEM_PATH)
+
   const handleSaveSuccess = () => {
     if (windowId) {
       setPageStateByWindowId(windowId, { artigoFormDraft: undefined })
     }
     void queryClient.invalidateQueries({ queryKey: ['artigos-paginated'] })
     void queryClient.invalidateQueries({ queryKey: ['artigos-light'] })
-    navigateManagedWindow(navigate, ARTIGO_LISTAGEM_PATH)
+    handleBack()
   }
 
   return (
     <>
       <PageHead title={`${title} | Artigos | Faturação | Área Financeira | CliCloud`} />
       <DashboardPageContainer>
-        <div className='mb-4 flex items-center justify-between gap-4 rounded-t-lg border border-b-0 bg-muted/40 px-4 py-3'>
-          <div className='flex items-center gap-2'>
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => navigateManagedWindow(navigate, ARTIGO_LISTAGEM_PATH)}
-              title='Voltar'
-            >
-              <ArrowLeft className='h-4 w-4' />
-            </Button>
-            <h1 className='text-lg font-semibold'>{title}</h1>
-          </div>
-          <div className='flex items-center gap-2'>
-            {!isView ? (
+        <AreaComumDashboardCard
+          title={title}
+          onBack={handleBack}
+          headerClassName='border-b border-border/70'
+          headerTrailing={
+            <>
+              {!isView ? (
+                <Button
+                  type='button'
+                  onClick={() => void formRef.current?.save()}
+                  disabled={loading}
+                  size='sm'
+                  className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                >
+                  <Save className='mr-2 h-4 w-4' />
+                  {loading ? 'A guardar...' : 'Guardar'}
+                </Button>
+              ) : null}
               <Button
                 type='button'
-                onClick={() => void formRef.current?.save()}
-                disabled={loading}
-                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                variant='outline'
+                size='sm'
+                onClick={handleBack}
               >
-                <Save className='mr-2 h-4 w-4' />
-                Guardar
+                {isView ? 'OK' : 'Cancelar'}
               </Button>
-            ) : null}
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => navigateManagedWindow(navigate, ARTIGO_LISTAGEM_PATH)}
-            >
-              {isView ? 'OK' : 'Cancelar'}
-            </Button>
-          </div>
-        </div>
-
-        <div className='rounded-b-lg border bg-background p-4'>
+            </>
+          }
+          contentClassName='px-3 pb-5 pt-3 sm:px-4 sm:pb-6 sm:pt-4 md:px-5'
+        >
           <ArtigoEditForm
             ref={formRef}
             mode={mode}
@@ -94,7 +90,7 @@ export function ArtigoEditPage() {
             onSaveSuccess={handleSaveSuccess}
             onLoadingChange={setLoading}
           />
-        </div>
+        </AreaComumDashboardCard>
       </DashboardPageContainer>
     </>
   )
