@@ -12,50 +12,25 @@ import {
 const filterMenuItemsByPermission = (
   items: MenuItem[],
   hasPermission: (permissionId: string, flag: PermissionFlag) => boolean,
-  hasModuleAccess: (moduleId: string) => boolean,
-  isTopLevel = false
+  hasModuleAccess: (moduleId: string) => boolean
 ): MenuItem[] => {
   return items.filter((item) => {
-    // Categorias de topo na sidebar: mostrar sempre para o role; só filtrar os filhos
-    if (isTopLevel) {
-      if (item.items) {
-        item.items = filterMenuItemsByPermission(
-          item.items,
-          hasPermission,
-          hasModuleAccess,
-          false
-        )
-      }
-      if (item.dropdown) {
-        item.dropdown = filterMenuItemsByPermission(
-          item.dropdown,
-          hasPermission,
-          hasModuleAccess,
-          false
-        )
-      }
-      return true
+    if (item.moduloId && !hasModuleAccess(item.moduloId)) {
+      return false
     }
 
-    // For main menu items (sidebar), only check moduloId
-    if (item.moduloId) {
-      return hasModuleAccess(item.moduloId)
+    if (
+      item.funcionalidadeId &&
+      !hasMenuFuncionalidadeAccess(item, hasPermission)
+    ) {
+      return false
     }
 
-    // For sub-items and other menu items, check funcionalidadeId
-    if (item.funcionalidadeId) {
-      if (!hasMenuFuncionalidadeAccess(item, hasPermission)) {
-        return false
-      }
-    }
-
-    // Recursively filter sub-items if they exist
     if (item.items) {
       item.items = filterMenuItemsByPermission(
         item.items,
         hasPermission,
-        hasModuleAccess,
-        false
+        hasModuleAccess
       )
       if (item.items.length === 0) {
         return false
@@ -63,17 +38,14 @@ const filterMenuItemsByPermission = (
     }
 
     if (item.dropdown) {
-      const filteredDropdown = filterMenuItemsByPermission(
+      item.dropdown = filterMenuItemsByPermission(
         item.dropdown,
         hasPermission,
-        hasModuleAccess,
-        false
+        hasModuleAccess
       )
-      if (filteredDropdown.length > 0) {
-        item.dropdown = filteredDropdown
-        return true
+      if (item.dropdown.length === 0) {
+        return false
       }
-      return false
     }
 
     return true
@@ -85,10 +57,15 @@ function normalizeHeaderItemsForSidebar(items: MenuItem[]): MenuItem[] {
   return items.map((item) => {
     const children = item.items?.length
       ? normalizeHeaderItemsForSidebar(item.items)
-      : (item.dropdown?.length ? normalizeHeaderItemsForSidebar(item.dropdown) : [])
+      : item.dropdown?.length
+        ? normalizeHeaderItemsForSidebar(item.dropdown)
+        : []
     return {
       ...item,
-      title: item.title ?? item.label?.replace(/\s+/g, '-').toLowerCase() ?? item.href,
+      title:
+        item.title ??
+        item.label?.replace(/\s+/g, '-').toLowerCase() ??
+        item.href,
       items: children.length ? children : undefined,
       dropdown: undefined,
     } as MenuItem
@@ -146,8 +123,7 @@ export const useMenuItems = (): MenuItem[] => {
     const filteredItems = filterMenuItemsByPermission(
       baseMenuItems,
       hasPermission,
-      hasModuleAccess,
-      role === 'client' // categorias de topo sempre visíveis para client
+      hasModuleAccess
     )
     setMenuItems(filteredItems)
   }, [role, permissions, modules, hasPermission, hasModuleAccess])
@@ -178,10 +154,13 @@ export const useMenuItemsWithHeaderSubmenus = (): MenuItem[] => {
     const filteredItems = filterMenuItemsByPermission(
       baseMenuItems,
       hasPermission,
-      hasModuleAccess,
-      role === 'client'
+      hasModuleAccess
     )
-    const enriched = enrichSidebarWithHeaderMenus(filteredItems, role, hasPermission)
+    const enriched = enrichSidebarWithHeaderMenus(
+      filteredItems,
+      role,
+      hasPermission
+    )
     setMenuItems(enriched)
   }, [role, permissions, modules, hasPermission, hasModuleAccess])
 

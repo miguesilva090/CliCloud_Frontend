@@ -1,12 +1,12 @@
 ﻿import { useEffect, memo, useState, useRef } from 'react'
-import { utilitariosRoutes } from '@/routes/base/utilitarios-routes'
-import { areaComumRoutes } from '@/routes/area-comum/areaComum'
-import { areaClinicaRoutes } from '@/routes/area-clinica/areaClinica'
-import { reportsRoutes } from '@/routes/reports/reports-routes'
 import { areaAdministrativaRoutes } from '@/routes/area-administrativa/areaAdministrativa'
+import { areaClinicaRoutes } from '@/routes/area-clinica/areaClinica'
+import { areaComumRoutes } from '@/routes/area-comum/areaComum'
 import { areaFinanceiraRoutes } from '@/routes/area-financeira/areaFinanceira'
-import { matchPath } from 'react-router-dom'
+import { utilitariosRoutes } from '@/routes/base/utilitarios-routes'
+import { reportsRoutes } from '@/routes/reports/reports-routes'
 import { X, ChevronLeft, ChevronRight, XCircle } from 'lucide-react'
+import { matchPath } from 'react-router-dom'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMapStore } from '@/stores/use-map-store'
 import { usePagesStore } from '@/stores/use-pages-store'
@@ -97,7 +97,6 @@ const WindowTab = memo(
             } else if (!isActive) {
               onRestore(window)
             } else {
-              // When clicking on the active window, minimize it and show dashboard
               onMinimize(window.id)
             }
           }}
@@ -135,7 +134,6 @@ const WindowTab = memo(
 )
 
 WindowTab.displayName = 'WindowTab'
-
 
 export function WindowManager({ children }: WindowManagerProps) {
   const { isMinimized } = useSidebar()
@@ -324,8 +322,11 @@ export function WindowManager({ children }: WindowManagerProps) {
     prevAreaPrefixRef.current = area
   }, [location.pathname, clearAllWindows])
 
-  // Hub (/consultas, etc.): limpar tabs Ã³rfÃ£s (Sinistrados preso com URL jÃ¡ no hub)
+  // Hub (/consultas, etc.): limpar tabs órfãs (Sinistrados preso com URL já no hub).
+  // No dashboard (/) as tabs ficam no footer mesmo minimizadas.
   useEffect(() => {
+    if (normalizeComparablePath(location.pathname) === '/') return
+
     if (!shouldManageWindow(location.pathname)) {
       const { windows: openWindows } = useWindowsStore.getState()
       if (openWindows.length > 0) {
@@ -346,8 +347,11 @@ export function WindowManager({ children }: WindowManagerProps) {
     const path = browserPath || routerPath
     const instanceId = browserInstance ?? routerInstance
 
-    const { windows: w, activeWindow: aw, restoreWindow: restore } =
-      useWindowsStore.getState()
+    const {
+      windows: w,
+      activeWindow: aw,
+      restoreWindow: restore,
+    } = useWindowsStore.getState()
 
     const match = w.find(
       (win) =>
@@ -691,6 +695,7 @@ export function WindowManager({ children }: WindowManagerProps) {
                     isActive={window.id === activeWindow}
                     onRestore={handleRestoreWindow}
                     onMinimize={(windowId) => {
+                      suppressAutoWindowRegistration()
                       minimizeWindow(windowId)
                       navigate('/')
                     }}
