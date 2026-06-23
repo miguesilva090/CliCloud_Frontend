@@ -28,7 +28,7 @@ export function UserAuthForm() {
   const form = useForm<UserFormValue>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: 'cliente@demo.local',
+      email: 'medico@globalsoft.pt',
       password: 'Password123!',
     },
   })
@@ -47,7 +47,10 @@ export function UserAuthForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className='w-full space-y-2'>
+      <form
+        onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+        className='w-full space-y-2'
+      >
         <FormField
           control={form.control}
           name='email'
