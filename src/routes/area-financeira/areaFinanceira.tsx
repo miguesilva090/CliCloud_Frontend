@@ -131,6 +131,11 @@ const ListagemTiposServicoPage = lazy(() =>
     '@/pages/area-comum/tabelas/consultas/servicos/tipos-servico/pages/listagem-tipos-servico-page'
   ).then((m) => ({ default: m.ListagemTiposServicoPage })),
 )
+const ListagemZonasPage = lazy(() =>
+  import(
+    '@/pages/area-financeira/faturacao/tabelas/zonas/zonas/pages/listagem-zonas-page'
+  ).then((m) => ({ default: m.ListagemZonasPage })),
+)
 const ListagemZonasFiscaisPage = lazy(() =>
   import(
     '@/pages/area-financeira/faturacao/tabelas/zonas/zonas-fiscais/pages/listagem-zonas-fiscais-page'
@@ -675,6 +680,20 @@ export const areaFinanceiraRoutes = [
     ),
     manageWindow: true,
     windowName: 'Tipos de Serviço',
+  },
+  {
+    path: 'area-financeira/faturacao/tabelas/zonas/zonas',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.tabelas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemZonasPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Zonas',
   },
   {
     path: 'area-financeira/faturacao/tabelas/zonas/zonas-fiscais',

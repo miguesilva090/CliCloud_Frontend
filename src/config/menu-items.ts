@@ -657,6 +657,11 @@ export const roleHeaderMenus = {
             funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
             items: [
               {
+                label: 'Zonas',
+                href: '/area-financeira/faturacao/tabelas/zonas/zonas',
+                funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
+              },
+              {
                 label: 'Zonas Fiscais',
                 href: '/area-financeira/faturacao/tabelas/zonas/zonas-fiscais',
                 funcionalidadeId: modules.areaFinanceira.permissions.tabelas.id,
