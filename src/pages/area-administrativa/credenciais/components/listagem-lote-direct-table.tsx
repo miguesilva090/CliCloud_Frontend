@@ -1,11 +1,21 @@
+import type { ReactNode } from 'react'
 import { DataTable } from '@/components/shared/data-table'
-import { getLoteDirectColumns } from './listagem-lote-direct-table.columns'
+import {
+  getLoteDirectColumns,
+  LOTE_DIRECT_HIDDEN_FILTER_COLUMNS,
+} from './listagem-lote-direct-table.columns'
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { LoteDirectTableDTO } from '@/types/dtos/credenciais/lote-direct.dtos'
-import type { ReactNode } from 'react'
 
 type TableFilter = Array<{ id: string; value: string }>
 type TableSort = Array<{ id: string; desc: boolean }>
+
+type FilterControlsComponent = React.ComponentType<{
+  table: any
+  columns: any[]
+  onApplyFilters: () => void
+  onClearFilters: () => void
+}>
 
 export function ListagemLoteDirectTable({
   data,
@@ -20,6 +30,7 @@ export function ListagemLoteDirectTable({
   onFiltersChange,
   onSortingChange,
   toolbarActions,
+  FilterControls,
   onOpenView,
   onOpenEdit,
   onOpenDelete,
@@ -40,6 +51,7 @@ export function ListagemLoteDirectTable({
   onFiltersChange: (filters: TableFilter) => void
   onSortingChange: (sorting: TableSort) => void
   toolbarActions?: DataTableAction[]
+  FilterControls: FilterControlsComponent
   onOpenView: (data: LoteDirectTableDTO) => void
   onOpenEdit?: (data: LoteDirectTableDTO) => void
   onOpenDelete?: (data: LoteDirectTableDTO) => void
@@ -63,7 +75,8 @@ export function ListagemLoteDirectTable({
       onPaginationChange={onPaginationChange}
       onFiltersChange={onFiltersChange}
       onSortingChange={onSortingChange}
-      FilterControls={() => null}
+      FilterControls={FilterControls}
+      hiddenColumns={[...LOTE_DIRECT_HIDDEN_FILTER_COLUMNS]}
       initialPage={page}
       initialPageSize={pageSize}
       initialSorting={sorting}

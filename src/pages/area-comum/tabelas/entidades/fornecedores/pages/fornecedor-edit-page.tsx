@@ -23,15 +23,15 @@ import { fornecedorEditDefaultValues, fornecedorEditSchema } from '../utils/forn
 import { buildCreatePayload, buildUpdatePayload } from '../utils/fornecedor-edit-payload'
 import { TabFornecedorEntidade, TabFornecedorOutros } from '../components/fornecedor-edit-tabs'
 import { navigateManagedWindow } from '@/utils/window-utils'
-import { entityRoutes } from '@/config/entity-routes'
+import { getEntityRoutesForPathname } from '@/config/entity-routes'
 
 // schema/payload extraídos para ./utils
-const LISTAGEM_PATH = entityRoutes.fornecedores.listagem
 
 export function FornecedorEditPage() {
   const navigate = useNavigate()
   const params = useParams<{ id: string }>()
   const location = useLocation()
+  const listagemPath = getEntityRoutesForPathname(location.pathname).fornecedores.listagem
   const id = params.id ?? ''
   const queryClient = useQueryClient()
 
@@ -155,7 +155,7 @@ export function FornecedorEditPage() {
                 ? 'Ver Fornecedor'
                 : 'Editar Fornecedor'
           }
-          onBack={() => navigateManagedWindow(navigate, LISTAGEM_PATH)}
+          onBack={() => navigateManagedWindow(navigate, listagemPath)}
           onRefresh={() => {
             if (isCreate) {
               queryClient.invalidateQueries({ queryKey: ['fornecedores-paginated'] })
@@ -239,7 +239,7 @@ export function FornecedorEditPage() {
                         onClick={() =>
                           navigateManagedWindow(
                             navigate,
-                            entityRoutes.fornecedores.editar(id)
+                            getEntityRoutesForPathname(location.pathname).fornecedores.editar(id)
                           )
                         }
                       >

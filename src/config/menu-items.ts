@@ -432,8 +432,30 @@ export const roleHeaderMenus = {
       },
       {
         label: 'Credenciais S.N.S.',
-        href: '/area-financeira/faturacao/credenciais-sns',
+        href: '/area-financeira/faturacao/credenciais-sns/especialidades',
         funcionalidadeId: modules.areaFinanceira.permissions.credenciaisSns.id,
+        items: [
+          {
+            label: 'Fisioterapia',
+            href: '/area-financeira/faturacao/credenciais-sns/fisioterapia',
+            funcionalidadeId: modules.areaFinanceira.permissions.credenciaisSns.id,
+          },
+          {
+            label: 'Especialidades',
+            href: '/area-financeira/faturacao/credenciais-sns/especialidades',
+            funcionalidadeId: modules.areaFinanceira.permissions.credenciaisSns.id,
+          },
+          {
+            label: 'Exames',
+            href: '/area-financeira/faturacao/credenciais-sns/exames',
+            funcionalidadeId: modules.areaFinanceira.permissions.credenciaisSns.id,
+          },
+          {
+            label: 'Ficheiro Eletrónico',
+            href: '/area-financeira/faturacao/credenciais-sns/ficheiro-eletronico',
+            funcionalidadeId: modules.areaFinanceira.permissions.credenciaisSns.id,
+          },
+        ],
       },
       {
         label: 'ADSE',
@@ -449,6 +471,40 @@ export const roleHeaderMenus = {
         label: 'Entidades',
         href: '/area-financeira/faturacao/entidades',
         funcionalidadeId: modules.areaFinanceira.permissions.entidades.id,
+        items: [
+          {
+            label: 'Fornecedores',
+            href: '/area-financeira/faturacao/entidades/fornecedores',
+            funcionalidadeId: modules.areaComum.permissions.fornecedores.id,
+            funcionalidadeFallbackIds: [
+              modules.areaFinanceira.permissions.entidades.id,
+            ],
+          },
+          {
+            label: 'Médicos',
+            href: '/area-financeira/faturacao/entidades/medicos',
+            funcionalidadeId: modules.areaComum.permissions.medicos.id,
+            funcionalidadeFallbackIds: [
+              modules.areaFinanceira.permissions.entidades.id,
+            ],
+          },
+          {
+            label: 'Organismos',
+            href: '/area-financeira/faturacao/entidades/organismos',
+            funcionalidadeId: modules.areaComum.permissions.organismos.id,
+            funcionalidadeFallbackIds: [
+              modules.areaFinanceira.permissions.entidades.id,
+            ],
+          },
+          {
+            label: 'Utentes',
+            href: '/area-financeira/faturacao/entidades/utentes',
+            funcionalidadeId: modules.areaComum.permissions.utentes.id,
+            funcionalidadeFallbackIds: [
+              modules.areaFinanceira.permissions.entidades.id,
+            ],
+          },
+        ],
       },
       {
         label: 'Tabelas',

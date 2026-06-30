@@ -13,7 +13,7 @@ import type {
 } from '@/types/dtos/saude/medicos.dtos'
 import { toast } from '@/utils/toast-utils'
 import { navigateManagedWindow } from '@/utils/window-utils'
-import { entityRoutes } from '@/config/entity-routes'
+import { getEntityRoutesForPathname } from '@/config/entity-routes'
 
 export const useMedicosLight = (keyword = '') =>
   useQuery({
@@ -28,7 +28,9 @@ export const useGetMedico = (id: string) =>
     enabled: !!id,
   })
 
-const LISTAGEM_PATH = entityRoutes.medicos.listagem
+function listagemMedicosPath() {
+  return getEntityRoutesForPathname().medicos.listagem
+}
 
 /** Colunas que o backend ordena sobre `Medico`; ids do TanStack devem coincidir com propriedades da entidade (ex.: nome). */
 export const MEDICO_LIST_ALLOWED_SORT_IDS = new Set(['nome'])
@@ -112,7 +114,7 @@ export const useCreateMedico = () => {
       if (info.status === ResponseStatus.Success && info.data) {
         toast.success('Médico criado com sucesso')
         await queryClient.invalidateQueries({ queryKey: ['medicos-paginated'] })
-        navigateManagedWindow(navigate, LISTAGEM_PATH)
+        navigateManagedWindow(navigate, listagemMedicosPath())
         return
       }
 
@@ -244,7 +246,7 @@ export const useUpdateMedico = (id: string, options?: UseUpdateMedicoOptions) =>
 export const useDeleteMedico = (options?: { onSuccessNavigateTo?: string }) => {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const returnPath = options?.onSuccessNavigateTo ?? LISTAGEM_PATH
+  const returnPath = options?.onSuccessNavigateTo ?? listagemMedicosPath()
 
   return useMutation({
     mutationFn: (id: string) => MedicosService('medicos').deleteMedico(id),

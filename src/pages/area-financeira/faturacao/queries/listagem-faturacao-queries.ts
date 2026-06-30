@@ -1,5 +1,7 @@
 export {
   documentoQueryKeys,
+  prefetchDocumentoById,
+  prefetchDocumentosByIds,
   useAtualizarValidacaoTransporteMutation,
   useDocumentoLiquidacaoContextoMutation,
   useGetDocumentoByIdMutation,

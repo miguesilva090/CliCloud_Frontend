@@ -8,11 +8,16 @@ import type {
 } from "@/types/api/responses"
 import type {
     CorrigirLotesRequest,
+    CorrigirLotesResultDTO,
     CreateLoteDirectRequest,
+    LoteDirectAgregadoTableDTO,
     LoteDirectDTO,
     LoteDirectTableDTO,
     TipoLoteLightDTO,
     UpdateLoteDirectRequest,
+    ValidarCorrigirLotesDTO,
+    PassarParaHistoricoRequest,
+    PassarParaHistoricoResultDTO,
 } from "@/types/dtos/credenciais/lote-direct.dtos"
 
 const BASE = '/client/credenciais/LoteDirect'
@@ -67,7 +72,7 @@ export class LoteDirectClient extends BaseApiClient {
 
     public async corrigirLotes(
         payload: CorrigirLotesRequest
-    ): Promise<ResponseApi<GSResponse<number>>> {
+    ): Promise<ResponseApi<GSResponse<CorrigirLotesResultDTO>>> {
         return this.httpClient.postRequest(
             state.URL,
             `${BASE}/corrigir-lotes`,
@@ -75,10 +80,40 @@ export class LoteDirectClient extends BaseApiClient {
         )
     }
 
+    public async validarCorrigirLotes(
+        payload: CorrigirLotesRequest
+    ): Promise<ResponseApi<GSResponse<ValidarCorrigirLotesDTO>>> {
+        return this.httpClient.postRequest(
+            state.URL,
+            `${BASE}/corrigir-lotes/validar`,
+            payload
+        )
+    }
+
+    public async getAgregadosPaginated(
+        params: PaginatedRequest
+    ): Promise<ResponseApi<PaginatedResponse<LoteDirectAgregadoTableDTO>>> {
+        return this.httpClient.postRequest(
+            state.URL,
+            `${BASE}/agregados/paginated`,
+            params
+        )
+    }
+
     public async getTiposLoteLight(): Promise<ResponseApi<GSResponse<TipoLoteLightDTO[]>>> {
         return this.httpClient.getRequest(
             state.URL,
             `${BASE}/tipos-lote/light`
+        )
+    }
+
+    public async passarParaHistorico(
+        payload: PassarParaHistoricoRequest
+    ): Promise<ResponseApi<GSResponse<PassarParaHistoricoResultDTO>>> {
+        return this.httpClient.postRequest(
+            state.URL,
+            `${BASE}/passar-para-historico`,
+            payload
         )
     }
 }

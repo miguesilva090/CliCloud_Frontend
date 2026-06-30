@@ -28,6 +28,16 @@ const ListagemFaturacaoPage = lazy(() =>
     (m) => ({ default: m.ListagemFaturacaoPage }),
   ),
 )
+const ListagemCredenciaisSnsModuloPage = lazy(() =>
+  import(
+    '@/pages/area-financeira/faturacao/credenciais-sns/pages/listagem-credenciais-sns-modulo-page'
+  ).then((m) => ({ default: m.ListagemCredenciaisSnsModuloPage })),
+)
+const ListagemCredenciaisSnsFicheiroEletronicoPage = lazy(() =>
+  import(
+    '@/pages/area-financeira/faturacao/credenciais-sns/pages/listagem-credenciais-sns-ficheiro-eletronico-page'
+  ).then((m) => ({ default: m.ListagemCredenciaisSnsFicheiroEletronicoPage })),
+)
 const NovoDocumentoPage = lazy(() =>
   import('@/pages/area-financeira/faturacao/pages/novo-documento-page').then(
     (m) => ({ default: m.NovoDocumentoPage }),
@@ -178,20 +188,65 @@ const ListagemSubsistemasArtigosPage = lazy(() =>
   ).then((m) => ({ default: m.ListagemSubsistemasArtigosPage })),
 )
 
+/** Entidades — mesmas páginas da área comum, prefixo faturação. */
+const ListagemUtentesPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/entidades/utentes/pages/listagem-utentes-page').then(
+    (m) => ({ default: m.ListagemUtentesPage }),
+  ),
+)
+const UtenteEditPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/entidades/utentes/pages/utente-edit-page').then(
+    (m) => ({ default: m.UtenteEditPage }),
+  ),
+)
+const UtenteDetailsPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/entidades/utentes/pages/utente-details-page').then(
+    (m) => ({ default: m.UtenteDetailsPage }),
+  ),
+)
+const ListagemMedicosPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/entidades/medicos/pages/listagem-medicos-page').then(
+    (m) => ({ default: m.ListagemMedicosPage }),
+  ),
+)
+const MedicoEditPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/entidades/medicos/pages/medico-edit-page').then(
+    (m) => ({ default: m.MedicoEditPage }),
+  ),
+)
+const MedicoDetailsPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/entidades/medicos/pages/medico-details-page').then(
+    (m) => ({ default: m.MedicoDetailsPage }),
+  ),
+)
+const ListagemOrganismosPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/entidades/organismos/pages/listagem-organismos-page').then(
+    (m) => ({ default: m.ListagemOrganismosPage }),
+  ),
+)
+const OrganismoEditPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/entidades/organismos/pages/organismo-edit-page').then(
+    (m) => ({ default: m.OrganismoEditPage }),
+  ),
+)
+const ListagemFornecedoresPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/entidades/fornecedores/pages/listagem-fornecedores-page'
+  ).then((m) => ({ default: m.ListagemFornecedoresPage })),
+)
+const FornecedorEditPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/entidades/fornecedores/pages/fornecedor-edit-page').then(
+    (m) => ({ default: m.FornecedorEditPage }),
+  ),
+)
+
+const entidadesPermissionFallback = [modules.areaFinanceira.permissions.entidades.id]
+
 export const areaFinanceiraRoutes = [
   {
     path: 'area-financeira',
-    element: (
-      <LicenseGuard
-        requiredModule={modules.areaFinanceira.id}
-        requiredPermission={modules.areaFinanceira.permissions.faturacao.id}
-        actionType={actionTypes.AuthVer}
-      >
-        <AreaFinanceiraHomePage />
-      </LicenseGuard>
-    ),
-    manageWindow: true,
-    windowName: 'Área Financeira',
+    element: <Navigate to='/area-financeira/faturacao' replace />,
+    manageWindow: false,
   },
   {
     path: 'area-financeira/recibos',
@@ -209,7 +264,7 @@ export const areaFinanceiraRoutes = [
         <AreaFinanceiraHomePage />
       </LicenseGuard>
     ),
-    manageWindow: true,
+    manageWindow: false,
     windowName: 'Faturação',
   },
   {
@@ -376,16 +431,67 @@ export const areaFinanceiraRoutes = [
   {
     path: 'area-financeira/faturacao/credenciais-sns',
     element: (
+      <Navigate
+        to='/area-financeira/faturacao/credenciais-sns/especialidades'
+        replace
+      />
+    ),
+  },
+  {
+    path: 'area-financeira/faturacao/credenciais-sns/fisioterapia',
+    element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
         requiredPermission={modules.areaFinanceira.permissions.credenciaisSns.id}
         actionType={actionTypes.AuthVer}
       >
-        <AreaFinanceiraPlaceholderPage title='Credenciais S.N.S.' />
+        <ListagemCredenciaisSnsModuloPage modulo='fisioterapia' />
       </LicenseGuard>
     ),
     manageWindow: true,
-    windowName: 'Credenciais S.N.S.',
+    windowName: 'Credenciais S.N.S. — Fisioterapia',
+  },
+  {
+    path: 'area-financeira/faturacao/credenciais-sns/especialidades',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.credenciaisSns.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemCredenciaisSnsModuloPage modulo='especialidades' />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Credenciais S.N.S. — Especialidades',
+  },
+  {
+    path: 'area-financeira/faturacao/credenciais-sns/exames',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.credenciaisSns.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemCredenciaisSnsModuloPage modulo='exames' />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Credenciais S.N.S. — Exames',
+  },
+  {
+    path: 'area-financeira/faturacao/credenciais-sns/ficheiro-eletronico',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.credenciaisSns.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemCredenciaisSnsFicheiroEletronicoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Credenciais S.N.S. — Ficheiro Eletrónico',
   },
   {
     path: 'area-financeira/faturacao/adse',
@@ -418,16 +524,248 @@ export const areaFinanceiraRoutes = [
   {
     path: 'area-financeira/faturacao/entidades',
     element: (
+      <Navigate to='/area-financeira/faturacao/entidades/fornecedores' replace />
+    ),
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/fornecedores',
+    element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
-        requiredPermission={modules.areaFinanceira.permissions.entidades.id}
+        requiredPermission={modules.areaComum.permissions.fornecedores.id}
+        permissionFallbackIds={entidadesPermissionFallback}
         actionType={actionTypes.AuthVer}
       >
-        <AreaFinanceiraPlaceholderPage title='Entidades' />
+        <ListagemFornecedoresPage />
       </LicenseGuard>
     ),
     manageWindow: true,
-    windowName: 'Entidades',
+    windowName: 'Fornecedores',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/fornecedores/novo',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.fornecedores.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <FornecedorEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Fornecedores',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/fornecedores/:id',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.fornecedores.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <FornecedorEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Fornecedores',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/fornecedores/:id/editar',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.fornecedores.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <FornecedorEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Fornecedores',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/medicos',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.medicos.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemMedicosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Médicos',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/medicos/novo',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.medicos.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <MedicoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Médicos',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/medicos/:id',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.medicos.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <MedicoDetailsPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Médicos',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/medicos/:id/editar',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.medicos.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <MedicoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Médicos',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/organismos',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.organismos.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemOrganismosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Organismos',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/organismos/novo',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.organismos.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <OrganismoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Organismos',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/organismos/:id',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.organismos.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <OrganismoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Organismos',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/organismos/:id/editar',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.organismos.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <OrganismoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Organismos',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/utentes',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.utentes.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemUtentesPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Utentes',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/utentes/novo',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.utentes.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <UtenteEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Utentes',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/utentes/:id',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.utentes.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <UtenteDetailsPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Utentes',
+  },
+  {
+    path: 'area-financeira/faturacao/entidades/utentes/:id/editar',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaComum.permissions.utentes.id}
+        permissionFallbackIds={entidadesPermissionFallback}
+        actionType={actionTypes.AuthVer}
+      >
+        <UtenteEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Utentes',
   },
   {
     path: 'area-financeira/faturacao/tabelas',

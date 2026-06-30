@@ -33,9 +33,11 @@ import { openEntityEditInApp, openPathInApp } from '@/utils/window-utils'
 import { ResponseStatus } from '@/types/api/responses'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
+import { useScopedEntityRoutes } from '@/hooks/use-scoped-entity-routes'
 import { modules } from '@/config/modules'
 
 export function ListagemFornecedoresPage() {
+  const routes = useScopedEntityRoutes()
   const fornecedoresPermId = useScopedFuncionalidadeId(
     modules.areaComum.permissions.fornecedores.id,
     modules.areaAdministrativa.permissions.fornecedores.id
@@ -84,7 +86,7 @@ export function ListagemFornecedoresPage() {
               openPathInApp(
                 navigate,
                 addWindow,
-                '/area-comum/tabelas/entidades/fornecedores/novo',
+                routes.fornecedores.novo,
                 'Novo Fornecedor'
               ),
             variant: 'destructive' as const,
@@ -205,7 +207,7 @@ export function ListagemFornecedoresPage() {
               openPathInApp(
                 navigate,
                 addWindow,
-                `/area-comum/tabelas/entidades/fornecedores/${id}`,
+                routes.fornecedores.detail(String(id)),
                 nome ? `Fornecedor: ${nome}` : 'Fornecedor'
               )
           }}
@@ -218,7 +220,7 @@ export function ListagemFornecedoresPage() {
                     openEntityEditInApp(
                       navigate,
                       addWindow,
-                      `/area-comum/tabelas/entidades/fornecedores/${id}/editar`,
+                      routes.fornecedores.editar(String(id)),
                       String(id),
                       nome ? `Fornecedor: ${nome}` : null
                     )

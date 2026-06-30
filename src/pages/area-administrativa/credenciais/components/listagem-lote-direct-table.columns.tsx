@@ -4,6 +4,13 @@ import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-e
 import type { LoteDirectTableDTO } from '@/types/dtos/credenciais/lote-direct.dtos'
 import type { ReactNode } from 'react'
 
+export const LOTE_DIRECT_HIDDEN_FILTER_COLUMNS = [
+  'numerolote',
+  'codigoorganismo',
+  'mes',
+  'ano',
+] as const
+
 function formatMoney(value?: number | null): string {
   if (value == null) return '-'
   return Number(value).toLocaleString('pt-PT', {
@@ -101,6 +108,16 @@ const baseColumns: DataTableColumnDef<LoteDirectTableDTO>[] = [
   },
 ]
 
+const hiddenFilterColumn = (id: string): DataTableColumnDef<LoteDirectTableDTO> => ({
+  id,
+  accessorKey: id,
+  header: '',
+  enableSorting: false,
+  enableHiding: false,
+  meta: { hidden: true },
+  cell: () => null,
+})
+
 export function getLoteDirectColumns(
   onOpenView: (data: LoteDirectTableDTO) => void,
   onOpenEdit?: (data: LoteDirectTableDTO) => void,
@@ -109,6 +126,7 @@ export function getLoteDirectColumns(
   renderExtraActions?: (data: LoteDirectTableDTO) => ReactNode
 ): DataTableColumnDef<LoteDirectTableDTO>[] {
   return [
+    ...LOTE_DIRECT_HIDDEN_FILTER_COLUMNS.map((id) => hiddenFilterColumn(id)),
     ...baseColumns,
     createAreaComumListActionsColumnDef<LoteDirectTableDTO>({
       onOpenView,

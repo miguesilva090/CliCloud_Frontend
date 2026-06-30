@@ -1,8 +1,9 @@
-import { Navigate, useParams, useSearchParams } from 'react-router-dom'
-import { entityRoutes } from '@/config/entity-routes'
+import { Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
+import { getEntityRoutesForPathname } from '@/config/entity-routes'
 
 export function MedicoDetailsPage() {
   const params = useParams<{ id: string }>()
+  const { pathname } = useLocation()
   const id = params.id ?? ''
   const [searchParams] = useSearchParams()
 
@@ -15,7 +16,7 @@ export function MedicoDetailsPage() {
 
   return (
     <Navigate
-      to={`${entityRoutes.medicos.editar(id)}?${next.toString()}`}
+      to={`${getEntityRoutesForPathname(pathname).medicos.editar(id)}?${next.toString()}`}
       replace
     />
   )

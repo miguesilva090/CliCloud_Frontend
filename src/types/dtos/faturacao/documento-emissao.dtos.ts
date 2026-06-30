@@ -171,6 +171,7 @@ export type EmitirDocumentoDesdeAdmissaoRequest = {
     descontoPagamento?: number | null
     outros?: number | null
     isentoIva?: boolean
+    motivoIsencaoId?: string | null
     ivaCaixa?: boolean
     pago?: boolean | null
     faturado?: boolean | null
@@ -195,6 +196,7 @@ export type EmitirDocumentoDesdeConsultaRequest = {
     descontoPagamento?: number | null
     outros?: number | null
     isentoIva?: boolean
+    motivoIsencaoId?: string | null
     ivaCaixa?: boolean
     pago?: boolean | null
     faturado?: boolean | null

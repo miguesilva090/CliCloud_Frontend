@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation , useQueryClient } from '@tanstack/react-query'
 import { DocumentoEmissaoService } from '@/lib/services/faturacao/documento-emissao-service'
 import type {
     AnularDocumentoRequest,
@@ -7,6 +7,8 @@ import type {
     EmitirDocumentoDesdeConsultaRequest,
     EmitirDocumentoRequest,
 } from '@/types/dtos/faturacao/documento-emissao.dtos'
+import { invalidateAdmissaoFaturacaoQueries } from '../../faturacao/utils/invalidate-admissao-faturacao-queries'
+
 
 type EmitirDesdeAdmissaoArgs = {
     admissaoId: string
@@ -49,12 +51,16 @@ export function useAtualizarDocumentoEmissaoMutation(idFuncionalidade = '')
 
 export function useEmitirDocumentoDesdeAdmissaoMutation(idFuncionalidade = '')
 {
+    const queryClient = useQueryClient()
     return useMutation({
         mutationFn: ({ admissaoId, payload }: EmitirDesdeAdmissaoArgs) =>
             DocumentoEmissaoService(idFuncionalidade).emitirDocumentoDesdeAdmissao(
                 admissaoId,
                 payload
             ),
+        onSuccess: async () => {
+            invalidateAdmissaoFaturacaoQueries(queryClient)
+        },
     })
 }
 
@@ -71,21 +77,29 @@ export function useEmitirDocumentoDesdeConsultaMutation(idFuncionalidade = '')
 
 export function useAnularDocumentoMutation(idFuncionalidade = '')
 {
+    const queryClient = useQueryClient()
     return useMutation({
        mutationFn: ({ documentoId, payload }: AnularDocumentoArgs) => 
         DocumentoEmissaoService(idFuncionalidade).anularDocumento(
             documentoId,
             payload,
         ),
+        onSuccess: async () => {
+            invalidateAdmissaoFaturacaoQueries(queryClient)
+        },
     })
 }
 
 export function useCriarNotaCreditoMutation(idFuncionalidade = '')
 {
+    const queryClient = useQueryClient()
     return useMutation({
         mutationFn: (payload : CriarNotaCreditoRequest) => 
             DocumentoEmissaoService(idFuncionalidade).criarNotaCredito(
                 payload,
             ),
+        onSuccess: async () => {
+            invalidateAdmissaoFaturacaoQueries(queryClient)
+        },
     })
 }

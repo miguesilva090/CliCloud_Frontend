@@ -86,7 +86,7 @@ export function DocumentoEditor({
   } = useDocumentoEditor(tipo, {
       initialState: initialState ?? null,
       initialPatch: contextoInitialPatch,
-      freezeTipoReset: readOnly,
+      freezeTipoReset: readOnly || !!initialState,
     })
 
   const clienteBloqueado = readOnly || state.linhas.some(linhaDocumentoTemConteudo)

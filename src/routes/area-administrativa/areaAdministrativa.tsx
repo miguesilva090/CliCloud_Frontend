@@ -137,6 +137,11 @@ const ListagemLoteDirectPage = lazy(() =>
     '@/pages/area-administrativa/credenciais/pages/listagem-lote-direct-page'
   ).then((m) => ({ default: m.ListagemLoteDirectPage })),
 )
+const ListagemLoteDirectAgregadosPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/credenciais/pages/listagem-lote-direct-agregados-page'
+  ).then((m) => ({ default: m.ListagemLoteDirectAgregadosPage })),
+)
 const NovoLoteDirectPage = lazy(() =>
   import(
     '@/pages/area-administrativa/credenciais/pages/novo-lote-direct-page'
@@ -426,6 +431,24 @@ export const areaAdministrativaRoutes = [
     ),
     manageWindow: true,
     windowName: 'Lançamento de Credenciais',
+  },
+  {
+    path: 'area-administrativa/credenciais/agregados',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaComum.permissions.credenciaisLancamentoConsultas.id}
+        permissionFallbackIds={[
+          modules.areaComum.permissions.historicoCredenciaisLancamento.id,
+          modules.areaAdministrativa.permissions.consultas.id,
+        ]}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemLoteDirectAgregadosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Lotes Agregados Credenciais',
   },
   {
     path: 'area-administrativa/credenciais/novo',

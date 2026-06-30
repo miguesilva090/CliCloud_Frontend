@@ -17,6 +17,7 @@ import { useGetTiposDocumentoLight } from '../queries/tipo-documento-queries'
 import { useClinicaFaturacaoConfig } from '../queries/documento-editor-queries'
 import { DocumentoEditor } from '../components/documento-editor'
 import { mapDocumentoToEditorState } from '../utils/map-documento-to-editor-state'
+import { REGRA_PRECOS_SEM_IVA_INCLUIDO } from '../utils/documento-editor-calculos'
 import {
   getFaturacaoApiErrorMessage,
   isFaturacaoApiSuccess,
@@ -58,10 +59,12 @@ export function DocumentoEdicaoPage() {
 
   const initialState = useMemo(() => {
     if (!documento || !tipo) return null
+    const regraFaturacao =
+      clinicaQ.data?.regraFaturacao ?? REGRA_PRECOS_SEM_IVA_INCLUIDO
     return mapDocumentoToEditorState(
       documento,
       tipo,
-      clinicaQ.data?.regraFaturacao,
+      regraFaturacao,
     )
   }, [documento, tipo, clinicaQ.data?.regraFaturacao])
 
@@ -78,7 +81,8 @@ export function DocumentoEdicaoPage() {
     ? `Editar — ${documentoLabel}`
     : `Ver — ${documentoLabel}`
 
-  const isLoading = docQ.isLoading || tiposQ.isLoading
+  const isInitialLoading = docQ.isPending && !documento
+  const isRefreshing = docQ.isFetching && !!documento
 
   const loadErrorMessage = useMemo(() => {
     if (docQ.isError && docQ.error instanceof Error) return docQ.error.message
@@ -128,9 +132,11 @@ export function DocumentoEdicaoPage() {
           onBack={closeLikeTabBar}
           onRefresh={() => {
             void docQ.refetch()
+            void tiposQ.refetch()
+            void clinicaQ.refetch()
           }}
         >
-          {isLoading ? (
+          {isInitialLoading ? (
             <p className='text-sm text-muted-foreground'>A carregar documento…</p>
           ) : loadErrorMessage || !documento || !tipo || !initialState ? (
             <p className='text-sm text-muted-foreground'>
@@ -141,7 +147,11 @@ export function DocumentoEdicaoPage() {
               Documento anulado — só consulta.
             </p>
           ) : (
-            <DocumentoEditor
+            <>
+              {isRefreshing ? (
+                <p className='mb-2 text-xs text-muted-foreground'>A actualizar…</p>
+              ) : null}
+              <DocumentoEditor
               tipo={tipo}
               mode={canEdit ? 'create' : 'view'}
               initialState={initialState}
@@ -149,6 +159,7 @@ export function DocumentoEdicaoPage() {
               onCancel={closeLikeTabBar}
               isSubmitting={atualizarMutation.isPending}
             />
+            </>
           )}
         </AreaComumListagemPageShell>
       </DashboardPageContainer>

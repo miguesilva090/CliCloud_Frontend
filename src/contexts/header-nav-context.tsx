@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { isEntityTabelasPath } from '@/config/entity-routes'
 import { MenuItem } from '@/types/navigation/menu.types'
 import { useLocation } from 'react-router-dom'
 import { usePermissionsStore } from '@/stores/permissions-store'
 import { useHeaderMenu } from '@/hooks/use-header-menu'
 import { useMenuItems } from '@/hooks/use-menu-items'
+import { determineCurrentMenuFromPathname } from '@/utils/determine-current-menu'
 
 interface HeaderNavContextType {
   currentMenu: string
@@ -93,68 +93,10 @@ export const HeaderNavProvider: React.FC<{ children: React.ReactNode }> = ({
     return null
   }
 
-  // Update current menu based on location (prefer most specific / nested match so header shows sub-menu)
   useEffect(() => {
-    const determineCurrentMenu = (pathname: string): string => {
-      // Rotas de utentes/medicos/organismos devem usar o menu de Tabelas da Área Comum
-      if (isEntityTabelasPath(pathname)) {
-        return 'tabelas'
-      }
-
-      // Área Clínica: em /area-clinica (ou antes do redirect) mostrar submenu Processo Clínico, como na área-comum
-      if (pathname === '/area-clinica' || pathname.startsWith('/area-clinica/processo-clinico')) {
-        return 'processo-clinico'
-      }
-
-      // Área Administrativa: manter sempre o header próprio da área,
-      // mesmo quando estamos em subsecções como /consultas, /tratamentos, /modalidades.
-      if (pathname.startsWith('/area-administrativa')) {
-        return 'area-administrativa'
-      }
-
-      // Área Financeira: manter sempre o header próprio da área,
-      // mesmo quando estamos em subsecções como /faturacao, /tesouraria, etc.
-      if (pathname.startsWith('/area-financeira')) {
-        return 'area-financeira'
-      }
-
-      // Sinistrados pertence ao contexto funcional de Área Administrativa > Consultas.
-      if (
-        pathname.startsWith('/area-administrativa/consultas/sinistrados') ||
-        pathname.startsWith('/area-administrativa/consultas/historico-sinistrados') ||
-        pathname.startsWith('/area-administrativa/consultas/historico/') ||
-        pathname.startsWith('/area-administrativa/credenciais') ||
-        pathname.startsWith('/area-administrativa/credenciais/exames-sem-papel') ||
-        pathname.startsWith('/area-comum/tabelas/consultas/estado-sinistro')
-      ) {
-        return 'area-administrativa'
-      }
-
-      // First check nested items and pick the most specific match
-      // (longest href wins, e.g. /area-comum/utilitarios over /area-comum)
-      const nestedCandidates = menuItems
-        .flatMap((item) => item.items ?? [])
-        .filter(
-          (subItem) =>
-            pathname === subItem.href ||
-            pathname.startsWith(subItem.href + '/')
-        )
-        .sort((a, b) => b.href.length - a.href.length)
-      if (nestedCandidates.length > 0 && nestedCandidates[0].title) {
-        return nestedCandidates[0].title
-      }
-
-      // Then check direct top-level matches
-      const directMatch = menuItems.find(
-        (item) => pathname === item.href || pathname.startsWith(item.href + '/')
-      )
-      if (directMatch?.title) return directMatch.title
-
-      return 'dashboard'
-    }
-
-    const newCurrentMenu = determineCurrentMenu(location.pathname)
-    setCurrentMenu(newCurrentMenu)
+    setCurrentMenu(
+      determineCurrentMenuFromPathname(location.pathname, menuItems)
+    )
   }, [location.pathname, menuItems])
 
   // Update active menu item when location or permissions change

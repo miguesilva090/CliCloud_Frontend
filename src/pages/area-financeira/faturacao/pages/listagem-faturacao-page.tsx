@@ -43,6 +43,8 @@ import { ValidacaoTransporteDialog } from '../components/validacao-transporte-di
 import { DetalhesAdmissoesDialog } from '../components/detalhes-admissoes-dialog'
 import {
   documentoQueryKeys,
+  prefetchDocumentoById,
+  prefetchDocumentosByIds,
   useAtualizarValidacaoTransporteMutation,
   useDocumentoLiquidacaoContextoMutation,
   useGetDocumentoByIdMutation,
@@ -129,6 +131,20 @@ export function ListagemFaturacaoPage() {
   const documentos: DocumentoTableDTO[] = data?.info?.data ?? []
   const pageCount = data?.info?.totalPages ?? 0
   const totalRows = data?.info?.totalCount ?? 0
+
+  const documentoIdsPagina = useMemo(
+    () => documentos.map((d) => d.id),
+    [documentos],
+  )
+
+  useEffect(() => {
+    if (documentoIdsPagina.length === 0) return
+    void prefetchDocumentosByIds(
+      queryClient,
+      documentoIdsPagina,
+      ID_FUNCIONALIDADE,
+    )
+  }, [documentoIdsPagina, queryClient])
   const errorMessage =
     error instanceof Error ? error.message : error ? String(error) : ''
 
@@ -453,7 +469,8 @@ export function ListagemFaturacaoPage() {
             FilterControls={ListagemFaturacaoFilterControls}
             selectedRows={selectedRows}
             onRowSelectionChange={setSelectedRows}
-            onOpenView={(row) =>
+            onOpenView={async (row) => {
+              await prefetchDocumentoById(queryClient, row.id, ID_FUNCIONALIDADE)
               navigateManagedWindow(
                 navigate,
                 `/area-financeira/faturacao/documento/${row.id}`,
@@ -462,12 +479,13 @@ export function ListagemFaturacaoPage() {
                   forceNewInstance: true,
                 },
               )
-            }
-            onOpenEdit={(row) => {
+            }}
+            onOpenEdit={async (row) => {
               if (!podeEditarDocumento(row)) {
                 toast.error('Documento anulado não pode ser editado.')
                 return
               }
+              await prefetchDocumentoById(queryClient, row.id, ID_FUNCIONALIDADE)
               navigateManagedWindow(
                 navigate,
                 `/area-financeira/faturacao/documento/${row.id}?edit=1`,

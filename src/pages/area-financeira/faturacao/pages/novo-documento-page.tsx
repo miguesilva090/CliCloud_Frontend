@@ -60,6 +60,7 @@ function mapEmitirRequestParaOrigem(
     descontoPagamento: payload.descontoPagamento ?? null,
     outros: payload.outros ?? null,
     isentoIva: payload.isentoIva ?? false,
+    motivoIsencaoId: payload.isentoIva ? (payload.motivoIsencaoId ?? null) : null,
     ivaCaixa: payload.ivaCaixa ?? false,
     codigoTipoDocSaft: payload.codigoTipoDocSaft ?? null,
     nomeCliente: payload.nomeCliente ?? null,

@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button'
 import { useDeleteUtente } from '../queries/utentes-queries'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { openPathInApp, openUtenteEditInApp } from '@/utils/window-utils'
-import { entityRoutes } from '@/config/entity-routes'
+import { useLocation } from 'react-router-dom'
+import { getEntityRoutesForPathname } from '@/config/entity-routes'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
 
@@ -28,6 +29,8 @@ function UtenteRowActions({
   const id = row.id
   const nome = row.nome
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const routes = getEntityRoutesForPathname(pathname)
   const addWindow = useWindowsStore((s) => s.addWindow)
   const { canView, canChange, canDelete } =
     useAreaComumEntityListPermissions(utentesPermId)
@@ -61,7 +64,7 @@ Esta ação não pode ser desfeita.`
             openPathInApp(
               navigate,
               addWindow,
-              `${entityRoutes.utentes.detail(id)}?from=utentes`,
+              `${routes.utentes.detail(id)}?from=utentes`,
               nome ? `Utente: ${nome}` : 'Utente'
             )
           }

@@ -1,32 +1,66 @@
+export type EntityRouteSet = {
+  listagem: string
+  novo: string
+  detail: (id: string) => string
+  editar: (id: string) => string
+}
+
+export type EntityRoutesMap = {
+  utentes: EntityRouteSet
+  medicos: EntityRouteSet
+  organismos: EntityRouteSet
+  fornecedores: EntityRouteSet
+}
+
+const AREA_COMUM_ENTIDADES_BASE = '/area-comum/tabelas/entidades'
+const AREA_ADMIN_ENTIDADES_BASE = '/area-administrativa/entidades'
+const FATURACAO_ENTIDADES_BASE = '/area-financeira/faturacao/entidades'
+
+function buildEntityRoutesForBase(basePath: string): EntityRoutesMap {
+  const r = (entity: string): EntityRouteSet => ({
+    listagem: `${basePath}/${entity}`,
+    novo: `${basePath}/${entity}/novo`,
+    detail: (id: string) => `${basePath}/${entity}/${id}`,
+    editar: (id: string) => `${basePath}/${entity}/${id}/editar`,
+  })
+
+  return {
+    utentes: r('utentes'),
+    medicos: r('medicos'),
+    organismos: r('organismos'),
+    fornecedores: r('fornecedores'),
+  }
+}
+
 /** Rotas canónicas de entidades (área comum → tabelas → entidades). */
-export const entityRoutes = {
-  utentes: {
-    listagem: '/area-comum/tabelas/entidades/utentes',
-    novo: '/area-comum/tabelas/entidades/utentes/novo',
-    detail: (id: string) => `/area-comum/tabelas/entidades/utentes/${id}`,
-    editar: (id: string) => `/area-comum/tabelas/entidades/utentes/${id}/editar`,
-  },
-  medicos: {
-    listagem: '/area-comum/tabelas/entidades/medicos',
-    novo: '/area-comum/tabelas/entidades/medicos/novo',
-    detail: (id: string) => `/area-comum/tabelas/entidades/medicos/${id}`,
-    editar: (id: string) => `/area-comum/tabelas/entidades/medicos/${id}/editar`,
-  },
-  organismos: {
-    listagem: '/area-comum/tabelas/entidades/organismos',
-    novo: '/area-comum/tabelas/entidades/organismos/novo',
-    detail: (id: string) => `/area-comum/tabelas/entidades/organismos/${id}`,
-    editar: (id: string) =>
-      `/area-comum/tabelas/entidades/organismos/${id}/editar`,
-  },
-  fornecedores: {
-    listagem: '/area-comum/tabelas/entidades/fornecedores',
-    novo: '/area-comum/tabelas/entidades/fornecedores/novo',
-    detail: (id: string) => `/area-comum/tabelas/entidades/fornecedores/${id}`,
-    editar: (id: string) =>
-      `/area-comum/tabelas/entidades/fornecedores/${id}/editar`,
-  },
-} as const
+export const entityRoutes = buildEntityRoutesForBase(AREA_COMUM_ENTIDADES_BASE)
+
+export const faturacaoEntityRoutes = buildEntityRoutesForBase(
+  FATURACAO_ENTIDADES_BASE,
+)
+
+function resolvePathnameForEntityRoutes(pathname?: string): string {
+  if (pathname?.trim()) return pathname
+  if (typeof window !== 'undefined' && window.location?.pathname) {
+    return window.location.pathname
+  }
+  return AREA_COMUM_ENTIDADES_BASE
+}
+
+export function resolveEntidadesBasePath(pathname?: string): string {
+  const path = resolvePathnameForEntityRoutes(pathname)
+  if (path.startsWith(FATURACAO_ENTIDADES_BASE)) {
+    return FATURACAO_ENTIDADES_BASE
+  }
+  if (path.startsWith(AREA_ADMIN_ENTIDADES_BASE)) {
+    return AREA_ADMIN_ENTIDADES_BASE
+  }
+  return AREA_COMUM_ENTIDADES_BASE
+}
+
+export function getEntityRoutesForPathname(pathname?: string): EntityRoutesMap {
+  return buildEntityRoutesForBase(resolveEntidadesBasePath(pathname))
+}
 
 const LEGACY_ENTITY_PREFIXES = [
   '/utentes',
@@ -35,10 +69,10 @@ const LEGACY_ENTITY_PREFIXES = [
   '/fornecedores',
 ] as const
 
-/** Deteta rotas de entidades (canónicas ou legacy) para menu/header. */
+/** Rotas de entidades sob o header «Tabelas» da área comum (não faturação nem administrativa). */
 export function isEntityTabelasPath(pathname: string): boolean {
   return (
-    pathname.startsWith('/area-comum/tabelas/entidades/') ||
+    pathname.startsWith(`${AREA_COMUM_ENTIDADES_BASE}/`) ||
     LEGACY_ENTITY_PREFIXES.some((prefix) => pathname.startsWith(prefix))
   )
 }

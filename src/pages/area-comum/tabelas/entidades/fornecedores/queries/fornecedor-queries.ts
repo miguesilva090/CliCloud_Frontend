@@ -9,7 +9,11 @@ import type {
 import { toast } from '@/utils/toast-utils'
 import { BaseApiError } from '@/lib/base-client'
 
-const LISTAGEM_PATH = '/area-comum/tabelas/entidades/fornecedores'
+import { getEntityRoutesForPathname } from '@/config/entity-routes'
+
+function listagemFornecedoresPath() {
+  return getEntityRoutesForPathname().fornecedores.listagem
+}
 
 function getValidationMessage(error: unknown, fallback: string): string {
   if (!(error instanceof BaseApiError) || error.data == null) return fallback
@@ -51,7 +55,7 @@ export const useCreateFornecedor = () => {
       if (body?.status === ResponseStatus.Success) {
         toast.success('Fornecedor criado com sucesso.')
         queryClient.invalidateQueries({ queryKey: ['fornecedores-paginated'] })
-        navigate(LISTAGEM_PATH, { replace: true })
+        navigate(listagemFornecedoresPath(), { replace: true })
       } else {
         const msg = body?.messages
           ? Object.values(body.messages)
@@ -86,7 +90,7 @@ export const useUpdateFornecedor = () => {
         toast.success('Fornecedor atualizado com sucesso.')
         queryClient.invalidateQueries({ queryKey: ['fornecedores-paginated'] })
         queryClient.invalidateQueries({ queryKey: ['fornecedor'] })
-        navigate(LISTAGEM_PATH, { replace: true })
+        navigate(listagemFornecedoresPath(), { replace: true })
       } else {
         const msg = body?.messages
           ? Object.values(body.messages)

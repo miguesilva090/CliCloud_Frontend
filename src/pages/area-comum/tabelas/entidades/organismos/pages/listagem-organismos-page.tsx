@@ -32,11 +32,13 @@ import { useWindowsStore } from '@/stores/use-windows-store'
 import { openOrganismoCreationInApp, openEntityEditInApp, openPathInApp } from '@/utils/window-utils'
 import { ResponseStatus } from '@/types/api/responses'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedEntityRoutes } from '@/hooks/use-scoped-entity-routes'
 import { modules } from '@/config/modules'
 
 const organismosPermId = modules.areaComum.permissions.organismos.id
 
 export function ListagemOrganismosPage() {
+  const routes = useScopedEntityRoutes()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)
@@ -196,7 +198,7 @@ export function ListagemOrganismosPage() {
               openPathInApp(
                 navigate,
                 addWindow,
-                `/area-comum/tabelas/entidades/organismos/${id}`,
+                routes.organismos.detail(String(id)),
                 nome ? `Organismo: ${nome}` : 'Organismo'
               )
           }}
@@ -209,7 +211,7 @@ export function ListagemOrganismosPage() {
                     openEntityEditInApp(
                       navigate,
                       addWindow,
-                      `/area-comum/tabelas/entidades/organismos/${id}/editar`,
+                      routes.organismos.editar(String(id)),
                       String(id),
                       nome ? `Organismo: ${nome}` : null
                     )

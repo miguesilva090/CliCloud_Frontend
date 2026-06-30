@@ -606,6 +606,28 @@ export function AdmissaoViewEditModal({
   }, [open])
 
   useEffect(() => {
+    if (!open || !row?.id || mode === 'create' || isHistorico) return
+
+    const reloadPagoFaturado = () => {
+      void AdmissaoAdministrativoService(permId)
+        .getById(row.id)
+        .then((res) => {
+          if (res.info?.status !== ResponseStatus.Success || !res.info.data) return
+          const mapped = mapDtoToForm(res.info.data)
+          setForm((prev) => ({
+            ...prev,
+            pago: mapped.pago,
+            faturado: mapped.faturado,
+          }))
+        })
+        .catch(() => undefined)
+    }
+
+    window.addEventListener('focus', reloadPagoFaturado)
+    return () => window.removeEventListener('focus', reloadPagoFaturado)
+  }, [open, row?.id, mode, isHistorico, permId])
+
+  useEffect(() => {
     if (!open || mode !== 'create' || !consultaMarcacaoIdParam || marcacaoPrefillDoneRef.current) {
       return
     }

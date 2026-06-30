@@ -69,7 +69,9 @@ export function DocumentoTabClienteSection({
   const [debOrg] = useDebounce(orgSearch, 300)
   const [debCp] = useDebounce(cpSearch, 300)
 
-  const utentesQ = useUtentesLight(debUt)
+  const lookupsAtivos = !clienteBloqueado
+
+  const utentesQ = useUtentesLight(debUt, lookupsAtivos)
   const orgsQ = useQuery({
     queryKey: [
       'organismos',
@@ -84,11 +86,12 @@ export function DocumentoTabClienteSection({
         contextoFicheiroEletronicoSiglaSlug ?? undefined,
       ),
     enabled:
-      state.tipoCliente === 'organismo' || !!contextoFicheiroEletronicoSiglaSlug,
+      lookupsAtivos &&
+      (state.tipoCliente === 'organismo' || !!contextoFicheiroEletronicoSiglaSlug),
   })
-  const codigosPostaisQ = useCodigosPostaisLight(debCp)
+  const codigosPostaisQ = useCodigosPostaisLight(debCp, lookupsAtivos)
 
-  const utenteDetalhe = useGetUtente(state.utenteId ?? '')
+  const utenteDetalhe = useGetUtente(state.utenteId ?? '', lookupsAtivos)
 
   const organismoUtenteItems = useMemo(() => {
     const u = utenteDetalhe.data?.info?.data
@@ -227,15 +230,17 @@ export function DocumentoTabClienteSection({
   }
 
   useEffect(() => {
+    if (clienteBloqueado) return
     void aplicarSnapshotUtente()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot ao mudar utente
-  }, [utenteDetalhe.data, state.tipoCliente, state.utenteId, state.organismoId])
+  }, [clienteBloqueado, utenteDetalhe.data, state.tipoCliente, state.utenteId, state.organismoId])
 
   useEffect(() => {
+    if (clienteBloqueado) return
     if (state.tipoCliente !== 'organismo' || !state.organismoId) return
     void aplicarSnapshotOrganismo(state.organismoId)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot organismo
-  }, [state.tipoCliente, state.organismoId, organismoUtenteItems, orgItemsGlobal])
+  }, [clienteBloqueado, state.tipoCliente, state.organismoId, organismoUtenteItems, orgItemsGlobal])
 
   useEffect(() => {
     if (!contextoFicheiroEletronicoSiglaSlug) return
@@ -260,6 +265,7 @@ export function DocumentoTabClienteSection({
   }, [contextoFicheiroEletronicoSiglaSlug])
 
   useEffect(() => {
+    if (clienteBloqueado) return
     if (!contextoFicheiroEletronicoSiglaSlug || state.organismoId) return
     if (state.tipoCliente !== 'organismo') return
     if (orgsQ.isFetching) return
@@ -276,6 +282,7 @@ export function DocumentoTabClienteSection({
     void aplicarSnapshotOrganismo(orgItemsGlobal[0].value)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-seleção organismo FE
   }, [
+    clienteBloqueado,
     contextoFicheiroEletronicoSiglaSlug,
     state.organismoId,
     state.tipoCliente,

@@ -49,11 +49,65 @@ export interface LoteDirectDTO extends LoteDirectTableDTO {
   valorConsulta?: number
   taxaConsulta?: number
   procedimentosEfetuados?: boolean
+  linhas?: LoteDirectLinhaDTO[]
+  linhas789?: LoteDirectLinhaDTO[]
+}
+
+export interface LoteDirectLinhaDTO {
+  id: string
+  servicoId: string
+  servicoDesignacao?: string
+  quantidade: number
+  valorUnitario: number
+  valorUtenteOriginal: number
+  valorInstituicaoOriginal: number
+  valorUtente: number
+  valorInstituicao: number
 }
 
 export interface CorrigirLotesRequest {
   mes: number
   ano: number
+}
+
+export interface ValidarCorrigirLotesDTO {
+  ano: number
+  mes: number
+  cabecalhosEncontrados: number
+  cabecalhosSemOrganismo: number
+  cabecalhosSemLinhasNemConsulta: number
+  linhasSemPreco: number
+  agregadosExistentes: number
+  podeCorrigir: boolean
+  problemas: string[]
+  avisos: string[]
+}
+
+export interface CorrigirLotesResultDTO {
+  ano: number
+  mes: number
+  cabecalhosProcessados: number
+  agregadosCriados: number
+  detalhesCriados: number
+  avisos: string[]
+}
+
+export interface LoteDirectAgregadoTableDTO {
+  id: string
+  indice: number
+  numeroLote: number
+  ano: number
+  mes: number
+  codigoOrganismo: number
+  organismoSigla?: string
+  tipoLote: number
+  tipoLoteDesignacao?: string
+  tipoServico: number
+  dataLote: string
+  quantidade: number
+  valor: number
+  valorTaxa: number
+  numeroRequisicoes: number
 }
 
 export interface TipoLoteLightDTO {
@@ -113,3 +167,14 @@ export interface CreateLoteDirectRequest {
 }
 
 export interface UpdateLoteDirectRequest extends CreateLoteDirectRequest {}
+
+export interface PassarParaHistoricoRequest {
+  loteDirectId: string
+}
+
+export interface PassarParaHistoricoResultDTO {
+  credenciaisActualizadas: number
+  codigoOrganismo: number
+  mes: number
+  ano: number
+}

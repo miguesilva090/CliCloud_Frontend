@@ -44,12 +44,14 @@ export const useFreguesiasLight = (keyword: string) =>
     gcTime: 10 * 60_000,
   })
 
-export const useCodigosPostaisLight = (keyword: string) =>
+export const useCodigosPostaisLight = (keyword: string, enabled = true) =>
   useQuery({
     queryKey: ['utility', 'codigo-postal', 'light', keyword],
     queryFn: () => UtilityLookupsService('utility').getCodigosPostaisLight(keyword),
+    enabled,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
+    refetchOnMount: false,
   })
 
 export const useRuasLight = (keyword: string) =>

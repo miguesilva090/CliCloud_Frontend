@@ -36,6 +36,7 @@ import {
 } from '@/utils/window-utils'
 import { useFormValidationFeedback } from '@/hooks/use-form-validation-feedback'
 import { isZodError, applyZodErrorToForm } from '@/lib/zod-error-to-field-errors'
+import { getEntityRoutesForPathname } from '@/config/entity-routes'
 
 // schema/payload extraídos para ./utils
 
@@ -349,7 +350,7 @@ export function OrganismoEditPage() {
                         onClick={() =>
                           navigateManagedWindow(
                             navigate,
-                            `/area-comum/tabelas/entidades/organismos/${id}/editar`
+                            getEntityRoutesForPathname(location.pathname).organismos.editar(id)
                           )
                         }
                       >

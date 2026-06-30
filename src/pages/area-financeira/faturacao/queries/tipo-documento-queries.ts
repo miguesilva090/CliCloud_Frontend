@@ -12,7 +12,9 @@ export function useGetTiposDocumentoLight(
     return useQuery({
         queryKey: tipoDocumentoQueryKeys.light(keyword),
         queryFn: () => TipoDocumentoService(idFuncionalidade).getTiposDocumentoLight(keyword),
-        staleTime: 5 * 60 * 1000,
-        gcTime: 30 * 60 * 1000,
+        staleTime: 30 * 60 * 1000,
+        gcTime: 60 * 60 * 1000,
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
     })
 }

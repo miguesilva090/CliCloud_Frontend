@@ -33,7 +33,8 @@ function patchClienteUtente(
 
   return {
     ...cliente,
-    moradaCliente: utente?.rua?.nome?.trim() ?? utente?.observacoes?.trim() ?? '',
+    moradaCliente: (utente?.rua?.nome?.trim() ?? '').slice(0, 100)
+      || (utente?.observacoes?.trim() ?? '').slice(0, 100),
     localidadeCliente:
       cp?.localidade?.trim() ??
       utente?.freguesia?.nome?.trim() ??

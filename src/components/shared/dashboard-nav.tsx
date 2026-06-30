@@ -13,8 +13,10 @@ import {
   isManagedRouteAlreadyFocused,
 } from '@/utils/window-utils'
 import { useSidebar } from '@/hooks/use-sidebar'
+import { useMenuItems } from '@/hooks/use-menu-items'
 import { Icons } from '@/components/ui/icons'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { determineCurrentMenuFromPathname } from '@/utils/determine-current-menu'
 
 interface DashboardNavProps {
   items: NavItem[]
@@ -24,6 +26,7 @@ interface DashboardNavProps {
 export function DashboardNav({ items, setOpen }: DashboardNavProps) {
   const { isMinimized, toggle } = useSidebar()
   const { setCurrentMenu, currentMenu, setActiveMenuItem } = useHeaderNav()
+  const sidebarMenuItems = useMenuItems()
   const location = useLocation()
   const navigate = useNavigate()
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(
@@ -37,14 +40,11 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
     }))
   }
 
-  const handleMenuClick = (
-    title: string | undefined,
-    hasSubItems?: boolean
-  ) => {
-    const menuTitle = title?.toLowerCase() ?? ''
-    if (menuTitle !== currentMenu) {
+  const handleMenuClick = (href: string, hasSubItems?: boolean) => {
+    const menuKey = determineCurrentMenuFromPathname(href, sidebarMenuItems)
+    if (menuKey !== currentMenu) {
       setActiveMenuItem(null)
-      setCurrentMenu(menuTitle)
+      setCurrentMenu(menuKey)
     }
     if (setOpen) setOpen(false)
 
@@ -240,7 +240,7 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
                 item.label || item.title
               )
               if (!item.underDevelopment) {
-                handleMenuClick(item.title, hasSubItems)
+                handleMenuClick(item.href, hasSubItems)
               } else {
                 e.preventDefault()
               }

@@ -51,19 +51,21 @@ import type { UtenteTableDTO } from '@/types/dtos/saude/utentes.dtos'
 import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedEntityRoutes } from '@/hooks/use-scoped-entity-routes'
 import { modules } from '@/config/modules'
 
-const LISTAGEM_PATH = '/area-comum/tabelas/entidades/utentes'
 const utentesPermId = modules.areaComum.permissions.utentes.id
 
 export function ListagemUtentesPage() {
+  const routes = useScopedEntityRoutes()
+  const listagemPath = routes.utentes.listagem
   const navigate = useNavigate()
   const addWindow = useWindowsStore((s) => s.addWindow)
   const { canAdd } = useAreaComumEntityListPermissions(utentesPermId)
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<UtenteTableDTO | null>(null)
-  const del = useDeleteUtente({ onSuccessNavigateTo: LISTAGEM_PATH })
+  const del = useDeleteUtente({ onSuccessNavigateTo: listagemPath })
   const consultarRnu = useConsultarUtenteRnu()
   const [rnuModalOpen, setRnuModalOpen] = useState(false)
   const [rnuConfirmAddOpen, setRnuConfirmAddOpen] = useState(false)
@@ -286,7 +288,7 @@ export function ListagemUtentesPage() {
           onPaginationChange={handlePaginationChange}
           onFiltersChange={handleFiltersChange}
           onSortingChange={handleSortingChange}
-          deleteReturnPath={LISTAGEM_PATH}
+          deleteReturnPath={listagemPath}
           onOpenDelete={handleOpenDelete}
           toolbarActions={toolbarActions}
           expandableSearch

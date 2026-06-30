@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { entityRoutes } from '@/config/entity-routes'
+import { entityRoutes, getEntityRoutesForPathname } from '@/config/entity-routes'
 import { roleHeaderMenus } from '@/config/menu-items'
 import {
   matchPath,
@@ -577,7 +577,8 @@ export function openUtenteCreationInApp(
   navigate: NavigateFunction,
   addWindow: AddWindowFn
 ): void {
-  openPathInApp(navigate, addWindow, entityRoutes.utentes.novo, 'Novo utente')
+  const routes = getEntityRoutesForPathname()
+  openPathInApp(navigate, addWindow, routes.utentes.novo, 'Novo utente')
 }
 
 export function openUtenteEditInApp(
@@ -586,10 +587,11 @@ export function openUtenteEditInApp(
   id: string,
   nome?: string | null
 ): void {
+  const routes = getEntityRoutesForPathname()
   openPathInApp(
     navigate,
     addWindow,
-    entityRoutes.utentes.editar(id),
+    routes.utentes.editar(id),
     nome ? `Utente: ${nome}` : 'Utente'
   )
 }
@@ -598,7 +600,8 @@ export function openMedicoCreationInApp(
   navigate: NavigateFunction,
   addWindow: AddWindowFn
 ): void {
-  openPathInApp(navigate, addWindow, entityRoutes.medicos.novo, 'Novo médico')
+  const routes = getEntityRoutesForPathname()
+  openPathInApp(navigate, addWindow, routes.medicos.novo, 'Novo médico')
 }
 
 export function openMedicoViewInApp(
@@ -607,10 +610,11 @@ export function openMedicoViewInApp(
   id: string,
   nome?: string | null
 ): void {
+  const routes = getEntityRoutesForPathname()
   openPathInApp(
     navigate,
     addWindow,
-    entityRoutes.medicos.detail(id),
+    routes.medicos.detail(id),
     nome ? `Médico: ${nome}` : 'Médico'
   )
 }
@@ -621,10 +625,11 @@ export function openMedicoEditInApp(
   id: string,
   nome?: string | null
 ): void {
+  const routes = getEntityRoutesForPathname()
   openPathInApp(
     navigate,
     addWindow,
-    entityRoutes.medicos.editar(id),
+    routes.medicos.editar(id),
     nome ? `Médico: ${nome}` : 'Médico'
   )
 }
@@ -633,10 +638,11 @@ export function openOrganismoCreationInApp(
   navigate: NavigateFunction,
   addWindow: AddWindowFn
 ): void {
+  const routes = getEntityRoutesForPathname()
   openPathInApp(
     navigate,
     addWindow,
-    entityRoutes.organismos.novo,
+    routes.organismos.novo,
     'Novo organismo'
   )
 }

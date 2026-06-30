@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Plus, Printer, Save, X } from 'lucide-react'
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
@@ -23,6 +24,7 @@ import type {
   LoteDirectTableDTO,
   CreateLoteDirectRequest,
   LoteDirectLinhaUpsertRequest,
+  LoteDirectLinhaDTO,
 } from '@/types/dtos/credenciais/lote-direct.dtos'
 import type { UtenteDTO } from '@/types/dtos/saude/utentes.dtos'
 import type { OrganismoLightDTO } from '@/types/dtos/saude/organismos.dtos'
@@ -37,6 +39,7 @@ import { useTiposServicoLight ,useServicosLight, useSubsistemasServicoByOrganism
 import type { ProvenienciaUtenteLightDTO } from '@/types/dtos/proveniencias-utente/proveniencia-utente.dtos'
 import type { ServicoDTO, ServicoLightDTO } from '@/types/dtos/servicos/servico.dtos'
 import type { SubsistemaServicoDTO } from '@/types/dtos/servicos/subsistema-servico.dtos'
+import { buildServicoConsultaComboboxItems } from '../utils/build-servico-consulta-combobox-items'
 
 
 type ModalMode = 'view' | 'create' | 'edit'
@@ -152,6 +155,32 @@ function newLinhaFormRow(): LinhaFormRow {
     valorUtente: '',
     valorInstituicao: '',
   }
+}
+
+function linhaDtoToFormRow(dto: LoteDirectLinhaDTO): LinhaFormRow {
+  const servicoId = dto.servicoId?.trim() ?? ''
+  const label = dto.servicoDesignacao?.trim() ?? ''
+  return {
+    id: dto.id || crypto.randomUUID(),
+    subsistemaServicoId: servicoId
+      ? `${LOTE_LINHA_SERVICO_SEM_VINCULO_PREFIX}${servicoId}`
+      : '',
+    subsistemaLinhaLabel: label,
+    servicoId,
+    quantidade: String(dto.quantidade ?? 1),
+    valorUnitario: formatDecimalInput(dto.valorUnitario),
+    valorUtenteOriginal: formatDecimalInput(dto.valorUtenteOriginal),
+    valorInstituicaoOriginal: formatDecimalInput(dto.valorInstituicaoOriginal),
+    valorUtente: formatDecimalInput(dto.valorUtente),
+    valorInstituicao: formatDecimalInput(dto.valorInstituicao),
+  }
+}
+
+function linhasDtoParaGrelhaExames(detail: LoteDirectDTO): LoteDirectLinhaDTO[] {
+  const consultaId = detail.servicoConsultaId?.trim()
+  return (detail.linhas ?? []).filter(
+    (linha) => !consultaId || linha.servicoId !== consultaId
+  )
 }
 
 function buildLinhaValoresFromSubsistema(
@@ -504,6 +533,7 @@ export function LoteDirectFormModal({
   renderAsPage?: boolean
 }) {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const permId = useLoteDirectFuncionalidadeId()
   const isView = mode === 'view'
   const isCreate = mode === 'create'
@@ -698,22 +728,15 @@ export function LoteDirectFormModal({
 
     return items
   }, [servicosConsulta, form.tipoServicoRegistoId, form.servicos, form.servicosLabel])
-  const servicoConsultaItems = useMemo(() => {
-    let items = (servicosConsulta as ServicoLightDTO[]).map((item) => ({
-      value: item.id,
-      label: item.designacao,
-    }))
-
-    if (form.tipoServicoRegistoId) {
-      items = items.filter(
-        (item) =>
-          (servicosConsulta as ServicoLightDTO[]).find((servico) => servico.id === item.value)
-            ?.tipoServicoId === form.tipoServicoRegistoId
-      )
-    }
-
-    return items
-  }, [servicosConsulta, form.tipoServicoRegistoId])
+  const servicoConsultaItems = useMemo(
+    () =>
+      buildServicoConsultaComboboxItems(
+        subsistemasOrganismo,
+        servicosConsulta as ServicoLightDTO[],
+        form.tipoServicoRegistoId
+      ),
+    [subsistemasOrganismo, servicosConsulta, form.tipoServicoRegistoId]
+  )
 
 
   const patchForm = (partial: Partial<typeof form>) => {
@@ -854,37 +877,48 @@ export function LoteDirectFormModal({
 
   useEffect(() => {
     if (!open) return
-    setLinhasRegisto((prev) =>
-      prev.map((row) => {
-        if (
-          !row.subsistemaServicoId ||
-          row.subsistemaServicoId.startsWith(LOTE_LINHA_SERVICO_SEM_VINCULO_PREFIX)
+
+    const servicos = servicosConsulta as ServicoLightDTO[]
+
+    const resolver = (row: LinhaFormRow): LinhaFormRow => {
+      const servicoId = row.servicoId.trim()
+      if (!servicoId) return row
+
+      const sub = subsistemasOrganismo.find((s) => s.servicoId === servicoId)
+      if (sub) {
+        const serv = servicos.find((x) => x.id === sub.servicoId)
+        const wasSemVinculo = row.subsistemaServicoId.startsWith(
+          LOTE_LINHA_SERVICO_SEM_VINCULO_PREFIX
         )
-          return row
-        const sub = subsistemasOrganismo.find((s) => s.id === row.subsistemaServicoId)
-        if (!sub) return row
         return {
           ...row,
-          ...buildLinhaValoresFromSubsistema(sub, row.quantidade, form.taxaModeradora),
+          subsistemaServicoId: sub.id,
+          subsistemaLinhaLabel: serv?.designacao?.trim() ?? row.subsistemaLinhaLabel,
+          ...(wasSemVinculo
+            ? {}
+            : buildLinhaValoresFromSubsistema(sub, row.quantidade, form.taxaModeradora)),
         }
-      })
-    )
-    setLinhasRegisto789((prev) =>
-      prev.map((row) => {
-        if (
-          !row.subsistemaServicoId ||
-          row.subsistemaServicoId.startsWith(LOTE_LINHA_SERVICO_SEM_VINCULO_PREFIX)
-        )
-          return row
-        const sub = subsistemasOrganismo.find((s) => s.id === row.subsistemaServicoId)
-        if (!sub) return row
-        return {
-          ...row,
-          ...buildLinhaValoresFromSubsistema(sub, row.quantidade, form.taxaModeradora),
+      }
+
+      if (
+        row.subsistemaServicoId &&
+        !row.subsistemaServicoId.startsWith(LOTE_LINHA_SERVICO_SEM_VINCULO_PREFIX)
+      ) {
+        const subById = subsistemasOrganismo.find((s) => s.id === row.subsistemaServicoId)
+        if (subById) {
+          return {
+            ...row,
+            ...buildLinhaValoresFromSubsistema(subById, row.quantidade, form.taxaModeradora),
+          }
         }
-      })
-    )
-  }, [open, form.taxaModeradora, subsistemasOrganismo])
+      }
+
+      return row
+    }
+
+    setLinhasRegisto((prev) => prev.map(resolver))
+    setLinhasRegisto789((prev) => prev.map(resolver))
+  }, [open, form.taxaModeradora, subsistemasOrganismo, servicosConsulta])
 
   const applyDetail = (detail: LoteDirectDTO) => {
     const medicoLabel = [detail.codigoMedico, detail.medicoNome].filter(Boolean).join(' - ')
@@ -929,6 +963,9 @@ export function LoteDirectFormModal({
       servicoConsultaId: detail.servicoConsultaId ?? '',
       servicoConsultaLabel: detail.servicoConsultaDesignacao ?? detail.servicoConsulta ?? '',
     })
+
+    setLinhasRegisto(linhasDtoParaGrelhaExames(detail).map(linhaDtoToFormRow))
+    setLinhasRegisto789((detail.linhas789 ?? []).map(linhaDtoToFormRow))
   }
 
   const handleSelectUtente = async (value: string) => {
@@ -1820,13 +1857,31 @@ export function LoteDirectFormModal({
                     }
                     searchPlaceholder='Pesquisar serviço...'
                     emptyText={
-                      form.utenteOrganismoId ? 'Sem serviços para o organismo' : 'Sem serviços'
+                      form.utenteOrganismoId
+                        ? 'Sem vínculos Subsistema/Serviço para este organismo'
+                        : 'Selecione primeiro o utente'
                     }
                     disabled={isView || !form.utenteOrganismoId}
                     searchValue={servicoConsultaSearch}
                     onSearchValueChange={setServicoConsultaSearch}
                   />
-                  <Button type='button' variant='secondary' size='icon' className='h-7 w-7 shrink-0' disabled={isView}>
+                  <Button
+                    type='button'
+                    variant='secondary'
+                    size='icon'
+                    className='h-7 w-7 shrink-0'
+                    disabled={isView || !form.utenteOrganismoId}
+                    title='Abrir Subsistemas de Serviço do organismo'
+                    onClick={() => {
+                      if (!form.utenteOrganismoId) {
+                        toast.error('Selecione um utente com organismo.')
+                        return
+                      }
+                      navigate(
+                        `/area-administrativa/tabelas/subsistemas-servicos?organismoId=${form.utenteOrganismoId}`
+                      )
+                    }}
+                  >
                     <Plus className='h-3.5 w-3.5' />
                   </Button>
                 </div>

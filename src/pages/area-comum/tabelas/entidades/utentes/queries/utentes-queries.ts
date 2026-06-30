@@ -8,15 +8,21 @@ import type {
   UtenteTableFilterRequest,
 } from '@/types/dtos/saude/utentes.dtos'
 import { toast } from '@/utils/toast-utils'
-import { entityRoutes } from '@/config/entity-routes'
+import { getEntityRoutesForPathname } from '@/config/entity-routes'
 
-export const useUtentesLight = (keyword = '') =>
+export const useUtentesLight = (keyword = '', enabled = true) =>
   useQuery({
     queryKey: ['utentes', 'light', keyword],
-    queryFn: () => UtentesService('utentes').getUtentesLight(keyword),
+    queryFn: () => UtentesService('utentes').getUtentesLight(keyword || undefined),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnMount: false,
   })
 
-const LISTAGEM_PATH = entityRoutes.utentes.listagem
+function listagemUtentesPath() {
+  return getEntityRoutesForPathname().utentes.listagem
+}
 
 /** Ids aceites pelo backend (`Utente` / Entidade); morada/localidade/telemóvel são calculados na UI — não são propriedades escalar para `OrderBy`. */
 export const UTENTE_LIST_ALLOWED_SORT_IDS = new Set([
@@ -33,11 +39,14 @@ export function sanitizeUtenteListSorting(
   return ok.length > 0 ? ok : undefined
 }
 
-export const useGetUtente = (id: string) => {
+export const useGetUtente = (id: string, enabled = true) => {
   return useQuery({
     queryKey: ['utente', id],
     queryFn: () => UtentesService('utentes').getUtente(id),
-    enabled: !!id,
+    enabled: !!id && enabled,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnMount: false,
   })
 }
 
@@ -114,7 +123,7 @@ export const useCreateUtente = () => {
         // invalidar listagens paginadas
         await queryClient.invalidateQueries({ queryKey: ['utentes-paginated'] })
         // navegar para listagem
-        navigate(LISTAGEM_PATH)
+        navigate(listagemUtentesPath())
         return
       }
 
@@ -157,7 +166,7 @@ export const useUpdateUtente = (id: string, options?: UseUpdateUtenteOptions) =>
         toast.success('Utente atualizado com sucesso')
         await queryClient.invalidateQueries({ queryKey: ['utentes-paginated'] })
         await queryClient.invalidateQueries({ queryKey: ['utente', id] })
-        navigate(LISTAGEM_PATH)
+        navigate(listagemUtentesPath())
         return
       }
 
@@ -196,7 +205,7 @@ export const useUpdateUtente = (id: string, options?: UseUpdateUtenteOptions) =>
 export const useDeleteUtente = (options?: { onSuccessNavigateTo?: string }) => {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const returnPath = options?.onSuccessNavigateTo ?? LISTAGEM_PATH
+  const returnPath = options?.onSuccessNavigateTo ?? listagemUtentesPath()
 
   return useMutation({
     mutationFn: (id: string) => UtentesService('utentes').deleteUtente(id),

@@ -261,6 +261,14 @@ export function linhaFromSubsistema(
   return row
 }
 
+function isPersistedAdmissaoServicoId(id: string): boolean {
+  const trimmed = id.trim()
+  if (!trimmed) return false
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    trimmed,
+  )
+}
+
 export function linhaToDto(linha: LinhaServicoForm, index: number): AdmissaoServicoDTO {
   const qty = parseDecimal(linha.quantidade) ?? 1
   const valorUnit = parseDecimal(linha.valorUnitario)
@@ -270,6 +278,7 @@ export function linhaToDto(linha: LinhaServicoForm, index: number): AdmissaoServ
   const descCli = parseDecimal(linha.descClinica)
 
   return {
+    ...(isPersistedAdmissaoServicoId(linha.id) ? { id: linha.id } : {}),
     linha: index + 1,
     servicoId: linha.servicoId || null,
     valorServico: valorUnit,
@@ -289,6 +298,9 @@ export function linhaToDto(linha: LinhaServicoForm, index: number): AdmissaoServ
 
 export function linhaFromDto(dto: AdmissaoServicoDTO): LinhaServicoForm {
   const row = newLinhaServicoForm()
+  if (dto.id) {
+    row.id = dto.id
+  }
   row.servicoId = dto.servicoId ?? ''
   row.codigoArtigo = dto.codigoArtigo ?? ''
   row.descricao = dto.nomeArtigo ?? ''

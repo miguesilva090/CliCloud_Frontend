@@ -15,7 +15,11 @@ export const useGetOrganismo = (id: string) =>
     enabled: !!id,
   })
 
-const LISTAGEM_PATH = '/area-comum/tabelas/entidades/organismos'
+import { getEntityRoutesForPathname } from '@/config/entity-routes'
+
+function listagemOrganismosPath() {
+  return getEntityRoutesForPathname().organismos.listagem
+}
 
 export const useCreateOrganismo = () => {
   const queryClient = useQueryClient()
@@ -29,7 +33,7 @@ export const useCreateOrganismo = () => {
       if (info?.status === ResponseStatus.Success && info?.data) {
         toast.success('Organismo criado com sucesso')
         await queryClient.invalidateQueries({ queryKey: ['organismos-paginated'] })
-        navigate(LISTAGEM_PATH)
+        navigate(listagemOrganismosPath())
       } else {
         const msg =
           (response.info as { messages?: Record<string, string[]> })?.messages?.['$']?.[0] ??

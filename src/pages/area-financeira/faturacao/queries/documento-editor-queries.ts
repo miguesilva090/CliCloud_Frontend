@@ -38,6 +38,14 @@ function resolveClinicaId(clinica: ClinicaDTO | null | undefined): string {
 
 const ID = 'documentos'
 
+/** Lookups do editor — estáveis entre abrir/fechar documentos. */
+const EDITOR_LOOKUP_CACHE = {
+  staleTime: 30 * 60 * 1000,
+  gcTime: 60 * 60 * 1000,
+  refetchOnMount: false,
+  refetchOnWindowFocus: false,
+} as const
+
 export { useTaxasIvaLight as useTaxasIvaDocumento }
 
 import { fetchReciboAdmissaoPrecarga } from '../utils/map-recibo-admissao-precarga'
@@ -68,7 +76,7 @@ export function useClinicaFaturacaoConfig() {
         regrafaturacao: clinica?.regrafaturacao ?? '1',
       }
     },
-    staleTime: 120_000,
+    ...EDITOR_LOOKUP_CACHE,
   })
 }
 
@@ -77,7 +85,7 @@ export function useServicosLightDocumento(keyword: string, enabled = true) {
     queryKey: ['documento-editor', 'servicos-light', keyword],
     queryFn: () => ServicoService(ID).getServicoLight(keyword),
     enabled,
-    staleTime: 60_000,
+    ...EDITOR_LOOKUP_CACHE,
   })
 }
 
@@ -94,7 +102,7 @@ export function useSubsistemasOrganismoDocumento(organismoId: string | null) {
       return extractSubsistemaServicoRows(res.info?.data)
     },
     enabled: !!organismoId,
-    staleTime: 60_000,
+    ...EDITOR_LOOKUP_CACHE,
   })
 }
 
@@ -141,7 +149,7 @@ export function useMoedasDocumento() {
       if (res.info?.status !== ResponseStatus.Success) return []
       return res.info.data ?? []
     },
-    staleTime: 120_000,
+    ...EDITOR_LOOKUP_CACHE,
   })
 }
 
@@ -154,7 +162,7 @@ export function useCondicoesPagamentoDocumento(keyword = '') {
       if (res.info?.status !== ResponseStatus.Success) return []
       return (res.info.data ?? []) as CondicaoPagamentoLightDTO[]
     },
-    staleTime: 120_000,
+    ...EDITOR_LOOKUP_CACHE,
   })
 }
 
@@ -169,7 +177,7 @@ export function useModosPagamentoDocumento(keyword = '', apenasAtivos = true) {
       if (res.info?.status !== ResponseStatus.Success) return []
       return (res.info.data ?? []) as ModoPagamentoLightDTO[]
     },
-    staleTime: 120_000,
+    ...EDITOR_LOOKUP_CACHE,
   })
 }
 
@@ -191,7 +199,7 @@ export function useOpcoesPagamentoDocumento() {
         referenciasMb: res.info.data.referenciasMb ?? [],
       }
     },
-    staleTime: 120_000,
+    ...EDITOR_LOOKUP_CACHE,
   })
 }
 
@@ -217,7 +225,7 @@ export function useMotivosIsencaoDocumento(keyword = '') {
       if (res.info?.status !== ResponseStatus.Success) return []
       return (res.info.data ?? []) as MotivoIsencaoLightDTO[]
     },
-    staleTime: 120_000,
+    ...EDITOR_LOOKUP_CACHE,
   })
 }
 
@@ -233,7 +241,7 @@ export function useMotivosRetencaoDocumento(tipoImposto: string, keyword = '') {
       if (res.info?.status !== ResponseStatus.Success) return []
       return (res.info.data ?? []) as MotivoRetencaoLightDTO[]
     },
-    staleTime: 120_000,
+    ...EDITOR_LOOKUP_CACHE,
   })
 }
 

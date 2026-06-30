@@ -2,7 +2,7 @@ import { useLocation } from 'react-router-dom'
 
 export function useScopedFuncionalidadeId(
   areaComumPermissionId: string,
-  areaAdministrativaPermissionId: string
+  areaAdministrativaPermissionId: string,
 ) {
   const { pathname } = useLocation()
 

@@ -62,13 +62,13 @@ export function createAreaComumListActionsColumnDef<T>(
               <Eye className='h-4 w-4' />
             </Button>
           ) : null}
-          {canChange && !locked ? (
+          {canChange && !locked && typeof onOpenEdit === 'function' ? (
             <Button
               type='button'
               variant='ghost'
               size='icon'
               className='h-8 w-8'
-              onClick={() => onOpenEdit?.(data)}
+              onClick={() => onOpenEdit(data)}
               title='Editar'
             >
               <Pencil className='h-4 w-4' />

@@ -127,6 +127,20 @@ const ptPTTranslations = {
   goToLastPage: 'Ir para última página',
 }
 
+function buildColumnVisibilityState(
+  initialColumnVisibility: VisibilityState,
+  hiddenColumns?: string[]
+): VisibilityState {
+  const hidden = (hiddenColumns ?? []).reduce<VisibilityState>(
+    (acc, columnId) => {
+      acc[columnId] = false
+      return acc
+    },
+    {}
+  )
+  return { ...initialColumnVisibility, ...hidden }
+}
+
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -174,8 +188,8 @@ export function DataTable<TData, TValue>({
       ? (initialFilters.find((f) => f.id === globalSearchColumnId)?.value as string) ?? ''
       : ''
   const [sorting, setSorting] = useState<SortingState>(initialSorting)
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-    initialColumnVisibility
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
+    buildColumnVisibilityState(initialColumnVisibility, hiddenColumns)
   )
   const [activeFiltersCount, setActiveFiltersCount] = useState(0)
   const location = useLocation()
@@ -216,19 +230,8 @@ export function DataTable<TData, TValue>({
     })
   }, [location.pathname, globalSearchColumnId])
 
-  useEffect(() => {
-    if (hiddenColumns) {
-      setColumnVisibility(
-        hiddenColumns.reduce(
-          (acc, columnId) => ({
-            ...acc,
-            [columnId]: false,
-          }),
-          {}
-        )
-      )
-    }
-  }, [hiddenColumns])
+  const hiddenColumnsKey = hiddenColumns?.join('\0') ?? ''
+  const initialColumnVisibilityKey = JSON.stringify(initialColumnVisibility)
 
   // Sincronizar estado interno com a rota/URL sempre que os valores iniciais mudam
   // (evita que, após interação com filtros/sorting/paginação, a tabela ignore mudanças vindas da rota)
@@ -391,11 +394,15 @@ export function DataTable<TData, TValue>({
     manualFiltering: true,
   })
 
-  // Sincronizar visibilidade de colunas com props (uma única fonte de verdade)
+  // Sincronizar visibilidade (inclui colunas de filtro ocultas).
   useEffect(() => {
-    setColumnVisibility(initialColumnVisibility)
-    table.setColumnVisibility(initialColumnVisibility)
-  }, [initialColumnVisibility, table])
+    const next = buildColumnVisibilityState(
+      initialColumnVisibility,
+      hiddenColumns
+    )
+    setColumnVisibility(next)
+    table.setColumnVisibility(next)
+  }, [initialColumnVisibilityKey, hiddenColumnsKey, table])
 
   const getActiveFiltersCount = () => {
     return activeFiltersCount
@@ -574,6 +581,7 @@ export function DataTable<TData, TValue>({
                           className={cn(
                             'h-12 font-semibold text-foreground/90 hover:text-foreground',
                             align === 'right' && 'text-right',
+                            align === 'left' && 'text-left',
                             isCenterOrDefault && 'text-center',
                             headerWidth,
                             isFirstVisible && 'rounded-tl-sm',
@@ -697,6 +705,7 @@ export function DataTable<TData, TValue>({
                                   .columnDef as DataTableColumnDef<TData>
                               ).meta?.width,
                               cellAlign === 'right' && 'text-right',
+                              cellAlign === 'left' && 'text-left',
                               cellCenterOrDefault && 'text-center'
                             )}
                           >

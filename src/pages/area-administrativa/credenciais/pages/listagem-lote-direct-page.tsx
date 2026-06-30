@@ -1,11 +1,22 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Archive, List, Plus, RotateCw, Wrench } from 'lucide-react'
+import { Archive, History, Layers, List, Plus, RotateCw, Tag, Wrench } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import {
   applyFiltersIfChanged,
   buildFiltersWithValue,
@@ -17,11 +28,15 @@ import { toast } from '@/utils/toast-utils'
 import { LoteDirectService } from '@/lib/services/credenciais/lote-direct-service'
 import type { LoteDirectTableDTO } from '@/types/dtos/credenciais/lote-direct.dtos'
 import { ListagemLoteDirectTable } from '../components/listagem-lote-direct-table'
+import { ListagemLoteDirectFilterControls } from '../components/listagem-lote-direct-filter-controls'
 import { LoteDirectViewModal } from '../modals/lote-direct-view-modal'
 import { LoteDirectFormModal } from '../modals/lote-direct-form-modal'
 import { CorrigirLotesModal } from '../modals/corrigir-lotes-modal'
+import { ListagensLoteDirectModal } from '../modals/listagens-lote-direct-modal'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { openLoteDirectCreationInApp } from '@/utils/window-utils'
+import { relatorioEtiquetaCredencialP1 } from '../utils/credenciais-legado-relatorios'
+import { usePassarLoteDirectParaHistorico } from '../queries/lote-direct-historico-mutations'
 import {
   useGetLoteDirectPaginated,
   usePrefetchAdjacentLoteDirect,
@@ -31,19 +46,24 @@ import {
 
 export function ListagemLoteDirectPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const appliedUrlFilters = useRef(false)
   const addWindow = useWindowsStore((s) => s.addWindow)
   const permId = useLoteDirectFuncionalidadeId()
   const { canView, canAdd, canChange, canDelete } = useEntityListPermissionsFromMany([
     ...loteDirectPermissionIds,
   ])
   const queryClient = useQueryClient()
+  const passarHistoricoMutation = usePassarLoteDirectParaHistorico()
   const [viewModalOpen, setViewModalOpen] = useState(false)
   const [formModalOpen, setFormModalOpen] = useState(false)
   const [formModalMode, setFormModalMode] = useState<'create' | 'edit'>('create')
   const [corrigirLotesOpen, setCorrigirLotesOpen] = useState(false)
+  const [listagensOpen, setListagensOpen] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedRow, setSelectedRow] = useState<LoteDirectTableDTO | null>(null)
   const [historicoAtivo, setHistoricoAtivo] = useState(false)
+  const [historicoConfirmRow, setHistoricoConfirmRow] = useState<LoteDirectTableDTO | null>(null)
 
   const {
     data,
@@ -62,6 +82,16 @@ export function ListagemLoteDirectPage() {
     usePrefetchAdjacentData: usePrefetchAdjacentLoteDirect,
   })
 
+  useEffect(() => {
+    if (appliedUrlFilters.current) return
+    const indiceLote = searchParams.get('indicelote')
+    if (!indiceLote) return
+
+    appliedUrlFilters.current = true
+    const next = buildFiltersWithValue(filters, 'indicelote', indiceLote)
+    applyFiltersIfChanged(filters, next, handleFiltersChange)
+  }, [searchParams, filters, handleFiltersChange])
+
   const errorMessage =
     error instanceof Error ? error.message : error ? String(error) : ''
 
@@ -78,6 +108,25 @@ export function ListagemLoteDirectPage() {
       )
       return next
     })
+  }
+
+  const confirmPassarHistorico = async () => {
+    if (!historicoConfirmRow?.id) return
+    try {
+      const response = await passarHistoricoMutation.mutateAsync({
+        loteDirectId: historicoConfirmRow.id,
+      })
+      if (response.info.status === ResponseStatus.Success) {
+        const n = response.info.data?.credenciaisActualizadas ?? 0
+        toast.success(`${n} credencial(is) passaram para histórico.`)
+        setHistoricoConfirmRow(null)
+        refresh()
+      } else {
+        toast.error(response.info.messages?.['$']?.[0] ?? 'Não foi possível passar para histórico.')
+      }
+    } catch (e) {
+      toast.error((e as Error)?.message ?? 'Erro ao passar para histórico.')
+    }
   }
 
   return (
@@ -106,9 +155,17 @@ export function ListagemLoteDirectPage() {
             onPaginationChange={handlePaginationChange}
             onFiltersChange={handleFiltersChange}
             onSortingChange={handleSortingChange}
+            FilterControls={ListagemLoteDirectFilterControls}
             toolbarActions={[
               ...(!historicoAtivo && canView
                 ? [
+                    {
+                      label: 'Lotes Agregados',
+                      icon: <Layers className='h-4 w-4' />,
+                      onClick: () =>
+                        navigate('/area-administrativa/credenciais/agregados'),
+                      variant: 'outline' as const,
+                    },
                     {
                       label: 'Corrigir Lotes',
                       icon: <Wrench className='h-4 w-4' />,
@@ -134,7 +191,7 @@ export function ListagemLoteDirectPage() {
               {
                 label: 'Listagens',
                 icon: <List className='h-4 w-4' />,
-                onClick: () => {},
+                onClick: () => setListagensOpen(true),
                 variant: 'outline' as const,
               },
               {
@@ -176,6 +233,34 @@ export function ListagemLoteDirectPage() {
                   }
                 : undefined
             }
+            renderExtraActions={
+              !historicoAtivo && canChange
+                ? (row) => (
+                    <>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='icon'
+                        className='h-8 w-8'
+                        title='Etiqueta P1'
+                        onClick={() => relatorioEtiquetaCredencialP1(row.id)}
+                      >
+                        <Tag className='h-4 w-4' />
+                      </Button>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='icon'
+                        className='h-8 w-8'
+                        title='Passar para histórico (organismo/mês/ano)'
+                        onClick={() => setHistoricoConfirmRow(row)}
+                      >
+                        <History className='h-4 w-4' />
+                      </Button>
+                    </>
+                  )
+                : undefined
+            }
             canView={canView}
             canChange={canChange}
             canDelete={canDelete}
@@ -199,6 +284,29 @@ export function ListagemLoteDirectPage() {
             onOpenChange={setCorrigirLotesOpen}
             onSuccess={refresh}
           />
+          <ListagensLoteDirectModal open={listagensOpen} onOpenChange={setListagensOpen} />
+
+          <AlertDialog
+            open={historicoConfirmRow != null}
+            onOpenChange={(open) => !open && setHistoricoConfirmRow(null)}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Passar para histórico</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta acção marca todas as credenciais do organismo{' '}
+                  {historicoConfirmRow?.organismoSigla ?? historicoConfirmRow?.codigoOrganismo} no
+                  período {historicoConfirmRow?.mesAno} como histórico. Continuar?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => void confirmPassarHistorico()}>
+                  Confirmar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </AreaComumListagemPageShell>
       </DashboardPageContainer>
     </>
