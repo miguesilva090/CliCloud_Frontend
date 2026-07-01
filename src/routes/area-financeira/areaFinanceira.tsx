@@ -1,246 +1,268 @@
 import { lazy } from 'react'
+import { modules, actionTypes } from '@/config/modules'
 import { Navigate } from 'react-router-dom'
 import { LicenseGuard } from '@/components/auth/license-guard'
-import { modules, actionTypes } from '@/config/modules'
 
 const AreaFinanceiraHomePage = lazy(() =>
   import('@/pages/area-financeira/pages/area-financeira-home-page').then(
-    (m) => ({ default: m.AreaFinanceiraHomePage }),
-  ),
+    (m) => ({ default: m.AreaFinanceiraHomePage })
+  )
 )
 const AreaFinanceiraPlaceholderPage = lazy(() =>
   import('@/pages/area-financeira/pages/area-financeira-placeholder-page').then(
-    (m) => ({ default: m.AreaFinanceiraPlaceholderPage }),
-  ),
+    (m) => ({ default: m.AreaFinanceiraPlaceholderPage })
+  )
 )
 const ListagemNaturezaDocumentoPage = lazy(() =>
-  import(
-    '@/pages/area-financeira/faturacao/tabelas/documentos/natureza-documento/pages/listagem-natureza-documento-page'
-  ).then((m) => ({ default: m.ListagemNaturezaDocumentoPage })),
+  import('@/pages/area-financeira/faturacao/tabelas/documentos/natureza-documento/pages/listagem-natureza-documento-page').then(
+    (m) => ({ default: m.ListagemNaturezaDocumentoPage })
+  )
 )
 const ListagemSeriesDocumentoPage = lazy(() =>
-  import(
-    '@/pages/area-financeira/faturacao/tabelas/documentos/series-documento/pages/listagem-series-documento-page'
-  ).then((m) => ({ default: m.ListagemSeriesDocumentoPage })),
+  import('@/pages/area-financeira/faturacao/tabelas/documentos/series-documento/pages/listagem-series-documento-page').then(
+    (m) => ({ default: m.ListagemSeriesDocumentoPage })
+  )
 )
 const ListagemFaturacaoPage = lazy(() =>
   import('@/pages/area-financeira/faturacao/pages/listagem-faturacao-page').then(
-    (m) => ({ default: m.ListagemFaturacaoPage }),
-  ),
+    (m) => ({ default: m.ListagemFaturacaoPage })
+  )
 )
 const ListagemCredenciaisSnsModuloPage = lazy(() =>
-  import(
-    '@/pages/area-financeira/faturacao/credenciais-sns/pages/listagem-credenciais-sns-modulo-page'
-  ).then((m) => ({ default: m.ListagemCredenciaisSnsModuloPage })),
+  import('@/pages/area-financeira/faturacao/credenciais-sns/pages/listagem-credenciais-sns-modulo-page').then(
+    (m) => ({ default: m.ListagemCredenciaisSnsModuloPage })
+  )
 )
 const ListagemCredenciaisSnsFicheiroEletronicoPage = lazy(() =>
-  import(
-    '@/pages/area-financeira/faturacao/credenciais-sns/pages/listagem-credenciais-sns-ficheiro-eletronico-page'
-  ).then((m) => ({ default: m.ListagemCredenciaisSnsFicheiroEletronicoPage })),
+  import('@/pages/area-financeira/faturacao/credenciais-sns/pages/listagem-credenciais-sns-ficheiro-eletronico-page').then(
+    (m) => ({ default: m.ListagemCredenciaisSnsFicheiroEletronicoPage })
+  )
 )
 const NovoDocumentoPage = lazy(() =>
   import('@/pages/area-financeira/faturacao/pages/novo-documento-page').then(
-    (m) => ({ default: m.NovoDocumentoPage }),
-  ),
+    (m) => ({ default: m.NovoDocumentoPage })
+  )
 )
 const DocumentoEdicaoPage = lazy(() =>
   import('@/pages/area-financeira/faturacao/pages/documento-edicao-page').then(
-    (m) => ({ default: m.DocumentoEdicaoPage }),
-  ),
+    (m) => ({ default: m.DocumentoEdicaoPage })
+  )
 )
 const LiquidacaoUtentePage = lazy(() =>
   import('@/pages/area-financeira/faturacao/pages/liquidacao-utente-page').then(
-    (m) => ({ default: m.LiquidacaoUtentePage }),
-  ),
+    (m) => ({ default: m.LiquidacaoUtentePage })
+  )
 )
 const LiquidacaoOrganismoPage = lazy(() =>
   import('@/pages/area-financeira/faturacao/pages/liquidacao-organismo-page').then(
-    (m) => ({ default: m.LiquidacaoOrganismoPage }),
-  ),
+    (m) => ({ default: m.LiquidacaoOrganismoPage })
+  )
 )
 
 const FicheiroEletronicoListagemPage = lazy(() =>
   import('@/pages/area-financeira/ficheiros-eletronicos/pages/ficheiro-eletronico-listagem-page').then(
-    (m) => ({ default: m.FicheiroEletronicoListagemPage }),
-  ),
+    (m) => ({ default: m.FicheiroEletronicoListagemPage })
+  )
+)
+const ComunicacaoFaturasConsultasPage = lazy(() =>
+  import('@/pages/area-financeira/adse/comunicacao-faturas/pages/comunicacao-faturas-consultas-page').then(
+    (m) => ({ default: m.ComunicacaoFaturasConsultasPage })
+  )
+)
+const ComunicacaoFaturasTratamentosPage = lazy(() =>
+  import('@/pages/area-financeira/adse/comunicacao-faturas/pages/comunicacao-faturas-tratamentos-page').then(
+    (m) => ({ default: m.ComunicacaoFaturasTratamentosPage })
+  )
+)
+const ComunicacaoFaturasExamesPage = lazy(() =>
+  import('@/pages/area-financeira/adse/comunicacao-faturas/pages/comunicacao-faturas-exames-page').then(
+    (m) => ({ default: m.ComunicacaoFaturasExamesPage })
+  )
+)
+const ConfiguracoesADSEPage = lazy(() =>
+  import('@/pages/area-financeira/adse/configuracoes/pages/configuracoes-adse-page').then(
+    (m) => ({ default: m.ConfiguracoesADSEPage })
+  )
 )
 
 /** Rotas alias — mesmas páginas da área comum, prefixo financeiro para navegação correcta. */
 const ListagemContasBancariasPage = lazy(() =>
-  import(
-    '@/pages/area-comum/tabelas/tabelas/contas-bancarias/pages/listagem-contas-bancarias-page'
-  ).then((m) => ({ default: m.ListagemContasBancariasPage })),
+  import('@/pages/area-comum/tabelas/tabelas/contas-bancarias/pages/listagem-contas-bancarias-page').then(
+    (m) => ({ default: m.ListagemContasBancariasPage })
+  )
 )
 const ListagemBancosPage = lazy(() =>
   import('@/pages/area-comum/tabelas/tabelas/bancos/pages/listagem-bancos-page').then(
-    (m) => ({ default: m.ListagemBancosPage }),
-  ),
+    (m) => ({ default: m.ListagemBancosPage })
+  )
 )
 const ListagemCodigosPostaisPage = lazy(() =>
-  import(
-    '@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/pages/listagem-codigospostais-page'
-  ).then((m) => ({ default: m.ListagemCodigosPostaisPage })),
+  import('@/pages/area-comum/tabelas/tabelas/geograficas/codigospostais/pages/listagem-codigospostais-page').then(
+    (m) => ({ default: m.ListagemCodigosPostaisPage })
+  )
 )
 const ListagemConcelhosPage = lazy(() =>
-  import(
-    '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/pages/listagem-concelhos-page'
-  ).then((m) => ({ default: m.ListagemConcelhosPage })),
+  import('@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/pages/listagem-concelhos-page').then(
+    (m) => ({ default: m.ListagemConcelhosPage })
+  )
 )
 const ListagemDistritosPage = lazy(() =>
-  import(
-    '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/pages/listagem-distritos-page'
-  ).then((m) => ({ default: m.ListagemDistritosPage })),
+  import('@/pages/area-comum/tabelas/tabelas/geograficas/distritos/pages/listagem-distritos-page').then(
+    (m) => ({ default: m.ListagemDistritosPage })
+  )
 )
 const ListagemPaisesPage = lazy(() =>
   import('@/pages/area-comum/tabelas/tabelas/geograficas/paises/pages/listagem-paises-page').then(
-    (m) => ({ default: m.ListagemPaisesPage }),
-  ),
+    (m) => ({ default: m.ListagemPaisesPage })
+  )
 )
 const ListagemMotivosIsencaoPage = lazy(() =>
-  import(
-    '@/pages/area-comum/tabelas/tabelas/motivo-isencao/pages/listagem-motivos-isencao-page'
-  ).then((m) => ({ default: m.ListagemMotivosIsencaoPage })),
+  import('@/pages/area-comum/tabelas/tabelas/motivo-isencao/pages/listagem-motivos-isencao-page').then(
+    (m) => ({ default: m.ListagemMotivosIsencaoPage })
+  )
 )
 const ListagemMotivosRetencaoPage = lazy(() =>
-  import(
-    '@/pages/area-comum/tabelas/tabelas/motivo-retencao/pages/listagem-motivos-retencao-page'
-  ).then((m) => ({ default: m.ListagemMotivosRetencaoPage })),
+  import('@/pages/area-comum/tabelas/tabelas/motivo-retencao/pages/listagem-motivos-retencao-page').then(
+    (m) => ({ default: m.ListagemMotivosRetencaoPage })
+  )
 )
 const ListagemTaxasIvaPage = lazy(() =>
   import('@/pages/area-comum/tabelas/tabelas/taxas-iva/pages/listagem-taxas-iva-page').then(
-    (m) => ({ default: m.ListagemTaxasIvaPage }),
-  ),
+    (m) => ({ default: m.ListagemTaxasIvaPage })
+  )
 )
 const ListagemMoedasPage = lazy(() =>
   import('@/pages/area-comum/tabelas/tabelas/moedas/pages/listagem-moedas-page').then(
-    (m) => ({ default: m.ListagemMoedasPage }),
-  ),
+    (m) => ({ default: m.ListagemMoedasPage })
+  )
 )
 const ListagemCondicoesPagamentoPage = lazy(() =>
-  import(
-    '@/pages/area-financeira/faturacao/tabelas/pagamentos/condicao-pagamento/pages/listagem-condicoes-pagamento-page'
-  ).then((m) => ({ default: m.ListagemCondicoesPagamentoPage })),
+  import('@/pages/area-financeira/faturacao/tabelas/pagamentos/condicao-pagamento/pages/listagem-condicoes-pagamento-page').then(
+    (m) => ({ default: m.ListagemCondicoesPagamentoPage })
+  )
 )
 const ListagemModosPagamentoPage = lazy(() =>
-  import(
-    '@/pages/area-financeira/faturacao/tabelas/pagamentos/modo-pagamento/pages/listagem-modos-pagamento-page'
-  ).then((m) => ({ default: m.ListagemModosPagamentoPage })),
+  import('@/pages/area-financeira/faturacao/tabelas/pagamentos/modo-pagamento/pages/listagem-modos-pagamento-page').then(
+    (m) => ({ default: m.ListagemModosPagamentoPage })
+  )
 )
 const ListagemServicosPage = lazy(() =>
-  import(
-    '@/pages/area-comum/tabelas/consultas/servicos/servicos/pages/listagem-servicos-page'
-  ).then((m) => ({ default: m.ListagemServicosPage })),
+  import('@/pages/area-comum/tabelas/consultas/servicos/servicos/pages/listagem-servicos-page').then(
+    (m) => ({ default: m.ListagemServicosPage })
+  )
 )
 const ListagemSubsistemasServicosPage = lazy(() =>
-  import(
-    '@/pages/area-comum/tabelas/consultas/servicos/subsistemas-servicos/pages/listagem-subsistemas-servicos-page'
-  ).then((m) => ({ default: m.ListagemSubsistemasServicosPage })),
+  import('@/pages/area-comum/tabelas/consultas/servicos/subsistemas-servicos/pages/listagem-subsistemas-servicos-page').then(
+    (m) => ({ default: m.ListagemSubsistemasServicosPage })
+  )
 )
 const ListagemTiposServicoPage = lazy(() =>
-  import(
-    '@/pages/area-comum/tabelas/consultas/servicos/tipos-servico/pages/listagem-tipos-servico-page'
-  ).then((m) => ({ default: m.ListagemTiposServicoPage })),
+  import('@/pages/area-comum/tabelas/consultas/servicos/tipos-servico/pages/listagem-tipos-servico-page').then(
+    (m) => ({ default: m.ListagemTiposServicoPage })
+  )
 )
 const ListagemZonasPage = lazy(() =>
-  import(
-    '@/pages/area-financeira/faturacao/tabelas/zonas/zonas/pages/listagem-zonas-page'
-  ).then((m) => ({ default: m.ListagemZonasPage })),
+  import('@/pages/area-financeira/faturacao/tabelas/zonas/zonas/pages/listagem-zonas-page').then(
+    (m) => ({ default: m.ListagemZonasPage })
+  )
 )
 const ListagemZonasFiscaisPage = lazy(() =>
-  import(
-    '@/pages/area-financeira/faturacao/tabelas/zonas/zonas-fiscais/pages/listagem-zonas-fiscais-page'
-  ).then((m) => ({ default: m.ListagemZonasFiscaisPage })),
+  import('@/pages/area-financeira/faturacao/tabelas/zonas/zonas-fiscais/pages/listagem-zonas-fiscais-page').then(
+    (m) => ({ default: m.ListagemZonasFiscaisPage })
+  )
 )
 
 const ListagemArmazensPage = lazy(() =>
   import('@/pages/area-financeira/faturacao/tabelas/artigos/armazens/pages/listagem-armazens-page').then(
-    (m) => ({ default: m.ListagemArmazensPage }),
-  ),
+    (m) => ({ default: m.ListagemArmazensPage })
+  )
 )
 
 const ListagemArtigosPage = lazy(() =>
   import('@/pages/area-financeira/faturacao/tabelas/artigos/artigos/pages/listagem-artigos-page').then(
-    (m) => ({ default: m.ListagemArtigosPage }),
-  ),
+    (m) => ({ default: m.ListagemArtigosPage })
+  )
 )
 
 const ArtigoEditPage = lazy(() =>
   import('@/pages/area-financeira/faturacao/tabelas/artigos/artigos/pages/artigo-edit-page').then(
-    (m) => ({ default: m.ArtigoEditPage }),
-  ),
+    (m) => ({ default: m.ArtigoEditPage })
+  )
 )
 
 const ListagemUnidadesPage = lazy(() =>
   import('@/pages/area-financeira/faturacao/tabelas/artigos/unidades/pages/listagem-unidades-page').then(
-    (m) => ({ default: m.ListagemUnidadesPage }),
-  ),
+    (m) => ({ default: m.ListagemUnidadesPage })
+  )
 )
 
 const ListagemFamiliasArtigoPage = lazy(() =>
-  import(
-    '@/pages/area-financeira/faturacao/tabelas/familias-artigo/pages/listagem-familias-artigo-page'
-  ).then((m) => ({ default: m.ListagemFamiliasArtigoPage })),
+  import('@/pages/area-financeira/faturacao/tabelas/familias-artigo/pages/listagem-familias-artigo-page').then(
+    (m) => ({ default: m.ListagemFamiliasArtigoPage })
+  )
 )
 
 const ListagemSubsistemasArtigosPage = lazy(() =>
-  import(
-    '@/pages/area-financeira/subsistemas-artigos/pages/listagem-subsistemas-artigos-page'
-  ).then((m) => ({ default: m.ListagemSubsistemasArtigosPage })),
+  import('@/pages/area-financeira/subsistemas-artigos/pages/listagem-subsistemas-artigos-page').then(
+    (m) => ({ default: m.ListagemSubsistemasArtigosPage })
+  )
 )
 
 /** Entidades — mesmas páginas da área comum, prefixo faturação. */
 const ListagemUtentesPage = lazy(() =>
   import('@/pages/area-comum/tabelas/entidades/utentes/pages/listagem-utentes-page').then(
-    (m) => ({ default: m.ListagemUtentesPage }),
-  ),
+    (m) => ({ default: m.ListagemUtentesPage })
+  )
 )
 const UtenteEditPage = lazy(() =>
   import('@/pages/area-comum/tabelas/entidades/utentes/pages/utente-edit-page').then(
-    (m) => ({ default: m.UtenteEditPage }),
-  ),
+    (m) => ({ default: m.UtenteEditPage })
+  )
 )
 const UtenteDetailsPage = lazy(() =>
   import('@/pages/area-comum/tabelas/entidades/utentes/pages/utente-details-page').then(
-    (m) => ({ default: m.UtenteDetailsPage }),
-  ),
+    (m) => ({ default: m.UtenteDetailsPage })
+  )
 )
 const ListagemMedicosPage = lazy(() =>
   import('@/pages/area-comum/tabelas/entidades/medicos/pages/listagem-medicos-page').then(
-    (m) => ({ default: m.ListagemMedicosPage }),
-  ),
+    (m) => ({ default: m.ListagemMedicosPage })
+  )
 )
 const MedicoEditPage = lazy(() =>
   import('@/pages/area-comum/tabelas/entidades/medicos/pages/medico-edit-page').then(
-    (m) => ({ default: m.MedicoEditPage }),
-  ),
+    (m) => ({ default: m.MedicoEditPage })
+  )
 )
 const MedicoDetailsPage = lazy(() =>
   import('@/pages/area-comum/tabelas/entidades/medicos/pages/medico-details-page').then(
-    (m) => ({ default: m.MedicoDetailsPage }),
-  ),
+    (m) => ({ default: m.MedicoDetailsPage })
+  )
 )
 const ListagemOrganismosPage = lazy(() =>
   import('@/pages/area-comum/tabelas/entidades/organismos/pages/listagem-organismos-page').then(
-    (m) => ({ default: m.ListagemOrganismosPage }),
-  ),
+    (m) => ({ default: m.ListagemOrganismosPage })
+  )
 )
 const OrganismoEditPage = lazy(() =>
   import('@/pages/area-comum/tabelas/entidades/organismos/pages/organismo-edit-page').then(
-    (m) => ({ default: m.OrganismoEditPage }),
-  ),
+    (m) => ({ default: m.OrganismoEditPage })
+  )
 )
 const ListagemFornecedoresPage = lazy(() =>
-  import(
-    '@/pages/area-comum/tabelas/entidades/fornecedores/pages/listagem-fornecedores-page'
-  ).then((m) => ({ default: m.ListagemFornecedoresPage })),
+  import('@/pages/area-comum/tabelas/entidades/fornecedores/pages/listagem-fornecedores-page').then(
+    (m) => ({ default: m.ListagemFornecedoresPage })
+  )
 )
 const FornecedorEditPage = lazy(() =>
   import('@/pages/area-comum/tabelas/entidades/fornecedores/pages/fornecedor-edit-page').then(
-    (m) => ({ default: m.FornecedorEditPage }),
-  ),
+    (m) => ({ default: m.FornecedorEditPage })
+  )
 )
 
-const entidadesPermissionFallback = [modules.areaFinanceira.permissions.entidades.id]
+const entidadesPermissionFallback = [
+  modules.areaFinanceira.permissions.entidades.id,
+]
 
 export const areaFinanceiraRoutes = [
   {
@@ -342,7 +364,9 @@ export const areaFinanceiraRoutes = [
     element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
-        requiredPermission={modules.areaFinanceira.permissions.contasCorrentes.id}
+        requiredPermission={
+          modules.areaFinanceira.permissions.contasCorrentes.id
+        }
         actionType={actionTypes.AuthVer}
       >
         <AreaFinanceiraPlaceholderPage title='Contas Correntes' />
@@ -382,7 +406,10 @@ export const areaFinanceiraRoutes = [
   {
     path: 'area-financeira/faturacao/ficheiros-eletronicos',
     element: (
-      <Navigate to='/area-financeira/faturacao/ficheiros-eletronicos/sad-gnr' replace />
+      <Navigate
+        to='/area-financeira/faturacao/ficheiros-eletronicos/sad-gnr'
+        replace
+      />
     ),
     manageWindow: false,
   },
@@ -391,7 +418,9 @@ export const areaFinanceiraRoutes = [
     element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
-        requiredPermission={modules.areaFinanceira.permissions.ficheirosEletronicos.id}
+        requiredPermission={
+          modules.areaFinanceira.permissions.ficheirosEletronicos.id
+        }
         actionType={actionTypes.AuthVer}
       >
         <FicheiroEletronicoListagemPage />
@@ -405,7 +434,9 @@ export const areaFinanceiraRoutes = [
     element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
-        requiredPermission={modules.areaFinanceira.permissions.ficheirosEletronicos.id}
+        requiredPermission={
+          modules.areaFinanceira.permissions.ficheirosEletronicos.id
+        }
         actionType={actionTypes.AuthVer}
       >
         <AreaFinanceiraPlaceholderPage title='Geração de Ficheiro SAFT PT' />
@@ -419,7 +450,9 @@ export const areaFinanceiraRoutes = [
     element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
-        requiredPermission={modules.areaFinanceira.permissions.ficheirosEletronicos.id}
+        requiredPermission={
+          modules.areaFinanceira.permissions.ficheirosEletronicos.id
+        }
         actionType={actionTypes.AuthVer}
       >
         <AreaFinanceiraPlaceholderPage title='Exportar Ficheiro Contabilidade' />
@@ -442,7 +475,9 @@ export const areaFinanceiraRoutes = [
     element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
-        requiredPermission={modules.areaFinanceira.permissions.credenciaisSns.id}
+        requiredPermission={
+          modules.areaFinanceira.permissions.credenciaisSns.id
+        }
         actionType={actionTypes.AuthVer}
       >
         <ListagemCredenciaisSnsModuloPage modulo='fisioterapia' />
@@ -456,7 +491,9 @@ export const areaFinanceiraRoutes = [
     element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
-        requiredPermission={modules.areaFinanceira.permissions.credenciaisSns.id}
+        requiredPermission={
+          modules.areaFinanceira.permissions.credenciaisSns.id
+        }
         actionType={actionTypes.AuthVer}
       >
         <ListagemCredenciaisSnsModuloPage modulo='especialidades' />
@@ -470,7 +507,9 @@ export const areaFinanceiraRoutes = [
     element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
-        requiredPermission={modules.areaFinanceira.permissions.credenciaisSns.id}
+        requiredPermission={
+          modules.areaFinanceira.permissions.credenciaisSns.id
+        }
         actionType={actionTypes.AuthVer}
       >
         <ListagemCredenciaisSnsModuloPage modulo='exames' />
@@ -484,7 +523,9 @@ export const areaFinanceiraRoutes = [
     element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
-        requiredPermission={modules.areaFinanceira.permissions.credenciaisSns.id}
+        requiredPermission={
+          modules.areaFinanceira.permissions.credenciaisSns.id
+        }
         actionType={actionTypes.AuthVer}
       >
         <ListagemCredenciaisSnsFicheiroEletronicoPage />
@@ -496,16 +537,98 @@ export const areaFinanceiraRoutes = [
   {
     path: 'area-financeira/faturacao/adse',
     element: (
+      <Navigate to='/area-financeira/faturacao/adse/consultas' replace />
+    ),
+    manageWindow: false,
+  },
+  {
+    path: 'area-financeira/faturacao/adse/consultas',
+    element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
         requiredPermission={modules.areaFinanceira.permissions.adse.id}
         actionType={actionTypes.AuthVer}
       >
-        <AreaFinanceiraPlaceholderPage title='ADSE' />
+        <ComunicacaoFaturasConsultasPage />
       </LicenseGuard>
     ),
     manageWindow: true,
-    windowName: 'ADSE',
+    windowName: 'Consultas',
+  },
+  {
+    path: 'area-financeira/faturacao/adse/tratamentos',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.adse.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ComunicacaoFaturasTratamentosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Tratamentos',
+  },
+  {
+    path: 'area-financeira/faturacao/adse/exames',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.adse.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ComunicacaoFaturasExamesPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Exames',
+  },
+  {
+    path: 'area-financeira/faturacao/adse/configuracoes',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.adse.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ConfiguracoesADSEPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Configurações',
+  },
+  {
+    path: 'area-financeira/adse',
+    element: (
+      <Navigate to='/area-financeira/faturacao/adse/consultas' replace />
+    ),
+    manageWindow: false,
+  },
+  {
+    path: 'area-financeira/adse/consultas',
+    element: (
+      <Navigate to='/area-financeira/faturacao/adse/consultas' replace />
+    ),
+    manageWindow: false,
+  },
+  {
+    path: 'area-financeira/adse/tratamentos',
+    element: (
+      <Navigate to='/area-financeira/faturacao/adse/tratamentos' replace />
+    ),
+    manageWindow: false,
+  },
+  {
+    path: 'area-financeira/adse/exames',
+    element: <Navigate to='/area-financeira/faturacao/adse/exames' replace />,
+    manageWindow: false,
+  },
+  {
+    path: 'area-financeira/adse/configuracoes',
+    element: (
+      <Navigate to='/area-financeira/faturacao/adse/configuracoes' replace />
+    ),
+    manageWindow: false,
   },
   {
     path: 'area-financeira/faturacao/mapas',
@@ -524,7 +647,10 @@ export const areaFinanceiraRoutes = [
   {
     path: 'area-financeira/faturacao/entidades',
     element: (
-      <Navigate to='/area-financeira/faturacao/entidades/fornecedores' replace />
+      <Navigate
+        to='/area-financeira/faturacao/entidades/fornecedores'
+        replace
+      />
     ),
   },
   {
@@ -1066,7 +1192,9 @@ export const areaFinanceiraRoutes = [
     element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
-        requiredPermission={modules.areaFinanceira.permissions.referenciasMultibanco.id}
+        requiredPermission={
+          modules.areaFinanceira.permissions.referenciasMultibanco.id
+        }
         actionType={actionTypes.AuthVer}
       >
         <AreaFinanceiraPlaceholderPage title='Referências Multibanco' />
