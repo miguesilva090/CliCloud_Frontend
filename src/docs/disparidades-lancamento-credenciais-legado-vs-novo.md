@@ -1,10 +1,11 @@
 # Disparidades — Lançamento de Credenciais (Legado vs Novo)
 
-**Última atualização:** 2026-06-25 (roadmap Credenciais S.N.S.)  
+**Última atualização:** 2026-06-25 (P0 admin concluído; roadmap pendente alinhado ao legado)  
 **Âmbito:** `LancamentoCredenciaisLst/Edt` (Consultas) vs `area-administrativa/credenciais` (`LoteDirect`) **+** faturação `CredenciaisSnsLst` vs `area-financeira/faturacao/credenciais-sns`.  
 **Relacionado:** `credenciais-corrigir-lotes-implementacao.md`, `auditoria-area-administrativa-consultas-legado-vs-novo.md` (§3.7), `auditoria-menu-faturacao-legado-vs-novo.md` (§2.3).
 
-**Princípio:** paridade **funcional** com o legado — não réplica espelhada do ASP (Metronic, ASMX, Crystal).  
+**Princípio:** paridade **funcional** com o legado — não réplica espelhada do ASP (Metronic, ASMX, Crystal). **Não inventar** funcionalidades que o legado não tem.  
+**Faturas / documentos financeiros (`TFatura`, pipeline documentos):** **adiados por decisão** — não implementar SNS-4 nem integrações de emissão nesta fase.  
 **Relatórios / Crystal / `GS.ShowReport`:** **fora de âmbito nesta fase** — manter stubs (`toast` «em breve») até track de emissão runtime.
 
 ---
@@ -36,20 +37,42 @@
 
 ## 1. Resumo executivo (re-auditoria 2026-06-25)
 
-| Camada | vs legado `LancamentoCredenciais` | Notas da re-auditoria |
-|--------|-----------------------------------|------------------------|
-| **Modelo de dados** | 🟡 | `LoteDirect` cobre o núcleo; faltam colunas legado (`hospital`, `prodaplic`, `quantc`/`quantk`, `tiposrvecg`, `ecg`, `totalc`/`totalk`) |
-| **CRUD lançamento** | 🟡 | Gravar cabeçalho + linhas OK; validações de negócio muito reduzidas vs `LotdirectEdtSave` |
-| **Sync agregados no save** | ⚠️ | Legado atualiza `LOTESP`/`LOTES` **em cada gravação**; novo só via **Corrigir Lotes** (batch) |
+| Camada | vs legado `LancamentoCredenciais` | Notas |
+|--------|-----------------------------------|-------|
+| **Modelo de dados** | 🟡 | `LoteDirect` cobre o núcleo; campos `hospital`/`quantc`/`k` **não existem no aspx Consultas** — só implementar se BD ainda os usar |
+| **CRUD lançamento** | 🟡 | Gravar cabeçalho + linhas ✅; **editar carrega linhas V2/V3** ✅ (LD-P0); validações ESP/tipo 7 ⏳ |
+| **Sync agregados no save** | ⚠️ | Legado: `LOTESP`/`LOTES` em cada save; novo: só **Corrigir Lotes** (B5 ⏳) |
 | **Corrigir lotes** | ✅ | Executor + validação prévia + ecrã agregados |
-| **Subsistema / serviço** | 🟡 | Consultas e exames com vínculos organismo ✅; exames mantém fallback manual ➕ |
-| **Listagens / mapas / etiquetas** | 🔇 | Stubs documentados; **sem emissão Crystal** nesta fase |
-| **Histórico em massa** | ✅ | `POST passar-para-historico` + acção na listagem |
-| **Filtros listagem** | 🟡 | BE 7 filtros; FE expõe nº lote, organismo, mês, ano (+ credencial, histórico, URL) |
-| **ESP / relatórios partilha** | 🔇 | Adiado |
-| **Faturação SNS** | 🟡 | ~30% — ver **§7** (UI forte; BE sobretudo especialidades) |
+| **Subsistema / serviço** | 🟡 | F1/F2 ✅; vínculos organismo nas linhas ✅ |
+| **Listagens / mapas / etiquetas** | 🔇 | Stubs; sem Crystal |
+| **Histórico** | 🟡 | Passar histórico massa org/mês/ano ✅; `RequisicoesESP` no histórico ⏳; **passar para ativo** ⏳ |
+| **Filtros listagem** | 🟡 | BE 7 filtros; FE expõe subconjunto (L1 parcial) |
+| **Faturação SNS** | 🟡 | Especialidades operacional (~85% fluxo listar/ver/apagar); resto ⏳ — ver **§7** |
 
-**Conclusão:** o fluxo **lançar → gravar linhas → corrigir lotes → ver agregados → SNS listar (especialidades)** é utilizável em UAT. **Não** é paridade total: sync incremental no save (B5), relatórios, e quase todo o track SNS de faturação/verbete/ficheiro eletrónico.
+**Conclusão:** fluxo **lançar → gravar linhas → editar com linhas → corrigir lotes → SNS especialidades → Ver admin** utilizável em UAT. **Pendente (só legado, sem documentos):** LD-P1 passar ativo, B5 sync save, obter novo lote, filtros extra, validações ESP; SNS fisioterapia e permissões 3 módulos.
+
+---
+
+## 1.1 Roadmap pendente — Lançamento admin (`LoteDirect`)
+
+Ordem acordada; **cada item existe no legado** (`LancamentoCredenciaisLst/Edt`, `Services/LancamentoCredenciais.cs`).
+
+| Fase | Conteúdo | Legado | Estado |
+|------|----------|--------|--------|
+| **LD-P0** | `GET` devolve `linhas` + `linhas789`; FE preenche grelhas no edit | `Lindirect789Load` + tabela serviços | ✅ |
+| **LD-P1** | `passarLancamentoCredenciaisParaAtivo` + modal mês/ano | `LancamentoCredenciaisLst.js` modo histórico | ⏳ |
+| **LD-P1** | `RequisicoesESP.UpdateParaHistorico/Ativo` no passar histórico/ativo | `passarLancamentoCredenciaisPara*` | ⏳ |
+| **LD-P1** | Modo histórico: só Ver + Passar ativo (ocultar edit/delete/add/corrigir) | Listagem histórico legado | ⏳ |
+| **LD-P2** | `ObternovoLote` → API + FE ao mudar organismo/tipo/mês/ano | `ObternovoLote` ASMX | ⏳ |
+| **LD-P2** | **B5** — sync `LoteDirectAgregado`/`Detalhe` no save (como `LotdirectEdtSave`) | Save incremental LOTESP | ⏳ |
+| **LD-P3** | Filtros listagem utente/nome/datas (L1 extensão) | `LotdirectLst` filtros de/até | ⏳ |
+| **LD-P3** | Validações save tipo lote 7 / ESP / PNP | `LotdirectEdtSave` ~741–836 | ⏳ |
+| **LD-P4** | Lançamento automático por credencial | `LotdirectEdtObterInfoAdmissaoByCredencial` | ⏳ |
+| **LD-P4** | Navegação P/N, `OnMessage`, `selectField` | `GetIdLancamentoCons`, `postMessage` | ⏳ |
+| — | F10 `hospital`, `quantc/k` | Ausentes no aspx Consultas; save legado força 0 | **Não implementar** salvo requisito BD |
+| 🔇 | L2/L3/F8 listagens e etiquetas Crystal | `GS.ShowReport` | Adiado |
+
+**Ficheiros LD-P0:** `LoteDirectLinhaDTO.cs`, `LoteDirectService.GetByIdAsync`, specs `LoteDirectLinhas*ByCabecalhoSpec`, `MappingProfiles`, `lote-direct.dtos.ts`, `lote-direct-form-modal.tsx` (`linhaDtoToFormRow`, `linhasDtoParaGrelhaExames`).
 
 ---
 
@@ -72,7 +95,7 @@
 | `CredenciaisSnsFicheiroEletronicoLst.aspx` | `area-financeira/faturacao/credenciais-sns/ficheiro-eletronico` |
 | `WSFaturacao.asmx/CredenciaisSnsLst` | `POST /client/faturacao/credenciais-sns/{modulo}/paginated` |
 | `WSFaturacao.asmx/CredenciaisSnsDel*` | `DELETE /client/faturacao/credenciais-sns/{modulo}` |
-| `WSFaturacao.asmx/CredenciaisSnsCriarFatura` | ⏳ (fase SNS-4) |
+| `WSFaturacao.asmx/CredenciaisSnsCriarFatura` | 🔇 adiado (SNS-4 — sem documentos nesta fase) |
 | `dbo.LOTESP` (especialidades SNS) | `Credenciais.LoteDirectAgregado` |
 | `dbo.LOTESPFISIO` (fisioterapia SNS) | ⏳ sem entidade no domínio novo |
 | `FicheiroEletronicoCredenciaisSns` (Dados.Faturacao) | ⏳ (fase SNS-6) |
@@ -105,7 +128,7 @@
 | L5 | Por linha: **relatório ESP** quando `PartilharRelatorio` | ⏳ | P3 |
 | L6 | Colunas legado (mais campos, `mesAno`, organismo nome, etc.) | Subconjunto; sigla organismo ✅ | P2 |
 | L7 | Seleção de campo (`selectField`) para ecrãs externos | ⏳ | P3 |
-| L8 | `passarLancamentoCredenciaisParaAtivo` (reverter histórico com novo mês/ano) | ⏳ | P3 |
+| L8 | `passarLancamentoCredenciaisParaAtivo` (reverter histórico com novo mês/ano) | ⏳ | **P1** (LD-P1) |
 
 **Ficheiros novo:** `listagem-lote-direct-page.tsx`, `listagem-lote-direct-table.columns.tsx`, `corrigir-lotes-modal.tsx`.
 
@@ -143,6 +166,7 @@ O `LoteDirectSearchTable` já suporta:
 | Totais | `updateValTotal`, `updateValorServicos` | Totais T1+T2+T3, V1+V2+V3 |
 | Histórico faturação | Campo read-only | Campo read-only |
 | Gravar cabeçalho + linhas | ASMX save | `Create` / `Update` + sync linhas |
+| **Carregar linhas no edit** | `Lindirect789Load` + serviços | `GET /{id}` → `linhas` / `linhas789` + `applyDetail` ✅ (LD-P0) |
 
 ### 4.2 Disparidades — subsistema / serviço 🟡
 
@@ -226,7 +250,7 @@ O `LoteDirectSearchTable` já suporta:
 
 **Legado:** `CredenciaisSnsLst.aspx` + `CredenciaisSnsLst.js` (3 módulos via `?modulo=`) e ecrã separado `CredenciaisSnsFicheiroEletronicoLst.aspx`.  
 **Novo:** `Frontend/src/pages/area-financeira/faturacao/credenciais-sns/` + `Backend/.../CredenciaisSnsService/`.  
-**Cobertura estimada:** ~**30%** (UI ~90%; dados/negócio ~15% fora especialidades).
+**Cobertura estimada:** ~**40%** global SNS; **~85%** módulo especialidades (listar/ver/apagar); faturação/documentos **adiados**.
 
 ### 7.1 Estado actual (2026-06-25)
 
@@ -243,8 +267,8 @@ O `LoteDirectSearchTable` já suporta:
 | **Dados exames** | ASMX (listagem) | Lista vazia | ⏳ |
 | Apagar lote(s) | `CredenciaisSnsDel` / `DelAll` | `DELETE …/{modulo}` + executor | ✅ só **especialidades** |
 | Ver linha | Fisio → Tratamentos; Espec → Consultas; Exames → «brevemente» | Admin `?indicelote=` / toasts | 🟡 |
-| Modal **Fatura** | `OpenModal('fatura')` + `gerarFatura` | `credenciais-sns-fatura-modal.tsx` (UI + validação) | 🟡 sem BE |
-| Modal **Verbete** / **Relação** | Mesmo modal, campos lote | Stub `credenciais-sns-operacoes-modal.tsx` | ⏳ |
+| Modal **Fatura** | `OpenModal('fatura')` + `gerarFatura` | `credenciais-sns-fatura-modal.tsx` (UI) | 🔇 adiado (sem `TFatura`/documentos) |
+| Modal **Verbete** / **Relação** | Mesmo modal, campos lote | Stub `credenciais-sns-operacoes-modal.tsx` | 🔇 adiado (pré-fatura) |
 | **Ficheiro Eletrónico** | CRUD + gerar ficheiro ACSS | Placeholder página | ⏳ |
 | Etiquetas / Listagens SNS | Crystal | Stub `credenciais-sns-legado-acoes.ts` | 🔇 adiado |
 | Permissões por módulo | 3 `IDFuncionalidade` no `.aspx.cs` | Uma `credenciaisSns` no FE | ⏳ |
@@ -252,16 +276,13 @@ O `LoteDirectSearchTable` já suporta:
 ### 7.2 Matriz de cobertura SNS
 
 ```
-Credenciais S.N.S. (Faturação)
+Credenciais S.N.S. (Faturação) — sem track fatura/documentos
 ├── Menu + rotas 4 variantes          ██████████  100%
 ├── UI listagem (3 módulos)           █████████░   90%
 ├── Filtros + grelha                  ████████░░   80%
-├── Listagem com dados (especialidades) ███░░░░░░░   30%
-├── Fisioterapia / exames (dados)     ░░░░░░░░░░    0%
-├── Apagar lotes                      ███░░░░░░░   30%
-├── Modal Fatura (UI)                 ██████░░░░   60%
-├── Criar fatura (negócio)            ░░░░░░░░░░    0%
-├── Verbete / relação (UI+negócio)    █░░░░░░░░░   10%
+├── Especialidades (listar/ver/apagar) ████████░░   85%
+├── Fisioterapia / exames (dados)     ░░░░░░░░░░    0%  (exames: legado também vazio)
+├── Criar fatura / verbete / relação  🔇 adiado     —
 ├── Ficheiro eletrónico SNS           ░░░░░░░░░░    5%
 └── Relatórios / etiquetas / Crystal  🔇 adiado     —
 ```
@@ -293,18 +314,17 @@ Ordem recomendada — cada fase fecha valor testável; **não inclui** Crystal /
 | Modal Fatura (UI) | `modals/credenciais-sns-fatura-modal.tsx` |
 | Fix colunas ocultas DataTable | `components/shared/data-table.tsx` |
 
-#### SNS-1 — Especialidades: fecho BE 🟡 (quase completo)
+#### SNS-1 — Especialidades: fecho BE ✅ (concluída)
 
 | # | Tarefa | Legado | Novo |
 |---|--------|--------|------|
-| 1.1 | Paginated + filtros | `CredenciaisSnsLst` | ✅ `GetPaginatedAsync` + `CredenciaisSnsAgregadoSearchSpec` |
+| 1.1 | Paginated + filtros | `CredenciaisSnsLst` (módulo especialidades) | ✅ |
 | 1.2 | Delete lote | `CredenciaisSnsDel` | ✅ `CredenciaisSnsAgregadoDeleteExecutor` |
-| 1.3 | Enriquecimento organismo/tipo lote | Joins implícitos ASMX | ✅ `PreencherEnriquecimentosAsync` |
-| 1.4 | Testes UAT delete em cascata (`LOTES`) | Sim | Validar em BD após cada release |
+| 1.3 | Enriquecimento organismo/tipo lote/tipo serviço | Joins ASMX | ✅ `PreencherEnriquecimentosAsync` + fallback `TipoServicoRegisto` |
+| 1.4 | Ver → lançamento admin | `?indice=` | ✅ `?indicelote=` |
+| 1.5 | UAT delete cascata | `LOTES` | Validar em BD por release |
 
-**Ficheiros BE:** `CredenciaisSnsService.cs`, `Specifications/`, `Infrastructure/.../CredenciaisSnsAgregadoDeleteExecutor.cs`, `CredenciaisSnsController.cs`.
-
-#### SNS-2 — Fisioterapia (dados + Ver)
+#### SNS-2 — Fisioterapia (dados + Ver) ⏳ — **próximo track SNS** (sem documentos)
 
 | # | Tarefa | Legado | Implementação sugerida |
 |---|--------|--------|------------------------|
@@ -316,15 +336,17 @@ Ordem recomendada — cada fase fecha valor testável; **não inclui** Crystal /
 
 **Ordem técnica:** inspecionar `CliCloud.ASPcli` + `Dados` para mapeamento colunas → domínio → AutoMapper → activar ramo `fisioterapia` em `GetPaginatedAsync` / `DeleteAsync`.
 
-#### SNS-3 — Exames (dados + Ver)
+#### SNS-3 — Exames ⏳ (paridade mínima já alinhada)
 
 | # | Tarefa | Legado | Notas |
 |---|--------|--------|-------|
-| 3.1 | Listagem exames | ASMX (quando existir dados) | Confirmar tabela origem no legado (pode partilhar agregados com regra distinta) |
-| 3.2 | **Ver** | `CredenciaisSnsLstBrevemente` | Manter toast até módulo exames SNS definido |
-| 3.3 | Permissão | `Faturacao_CredSNS_Exames` | Idem SNS-2.5 |
+| 3.1 | Listagem exames | ASMX **sem ramo de dados** | Novo: lista vazia ✅ (igual legado) |
+| 3.2 | **Ver** | `CredenciaisSnsLstBrevemente` | Toast ✅ |
+| 3.3 | Permissão | `Faturacao_CredSNS_Exames` | ⏳ SNS-7.1 |
 
-#### SNS-4 — Fatura (negócio, sem Crystal)
+#### SNS-4 — Fatura (negócio) 🔇 **adiado** — decisão: sem integração `TFatura`/documentos nesta fase
+
+> Referência futura quando o track documentos for activado. UI modal existe; `credenciais-sns-fatura-submit.ts` mantém stub.
 
 | # | Tarefa | Legado | Novo |
 |---|--------|--------|------|
@@ -352,7 +374,7 @@ Frontend/.../credenciais-sns/
 
 **Referência legado:** `CredenciaisSnsLst.js` (`gerarFatura`, `CriarFatura`), `WSFaturacao.asmx/CredenciaisSnsCriarFatura`.
 
-#### SNS-5 — Verbete e Relação de Lotes (UI + validação, sem Crystal)
+#### SNS-5 — Verbete e Relação 🔇 **adiado** (pré-fatura; sem documentos nesta fase)
 
 | # | Tarefa | Legado | Novo |
 |---|--------|--------|------|
@@ -476,57 +498,71 @@ Backend/CliCloud.Infrastructure/.../CredenciaisSnsAgregadoDeleteExecutor.cs
 
 ```
 Legado LancamentoCredenciais (consultas)
-├── Dados + CRUD cabeçalho/linhas     ████████░░  ~80%
-├── Sync agregados no save            ░░░░░░░░░░   0%  ⚠️
+├── Dados + CRUD cabeçalho/linhas     █████████░  ~88%  (+ LD-P0 carregar linhas edit)
+├── Passar para ativo + ESP histórico  ░░░░░░░░░░   0%  (LD-P1)
+├── Sync agregados no save (B5)       ░░░░░░░░░░   0%  ⚠️
 ├── Regras preços / isenções          ██████░░░░  ~60%
 ├── Corrigir lotes + agregados        █████████░  ~90%
-├── Listagens / mapas / etiquetas     🔇░░░░░░░░  stubs (adiado)
-├── Histórico em massa                ████████░░  ~80%  (por credencial; legado era organismo/mês)
+├── Listagens / mapas / etiquetas     🔇░░░░░░░░  adiado
+├── Histórico em massa                ████████░░  ~80%  (falta RequisicoesESP)
 ├── ESP / relatórios partilha         🔇░░░░░░░░  adiado
 ├── Filtros listagem (vs legado)      ██████░░░░  ~60%
 └── UX subsistema (Acor_Ins)          █████████░  ~90%
 ```
 
 ```
-Credenciais S.N.S. (faturação) — ver §7.2
-└── Cobertura global ~30% (UI pronta; BE operacional sobretudo especialidades)
+Credenciais S.N.S. — ver §7.2 (~40% global; especialidades ~85%)
 ```
 
 ---
 
 ## 10. Plano de fecho (prioridades)
 
-### P0 — Dados de teste
+### Concluído ✅
 
-- [ ] Criar **Subsistemas de Serviço** para organismo de teste (ex. ULS 19) em `subsistemas-servicos`.
-- [ ] Confirmar **Tipo de Serviço** no cabeçalho antes de linhas de exame.
-- [ ] Após cada gravação em UAT, correr **Corrigir Lotes** até decisão sobre B5.
+- [x] **LD-P0** — Carregar linhas V2/V3 no edit (`GetById` + `lote-direct-form-modal`).
+- [x] F1/F2 — Consultas serviço só vínculos organismo; botão + subsistemas-servicos.
+- [x] L1 (fase 1) — Filtros nº lote, organismo, mês, ano.
+- [x] L2 — Modal listagens + stubs (sem Crystal).
+- [x] L4 — Passar ao histórico (massa org/mês/ano por linha).
+- [x] B1 — Validador save (credencial única, mês em histórico).
+- [x] **SNS-0** + **SNS-1** — UI SNS + especialidades listar/apagar/ver.
 
-### P1 — Paridade operacional imediata
+### UAT / dados de teste
 
-- [x] F1: Consultas → serviço = só vínculos organismo.
-- [x] F2: Botão **+** → subsistemas-servicos (query `organismoId`).
-- [x] L2: Modal listagens + **stubs** (sem Crystal).
-- [ ] Decisão B5: sync agregados no save vs manter batch.
-- [ ] **SNS-4:** `CredenciaisSnsCriarFatura` + preview sem `.rpt`.
+- [ ] Subsistemas de Serviço para organismo de teste (ex. ULS 19).
+- [ ] Após gravar, correr **Corrigir Lotes** até **B5** estar implementado.
+- [ ] Validar edit com linhas exame/789 (LD-P0).
 
-### P2 — Completude listagem e save
+### Próximo — Admin **LD-P1** (sem documentos)
 
-- [x] L1: Filtros nº lote, organismo, mês, ano na listagem admin.
-- [x] L4: Passar ao histórico por linha.
-- [x] B1: Validador save (credencial única, mês em histórico).
-- [ ] L3: Etiquetas — **adiado** (relatórios).
-- [ ] F10: Campos legado em falta (se ainda usados na BD).
-- [ ] **SNS-2 / SNS-3:** Fisioterapia e exames com dados.
+- [ ] `passarLancamentoCredenciaisParaAtivo` — BE executor + modal FE + acção em modo histórico.
+- [ ] `RequisicoesESP.UpdateParaHistorico/Ativo` nos executores de histórico/ativo.
+- [ ] Listagem modo histórico: ocultar edit/delete/corrigir/adicionar; só Ver + Passar ativo.
 
-### P3 — Integrações SNS e ESP
+### Depois — Admin **LD-P2**
 
-- [ ] **SNS-5:** Modais verbete + relação (validação; sem `.rpt`).
-- [ ] **SNS-6:** Ficheiro eletrónico SNS (CRUD + gerar ficheiro).
-- [ ] **SNS-7:** Permissões por módulo + organismos/naturezas no modal Fatura.
-- [ ] L5: Relatório ESP — **adiado**.
-- [ ] F8: Impressão credenciais — **adiado**.
-- [ ] L7/L8: Seleção externa e reverter histórico.
+- [ ] `ObternovoLote` — endpoint + ligar formulário.
+- [ ] **B5** — sync agregados no save (paridade `LotdirectEdtSave`; ver §11.7).
+
+### Depois — Admin **LD-P3** / SNS (sem faturas)
+
+- [ ] L1 extensão — filtros utente, nome, datas.
+- [ ] Validações save tipo lote 7 / ESP / PNP.
+- [ ] **SNS-2** — fisioterapia `LOTESPFISIO`.
+- [ ] **SNS-7.1** — permissões 3 módulos RBAC.
+
+### Adiado 🔇 (existe no legado; fora de âmbito actual)
+
+- [ ] **SNS-4** — `CredenciaisSnsCriarFatura` / documentos.
+- [ ] **SNS-5** — verbete / relação (pré-fatura).
+- [ ] L3/F8/L5 — etiquetas, listagens Crystal, relatório ESP.
+- [ ] **SNS-6** — ficheiro eletrónico (track separado).
+- [ ] F10 — `hospital`, `quantc/k` (não usados no Consultas legado).
+
+### P4 — Integrações tardias
+
+- [ ] LD-P4 — lançamento automático, navegação P/N, `OnMessage`/`selectField`.
 
 ---
 
@@ -581,11 +617,11 @@ Esta secção descreve **onde** e **como** fechar cada gap, seguindo a arquitect
 - `ILoteDirectPassarHistoricoExecutor` + `POST .../passar-para-historico` (por `loteDirectId`).
 - Acção na listagem admin com confirmação.
 
-**Pendente (paridade legado em massa):**
+**Pendente (paridade legado):**
 
-- `MoveToHistory` por organismo/mês/ano (todas as credenciais de uma vez).
-- `PassarParaAtivoAsync` / reverter histórico.
-- Integração `RequisicoesESP` (exames-sem-papel).
+- `RequisicoesESP.UpdateParaHistorico` no passar histórico (LD-P1).
+- `passarLancamentoCredenciaisParaAtivo` + modal (LD-P1).
+- Modo histórico na listagem (LD-P1).
 
 ---
 
@@ -629,18 +665,16 @@ Esta secção descreve **onde** e **como** fechar cada gap, seguindo a arquitect
 
 ---
 
-### 11.9 Credenciais S.N.S. — roadmap detalhado
+### 11.9 Credenciais S.N.S. — roadmap (sem faturas/documentos)
 
-**Ver §7.4** (fases SNS-0 a SNS-7 + SNS-R relatórios adiados). Resumo da próxima sprint sugerida:
+**Ver §7.4.** Próxima sprint SNS (quando retomar faturação **sem** TFatura):
 
-1. **SNS-4** — `CredenciaisSnsCriarFatura` + preview DTO + ligar `credenciais-sns-fatura-submit.ts`.
-2. **SNS-2** — migrar `LOTESPFISIO` e activar listagem fisioterapia.
-3. **SNS-5** — modais verbete/relação (campos lote do legado `OpenModal`).
-4. **SNS-6** — ficheiro eletrónico (substituir placeholder).
+1. **SNS-2** — `LOTESPFISIO` + listagem/apagar fisioterapia.
+2. **SNS-7.1** — permissões `Faturacao_CredSNS_Fisio` / `_Especi` / `_Exames`.
 
-**Já feito (SNS-0 + SNS-1 parcial):** menu, rotas, UI 3 módulos, filtros, paginated/delete especialidades, Ver→admin, modal Fatura UI, stubs relatórios.
+**Adiado por decisão:** SNS-4 (fatura), SNS-5 (verbete/relação), SNS-6 (ficheiro eletrónico), SNS-7.2/7.3 (naturezas modal fatura).
 
-**Não fazer agora:** qualquer `.rpt`, `GS.ShowReport`, etiquetas SNS, listagem Crystal toolbar.
+**Já feito:** SNS-0, SNS-1, Ver especialidades→admin, stubs relatórios.
 
 ---
 
@@ -668,7 +702,8 @@ Esta secção descreve **onde** e **como** fechar cada gap, seguindo a arquitect
 | `listagem-lote-direct-page.tsx` | Filtros, listagens stub, histórico ✅ |
 | `modals/listagens-lote-direct-modal.tsx` | L2 stub tipos 1–7 |
 | `modals/credenciais-sns-fatura-modal.tsx` | Modal Fatura SNS |
-| `LoteDirectService.cs` | CRUD + corrigir + passar histórico + validator |
+| `LoteDirectService.cs` | CRUD + corrigir + passar histórico + validator + **GetById com linhas** |
+| `LoteDirectLinhaDTO.cs` | DTO linhas V2/V3 para edit |
 | `LoteDirectSearchTable.cs` | Filtros BE disponíveis |
 | `CredenciaisSnsService.cs` | SNS paginated/delete especialidades |
 | `CredenciaisSnsController.cs` | API SNS |
@@ -679,16 +714,16 @@ Esta secção descreve **onde** e **como** fechar cada gap, seguindo a arquitect
 
 ## 14. UAT mínimo recomendado
 
-1. Utente com organismo + vínculos → lançamento consulta + 1 exame → gravar → **corrigir lotes** → agregados OK.  
-2. Repetir **sem** vínculos → comparar legado (lista vazia consultas) vs novo (F1 após fix).  
-3. Tentar gravar credencial duplicada → legado erro; novo deve falhar após B1.  
-4. Tentar gravar mês já em histórico → legado erro; novo deve falhar após B1.  
-5. SNS especialidades → listar → Ver → `indicelote` na listagem admin.  
-6. Apagar lote SNS → agregado + detalhes removidos.  
-7. Modal Fatura → validar campos; após SNS-4, criar documento sem `.rpt`.  
-8. (Pós B5) Gravar lançamento → agregados reflectem save automático ou aviso corrigir.  
-9. (Pós SNS-2) Fisioterapia lista com dados; Ver abre tratamentos (quando rota existir).  
-10. (Pós SNS-6) Ficheiro eletrónico: CRUD + gerar ficheiro exportável.
+1. Utente com organismo + vínculos → lançamento consulta + 1 exame → gravar → **editar** → linhas V2/789 visíveis (LD-P0).  
+2. Corrigir lotes → agregados OK.  
+3. Credencial duplicada / mês em histórico → erro (B1).  
+4. SNS especialidades → listar → Ver → `indicelote` na admin.  
+5. Apagar lote SNS → agregado removido.  
+6. (LD-P1) Modo histórico → passar para ativo com novo mês/ano.  
+7. (B5) Gravar → agregados reflectem save sem corrigir manual.  
+8. (SNS-2) Fisioterapia lista com dados.  
+9. (SNS-6) Ficheiro eletrónico — quando track activo.  
+10. (SNS-4) Fatura — quando track documentos activo.
 
 ---
 
@@ -698,4 +733,4 @@ Esta secção descreve **onde** e **como** fechar cada gap, seguindo a arquitect
 |------|-----------|
 | 2026-06-25 | Documento inicial |
 | 2026-06-25 | Re-auditoria: catálogo relatórios, validações save, B5, filtros, §11 implementação |
-| 2026-06-25 | **Roadmap Credenciais S.N.S. (§7):** estado ~30%, fases SNS-0–7, estrutura projeto novo; relatórios 🔇 adiados; progresso admin F1/F2/L1/L2/L4/B1 |
+| 2026-06-25 | **LD-P0** ✅: `GetById` com `linhas`/`linhas789`; FE edit carrega grelhas V2/V3; **SNS-1** ✅; roadmap pendente §1.1 e §10 reorganizado; faturas/documentos e SNS-4/5 **adiados** |

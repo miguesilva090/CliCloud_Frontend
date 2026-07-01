@@ -459,8 +459,37 @@ export const roleHeaderMenus = {
       },
       {
         label: 'ADSE',
-        href: '/area-financeira/faturacao/adse',
+        href: '/area-financeira/faturacao/adse/tratamentos',
         funcionalidadeId: modules.areaFinanceira.permissions.adse.id,
+        items: [
+          {
+            label: 'Comunicação de Faturas',
+            href: '/area-financeira/faturacao/adse/tratamentos',
+            funcionalidadeId: modules.areaFinanceira.permissions.adse.id,
+            items: [
+              {
+                label: 'Tratamentos',
+                href: '/area-financeira/faturacao/adse/tratamentos',
+                funcionalidadeId: modules.areaFinanceira.permissions.adse.id,
+              },
+              {
+                label: 'Consultas',
+                href: '/area-financeira/faturacao/adse/consultas',
+                funcionalidadeId: modules.areaFinanceira.permissions.adse.id,
+              },
+              {
+                label: 'Exames',
+                href: '/area-financeira/faturacao/adse/exames',
+                funcionalidadeId: modules.areaFinanceira.permissions.adse.id,
+              },
+            ],
+          },
+          {
+            label: 'Configurações',
+            href: '/area-financeira/faturacao/adse/configuracoes',
+            funcionalidadeId: modules.areaFinanceira.permissions.adse.id,
+          },
+        ],
       },
       {
         label: 'Mapas',

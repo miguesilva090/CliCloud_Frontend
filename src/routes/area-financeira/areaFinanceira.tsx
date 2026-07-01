@@ -38,6 +38,26 @@ const ListagemCredenciaisSnsFicheiroEletronicoPage = lazy(() =>
     '@/pages/area-financeira/faturacao/credenciais-sns/pages/listagem-credenciais-sns-ficheiro-eletronico-page'
   ).then((m) => ({ default: m.ListagemCredenciaisSnsFicheiroEletronicoPage })),
 )
+const ConfigAdsePage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/adse/pages/config-adse-page').then(
+    (m) => ({ default: m.ConfigAdsePage }),
+  ),
+)
+const ComunicacaoAdseTratamentosPage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/adse/pages/comunicacao-adse-tratamentos-page').then(
+    (m) => ({ default: m.ComunicacaoAdseTratamentosPage }),
+  ),
+)
+const ComunicacaoAdseConsultasPage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/adse/pages/comunicacao-adse-consultas-page').then(
+    (m) => ({ default: m.ComunicacaoAdseConsultasPage }),
+  ),
+)
+const ComunicacaoAdseExamesPage = lazy(() =>
+  import('@/pages/area-financeira/faturacao/adse/pages/comunicacao-adse-exames-page').then(
+    (m) => ({ default: m.ComunicacaoAdseExamesPage }),
+  ),
+)
 const NovoDocumentoPage = lazy(() =>
   import('@/pages/area-financeira/faturacao/pages/novo-documento-page').then(
     (m) => ({ default: m.NovoDocumentoPage }),
@@ -496,16 +516,64 @@ export const areaFinanceiraRoutes = [
   {
     path: 'area-financeira/faturacao/adse',
     element: (
+      <Navigate to='/area-financeira/faturacao/adse/tratamentos' replace />
+    ),
+  },
+  {
+    path: 'area-financeira/faturacao/adse/configuracoes',
+    element: (
       <LicenseGuard
         requiredModule={modules.areaFinanceira.id}
         requiredPermission={modules.areaFinanceira.permissions.adse.id}
         actionType={actionTypes.AuthVer}
       >
-        <AreaFinanceiraPlaceholderPage title='ADSE' />
+        <ConfigAdsePage />
       </LicenseGuard>
     ),
     manageWindow: true,
-    windowName: 'ADSE',
+    windowName: 'ADSE — Configurações',
+  },
+  {
+    path: 'area-financeira/faturacao/adse/tratamentos',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.adse.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ComunicacaoAdseTratamentosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Faturação ADSE - Tratamentos',
+  },
+  {
+    path: 'area-financeira/faturacao/adse/consultas',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.adse.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ComunicacaoAdseConsultasPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Faturação ADSE - Consultas',
+  },
+  {
+    path: 'area-financeira/faturacao/adse/exames',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.adse.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ComunicacaoAdseExamesPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Faturação ADSE - Exames',
   },
   {
     path: 'area-financeira/faturacao/mapas',

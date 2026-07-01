@@ -74,6 +74,12 @@ const LOTE_LINHA_TITLE_UTENTE_ORIG =
 const LOTE_LINHA_TITLE_INST_ORIG =
   'Valor por unidade a favor da instituição / organismo. No pedido: ValorInstituicaoOriginal. Se «V. Instit.» estiver vazio ao guardar, o total enviado é ValorInstituicaoOriginal × Quantidade.'
 
+/** Grelhas de linhas no separador «Registo de serviços» (legado: `servicos` + `examesNaoPrescritosEfetuados`). */
+type LinhaRegistoGrelha = 'examesTratamentos' | 'naoPrescritosEfetuados'
+
+/** Título visível no legado (`Strings.ExamesNaoPrescritosEfetuados`); BD interna `LINDIRECT_789`. */
+const LOTE_TITULO_EXAMES_NAO_PRESCRITOS = 'Exames Não Prescritos e Efetuados'
+
 const MESES = [
   { value: 1, label: 'Janeiro' },
   { value: 2, label: 'Fevereiro' },
@@ -239,16 +245,16 @@ function computeRegistoSomaTotais(
   valorConsulta: string,
   taxaConsulta: string,
   linhas: LinhaFormRow[],
-  linhas789: LinhaFormRow[]
+  linhasNaoPrescritos: LinhaFormRow[]
 ) {
   const v1 = parseDecimal(valorConsulta) ?? 0
   const t1 = parseDecimal(taxaConsulta) ?? 0
   const linhasOk = linhas.filter((r) => r.servicoId.trim() !== '')
-  const linhas789Ok = linhas789.filter((r) => r.servicoId.trim() !== '')
+  const linhasNaoPrescritosOk = linhasNaoPrescritos.filter((r) => r.servicoId.trim() !== '')
   const t2 = linhasOk.reduce((acc, row) => acc + linhaUtenteTotal(row), 0)
-  const t3 = linhas789Ok.reduce((acc, row) => acc + linhaUtenteTotal(row), 0)
+  const t3 = linhasNaoPrescritosOk.reduce((acc, row) => acc + linhaUtenteTotal(row), 0)
   const v2 = linhasOk.reduce((acc, row) => acc + linhaInstituicaoTotal(row), 0)
-  const v3 = linhas789Ok.reduce((acc, row) => acc + linhaInstituicaoTotal(row), 0)
+  const v3 = linhasNaoPrescritosOk.reduce((acc, row) => acc + linhaInstituicaoTotal(row), 0)
   return {
     totalTaxas: t1 + t2 + t3,
     totalV2: v2,
@@ -553,7 +559,7 @@ export function LoteDirectFormModal({
   const [servicoConsultaSearch, setServicoConsultaSearch] = useState('')
   const [servicoConsultaQD] = useDebounce(servicoConsultaSearch, 250)
   const [linhasRegisto, setLinhasRegisto] = useState<LinhaFormRow[]>([])
-  const [linhasRegisto789, setLinhasRegisto789] = useState<LinhaFormRow[]>([])
+  const [linhasNaoPrescritosEfetuados, setLinhasNaoPrescritosEfetuados] = useState<LinhaFormRow[]>([])
   const [utenteOrganismoOptions, setUtenteOrganismoOptions] = useState<UtenteOrganismoOption[]>([])
   const resolvedConsultaCodigosRef = useRef('')
 
@@ -743,34 +749,34 @@ export function LoteDirectFormModal({
     setForm((prev) => ({ ...prev, ...partial }))
   }
 
-  const addLinhaRegisto = (tipo: 'normal' | '789') => {
-    if (tipo === 'normal') {
+  const addLinhaRegisto = (tipo: LinhaRegistoGrelha) => {
+    if (tipo === 'examesTratamentos') {
       setLinhasRegisto((prev) => [...prev, newLinhaFormRow()])
       return
     }
-    setLinhasRegisto789((prev) => [...prev, newLinhaFormRow()])
+    setLinhasNaoPrescritosEfetuados((prev) => [...prev, newLinhaFormRow()])
   }
 
-  const removeLinhaRegisto = (tipo: 'normal' | '789', id: string) => {
-    if (tipo === 'normal') {
+  const removeLinhaRegisto = (tipo: LinhaRegistoGrelha, id: string) => {
+    if (tipo === 'examesTratamentos') {
       setLinhasRegisto((prev) => prev.filter((row) => row.id !== id))
       return
     }
-    setLinhasRegisto789((prev) => prev.filter((row) => row.id !== id))
+    setLinhasNaoPrescritosEfetuados((prev) => prev.filter((row) => row.id !== id))
   }
 
   const updateLinhaRegisto = (
-    tipo: 'normal' | '789',
+    tipo: LinhaRegistoGrelha,
     id: string,
     field: keyof Omit<LinhaFormRow, 'id'>,
     value: string
   ) => {
     const mapper = (row: LinhaFormRow) => (row.id === id ? { ...row, [field]: value } : row)
-    if (tipo === 'normal') {
+    if (tipo === 'examesTratamentos') {
       setLinhasRegisto((prev) => prev.map(mapper))
       return
     }
-    setLinhasRegisto789((prev) => prev.map(mapper))
+    setLinhasNaoPrescritosEfetuados((prev) => prev.map(mapper))
   }
 
   const clearServicoLinhasRegisto = () => {
@@ -786,10 +792,10 @@ export function LoteDirectFormModal({
       valorInstituicao: '',
     })
     setLinhasRegisto((prev) => prev.map(strip))
-    setLinhasRegisto789((prev) => prev.map(strip))
+    setLinhasNaoPrescritosEfetuados((prev) => prev.map(strip))
   }
 
-  const updateLinhaQuantidade = (tipo: 'normal' | '789', id: string, quantidade: string) => {
+  const updateLinhaQuantidade = (tipo: LinhaRegistoGrelha, id: string, quantidade: string) => {
     const mapper = (row: LinhaFormRow) => {
       if (row.id !== id) return row
       if (
@@ -806,15 +812,15 @@ export function LoteDirectFormModal({
         ...buildLinhaValoresFromSubsistema(sub, quantidade, form.taxaModeradora),
       }
     }
-    if (tipo === 'normal') {
+    if (tipo === 'examesTratamentos') {
       setLinhasRegisto((prev) => prev.map(mapper))
       return
     }
-    setLinhasRegisto789((prev) => prev.map(mapper))
+    setLinhasNaoPrescritosEfetuados((prev) => prev.map(mapper))
   }
 
   const handleSelectSubsistemaLinhaRegisto = (
-    tipo: 'normal' | '789',
+    tipo: LinhaRegistoGrelha,
     linhaId: string,
     subsistemaServicoId: string
   ) => {
@@ -868,11 +874,11 @@ export function LoteDirectFormModal({
         }
       })
 
-    if (tipo === 'normal') {
+    if (tipo === 'examesTratamentos') {
       setLinhasRegisto(apply)
       return
     }
-    setLinhasRegisto789(apply)
+    setLinhasNaoPrescritosEfetuados(apply)
   }
 
   useEffect(() => {
@@ -917,7 +923,7 @@ export function LoteDirectFormModal({
     }
 
     setLinhasRegisto((prev) => prev.map(resolver))
-    setLinhasRegisto789((prev) => prev.map(resolver))
+    setLinhasNaoPrescritosEfetuados((prev) => prev.map(resolver))
   }, [open, form.taxaModeradora, subsistemasOrganismo, servicosConsulta])
 
   const applyDetail = (detail: LoteDirectDTO) => {
@@ -965,7 +971,7 @@ export function LoteDirectFormModal({
     })
 
     setLinhasRegisto(linhasDtoParaGrelhaExames(detail).map(linhaDtoToFormRow))
-    setLinhasRegisto789((detail.linhas789 ?? []).map(linhaDtoToFormRow))
+    setLinhasNaoPrescritosEfetuados((detail.linhas789 ?? []).map(linhaDtoToFormRow))
   }
 
   const handleSelectUtente = async (value: string) => {
@@ -1230,7 +1236,7 @@ export function LoteDirectFormModal({
       setUtenteOrganismoOptions([])
       setForm(resetFormState())
       setLinhasRegisto([])
-      setLinhasRegisto789([])
+      setLinhasNaoPrescritosEfetuados([])
       return
     }
 
@@ -1286,9 +1292,9 @@ export function LoteDirectFormModal({
         form.valorConsulta,
         form.taxaConsulta,
         linhasRegisto,
-        linhasRegisto789
+        linhasNaoPrescritosEfetuados
       ),
-    [form.valorConsulta, form.taxaConsulta, linhasRegisto, linhasRegisto789]
+    [form.valorConsulta, form.taxaConsulta, linhasRegisto, linhasNaoPrescritosEfetuados]
   )
 
   const buildPayload = (): CreateLoteDirectRequest => ({
@@ -1337,13 +1343,13 @@ export function LoteDirectFormModal({
         : []
 
       const linhasManuais = linhasRegisto.map(mapLinha).filter((x): x is LoteDirectLinhaUpsertRequest => x !== null)
-      const linhasManuais789 = linhasRegisto789
+      const linhasNaoPrescritosManuais = linhasNaoPrescritosEfetuados
         .map(mapLinha)
         .filter((x): x is LoteDirectLinhaUpsertRequest => x !== null)
 
       return {
         linhas: [...linhaConsulta, ...linhasManuais],
-        linhas789: linhasManuais789,
+        linhas789: linhasNaoPrescritosManuais,
       }
     })(),
     utenteId: form.utenteId || undefined,
@@ -1964,7 +1970,7 @@ export function LoteDirectFormModal({
           <div className='rounded-md border p-3'>
             <div className='mb-3 flex items-center justify-between gap-2'>
               <h4 className='text-sm font-semibold'>Exames/Tratamentos</h4>
-              <Button type='button' variant='outline' size='sm' disabled={isView} onClick={() => addLinhaRegisto('normal')}>
+              <Button type='button' variant='outline' size='sm' disabled={isView} onClick={() => addLinhaRegisto('examesTratamentos')}>
                 + Inserir
               </Button>
             </div>
@@ -1980,7 +1986,7 @@ export function LoteDirectFormModal({
                     <Label className={labelClass}>Subsistema / serviço</Label>
                     <SubsistemaLinhaCombobox
                       value={linha.subsistemaServicoId}
-                      onChange={(v) => handleSelectSubsistemaLinhaRegisto('normal', linha.id, v)}
+                      onChange={(v) => handleSelectSubsistemaLinhaRegisto('examesTratamentos', linha.id, v)}
                       disabled={isView || !form.utenteOrganismoId}
                       isLoading={subsistemasOrganismoQuery.isFetching}
                       items={subsistemaLinhaComboboxItems}
@@ -2011,7 +2017,7 @@ export function LoteDirectFormModal({
                       className={inputClass}
                       disabled={isView}
                       value={linha.quantidade}
-                      onChange={(e) => updateLinhaQuantidade('normal', linha.id, e.target.value)}
+                      onChange={(e) => updateLinhaQuantidade('examesTratamentos', linha.id, e.target.value)}
                     />
                   </div>
                   <div className='col-span-1'>
@@ -2022,7 +2028,7 @@ export function LoteDirectFormModal({
                       className={inputClass}
                       disabled={isView}
                       value={linha.valorUnitario}
-                      onChange={(e) => updateLinhaRegisto('normal', linha.id, 'valorUnitario', e.target.value)}
+                      onChange={(e) => updateLinhaRegisto('examesTratamentos', linha.id, 'valorUnitario', e.target.value)}
                     />
                   </div>
                   <div className='col-span-2'>
@@ -2034,7 +2040,7 @@ export function LoteDirectFormModal({
                       disabled={isView}
                       value={linha.valorUtenteOriginal}
                       onChange={(e) =>
-                        updateLinhaRegisto('normal', linha.id, 'valorUtenteOriginal', e.target.value)
+                        updateLinhaRegisto('examesTratamentos', linha.id, 'valorUtenteOriginal', e.target.value)
                       }
                     />
                   </div>
@@ -2047,7 +2053,7 @@ export function LoteDirectFormModal({
                       disabled={isView}
                       value={linha.valorInstituicaoOriginal}
                       onChange={(e) =>
-                        updateLinhaRegisto('normal', linha.id, 'valorInstituicaoOriginal', e.target.value)
+                        updateLinhaRegisto('examesTratamentos', linha.id, 'valorInstituicaoOriginal', e.target.value)
                       }
                     />
                   </div>
@@ -2062,7 +2068,7 @@ export function LoteDirectFormModal({
                       className={inputClass}
                       disabled={isView}
                       value={linha.valorUtente}
-                      onChange={(e) => updateLinhaRegisto('normal', linha.id, 'valorUtente', e.target.value)}
+                      onChange={(e) => updateLinhaRegisto('examesTratamentos', linha.id, 'valorUtente', e.target.value)}
                     />
                   </div>
                   <div className='col-span-1'>
@@ -2077,7 +2083,7 @@ export function LoteDirectFormModal({
                       disabled={isView}
                       value={linha.valorInstituicao}
                       onChange={(e) =>
-                        updateLinhaRegisto('normal', linha.id, 'valorInstituicao', e.target.value)
+                        updateLinhaRegisto('examesTratamentos', linha.id, 'valorInstituicao', e.target.value)
                       }
                     />
                   </div>
@@ -2088,7 +2094,7 @@ export function LoteDirectFormModal({
                       size='icon'
                       className='h-8 w-8'
                       disabled={isView}
-                      onClick={() => removeLinhaRegisto('normal', linha.id)}
+                      onClick={() => removeLinhaRegisto('examesTratamentos', linha.id)}
                     >
                       <X className='h-4 w-4' />
                     </Button>
@@ -2102,7 +2108,7 @@ export function LoteDirectFormModal({
             <div className={`col-span-3 ${fieldGap}`}>
               <Label
                 className={labelClass}
-                title='Taxa moderadora da consulta [T1] + soma da coluna «V. Utente (€) [T2]» em Exames/Tratamentos + soma da coluna «V. Utente (€) [T3]» na grelha 789.'
+                title={`Taxa moderadora da consulta [T1] + soma da coluna «V. Utente (€) [T2]» em Exames/Tratamentos + soma da coluna «V. Utente (€) [T3]» em ${LOTE_TITULO_EXAMES_NAO_PRESCRITOS}.`}
               >
                 Total taxas (€) — [T1] + [T2] + [T3]
               </Label>
@@ -2130,9 +2136,9 @@ export function LoteDirectFormModal({
             <div className={`col-span-3 ${fieldGap}`}>
               <Label
                 className={labelClass}
-                title='Soma dos totais da coluna «V. Instit. (€) [V3]» na grelha «Exames não prescritos…».'
+                title={`Soma dos totais da coluna «V. Instit. (€) [V3]» em ${LOTE_TITULO_EXAMES_NAO_PRESCRITOS}.`}
               >
-                Total «V. Instit.» — 789 (€) [V3]
+                Total «V. Instit.» — não prescritos (€) [V3]
               </Label>
               <Input
                 className={inputClass}
@@ -2144,7 +2150,7 @@ export function LoteDirectFormModal({
             <div className={`col-span-3 ${fieldGap}`}>
               <Label
                 className={labelClass}
-                title='Valor consulta total [V1] + total exames [V2] + total 789 [V3].'
+                title='Valor consulta total [V1] + total exames/tratamentos [V2] + total não prescritos [V3].'
               >
                 Total global (€) — [V1] + [V2] + [V3]
               </Label>
@@ -2159,24 +2165,24 @@ export function LoteDirectFormModal({
 
           <div className='rounded-md border p-3'>
             <div className='mb-3 flex items-center justify-between gap-2'>
-              <h4 className='text-sm font-semibold'>Exames Não Prescritos e Efetuados</h4>
-              <Button type='button' variant='outline' size='sm' disabled={isView} onClick={() => addLinhaRegisto('789')}>
+              <h4 className='text-sm font-semibold'>{LOTE_TITULO_EXAMES_NAO_PRESCRITOS}</h4>
+              <Button type='button' variant='outline' size='sm' disabled={isView} onClick={() => addLinhaRegisto('naoPrescritosEfetuados')}>
                 + Inserir
               </Button>
             </div>
             <div className='space-y-2'>
-              {linhasRegisto789.length === 0 ? (
+              {linhasNaoPrescritosEfetuados.length === 0 ? (
                 <div className='rounded border border-dashed p-4 text-center text-sm text-muted-foreground'>
-                  Sem linhas 789.
+                  Sem {LOTE_TITULO_EXAMES_NAO_PRESCRITOS.toLowerCase()}.
                 </div>
               ) : null}
-              {linhasRegisto789.map((linha) => (
+              {linhasNaoPrescritosEfetuados.map((linha) => (
                 <div key={linha.id} className='grid grid-cols-12 gap-2 rounded border p-2'>
                   <div className='col-span-3'>
                     <Label className={labelClass}>Subsistema / serviço</Label>
                     <SubsistemaLinhaCombobox
                       value={linha.subsistemaServicoId}
-                      onChange={(v) => handleSelectSubsistemaLinhaRegisto('789', linha.id, v)}
+                      onChange={(v) => handleSelectSubsistemaLinhaRegisto('naoPrescritosEfetuados', linha.id, v)}
                       disabled={isView || !form.utenteOrganismoId}
                       isLoading={subsistemasOrganismoQuery.isFetching}
                       items={subsistemaLinhaComboboxItems}
@@ -2207,7 +2213,7 @@ export function LoteDirectFormModal({
                       className={inputClass}
                       disabled={isView}
                       value={linha.quantidade}
-                      onChange={(e) => updateLinhaQuantidade('789', linha.id, e.target.value)}
+                      onChange={(e) => updateLinhaQuantidade('naoPrescritosEfetuados', linha.id, e.target.value)}
                     />
                   </div>
                   <div className='col-span-1'>
@@ -2218,7 +2224,7 @@ export function LoteDirectFormModal({
                       className={inputClass}
                       disabled={isView}
                       value={linha.valorUnitario}
-                      onChange={(e) => updateLinhaRegisto('789', linha.id, 'valorUnitario', e.target.value)}
+                      onChange={(e) => updateLinhaRegisto('naoPrescritosEfetuados', linha.id, 'valorUnitario', e.target.value)}
                     />
                   </div>
                   <div className='col-span-2'>
@@ -2230,7 +2236,7 @@ export function LoteDirectFormModal({
                       disabled={isView}
                       value={linha.valorUtenteOriginal}
                       onChange={(e) =>
-                        updateLinhaRegisto('789', linha.id, 'valorUtenteOriginal', e.target.value)
+                        updateLinhaRegisto('naoPrescritosEfetuados', linha.id, 'valorUtenteOriginal', e.target.value)
                       }
                     />
                   </div>
@@ -2243,7 +2249,7 @@ export function LoteDirectFormModal({
                       disabled={isView}
                       value={linha.valorInstituicaoOriginal}
                       onChange={(e) =>
-                        updateLinhaRegisto('789', linha.id, 'valorInstituicaoOriginal', e.target.value)
+                        updateLinhaRegisto('naoPrescritosEfetuados', linha.id, 'valorInstituicaoOriginal', e.target.value)
                       }
                     />
                   </div>
@@ -2258,7 +2264,7 @@ export function LoteDirectFormModal({
                       className={inputClass}
                       disabled={isView}
                       value={linha.valorUtente}
-                      onChange={(e) => updateLinhaRegisto('789', linha.id, 'valorUtente', e.target.value)}
+                      onChange={(e) => updateLinhaRegisto('naoPrescritosEfetuados', linha.id, 'valorUtente', e.target.value)}
                     />
                   </div>
                   <div className='col-span-1'>
@@ -2273,7 +2279,7 @@ export function LoteDirectFormModal({
                       disabled={isView}
                       value={linha.valorInstituicao}
                       onChange={(e) =>
-                        updateLinhaRegisto('789', linha.id, 'valorInstituicao', e.target.value)
+                        updateLinhaRegisto('naoPrescritosEfetuados', linha.id, 'valorInstituicao', e.target.value)
                       }
                     />
                   </div>
@@ -2284,7 +2290,7 @@ export function LoteDirectFormModal({
                       size='icon'
                       className='h-8 w-8'
                       disabled={isView}
-                      onClick={() => removeLinhaRegisto('789', linha.id)}
+                      onClick={() => removeLinhaRegisto('naoPrescritosEfetuados', linha.id)}
                     >
                       <X className='h-4 w-4' />
                     </Button>
