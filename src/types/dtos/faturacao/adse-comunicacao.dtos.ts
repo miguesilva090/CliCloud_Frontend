@@ -74,3 +74,19 @@ export type AdseComunicarDocumentosRequest = {
   devolucoes: boolean
   linhas: { origemClinicaId: string; documentoId: string; numeroFatura: string }[]
 }
+
+export type AdseFecharPreFaturaRequest = {
+  referenciaSerie: string
+  referenciaNumeroDocumento: number
+  referenciaData: string
+  referenciaValor?: number | null
+  pdfFicheiro?: string | null
+}
+
+export type AdseUploadPdfRequest = {
+  documentoId: string
+  origemClinicaId: string
+  nomeFicheiro: string
+  conteudoBase64: string
+  relatorioMedico: boolean
+}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Eye, EyeOff, Pencil } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { navigateManagedWindow } from '@/utils/window-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -13,7 +13,6 @@ import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ConfigPageCardTitleRow } from '@/components/shared/config-page-card-title-row'
-import { modules } from '@/config/modules'
 import { useConfigPageEditMode } from '@/hooks/use-config-page-edit-mode'
 import { toast } from '@/utils/toast-utils'
 import { EmailService } from '@/lib/services/core/email-service'
@@ -24,6 +23,7 @@ import type {
   ConfiguracaoEmailAutomaticaDTO,
   ConfiguracaoEmailDTO,
 } from '@/types/dtos/core/email.dtos'
+import { emailHistoricoPath, emailPermissionId } from '../utils/email-path'
 
 type EmailConfigForm = {
   username: string
@@ -97,8 +97,6 @@ const isFlowTemplateCode = (codigo: string) => {
   return normalized === '8.1' || normalized === '8.2' || normalized === '8.3' || normalized === '8.4'
 }
 
-const emailPermId = modules.areaComum.permissions.configuracoesEmail.id
-
 const initialForm: EmailConfigForm = {
   username: '',
   server: '',
@@ -115,6 +113,8 @@ const initialForm: EmailConfigForm = {
 
 export function EmailConfigPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const emailPermId = emailPermissionId(location.pathname)
   const {
     canChange,
     isEditing,
@@ -371,7 +371,7 @@ export function EmailConfigPage() {
                     onClick={() =>
                       navigateManagedWindow(
                         navigate,
-                        '/area-comum/tabelas/configuracao/email/historico'
+                        emailHistoricoPath(location.pathname),
                       )
                     }
                     disabled={saveMutation.isPending}

@@ -104,6 +104,14 @@ const TecnicoEditPage = lazy(() =>
     }))
 )
 
+const ListagemSeguradorasPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/entidades/seguradoras/pages/listagem-seguradoras-page'
+  ).then((m) => ({
+    default: m.ListagemSeguradorasPage,
+  })),
+)
+
 const ListagemClinicasPage = lazy(() =>
     import(
       '@/pages/area-comum/tabelas/configuracao/clinicas/pages/listagem-clinicas-page'
@@ -2350,6 +2358,34 @@ export const areaComumRoutes = [
               ),
               manageWindow: true,
               windowName: areaComum?.permissions?.centrosSaude?.name,
+            },
+            {
+              path: 'area-comum/tabelas/entidades/seguradoras',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.seguradoras?.id}
+                  actionType={actionTypes.AuthVer}
+                >
+                  <ListagemSeguradorasPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.seguradoras?.name,
+            },
+            {
+              path: 'area-comum/tabelas/entidades/seguradoras/nova',
+              element: (
+                <LicenseGuard
+                  requiredModule={areaComum.id}
+                  requiredPermission={areaComum?.permissions?.seguradoras?.id}
+                  actionType={actionTypes.AuthVer}
+                >
+                  <ListagemSeguradorasPage />
+                </LicenseGuard>
+              ),
+              manageWindow: true,
+              windowName: areaComum?.permissions?.seguradoras?.name,
             },
             {
               path: 'area-comum/tabelas/entidades/funcionarios',

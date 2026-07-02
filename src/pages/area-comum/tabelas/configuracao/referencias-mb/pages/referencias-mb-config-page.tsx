@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { navigateManagedWindow } from '@/utils/window-utils'
 import { ConfigPageCardTitleRow } from '@/components/shared/config-page-card-title-row'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -12,9 +12,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ReferenciasMbService } from '@/lib/services/faturacao/referencias-mb-service'
 import type { AtualizarConfigReferenciaMbRequest } from '@/types/dtos/faturacao/referencias-mb.dtos'
-import { modules } from '@/config/modules'
 import { useConfigPageEditMode } from '@/hooks/use-config-page-edit-mode'
 import { toast } from '@/utils/toast-utils'
+import {
+  referenciasMbHistoricoPath,
+  referenciasMbPermissionId,
+} from '../utils/referencias-mb-paths'
 
 type FormState = {
   servicoUrl: string
@@ -25,8 +28,6 @@ type FormState = {
   chaveBackOffice: string
   ifThenKey: string
 }
-
-const refMbPermId = modules.areaComum.permissions.referenciasMb.id
 
 const initialForm: FormState = {
   servicoUrl: '',
@@ -40,6 +41,8 @@ const initialForm: FormState = {
 
 export function ReferenciasMbConfigPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const refMbPermId = referenciasMbPermissionId(location.pathname)
   const {
     canChange,
     isEditing,
@@ -155,7 +158,7 @@ export function ReferenciasMbConfigPage() {
                     onClick={() =>
                       navigateManagedWindow(
                         navigate,
-                        '/area-comum/tabelas/configuracao/referencias-mb/historico'
+                        referenciasMbHistoricoPath(location.pathname),
                       )
                     }
                   >

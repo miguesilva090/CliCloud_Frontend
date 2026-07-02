@@ -27,7 +27,10 @@ import {
 import { useAdsePreFaturasPorEstadoQuery } from '../queries/adse-comunicacao-queries'
 import {
   useApagarAdsePreFaturaMutation,
+  useConferirAdsePreFaturaMutation,
   useCriarAdsePreFaturaMutation,
+  useConsultarAdsePreFaturaMutation,
+  useFecharAdsePreFaturaMutation,
 } from '../queries/adse-comunicacao-mutations'
 
 type Props = {
@@ -50,20 +53,19 @@ export function AdsePreFaturasDialog({ open, modulo, onClose, onPreFaturaSelecio
   const listQuery = useAdsePreFaturasPorEstadoQuery(modulo, Number(estado), open)
   const criar = useCriarAdsePreFaturaMutation(modulo)
   const apagar = useApagarAdsePreFaturaMutation(modulo)
+  const conferir = useConferirAdsePreFaturaMutation()
+  const consultar = useConsultarAdsePreFaturaMutation()
+  const fechar = useFecharAdsePreFaturaMutation()
 
   const linhas = listQuery.data?.info?.data ?? []
   const selected = linhas.find((p) => p.id === selectedId) ?? null
 
   const criarPreFatura = () => {
     criar.mutate(undefined, {
-      onSuccess: (res) =>
-        handleApiResponse(res, {
-          onSuccess: () => {
-            toast.success('Pré-fatura criada.')
-            listQuery.refetch()
-          },
-          onError: (msg) => toast.error(msg),
-        }),
+      onSuccess: (res) => {
+        const handled = handleApiResponse(res, 'Pré-fatura criada.')
+        if (handled.success) listQuery.refetch()
+      },
     })
   }
 
@@ -73,21 +75,68 @@ export function AdsePreFaturasDialog({ open, modulo, onClose, onPreFaturaSelecio
       return
     }
     apagar.mutate(selected.id, {
-      onSuccess: (res) =>
-        handleApiResponse(res, {
-          onSuccess: () => {
-            toast.success('Pré-fatura eliminada.')
-            setSelectedId(null)
-            listQuery.refetch()
-          },
-          onError: (msg) => toast.error(msg),
-        }),
+      onSuccess: (res) => {
+        const handled = handleApiResponse(res, 'Pré-fatura eliminada.')
+        if (handled.success) {
+          setSelectedId(null)
+          listQuery.refetch()
+        }
+      },
     })
   }
 
   const confirmar = () => {
     if (selected) onPreFaturaSelecionada?.(selected.numOrdem)
     onClose()
+  }
+
+  const conferirPreFatura = () => {
+    if (!selected) return toast.error('Selecione uma pré-fatura.')
+    conferir.mutate(selected.id, {
+      onSuccess: (res) => {
+        const handled = handleApiResponse(res, 'Pré-fatura conferida.')
+        if (handled.success) listQuery.refetch()
+      },
+    })
+  }
+
+  const consultarPreFatura = () => {
+    if (!selected) return toast.error('Selecione uma pré-fatura.')
+    consultar.mutate(selected.id, {
+      onSuccess: (res) => {
+        const handled = handleApiResponse<AdsePreFaturaDTO>(res, 'Pré-fatura consultada.')
+        if (handled.success && handled.data) {
+          const pf = handled.data
+          toast.info(`Pré-fatura ${pf.codigo}: ${pf.numDocumentos} docs, total ${formatMoneyPt(pf.valorTotal)}`)
+        }
+      },
+    })
+  }
+
+  const fecharPreFatura = () => {
+    if (!selected) return toast.error('Selecione uma pré-fatura.')
+    const numero = window.prompt('Número da fatura ADSE:')
+    if (!numero) return
+    const serie = window.prompt('Série da fatura ADSE (opcional):') ?? ''
+    const data = window.prompt('Data da fatura ADSE (YYYY-MM-DD):') ?? ''
+    if (!data) return toast.error('Data da fatura é obrigatória.')
+    fechar.mutate(
+      {
+        id: selected.id,
+        payload: {
+          referenciaSerie: serie,
+          referenciaNumeroDocumento: Number(numero),
+          referenciaData: data,
+          referenciaValor: selected.valorTotal,
+        },
+      },
+      {
+        onSuccess: (res) => {
+          const handled = handleApiResponse(res, 'Pré-fatura fechada.')
+          if (handled.success) listQuery.refetch()
+        },
+      },
+    )
   }
 
   return (
@@ -124,7 +173,7 @@ export function AdsePreFaturasDialog({ open, modulo, onClose, onPreFaturaSelecio
             <Button
               variant='outline'
               className='h-auto flex-col px-3 py-2 text-xs'
-              onClick={() => toast.info('Confere pré-fatura — disponível na fase F5.')}
+              onClick={conferirPreFatura}
             >
               <Check className='mb-1 h-4 w-4' />
               Confere Pré Fatura
@@ -132,7 +181,7 @@ export function AdsePreFaturasDialog({ open, modulo, onClose, onPreFaturaSelecio
             <Button
               variant='outline'
               className='h-auto flex-col px-3 py-2 text-xs'
-              onClick={() => toast.info('Consulta pré-fatura — disponível na fase F5.')}
+              onClick={consultarPreFatura}
             >
               <Search className='mb-1 h-4 w-4' />
               Consulta Pré Fatura
@@ -140,7 +189,7 @@ export function AdsePreFaturasDialog({ open, modulo, onClose, onPreFaturaSelecio
             <Button
               variant='outline'
               className='h-auto flex-col px-3 py-2 text-xs'
-              onClick={() => toast.info('Fecho pré-fatura — disponível na fase F5.')}
+              onClick={fecharPreFatura}
             >
               <FolderOpen className='mb-1 h-4 w-4' />
               Fecha Pré Fatura

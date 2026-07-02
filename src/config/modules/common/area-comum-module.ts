@@ -368,6 +368,10 @@ export const areaComum: Module = {
       id: '00000002-0000-0000-0088-000000000003',
       name: 'Notificações de atualização',
     },
+    seguradoras: {
+      id: '00000002-0000-0000-0013-000000000005',
+      name: 'Seguradoras',
+    },
 
 
   },

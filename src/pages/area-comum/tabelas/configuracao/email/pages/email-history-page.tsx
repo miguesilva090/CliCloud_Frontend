@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Search } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { navigateManagedWindow } from '@/utils/window-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -18,9 +18,11 @@ import {
 } from '@/components/ui/dialog'
 import { EmailService } from '@/lib/services/core/email-service'
 import type { HistoricoEmailTabelaDTO } from '@/types/dtos/core/email.dtos'
+import { emailConfigPath } from '../utils/email-path'
 
 export function EmailHistoryPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize] = useState(10)
   const [selected, setSelected] = useState<HistoricoEmailTabelaDTO | null>(null)
@@ -53,7 +55,7 @@ export function EmailHistoryPage() {
               onClick={() =>
                 navigateManagedWindow(
                   navigate,
-                  '/area-comum/tabelas/configuracao/email'
+                  emailConfigPath(location.pathname),
                 )
               }
             >

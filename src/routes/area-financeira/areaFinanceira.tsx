@@ -171,6 +171,30 @@ const ListagemZonasFiscaisPage = lazy(() =>
   )
 )
 
+const ReferenciasMbConfigPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/referencias-mb/pages/referencias-mb-config-page'
+  ).then((m) => ({ default: m.ReferenciasMbConfigPage }))
+)
+
+const ReferenciasMbHistoryPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/configuracao/referencias-mb/pages/referencias-mb-history-page'
+  ).then((m) => ({ default: m.ReferenciasMbHistoryPage }))
+)
+
+const EmailConfigPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/configuracao/email/pages/email-config-page').then(
+    (m) => ({ default: m.EmailConfigPage })
+  )
+)
+
+const EmailHistoryPage = lazy(() =>
+  import('@/pages/area-comum/tabelas/configuracao/email/pages/email-history-page').then(
+    (m) => ({ default: m.EmailHistoryPage })
+  )
+)
+
 const ListagemArmazensPage = lazy(() =>
   import('@/pages/area-financeira/faturacao/tabelas/artigos/armazens/pages/listagem-armazens-page').then(
     (m) => ({ default: m.ListagemArmazensPage })
@@ -1180,11 +1204,25 @@ export const areaFinanceiraRoutes = [
         requiredPermission={modules.areaFinanceira.permissions.emails.id}
         actionType={actionTypes.AuthVer}
       >
-        <AreaFinanceiraPlaceholderPage title='Emails' />
+        <EmailConfigPage />
       </LicenseGuard>
     ),
     manageWindow: true,
     windowName: 'Emails',
+  },
+  {
+    path: 'area-financeira/faturacao/emails/historico',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={modules.areaFinanceira.permissions.emails.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <EmailHistoryPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Histórico de Emails',
   },
   {
     path: 'area-financeira/faturacao/referencias-multibanco',
@@ -1196,11 +1234,27 @@ export const areaFinanceiraRoutes = [
         }
         actionType={actionTypes.AuthVer}
       >
-        <AreaFinanceiraPlaceholderPage title='Referências Multibanco' />
+        <ReferenciasMbConfigPage />
       </LicenseGuard>
     ),
     manageWindow: true,
     windowName: 'Referências Multibanco',
+  },
+  {
+    path: 'area-financeira/faturacao/referencias-multibanco/historico',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaFinanceira.id}
+        requiredPermission={
+          modules.areaFinanceira.permissions.referenciasMultibanco.id
+        }
+        actionType={actionTypes.AuthVer}
+      >
+        <ReferenciasMbHistoryPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Histórico Referências Multibanco',
   },
   {
     path: 'area-financeira/faturacao/tabelas/artigos/artigos',

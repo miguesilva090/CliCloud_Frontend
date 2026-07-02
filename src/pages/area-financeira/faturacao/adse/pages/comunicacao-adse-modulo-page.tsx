@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { format } from 'date-fns'
 import {
   Check,
@@ -40,7 +40,13 @@ import {
   useAdsePreFaturasAbertasQuery,
 } from '../queries/adse-comunicacao-queries'
 import { useComunicarAdseDocumentosMutation } from '../queries/adse-comunicacao-mutations'
+import {
+  useLibertarAdseDocumentosMutation,
+  useUploadAdsePdfMutation,
+} from '../queries/adse-comunicacao-mutations'
 import { adseComunicacaoPageTitle, ADSE_TIPO_PRE_FATURA } from '../adse-modulo-config'
+import { DatePicker } from '@/components/ui/date-picker'
+
 
 type Props = { modulo: AdseComunicacaoModulo }
 
@@ -73,10 +79,15 @@ function buildFilter(applied: {
   }
 }
 
+const toDate = (value: string): Date | undefined => 
+  value ? new Date(`${value}T12:00:00`) : undefined
+
+
 export function ComunicacaoAdseModuloPage({ modulo }: Props) {
   const title = adseComunicacaoPageTitle(modulo)
   const { canView } = useAreaComumEntityListPermissions(ADSE_PERM_ID)
   const isTratamentos = modulo === 'tratamentos'
+  const isExames = modulo === 'exames'
 
   const [draftDataInicial, setDraftDataInicial] = useState(defaultDataInicial)
   const [draftDataFinal, setDraftDataFinal] = useState(defaultDataFinal)
@@ -89,6 +100,12 @@ export function ComunicacaoAdseModuloPage({ modulo }: Props) {
   const [preFaturaOrdem, setPreFaturaOrdem] = useState('')
   const [selected, setSelected] = useState<string[]>([])
   const [modalPreFaturasOpen, setModalPreFaturasOpen] = useState(false)
+  const [uploadTarget, setUploadTarget] = useState<{
+    documentoId: string
+    origemClinicaId: string
+    relatorioMedico: boolean
+  } | null>(null)
+  const inputUploadRef = useRef<HTMLInputElement | null>(null)
 
   const [applied, setApplied] = useState(() => ({
     dataInicial: defaultDataInicial(),
@@ -99,13 +116,18 @@ export function ComunicacaoAdseModuloPage({ modulo }: Props) {
   }))
 
   const filter = useMemo(
-    () => buildFilter({ ...applied, devolucoes }),
-    [applied, devolucoes],
+    () => ({
+      ...buildFilter({...applied, devolucoes}),
+      numOrdemPreFatura: preFaturaOrdem ? Number(preFaturaOrdem) : null,
+    }),
+    [applied, devolucoes, preFaturaOrdem],
   )
 
   const listQuery = useAdseComunicacaoPaginatedQuery(modulo, filter, canView)
   const preFaturasQuery = useAdsePreFaturasAbertasQuery(modulo)
   const comunicar = useComunicarAdseDocumentosMutation()
+  const libertar = useLibertarAdseDocumentosMutation()
+  const uploadPdf = useUploadAdsePdfMutation(modulo)
   const utentesQ = useUtentesLight(debUtente, canView)
 
   const linhas = listQuery.data?.info?.data?.linhas ?? []
@@ -188,18 +210,53 @@ export function ComunicacaoAdseModuloPage({ modulo }: Props) {
         })),
     }
     const res = await comunicar.mutateAsync(payload)
-    handleApiResponse(res, {
-      onSuccess: () => {
-        toast.success('Operação concluída.')
-        listQuery.refetch()
-      },
-      onError: (msg) => toast.error(msg),
+    const handled = handleApiResponse(res, 'Operação concluída.')
+    if (handled.success) listQuery.refetch()
+  }
+
+  const executarLibertar = async () => {
+    if (selected.length === 0) {
+      toast.error('Selecione pelo menos uma linha.')
+      return
+    }
+    const documentoIds = linhas
+      .filter((l) => selected.includes(l.id))
+      .map((l) => l.documentoId)
+    const res = await libertar.mutateAsync(documentoIds)
+    const handled = handleApiResponse<string>(res, 'Linhas libertadas.')
+    if (handled.success) listQuery.refetch()
+  }
+
+  const abrirUpload = (row: (typeof linhas)[number], relatorioMedico: boolean) => {
+    setUploadTarget({
+      documentoId: row.documentoId,
+      origemClinicaId: row.origemClinicaId,
+      relatorioMedico,
     })
+    inputUploadRef.current?.click()
+  }
+
+  const onUploadChanged = async (file?: File | null) => {
+    if (!uploadTarget || !file) return
+    if (file.type !== 'application/pdf') {
+      toast.error('Apenas ficheiros PDF são permitidos.')
+      return
+    }
+    const base64 = await fileToBase64(file)
+    const res = await uploadPdf.mutateAsync({
+      documentoId: uploadTarget.documentoId,
+      origemClinicaId: uploadTarget.origemClinicaId,
+      nomeFicheiro: file.name,
+      conteudoBase64: base64,
+      relatorioMedico: uploadTarget.relatorioMedico,
+    })
+    const handled = handleApiResponse(res, 'PDF registado com sucesso.')
+    if (handled.success) listQuery.refetch()
   }
 
   if (!canView) return null
 
-  const colOrigem = isTratamentos ? 'Trat.' : 'Nº'
+  const colOrigem = isTratamentos ? 'Trat.' : isExames ? 'Nº Mar.' : 'Nº'
 
   return (
     <>
@@ -209,21 +266,26 @@ export function ComunicacaoAdseModuloPage({ modulo }: Props) {
           <div className='rounded-lg border bg-background p-4'>
             <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4'>
               <div className={fieldGap}>
-                <Label className={labelClass}>Data Inicial</Label>
-                <Input
-                  type='date'
+                <Label htmlFor='adse-data-inicial' className={labelClass}>Data Inicial</Label>
+
+                <DatePicker
+                  id='adse-data-inicial'
+                  value={toDate(draftDataInicial)}
+                  onChange={(date) => setDraftDataInicial(date ? format(date, 'yyyy-MM-dd') : '')}
+                  placeholder='Data Inicial'
+                  displayFormat='dd/MM/yyyy'
                   className={inputClass}
-                  value={draftDataInicial}
-                  onChange={(e) => setDraftDataInicial(e.target.value)}
                 />
               </div>
               <div className={fieldGap}>
-                <Label className={labelClass}>Data Final</Label>
-                <Input
-                  type='date'
+                <Label htmlFor='adse-data-final' className={labelClass}>Data Final</Label>
+                <DatePicker
+                  id='adse-data-final'
+                  value={toDate(draftDataFinal)}
+                  onChange={(date) => setDraftDataFinal(date ? format(date, 'yyyy-MM-dd') : '')}
+                  placeholder='Data Final'
+                  displayFormat='dd/MM/yyyy'
                   className={inputClass}
-                  value={draftDataFinal}
-                  onChange={(e) => setDraftDataFinal(e.target.value)}
                 />
               </div>
               <div className={fieldGap}>
@@ -332,9 +394,25 @@ export function ComunicacaoAdseModuloPage({ modulo }: Props) {
                   size='sm'
                   variant='outline'
                   className='border-amber-500 text-amber-600'
-                  onClick={() => toast.info('Libertar linhas — disponível na fase F5.')}
+                  onClick={executarLibertar}
                 >
                   <Undo2 className='mr-1 h-4 w-4' /> Libertar
+                </Button>
+              )}
+              <Button
+                size='sm'
+                variant='outline'
+                onClick={() => executarOperacao(4)}
+              >
+                <FileText className='mr-1 h-4 w-4' /> Substituir PDF
+              </Button>
+              {isTratamentos && (
+                <Button
+                  size='sm'
+                  variant='outline'
+                  onClick={() => executarOperacao(5)}
+                >
+                  <FileText className='mr-1 h-4 w-4' /> Substituir Relatório
                 </Button>
               )}
             </div>
@@ -436,6 +514,7 @@ export function ComunicacaoAdseModuloPage({ modulo }: Props) {
                       className={`mx-auto h-4 w-4 ${
                         row.pdfFicheiro ? 'text-primary' : 'text-muted-foreground/40'
                       }`}
+                      onClick={() => abrirUpload(row, false)}
                     />
                   </td>
                   {isTratamentos && (
@@ -446,6 +525,7 @@ export function ComunicacaoAdseModuloPage({ modulo }: Props) {
                             ? 'text-primary'
                             : 'text-muted-foreground/40'
                         }`}
+                        onClick={() => abrirUpload(row, true)}
                       />
                     </td>
                   )}
@@ -489,8 +569,25 @@ export function ComunicacaoAdseModuloPage({ modulo }: Props) {
             onClose={() => setModalPreFaturasOpen(false)}
             onPreFaturaSelecionada={(numOrdem) => setPreFaturaOrdem(String(numOrdem))}
           />
+          <input
+            ref={inputUploadRef}
+            type='file'
+            accept='application/pdf'
+            className='hidden'
+            onChange={(e) => onUploadChanged(e.target.files?.[0] ?? null)}
+          />
         </AreaComumDashboardCard>
       </DashboardPageContainer>
     </>
   )
+}
+
+async function fileToBase64(file: File): Promise<string> {
+  const data = await file.arrayBuffer()
+  let binary = ''
+  const bytes = new Uint8Array(data)
+  bytes.forEach((b) => {
+    binary += String.fromCharCode(b)
+  })
+  return btoa(binary)
 }

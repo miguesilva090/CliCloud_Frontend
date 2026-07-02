@@ -1104,6 +1104,11 @@ export const roleHeaderMenus = {
             href: '/area-comum/tabelas/entidades/tecnicos',
             funcionalidadeId: modules.areaComum.permissions.tecnicos.id,
           },
+          {
+            label: 'Seguradoras',
+            href: '/area-comum/tabelas/entidades/seguradoras',
+            funcionalidadeId: modules.areaComum.permissions.seguradoras.id,
+          },
         ],
       },
       {
