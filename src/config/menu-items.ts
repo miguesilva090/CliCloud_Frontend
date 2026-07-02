@@ -28,7 +28,8 @@ export const roleMenuItems = {
           href: '/area-clinica/prescricao-eletronica',
           icon: 'fileText',
           label: 'Prescrição Eletronica',
-          funcionalidadeId: modules.areaClinica.permissions.prescricaoEletronica.id,
+          funcionalidadeId:
+            modules.areaClinica.permissions.prescricaoEletronica.id,
         },
         {
           title: 'prescricao-mcdts',
@@ -101,7 +102,8 @@ export const roleMenuItems = {
           href: '/area-financeira/contas-correntes',
           icon: 'wallet',
           label: 'Contas Correntes',
-          funcionalidadeId: modules.areaFinanceira.permissions.contasCorrentes.id,
+          funcionalidadeId:
+            modules.areaFinanceira.permissions.contasCorrentes.id,
         },
         {
           title: 'financeira-tesouraria',
@@ -144,7 +146,8 @@ export const roleMenuItems = {
           href: '/area-comum/utilitarios',
           icon: 'settings',
           label: 'Utilitários',
-          funcionalidadeId: modules.areaComum.permissions.utilitariosLinhaMenu.id,
+          funcionalidadeId:
+            modules.areaComum.permissions.utilitariosLinhaMenu.id,
         },
         {
           title: 'app-saude',
@@ -177,27 +180,32 @@ export const roleHeaderMenus = {
           {
             label: 'Agenda',
             href: '/area-administrativa/consultas/marcacoes',
-            funcionalidadeId: modules.areaAdministrativa.permissions.marcacoesAgenda.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.marcacoesAgenda.id,
           },
           {
             label: 'Troca de Marcações entre Médicos',
             href: '/area-administrativa/consultas/marcacoes/troca-medicos',
-            funcionalidadeId: modules.areaAdministrativa.permissions.trocaMarcacoesMedicos.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.trocaMarcacoesMedicos.id,
           },
           {
             label: 'Entrada de Marcações',
             href: '/area-administrativa/consultas/marcacoes/ordem-entrada',
-            funcionalidadeId: modules.areaAdministrativa.permissions.ordemEntradaMarcacoes.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.ordemEntradaMarcacoes.id,
           },
           {
             label: 'Lista de Espera',
             href: '/area-administrativa/consultas/marcacoes/lista-espera',
-            funcionalidadeId: modules.areaAdministrativa.permissions.listaEsperaConsultas.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.listaEsperaConsultas.id,
           },
           {
             label: 'GlobalBooking',
             href: '/area-administrativa/consultas/marcacoes/global-booking',
-            funcionalidadeId: modules.areaAdministrativa.permissions.globalBooking.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.globalBooking.id,
           },
         ],
       },
@@ -209,17 +217,20 @@ export const roleHeaderMenus = {
           {
             label: 'Admissões',
             href: '/area-administrativa/consultas/admissoes',
-            funcionalidadeId: modules.areaAdministrativa.permissions.admissoes.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.admissoes.id,
           },
           {
             label: 'Admissões Pendentes',
             href: '/area-administrativa/consultas/admissoes/pendentes',
-            funcionalidadeId: modules.areaAdministrativa.permissions.admissoes.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.admissoes.id,
           },
           {
             label: 'Fecho Diário',
             href: '/area-administrativa/consultas/fecho-diario',
-            funcionalidadeId: modules.areaAdministrativa.permissions.fechoDiario.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.fechoDiario.id,
           },
         ],
       },
@@ -257,7 +268,8 @@ export const roleHeaderMenus = {
           {
             label: 'Registos',
             href: '/area-administrativa/consultas/sinistrados',
-            funcionalidadeId: modules.areaAdministrativa.permissions.sinistrados.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.sinistrados.id,
           },
         ],
       },
@@ -269,39 +281,46 @@ export const roleHeaderMenus = {
           {
             label: 'Por Datas',
             href: '/area-administrativa/consultas/historico/datas',
-            funcionalidadeId: modules.areaAdministrativa.permissions.consultas.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.consultas.id,
           },
           {
             label: 'Por Utente',
             href: '/area-administrativa/consultas/historico/utentes',
-            funcionalidadeId: modules.areaAdministrativa.permissions.consultas.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.consultas.id,
           },
           {
             label: 'Médicos',
             href: '/area-administrativa/consultas/historico/medicos',
-            funcionalidadeId: modules.areaAdministrativa.permissions.consultas.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.consultas.id,
           },
           {
             label: 'Organismos',
             href: '/area-administrativa/consultas/historico/organismos',
-            funcionalidadeId: modules.areaAdministrativa.permissions.consultas.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.consultas.id,
           },
         ],
       },
       {
         label: 'Mapas',
         href: '/area-administrativa',
-        funcionalidadeId: modules.areaClinica.permissions.mapaConsultasMarcadas.id,
+        funcionalidadeId:
+          modules.areaClinica.permissions.mapaConsultasMarcadas.id,
         items: [
           {
             label: 'Mapa Consultas Marcadas',
             href: '/area-clinica/processo-clinico/agenda/mapa-consultas-marcadas',
-            funcionalidadeId: modules.areaClinica.permissions.mapaConsultasMarcadas.id,
+            funcionalidadeId:
+              modules.areaClinica.permissions.mapaConsultasMarcadas.id,
           },
           {
             label: 'Mapa Consultas Efetuadas',
             href: '/area-clinica/processo-clinico/historico/mapa-consultas-efetuadas',
-            funcionalidadeId: modules.areaClinica.permissions.mapaConsultasEfetuadas.id,
+            funcionalidadeId:
+              modules.areaClinica.permissions.mapaConsultasEfetuadas.id,
           },
         ],
       },
@@ -318,12 +337,14 @@ export const roleHeaderMenus = {
           {
             label: 'Fornecedores',
             href: '/area-administrativa/entidades/fornecedores',
-            funcionalidadeId: modules.areaAdministrativa.permissions.fornecedores.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.fornecedores.id,
           },
           {
             label: 'Funcionarios',
             href: '/area-administrativa/entidades/funcionarios',
-            funcionalidadeId: modules.areaAdministrativa.permissions.funcionarios.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.funcionarios.id,
           },
         ],
       },
@@ -340,12 +361,14 @@ export const roleHeaderMenus = {
           {
             label: 'Serviços',
             href: '/area-administrativa/tabelas/servicos',
-            funcionalidadeId: modules.areaAdministrativa.permissions.servicos.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.servicos.id,
           },
           {
             label: 'Subsistemas de Serviços',
             href: '/area-administrativa/tabelas/subsistemas-servicos',
-            funcionalidadeId: modules.areaAdministrativa.permissions.subsistemaServicos.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.subsistemaServicos.id,
           },
           {
             label: 'Doenças',
@@ -355,27 +378,32 @@ export const roleHeaderMenus = {
           {
             label: 'Margem de Médicos',
             href: '/area-administrativa/tabelas/margem-medicos',
-            funcionalidadeId: modules.areaAdministrativa.permissions.margemMedicos.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.margemMedicos.id,
           },
           {
             label: 'Tipos de Carta',
             href: '/area-administrativa/tabelas/tipos-carta',
-            funcionalidadeId: modules.areaAdministrativa.permissions.tiposCarta.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.tiposCarta.id,
           },
           {
             label: 'Tipos de Consultas',
             href: '/area-administrativa/tabelas/tipos-consultas',
-            funcionalidadeId: modules.areaAdministrativa.permissions.tiposConsulta.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.tiposConsulta.id,
           },
           {
             label: 'Prioridades',
             href: '/area-administrativa/tabelas/prioridades',
-            funcionalidadeId: modules.areaAdministrativa.permissions.prioridades.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.prioridades.id,
           },
           {
             label: 'Motivos de Consulta',
             href: '/area-administrativa/tabelas/motivos-consulta',
-            funcionalidadeId: modules.areaAdministrativa.permissions.motivosConsulta.id,
+            funcionalidadeId:
+              modules.areaAdministrativa.permissions.motivosConsulta.id,
           },
         ],
       },
@@ -401,32 +429,38 @@ export const roleHeaderMenus = {
       {
         label: 'Ficheiros Eletrónicos',
         href: '/area-financeira/faturacao/ficheiros-eletronicos/sad-gnr',
-        funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+        funcionalidadeId:
+          modules.areaFinanceira.permissions.ficheirosEletronicos.id,
         items: [
           {
             label: 'SAD/GNR',
             href: '/area-financeira/faturacao/ficheiros-eletronicos/sad-gnr',
-            funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+            funcionalidadeId:
+              modules.areaFinanceira.permissions.ficheirosEletronicos.id,
           },
           {
             label: 'ADM',
             href: '/area-financeira/faturacao/ficheiros-eletronicos/adm',
-            funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+            funcionalidadeId:
+              modules.areaFinanceira.permissions.ficheirosEletronicos.id,
           },
           {
             label: 'SAD/PSP',
             href: '/area-financeira/faturacao/ficheiros-eletronicos/sad-psp',
-            funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+            funcionalidadeId:
+              modules.areaFinanceira.permissions.ficheirosEletronicos.id,
           },
           {
             label: 'Ficheiro Saft',
             href: '/area-financeira/faturacao/ficheiro-saft',
-            funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+            funcionalidadeId:
+              modules.areaFinanceira.permissions.ficheirosEletronicos.id,
           },
           {
             label: 'Exportar Contabilidade',
             href: '/area-financeira/faturacao/exportar-contabilidade',
-            funcionalidadeId: modules.areaFinanceira.permissions.ficheirosEletronicos.id,
+            funcionalidadeId:
+              modules.areaFinanceira.permissions.ficheirosEletronicos.id,
           },
         ],
       },
@@ -438,22 +472,26 @@ export const roleHeaderMenus = {
           {
             label: 'Fisioterapia',
             href: '/area-financeira/faturacao/credenciais-sns/fisioterapia',
-            funcionalidadeId: modules.areaFinanceira.permissions.credenciaisSns.id,
+            funcionalidadeId:
+              modules.areaFinanceira.permissions.credenciaisSns.id,
           },
           {
             label: 'Especialidades',
             href: '/area-financeira/faturacao/credenciais-sns/especialidades',
-            funcionalidadeId: modules.areaFinanceira.permissions.credenciaisSns.id,
+            funcionalidadeId:
+              modules.areaFinanceira.permissions.credenciaisSns.id,
           },
           {
             label: 'Exames',
             href: '/area-financeira/faturacao/credenciais-sns/exames',
-            funcionalidadeId: modules.areaFinanceira.permissions.credenciaisSns.id,
+            funcionalidadeId:
+              modules.areaFinanceira.permissions.credenciaisSns.id,
           },
           {
             label: 'Ficheiro Eletrónico',
             href: '/area-financeira/faturacao/credenciais-sns/ficheiro-eletronico',
-            funcionalidadeId: modules.areaFinanceira.permissions.credenciaisSns.id,
+            funcionalidadeId:
+              modules.areaFinanceira.permissions.credenciaisSns.id,
           },
         ],
       },
@@ -464,17 +502,17 @@ export const roleHeaderMenus = {
         items: [
           {
             label: 'Comunicação de Faturas',
-            href: '/area-financeira/faturacao/adse/tratamentos',
+            href: '#',
             funcionalidadeId: modules.areaFinanceira.permissions.adse.id,
             items: [
               {
-                label: 'Tratamentos',
-                href: '/area-financeira/faturacao/adse/tratamentos',
+                label: 'Consultas',
+                href: '/area-financeira/faturacao/adse/consultas',
                 funcionalidadeId: modules.areaFinanceira.permissions.adse.id,
               },
               {
-                label: 'Consultas',
-                href: '/area-financeira/faturacao/adse/consultas',
+                label: 'Tratamentos',
+                href: '/area-financeira/faturacao/adse/tratamentos',
                 funcionalidadeId: modules.areaFinanceira.permissions.adse.id,
               },
               {
@@ -588,7 +626,8 @@ export const roleHeaderMenus = {
               {
                 label: 'Código Postal',
                 href: '/area-financeira/faturacao/tabelas/geograficas/codigospostais',
-                funcionalidadeId: modules.areaComum.permissions.codigospostais.id,
+                funcionalidadeId:
+                  modules.areaComum.permissions.codigospostais.id,
                 funcionalidadeFallbackIds: [
                   modules.areaFinanceira.permissions.tabelas.id,
                 ],
@@ -689,7 +728,8 @@ export const roleHeaderMenus = {
               {
                 label: 'Subsistemas de Serviços',
                 href: '/area-financeira/faturacao/tabelas/servicos/subsistemas-servicos',
-                funcionalidadeId: modules.areaComum.permissions.subsistemasServicos.id,
+                funcionalidadeId:
+                  modules.areaComum.permissions.subsistemasServicos.id,
                 funcionalidadeFallbackIds: [
                   modules.areaFinanceira.permissions.tabelas.id,
                 ],
@@ -763,7 +803,8 @@ export const roleHeaderMenus = {
       {
         label: 'Referências Multibanco',
         href: '/area-financeira/faturacao/referencias-multibanco',
-        funcionalidadeId: modules.areaFinanceira.permissions.referenciasMultibanco.id,
+        funcionalidadeId:
+          modules.areaFinanceira.permissions.referenciasMultibanco.id,
       },
     ],
     'processo-clinico': [
@@ -771,7 +812,8 @@ export const roleHeaderMenus = {
         label: 'Atendimento ao Utente',
         href: '/area-clinica/processo-clinico/atendimento',
         icon: 'user',
-        funcionalidadeId: modules.areaClinica.permissions.atendimentoAoUtente.id,
+        funcionalidadeId:
+          modules.areaClinica.permissions.atendimentoAoUtente.id,
         funcionalidadeFallbackIds: [
           modules.areaClinica.permissions.processoClinico.id,
         ],
@@ -806,21 +848,24 @@ export const roleHeaderMenus = {
             href: '/area-clinica/processo-clinico/agenda/consultas-marcadas',
             description: 'Consultas marcadas',
             icon: 'clock',
-            funcionalidadeId: modules.areaClinica.permissions.consultasMarcadas.id,
+            funcionalidadeId:
+              modules.areaClinica.permissions.consultasMarcadas.id,
           },
           {
             label: 'Listagem Consultas Marcadas',
             href: '/area-clinica/processo-clinico/agenda/listagem-consultas-marcadas',
             description: 'Listagem',
             icon: 'list',
-            funcionalidadeId: modules.areaClinica.permissions.listagemConsultasMarcadas.id,
+            funcionalidadeId:
+              modules.areaClinica.permissions.listagemConsultasMarcadas.id,
           },
           {
             label: 'Mapa de Consultas Marcadas',
             href: '/area-clinica/processo-clinico/agenda/mapa-consultas-marcadas',
             description: 'Mapa',
             icon: 'tablerMap',
-            funcionalidadeId: modules.areaClinica.permissions.mapaConsultasMarcadas.id,
+            funcionalidadeId:
+              modules.areaClinica.permissions.mapaConsultasMarcadas.id,
           },
         ],
       },
@@ -838,7 +883,8 @@ export const roleHeaderMenus = {
             href: '/area-clinica/processo-clinico/exames/exames-sem-papel',
             description: 'Exames sem papel',
             icon: 'fileText',
-            funcionalidadeId: modules.areaClinica.permissions.examesSemPapelSubmenu.id,
+            funcionalidadeId:
+              modules.areaClinica.permissions.examesSemPapelSubmenu.id,
           },
         ],
       },
@@ -846,7 +892,8 @@ export const roleHeaderMenus = {
         label: 'Atestados Carta Condução',
         href: '/area-clinica/processo-clinico/atestados',
         icon: 'car',
-        funcionalidadeId: modules.areaClinica.permissions.atestadosCartaConducao.id,
+        funcionalidadeId:
+          modules.areaClinica.permissions.atestadosCartaConducao.id,
         funcionalidadeFallbackIds: [
           modules.areaClinica.permissions.processoClinico.id,
         ],
@@ -863,7 +910,8 @@ export const roleHeaderMenus = {
             href: '/area-clinica/processo-clinico/atestados/listagem-atestados',
             description: 'Listagem',
             icon: 'list',
-            funcionalidadeId: modules.areaClinica.permissions.listagemAtestadosCartaConducao.id,
+            funcionalidadeId:
+              modules.areaClinica.permissions.listagemAtestadosCartaConducao.id,
           },
         ],
       },
@@ -881,21 +929,24 @@ export const roleHeaderMenus = {
             href: '/area-clinica/processo-clinico/historico/consultas-efetuadas',
             description: 'Consultas efetuadas',
             icon: 'history',
-            funcionalidadeId: modules.areaClinica.permissions.consultasEfetuadas.id,
+            funcionalidadeId:
+              modules.areaClinica.permissions.consultasEfetuadas.id,
           },
           {
             label: 'Listagem Consultas Efetuadas',
             href: '/area-clinica/processo-clinico/historico/listagem-consultas-efetuadas',
             description: 'Listagem',
             icon: 'list',
-            funcionalidadeId: modules.areaClinica.permissions.listagemConsultasEfetuadas.id,
+            funcionalidadeId:
+              modules.areaClinica.permissions.listagemConsultasEfetuadas.id,
           },
           {
             label: 'Mapa Consultas Efetuadas',
             href: '/area-clinica/processo-clinico/historico/mapa-consultas-efetuadas',
             description: 'Mapa',
             icon: 'tablerMap',
-            funcionalidadeId: modules.areaClinica.permissions.mapaConsultasEfetuadas.id,
+            funcionalidadeId:
+              modules.areaClinica.permissions.mapaConsultasEfetuadas.id,
           },
         ],
       },
@@ -911,21 +962,24 @@ export const roleHeaderMenus = {
           {
             label: 'Medicamentos e terapêutica',
             href: '/area-clinica/processo-clinico/tabelas',
-            funcionalidadeId: modules.areaClinica.permissions.medicamentoseTerapeuticas.id,
+            funcionalidadeId:
+              modules.areaClinica.permissions.medicamentoseTerapeuticas.id,
             items: [
               {
                 label: 'Medicamentos',
                 href: '/area-clinica/processo-clinico/tabelas/medicamentos',
                 description: 'Medicamentos',
                 icon: 'list',
-                funcionalidadeId: modules.areaClinica.permissions.medicamentos.id,
+                funcionalidadeId:
+                  modules.areaClinica.permissions.medicamentos.id,
               },
               {
                 label: 'Outros Medicamentos',
                 href: '/area-clinica/processo-clinico/tabelas/outros-medicamentos',
                 description: 'Outros medicamentos',
                 icon: 'list',
-                funcionalidadeId: modules.areaClinica.permissions.outrosMedicamentos.id,
+                funcionalidadeId:
+                  modules.areaClinica.permissions.outrosMedicamentos.id,
               },
               {
                 label: 'Alergias',
@@ -939,7 +993,8 @@ export const roleHeaderMenus = {
           {
             label: 'Profissionais e clínica',
             href: '/area-clinica/processo-clinico/tabelas',
-            funcionalidadeId: modules.areaClinica.permissions.profissionaiseHistorialClinico.id,
+            funcionalidadeId:
+              modules.areaClinica.permissions.profissionaiseHistorialClinico.id,
             items: [
               {
                 label: 'Médicos',
@@ -960,7 +1015,8 @@ export const roleHeaderMenus = {
                 href: '/area-clinica/processo-clinico/tabelas/historia-clinica',
                 description: 'História clínica',
                 icon: 'history',
-                funcionalidadeId: modules.areaClinica.permissions.historiaClinica.id,
+                funcionalidadeId:
+                  modules.areaClinica.permissions.historiaClinica.id,
               },
             ],
           },
@@ -974,14 +1030,16 @@ export const roleHeaderMenus = {
                 href: '/area-clinica/processo-clinico/tabelas/mapas-body-chart',
                 description: 'Mapas body chart',
                 icon: 'tablerMap',
-                funcionalidadeId: modules.areaClinica.permissions.mapasBodyChart.id,
+                funcionalidadeId:
+                  modules.areaClinica.permissions.mapasBodyChart.id,
               },
               {
                 label: 'Estados Dentários',
                 href: '/area-clinica/processo-clinico/tabelas/estados-dentarios',
                 description: 'Estados dentários',
                 icon: 'list',
-                funcionalidadeId: modules.areaClinica.permissions.estadosDentarios.id,
+                funcionalidadeId:
+                  modules.areaClinica.permissions.estadosDentarios.id,
               },
               {
                 label: 'Feriados',
@@ -1001,19 +1059,55 @@ export const roleHeaderMenus = {
         href: '/area-comum/tabelas/entidades',
         funcionalidadeId: modules.areaComum.permissions.entidades.id,
         items: [
-          { label: 'Utentes', href: '/area-comum/tabelas/entidades/utentes', funcionalidadeId: modules.areaComum.permissions.utentes.id },
-          { label: 'Médicos', href: '/area-comum/tabelas/entidades/medicos', funcionalidadeId: modules.areaComum.permissions.medicos.id },
-          { label: 'Médicos Externos', href: '/area-comum/tabelas/entidades/medicos-externos', funcionalidadeId: modules.areaComum.permissions.medicosExternos.id },
-          { label: 'Organismos', href: '/area-comum/tabelas/entidades/organismos', funcionalidadeId: modules.areaComum.permissions.organismos.id },
-          { label: 'Centros de Saúde', href: '/area-comum/tabelas/entidades/centros-saude', funcionalidadeId: modules.areaComum.permissions.centrosSaude.id },
-          { label: 'Funcionarios', href: '/area-comum/tabelas/entidades/funcionarios', funcionalidadeId: modules.areaComum.permissions.funcionarios.id },
-          { label: 'Fornecedores', href: '/area-comum/tabelas/entidades/fornecedores', funcionalidadeId: modules.areaComum.permissions.fornecedores.id },
-          { label: 'Empresas', href: '/area-comum/tabelas/entidades/empresas', funcionalidadeId: modules.areaComum.permissions.empresas.id },
-          { label: 'Técnicos', href: '/area-comum/tabelas/entidades/tecnicos', funcionalidadeId: modules.areaComum.permissions.tecnicos.id },
+          {
+            label: 'Utentes',
+            href: '/area-comum/tabelas/entidades/utentes',
+            funcionalidadeId: modules.areaComum.permissions.utentes.id,
+          },
+          {
+            label: 'Médicos',
+            href: '/area-comum/tabelas/entidades/medicos',
+            funcionalidadeId: modules.areaComum.permissions.medicos.id,
+          },
+          {
+            label: 'Médicos Externos',
+            href: '/area-comum/tabelas/entidades/medicos-externos',
+            funcionalidadeId: modules.areaComum.permissions.medicosExternos.id,
+          },
+          {
+            label: 'Organismos',
+            href: '/area-comum/tabelas/entidades/organismos',
+            funcionalidadeId: modules.areaComum.permissions.organismos.id,
+          },
+          {
+            label: 'Centros de Saúde',
+            href: '/area-comum/tabelas/entidades/centros-saude',
+            funcionalidadeId: modules.areaComum.permissions.centrosSaude.id,
+          },
+          {
+            label: 'Funcionarios',
+            href: '/area-comum/tabelas/entidades/funcionarios',
+            funcionalidadeId: modules.areaComum.permissions.funcionarios.id,
+          },
+          {
+            label: 'Fornecedores',
+            href: '/area-comum/tabelas/entidades/fornecedores',
+            funcionalidadeId: modules.areaComum.permissions.fornecedores.id,
+          },
+          {
+            label: 'Empresas',
+            href: '/area-comum/tabelas/entidades/empresas',
+            funcionalidadeId: modules.areaComum.permissions.empresas.id,
+          },
+          {
+            label: 'Técnicos',
+            href: '/area-comum/tabelas/entidades/tecnicos',
+            funcionalidadeId: modules.areaComum.permissions.tecnicos.id,
+          },
         ],
       },
-      { 
-        label: 'Tabelas', 
+      {
+        label: 'Tabelas',
         href: '/area-comum/tabelas',
         funcionalidadeId: modules.areaComum.permissions.tabelas.id,
         items: [
@@ -1022,54 +1116,161 @@ export const roleHeaderMenus = {
             href: '/area-comum/tabelas/tabelas/geograficas',
             funcionalidadeId: modules.areaComum.permissions.geograficas.id,
             items: [
-              { label: 'Países', href: '/area-comum/tabelas/tabelas/geograficas/paises', funcionalidadeId: modules.areaComum.permissions.paises.id },
-              { label: 'Distritos', href: '/area-comum/tabelas/tabelas/geograficas/distritos', funcionalidadeId: modules.areaComum.permissions.distritos.id },
-              { label: 'Concelhos', href: '/area-comum/tabelas/tabelas/geograficas/concelhos', funcionalidadeId: modules.areaComum.permissions.concelhos.id },
-              { label: 'Freguesias', href: '/area-comum/tabelas/tabelas/geograficas/freguesias', funcionalidadeId: modules.areaComum.permissions.freguesias.id },
-              { label: 'Códigos Postais', href: '/area-comum/tabelas/tabelas/geograficas/codigospostais', funcionalidadeId: modules.areaComum.permissions.codigospostais.id },
-              { label: 'Ruas', href: '/area-comum/tabelas/tabelas/geograficas/ruas', funcionalidadeId: modules.areaComum.permissions.ruas.id },
+              {
+                label: 'Países',
+                href: '/area-comum/tabelas/tabelas/geograficas/paises',
+                funcionalidadeId: modules.areaComum.permissions.paises.id,
+              },
+              {
+                label: 'Distritos',
+                href: '/area-comum/tabelas/tabelas/geograficas/distritos',
+                funcionalidadeId: modules.areaComum.permissions.distritos.id,
+              },
+              {
+                label: 'Concelhos',
+                href: '/area-comum/tabelas/tabelas/geograficas/concelhos',
+                funcionalidadeId: modules.areaComum.permissions.concelhos.id,
+              },
+              {
+                label: 'Freguesias',
+                href: '/area-comum/tabelas/tabelas/geograficas/freguesias',
+                funcionalidadeId: modules.areaComum.permissions.freguesias.id,
+              },
+              {
+                label: 'Códigos Postais',
+                href: '/area-comum/tabelas/tabelas/geograficas/codigospostais',
+                funcionalidadeId:
+                  modules.areaComum.permissions.codigospostais.id,
+              },
+              {
+                label: 'Ruas',
+                href: '/area-comum/tabelas/tabelas/geograficas/ruas',
+                funcionalidadeId: modules.areaComum.permissions.ruas.id,
+              },
             ],
           },
-         
-          { label: 'Tipos de Entidades Financeiras', href: '/area-comum/tabelas/tabelas/tipos-entidades', funcionalidadeId: modules.areaComum.permissions.tiposEntidadesFinanceiras.id },
-          { label: 'Entidades Financeiras Responsaveis', href: '/area-comum/tabelas/tabelas/entidades-financeiras-responsaveis', funcionalidadeId: modules.areaComum.permissions.entidadesFinanceirasResponsaveis.id },
-          { label: 'Bancos', href: '/area-comum/tabelas/tabelas/bancos', funcionalidadeId: modules.areaComum.permissions.bancos.id },
+
+          {
+            label: 'Tipos de Entidades Financeiras',
+            href: '/area-comum/tabelas/tabelas/tipos-entidades',
+            funcionalidadeId:
+              modules.areaComum.permissions.tiposEntidadesFinanceiras.id,
+          },
+          {
+            label: 'Entidades Financeiras Responsaveis',
+            href: '/area-comum/tabelas/tabelas/entidades-financeiras-responsaveis',
+            funcionalidadeId:
+              modules.areaComum.permissions.entidadesFinanceirasResponsaveis.id,
+          },
+          {
+            label: 'Bancos',
+            href: '/area-comum/tabelas/tabelas/bancos',
+            funcionalidadeId: modules.areaComum.permissions.bancos.id,
+          },
           {
             label: 'Contas Bancárias',
             href: '/area-comum/tabelas/tabelas/contas-bancarias',
             funcionalidadeId: modules.areaComum.permissions.bancos.id,
           },
-          { label: 'Categorias das Especialidades', href : '/area-comum/tabelas/tabelas/categorias-das-especialidades', funcionalidadeId: modules.areaComum.permissions.categoriasEspecialidades.id },
-          { label: 'Especialidades', href: '/area-comum/tabelas/tabelas/especialidades', funcionalidadeId: modules.areaComum.permissions.especialidades.id },
-          { label: 'Estados Civis', href: '/area-comum/tabelas/tabelas/estados-civis', funcionalidadeId: modules.areaComum.permissions.estadosCivis.id },
-          { label: 'Grupos Sanguineos', href: '/area-comum/tabelas/tabelas/grupos-sanguineos', funcionalidadeId: modules.areaComum.permissions.gruposSanguineos.id },
-          { label: 'Habilitações', href: '/area-comum/tabelas/tabelas/habilitacoes', funcionalidadeId: modules.areaComum.permissions.habilitacoes.id },
-          { label: 'Moedas', href: '/area-comum/tabelas/tabelas/moedas', funcionalidadeId: modules.areaComum.permissions.moedas.id },
-          { label: 'Profissões', href: '/area-comum/tabelas/tabelas/profissoes', funcionalidadeId: modules.areaComum.permissions.profissoes.id },
-          { label: 'Sexos', href: '/area-comum/tabelas/tabelas/sexos', funcionalidadeId: modules.areaComum.permissions.sexos.id },
-          { label: 'Graus Parentesco', href: '/area-comum/tabelas/tabelas/graus-parentesco', funcionalidadeId: modules.areaComum.permissions.grausParentesco.id },
-          { label: 'Taxas IVA', href: '/area-comum/tabelas/tabelas/taxas-iva', funcionalidadeId: modules.areaComum.permissions.taxasIva.id },
-          { label: 'Motivos de Isenção', href: '/area-comum/tabelas/tabelas/motivos-isencao', funcionalidadeId: modules.areaComum.permissions.taxasIva.id },
-          { label: 'Motivos de Retenção', href: '/area-comum/tabelas/tabelas/motivos-retencao', funcionalidadeId: modules.areaComum.permissions.taxasIva.id },
-          { label: 'Proveniências Utentes', href: '/area-comum/tabelas/tabelas/proveniencias-utentes', funcionalidadeId: modules.areaComum.permissions.provenienciasUtentes.id },    
-        ]
-      
+          {
+            label: 'Categorias das Especialidades',
+            href: '/area-comum/tabelas/tabelas/categorias-das-especialidades',
+            funcionalidadeId:
+              modules.areaComum.permissions.categoriasEspecialidades.id,
+          },
+          {
+            label: 'Especialidades',
+            href: '/area-comum/tabelas/tabelas/especialidades',
+            funcionalidadeId: modules.areaComum.permissions.especialidades.id,
+          },
+          {
+            label: 'Estados Civis',
+            href: '/area-comum/tabelas/tabelas/estados-civis',
+            funcionalidadeId: modules.areaComum.permissions.estadosCivis.id,
+          },
+          {
+            label: 'Grupos Sanguineos',
+            href: '/area-comum/tabelas/tabelas/grupos-sanguineos',
+            funcionalidadeId: modules.areaComum.permissions.gruposSanguineos.id,
+          },
+          {
+            label: 'Habilitações',
+            href: '/area-comum/tabelas/tabelas/habilitacoes',
+            funcionalidadeId: modules.areaComum.permissions.habilitacoes.id,
+          },
+          {
+            label: 'Moedas',
+            href: '/area-comum/tabelas/tabelas/moedas',
+            funcionalidadeId: modules.areaComum.permissions.moedas.id,
+          },
+          {
+            label: 'Profissões',
+            href: '/area-comum/tabelas/tabelas/profissoes',
+            funcionalidadeId: modules.areaComum.permissions.profissoes.id,
+          },
+          {
+            label: 'Sexos',
+            href: '/area-comum/tabelas/tabelas/sexos',
+            funcionalidadeId: modules.areaComum.permissions.sexos.id,
+          },
+          {
+            label: 'Graus Parentesco',
+            href: '/area-comum/tabelas/tabelas/graus-parentesco',
+            funcionalidadeId: modules.areaComum.permissions.grausParentesco.id,
+          },
+          {
+            label: 'Taxas IVA',
+            href: '/area-comum/tabelas/tabelas/taxas-iva',
+            funcionalidadeId: modules.areaComum.permissions.taxasIva.id,
+          },
+          {
+            label: 'Motivos de Isenção',
+            href: '/area-comum/tabelas/tabelas/motivos-isencao',
+            funcionalidadeId: modules.areaComum.permissions.taxasIva.id,
+          },
+          {
+            label: 'Motivos de Retenção',
+            href: '/area-comum/tabelas/tabelas/motivos-retencao',
+            funcionalidadeId: modules.areaComum.permissions.taxasIva.id,
+          },
+          {
+            label: 'Proveniências Utentes',
+            href: '/area-comum/tabelas/tabelas/proveniencias-utentes',
+            funcionalidadeId:
+              modules.areaComum.permissions.provenienciasUtentes.id,
+          },
+        ],
       },
       {
         label: 'Stocks',
         href: '/area-comum/tabelas/stocks',
         funcionalidadeId: modules.areaComum.permissions.stocks.id,
         items: [
-          { label: 'Vias de Administração', href: '/area-comum/tabelas/stocks/vias-administracao', funcionalidadeId: modules.areaComum.permissions.viasAdministracao.id },
-          { label: 'Grupo de Vias de Administração', href: '/area-comum/tabelas/stocks/grupo-vias-administracao', funcionalidadeId: modules.areaComum.permissions.grupoViasAdministracao.id },
+          {
+            label: 'Vias de Administração',
+            href: '/area-comum/tabelas/stocks/vias-administracao',
+            funcionalidadeId:
+              modules.areaComum.permissions.viasAdministracao.id,
+          },
+          {
+            label: 'Grupo de Vias de Administração',
+            href: '/area-comum/tabelas/stocks/grupo-vias-administracao',
+            funcionalidadeId:
+              modules.areaComum.permissions.grupoViasAdministracao.id,
+          },
         ],
       },
-      { 
-        label: 'Consultas', 
+      {
+        label: 'Consultas',
         href: '/area-comum/tabelas/consultas',
         funcionalidadeId: modules.areaComum.permissions.consultas.id,
         items: [
-          { label: 'Margem de Médicos', href: '/area-comum/tabelas/consultas/margem-medicos', icon: 'user', funcionalidadeId: modules.areaComum.permissions.margemMedicos.id },
+          {
+            label: 'Margem de Médicos',
+            href: '/area-comum/tabelas/consultas/margem-medicos',
+            icon: 'user',
+            funcionalidadeId: modules.areaComum.permissions.margemMedicos.id,
+          },
           {
             label: 'Serviços',
             href: '/area-comum/tabelas/consultas/servicos/servicos',
@@ -1082,14 +1283,16 @@ export const roleHeaderMenus = {
                 href: '/area-comum/tabelas/consultas/servicos/servicos',
                 description: 'Tabela de serviços',
                 icon: 'list',
-                funcionalidadeId: modules.areaComum.permissions.tabelaServicos.id,
+                funcionalidadeId:
+                  modules.areaComum.permissions.tabelaServicos.id,
               },
               {
                 label: 'Subsistemas de Serviços',
                 href: '/area-comum/tabelas/consultas/servicos/subsistemas-servicos',
                 description: 'Tabela de subsistemas de serviços',
                 icon: 'list',
-                funcionalidadeId: modules.areaComum.permissions.subsistemasServicos.id,
+                funcionalidadeId:
+                  modules.areaComum.permissions.subsistemasServicos.id,
               },
               {
                 label: 'Tipos de Serviço',
@@ -1100,11 +1303,36 @@ export const roleHeaderMenus = {
               },
             ],
           },
-          { label: 'Alergias', href: '/area-comum/tabelas/consultas/alergias', icon: 'warning', funcionalidadeId: modules.areaComum.permissions.alergias.id },
-          { label: 'Graus de Alergia', href: '/area-comum/tabelas/consultas/graus-alergia', icon: 'warning', funcionalidadeId: modules.areaComum.permissions.grausAlergia.id },
-          { label: 'Doenças', href: '/area-comum/tabelas/consultas/doencas', icon: 'activity', funcionalidadeId: modules.areaComum.permissions.doencas.id },
-          { label: 'Tipos de Consultas', href: '/area-comum/tabelas/consultas/tipos-consultas', icon: 'list', funcionalidadeId: modules.areaComum.permissions.tiposConsultas.id },
-          { label: 'Estado de Sinistro', href: '/area-comum/tabelas/consultas/estado-sinistro', icon: 'list', funcionalidadeId: modules.areaComum.permissions.estadoSinistro.id },
+          {
+            label: 'Alergias',
+            href: '/area-comum/tabelas/consultas/alergias',
+            icon: 'warning',
+            funcionalidadeId: modules.areaComum.permissions.alergias.id,
+          },
+          {
+            label: 'Graus de Alergia',
+            href: '/area-comum/tabelas/consultas/graus-alergia',
+            icon: 'warning',
+            funcionalidadeId: modules.areaComum.permissions.grausAlergia.id,
+          },
+          {
+            label: 'Doenças',
+            href: '/area-comum/tabelas/consultas/doencas',
+            icon: 'activity',
+            funcionalidadeId: modules.areaComum.permissions.doencas.id,
+          },
+          {
+            label: 'Tipos de Consultas',
+            href: '/area-comum/tabelas/consultas/tipos-consultas',
+            icon: 'list',
+            funcionalidadeId: modules.areaComum.permissions.tiposConsultas.id,
+          },
+          {
+            label: 'Estado de Sinistro',
+            href: '/area-comum/tabelas/consultas/estado-sinistro',
+            icon: 'list',
+            funcionalidadeId: modules.areaComum.permissions.estadoSinistro.id,
+          },
         ],
       },
       {
@@ -1112,25 +1340,87 @@ export const roleHeaderMenus = {
         href: '/area-comum/tabelas/tratamentos',
         funcionalidadeId: modules.areaComum.permissions.tratamentos.id,
         items: [
-          { label: 'Locais de Tratamentos', href: '/area-comum/tabelas/tratamentos/locais-tratamento', funcionalidadeId: modules.areaComum.permissions.locaisTratamento.id },
-          { label: 'Estados Lista Espera', href: '/area-comum/tabelas/tratamentos/estados-lista-espera', funcionalidadeId: modules.areaComum.permissions.estadosListaEspera.id },
-          { label: 'Prioridades', href: '/area-comum/tabelas/tratamentos/prioridades' ,funcionalidadeId: modules.areaComum.permissions.prioridades.id},
-          { label: 'Patologias', href: '/area-comum/tabelas/tratamentos/patologias' ,funcionalidadeId: modules.areaComum.permissions.patologias.id},
-          { label: 'Regiões do Corpo', href: '/area-comum/tabelas/tratamentos/regioes-corpo' ,funcionalidadeId: modules.areaComum.permissions.regioesCorpo.id},
-          { label: 'Goniometrias', href: '/area-comum/tabelas/tratamentos/goniometrias' ,funcionalidadeId: modules.areaComum.permissions.goniometrias.id},
-          { label: 'Tipos de Dor', href: '/area-comum/tabelas/tratamentos/tipos-de-dor' ,funcionalidadeId: modules.areaComum.permissions.tiposDeDor.id},
-          { label: 'Fraquezas Musculares', href: '/area-comum/tabelas/tratamentos/fraquezas-musculares' ,funcionalidadeId: modules.areaComum.permissions.fraquezasMusculares.id},
-          { label: 'Motivos de Alta', href: '/area-comum/tabelas/tratamentos/motivos-alta', funcionalidadeId: modules.areaComum.permissions.motivosAlta.id },
-          { label: 'Motivos de Desmarcação', href: '/area-comum/tabelas/tratamentos/motivos-desmarcacao', funcionalidadeId: modules.areaComum.permissions.motivosDesmarcacao.id },
+          {
+            label: 'Locais de Tratamentos',
+            href: '/area-comum/tabelas/tratamentos/locais-tratamento',
+            funcionalidadeId: modules.areaComum.permissions.locaisTratamento.id,
+          },
+          {
+            label: 'Estados Lista Espera',
+            href: '/area-comum/tabelas/tratamentos/estados-lista-espera',
+            funcionalidadeId:
+              modules.areaComum.permissions.estadosListaEspera.id,
+          },
+          {
+            label: 'Prioridades',
+            href: '/area-comum/tabelas/tratamentos/prioridades',
+            funcionalidadeId: modules.areaComum.permissions.prioridades.id,
+          },
+          {
+            label: 'Patologias',
+            href: '/area-comum/tabelas/tratamentos/patologias',
+            funcionalidadeId: modules.areaComum.permissions.patologias.id,
+          },
+          {
+            label: 'Regiões do Corpo',
+            href: '/area-comum/tabelas/tratamentos/regioes-corpo',
+            funcionalidadeId: modules.areaComum.permissions.regioesCorpo.id,
+          },
+          {
+            label: 'Goniometrias',
+            href: '/area-comum/tabelas/tratamentos/goniometrias',
+            funcionalidadeId: modules.areaComum.permissions.goniometrias.id,
+          },
+          {
+            label: 'Tipos de Dor',
+            href: '/area-comum/tabelas/tratamentos/tipos-de-dor',
+            funcionalidadeId: modules.areaComum.permissions.tiposDeDor.id,
+          },
+          {
+            label: 'Fraquezas Musculares',
+            href: '/area-comum/tabelas/tratamentos/fraquezas-musculares',
+            funcionalidadeId:
+              modules.areaComum.permissions.fraquezasMusculares.id,
+          },
+          {
+            label: 'Motivos de Alta',
+            href: '/area-comum/tabelas/tratamentos/motivos-alta',
+            funcionalidadeId: modules.areaComum.permissions.motivosAlta.id,
+          },
+          {
+            label: 'Motivos de Desmarcação',
+            href: '/area-comum/tabelas/tratamentos/motivos-desmarcacao',
+            funcionalidadeId:
+              modules.areaComum.permissions.motivosDesmarcacao.id,
+          },
           {
             label: 'Equipamentos',
             href: '/area-comum/tabelas/tratamentos',
             funcionalidadeId: modules.areaComum.permissions.equipamentos.id,
             items: [
-              { label: 'Aparelhos', href: '/area-comum/tabelas/tratamentos/aparelhos', funcionalidadeId: modules.areaComum.permissions.aparelhos.id },
-              { label: 'Tipo de Aparelhos', href: '/area-comum/tabelas/tratamentos/tipos-aparelho', funcionalidadeId: modules.areaComum.permissions.tiposAparelho.id },
-              { label: 'Marcas', href: '/area-comum/tabelas/tratamentos/marcas-aparelho', funcionalidadeId: modules.areaComum.permissions.marcasAparelho.id },
-              { label: 'Modelos', href: '/area-comum/tabelas/tratamentos/modelos-aparelho', funcionalidadeId: modules.areaComum.permissions.modelosAparelho.id },
+              {
+                label: 'Aparelhos',
+                href: '/area-comum/tabelas/tratamentos/aparelhos',
+                funcionalidadeId: modules.areaComum.permissions.aparelhos.id,
+              },
+              {
+                label: 'Tipo de Aparelhos',
+                href: '/area-comum/tabelas/tratamentos/tipos-aparelho',
+                funcionalidadeId:
+                  modules.areaComum.permissions.tiposAparelho.id,
+              },
+              {
+                label: 'Marcas',
+                href: '/area-comum/tabelas/tratamentos/marcas-aparelho',
+                funcionalidadeId:
+                  modules.areaComum.permissions.marcasAparelho.id,
+              },
+              {
+                label: 'Modelos',
+                href: '/area-comum/tabelas/tratamentos/modelos-aparelho',
+                funcionalidadeId:
+                  modules.areaComum.permissions.modelosAparelho.id,
+              },
             ],
           },
         ],
@@ -1140,10 +1430,27 @@ export const roleHeaderMenus = {
         href: '/area-comum/tabelas/exames',
         funcionalidadeId: modules.areaComum.permissions.exames.id,
         items: [
-          { label: 'Categorias de Procedimento', href: '/area-comum/tabelas/exames/categorias-procedimento', funcionalidadeId: modules.areaComum.permissions.categoriasProcedimento.id },
-          { label: 'Análises', href: '/area-comum/tabelas/exames/analises', funcionalidadeId: modules.areaComum.permissions.analises.id },
-          { label: 'Tipos de Exame', href: '/area-comum/tabelas/exames/tipos-exame', funcionalidadeId: modules.areaComum.permissions.tiposExame.id },
-          { label: 'Acordos', href: '/area-comum/tabelas/exames/acordos', funcionalidadeId: modules.areaComum.permissions.acordos.id },
+          {
+            label: 'Categorias de Procedimento',
+            href: '/area-comum/tabelas/exames/categorias-procedimento',
+            funcionalidadeId:
+              modules.areaComum.permissions.categoriasProcedimento.id,
+          },
+          {
+            label: 'Análises',
+            href: '/area-comum/tabelas/exames/analises',
+            funcionalidadeId: modules.areaComum.permissions.analises.id,
+          },
+          {
+            label: 'Tipos de Exame',
+            href: '/area-comum/tabelas/exames/tipos-exame',
+            funcionalidadeId: modules.areaComum.permissions.tiposExame.id,
+          },
+          {
+            label: 'Acordos',
+            href: '/area-comum/tabelas/exames/acordos',
+            funcionalidadeId: modules.areaComum.permissions.acordos.id,
+          },
         ],
       },
       {
@@ -1151,7 +1458,6 @@ export const roleHeaderMenus = {
         href: '/area-comum/tabelas/configuracao/clinicas',
         funcionalidadeId: modules.areaComum.permissions.configuracoes.id,
         items: [
-          
           {
             label: 'Configuração da Clínica',
             href: '/area-comum/tabelas/configuracao/clinicas',
@@ -1163,27 +1469,28 @@ export const roleHeaderMenus = {
             label: 'Configuração de SMS',
             href: '/area-comum/tabelas/configuracao/sms',
             description: 'Configurar fornecedor SMS (Arpoone)',
-            funcionalidadeId:
-              modules.areaComum.permissions.configuracoesSms.id,
+            funcionalidadeId: modules.areaComum.permissions.configuracoesSms.id,
           },
           {
             label: 'Configuração de Voz',
             href: '/area-comum/tabelas/configuracao/voz',
-            description: 'Configurar STT/TTS, idioma, voz e parâmetros de execução',
-            funcionalidadeId:
-              modules.areaComum.permissions.configuracoesVoz.id,
+            description:
+              'Configurar STT/TTS, idioma, voz e parâmetros de execução',
+            funcionalidadeId: modules.areaComum.permissions.configuracoesVoz.id,
           },
           {
             label: 'Configuração de Teleconsulta',
             href: '/area-comum/tabelas/configuracao/teleconsulta',
-            description: 'Configurar provider Jitsi, URL base, janela de entrada e parâmetros JWT',
+            description:
+              'Configurar provider Jitsi, URL base, janela de entrada e parâmetros JWT',
             funcionalidadeId:
               modules.areaComum.permissions.configuracoesTeleconsulta.id,
           },
           {
             label: 'Configuração Atestados Carta Condução',
             href: '/area-comum/tabelas/configuracao/carta-conducao',
-            description: 'Configurar URL online/offline, credenciais e autoridade de saúde pública',
+            description:
+              'Configurar URL online/offline, credenciais e autoridade de saúde pública',
             funcionalidadeId:
               modules.areaComum.permissions.configuracoesCartaConducao.id,
           },
@@ -1197,14 +1504,16 @@ export const roleHeaderMenus = {
           {
             label: 'Configuração WebServices',
             href: '/area-comum/tabelas/configuracao/webservices',
-            description: 'Configurar endpoints e credenciais SPMS (materializadas e desmaterializadas)',
+            description:
+              'Configurar endpoints e credenciais SPMS (materializadas e desmaterializadas)',
             funcionalidadeId:
               modules.areaComum.permissions.configuracoesWebservices.id,
           },
           {
             label: 'Configuração Exames Sem Papel',
             href: '/area-comum/tabelas/configuracao/exames-sem-papel',
-            description: 'Configurar endpoints e credenciais para integração de Exames Sem Papel',
+            description:
+              'Configurar endpoints e credenciais para integração de Exames Sem Papel',
             funcionalidadeId:
               modules.areaComum.permissions.configuracoesExamesSemPapel.id,
           },
@@ -1218,8 +1527,7 @@ export const roleHeaderMenus = {
               {
                 label: 'Separadores',
                 href: '/area-comum/tabelas/configuracao/separadores',
-                funcionalidadeId:
-                  modules.areaComum.permissions.separadores.id,
+                funcionalidadeId: modules.areaComum.permissions.separadores.id,
               },
               {
                 label: 'Separadores Personalizados',
@@ -1250,7 +1558,8 @@ export const roleHeaderMenus = {
           {
             label: 'Configuração Referências MB',
             href: '/area-comum/tabelas/configuracao/referencias-mb',
-            description: 'Configurar integração IfThenPay e callback de liquidação',
+            description:
+              'Configurar integração IfThenPay e callback de liquidação',
             funcionalidadeId: modules.areaComum.permissions.referenciasMb.id,
           },
         ],
@@ -1270,7 +1579,8 @@ export const roleHeaderMenus = {
             label: 'Notificações enviadas',
             href: '/area-comum/tabelas/notificacoes/enviadas',
             description: 'NotificacoesEnviadasLst.aspx',
-            funcionalidadeId: modules.areaComum.permissions.notificacoesEnviadas.id,
+            funcionalidadeId:
+              modules.areaComum.permissions.notificacoesEnviadas.id,
           },
           {
             label: 'Tipo de notificações',
@@ -1282,7 +1592,8 @@ export const roleHeaderMenus = {
             label: 'Notificações de atualização',
             href: '/area-comum/tabelas/notificacoes/atualizacoes',
             description: 'NotificacoesAtualizacoesLst.aspx',
-            funcionalidadeId: modules.areaComum.permissions.notificacoesAtualizacao.id,
+            funcionalidadeId:
+              modules.areaComum.permissions.notificacoesAtualizacao.id,
           },
         ],
       },
@@ -1301,33 +1612,37 @@ export const roleHeaderMenus = {
             href: '/area-comum/utilitarios/replicar-patologias',
             description: 'Replicar patologias entre organismos',
             icon: 'activity',
-            funcionalidadeId: modules.areaComum.permissions.utilitariosLinhaMenu.id,
+            funcionalidadeId:
+              modules.areaComum.permissions.utilitariosLinhaMenu.id,
           },
           {
             label: 'Replicar Subsistemas',
             href: '/area-comum/utilitarios/replicar-subsistemas',
             description: 'Replicar subsistemas entre organismos',
             icon: 'activity',
-            funcionalidadeId: modules.areaComum.permissions.utilitariosLinhaMenu.id,
+            funcionalidadeId:
+              modules.areaComum.permissions.utilitariosLinhaMenu.id,
           },
           {
             label: 'Atualizar Subsistemas Por Entidade',
             href: '/area-comum/utilitarios/atualizar-subsistemas-entidade',
-            description: 'Atualizar subsistemas no destino sem substituir os existentes',
+            description:
+              'Atualizar subsistemas no destino sem substituir os existentes',
             icon: 'activity',
-            funcionalidadeId: modules.areaComum.permissions.utilitariosLinhaMenu.id,
+            funcionalidadeId:
+              modules.areaComum.permissions.utilitariosLinhaMenu.id,
           },
           {
             label: 'Replicar Margem/Médicos Consultas',
             href: '/area-comum/utilitarios/replicar-margem-medicos',
             description: 'Replicar margens de serviços entre médicos',
             icon: 'activity',
-            funcionalidadeId: modules.areaComum.permissions.utilitariosLinhaMenu.id,
+            funcionalidadeId:
+              modules.areaComum.permissions.utilitariosLinhaMenu.id,
           },
         ],
       },
     ],
-    
   },
   guest: {},
 } as const
