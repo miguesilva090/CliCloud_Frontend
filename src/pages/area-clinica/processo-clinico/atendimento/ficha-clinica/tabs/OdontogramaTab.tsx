@@ -49,8 +49,15 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
   const fichaClinicaPermissionId = modules.areaClinica.permissions.fichaClinica.id
   const { canView, canAdd, canChange, canDelete } =
     useAreaComumEntityListPermissions(fichaClinicaPermissionId)
-  const [searchParams, setSearchParams] = useSearchParams()
-  const consultaId = searchParams.get('consultaId') ?? null
+  const [searchParams] = useSearchParams()
+  const consultaIdFromUrl = searchParams.get('consultaId') ?? null
+  const [activeConsultaId, setActiveConsultaId] = useState<string | null>(consultaIdFromUrl)
+
+  useEffect(() => {
+    setActiveConsultaId(consultaIdFromUrl)
+  }, [utenteId, consultaIdFromUrl])
+
+  const consultaId = activeConsultaId
   const { data: linhas, isLoading } = useOdontogramaByUtenteConsulta(utenteId, consultaId)
   const { data: estados } = useEstadosDentarios()
   const { data: tratamentos } = useTiposTratamentoDentario()
@@ -930,9 +937,7 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
                     const nextIndex =
                       selectedConsultaIndex > 0 ? selectedConsultaIndex - 1 : consultas.length - 1
                     const nextConsulta = consultas[nextIndex]
-                    const next = new URLSearchParams(searchParams)
-                    next.set('consultaId', nextConsulta.id)
-                    setSearchParams(next, { replace: true })
+                    setActiveConsultaId(nextConsulta.id)
                   }}
                 >
                   {'<'}
@@ -957,9 +962,7 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
                         ? selectedConsultaIndex + 1
                         : 0
                     const nextConsulta = consultas[nextIndex]
-                    const next = new URLSearchParams(searchParams)
-                    next.set('consultaId', nextConsulta.id)
-                    setSearchParams(next, { replace: true })
+                    setActiveConsultaId(nextConsulta.id)
                   }}
                 >
                   {'>'}

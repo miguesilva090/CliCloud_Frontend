@@ -399,13 +399,6 @@ export function ComunicacaoAdseModuloPage({ modulo }: Props) {
                   <Undo2 className='mr-1 h-4 w-4' /> Libertar
                 </Button>
               )}
-              <Button
-                size='sm'
-                variant='outline'
-                onClick={() => executarOperacao(4)}
-              >
-                <FileText className='mr-1 h-4 w-4' /> Substituir PDF
-              </Button>
               {isTratamentos && (
                 <Button
                   size='sm'

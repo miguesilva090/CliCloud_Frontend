@@ -506,7 +506,7 @@ export function ServicoViewCreateModal({
               disabled={isView}
               value={values.duracao}
               maxLength={50}
-              placeholder='Duração (texto livre)...'
+              placeholder='Duração'
               onChange={(e) =>
                 setValues((prev) => ({ ...prev, duracao: e.target.value }))
               }

@@ -56,4 +56,3 @@ export class HistoriaClinicaClient extends BaseApiClient {
     return this.httpClient.deleteRequest<{ data?: string }>(state.URL, `${BASE}/${id}`)
   }
 }
-

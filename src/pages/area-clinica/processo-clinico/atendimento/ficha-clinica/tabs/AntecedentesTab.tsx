@@ -966,51 +966,49 @@ export function AntecedentesTab({ utenteId = '' }: AntecedentesTabProps) {
               <h4 className='mb-4 text-sm font-semibold text-teal-800 dark:text-teal-100'>
                 Hábitos Alimentares
               </h4>
-              <div className='grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1.4fr)]'>
-                {/* Coluna esquerda - Alimentares */}
-                <div className='space-y-3'>
+              <div className='grid gap-4 lg:grid-cols-3 lg:items-start'>
+                {/* Coluna 1 — Hábitos alimentares (legado: lista vertical) */}
+                <div className='space-y-4'>
                   <div className='space-y-2'>
-                    <div className='flex items-center gap-2'>
-                      <Checkbox
-                        name='consumoDeFrutas'
-                        checked={consumoDeFrutasChecked}
-                        onCheckedChange={(c) =>
-                          setConsumoDeFrutasChecked(c === true)
-                        }
-                      />
-                      <span className='text-sm'>
-                        Consumo diário de fruta ou sumos de fruta
-                      </span>
-                    </div>
-                    <div className='flex flex-wrap items-center gap-4'>
-                      <div className='flex items-center gap-2'>
-                        <Checkbox
-                          name='consumoAgua'
-                          checked={consumoAguaChecked}
-                          onCheckedChange={(c) => setConsumoAguaChecked(c === true)}
-                        />
-                        <span className='text-sm'>Consumo de Água</span>
-                      </div>
-                      <div className='flex items-center gap-2'>
-                      <Checkbox
-                        name='consumoPeixe'
-                        checked={consumoPeixeChecked}
-                        onCheckedChange={(c) => setConsumoPeixeChecked(c === true)}
-                      />
-                        <span className='text-sm'>Consumo de Peixe</span>
-                      </div>
-                    </div>
-                    <div className='space-y-1'>
-                      <Label className='text-xs'>Quantidade de Água Consumida</Label>
-                      <Input
-                        name='quantidadeAgua'
-                        placeholder='Quantidade...'
-                        defaultValue={habitosEVicios?.quantidadeAgua ?? ''}
-                        disabled={!consumoAguaChecked}
-                      />
-                    </div>
+                    <p className='text-sm font-semibold text-teal-700 dark:text-teal-100'>
+                      Alimentares
+                    </p>
+                    <div className='space-y-3'>
+                  <div className='flex items-center gap-2'>
+                    <Checkbox
+                      name='consumoDeFrutas'
+                      checked={consumoDeFrutasChecked}
+                      onCheckedChange={(c) => setConsumoDeFrutasChecked(c === true)}
+                    />
+                    <span className='text-sm'>
+                      Consumo diário de fruta ou sumos de fruta
+                    </span>
                   </div>
-
+                  <div className='flex items-center gap-2'>
+                    <Checkbox
+                      name='consumoAgua'
+                      checked={consumoAguaChecked}
+                      onCheckedChange={(c) => setConsumoAguaChecked(c === true)}
+                    />
+                    <span className='text-sm'>Consumo de Água</span>
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    <Checkbox
+                      name='consumoPeixe'
+                      checked={consumoPeixeChecked}
+                      onCheckedChange={(c) => setConsumoPeixeChecked(c === true)}
+                    />
+                    <span className='text-sm'>Consumo de Peixe</span>
+                  </div>
+                  <div className='space-y-1'>
+                    <Label className='text-xs'>Quantidade de Água Consumida</Label>
+                    <Input
+                      name='quantidadeAgua'
+                      placeholder='Quantidade...'
+                      defaultValue={habitosEVicios?.quantidadeAgua ?? ''}
+                      disabled={!consumoAguaChecked}
+                    />
+                  </div>
                   <div className='space-y-2'>
                     <div className='flex items-center gap-2'>
                       <Checkbox
@@ -1051,55 +1049,44 @@ export function AntecedentesTab({ utenteId = '' }: AntecedentesTabProps) {
                       </label>
                     </div>
                   </div>
-
-                  <div className='grid gap-2 md:grid-cols-2'>
-                    <div className='flex items-center gap-2'>
-                      <Checkbox
-                        name='consumoVegetais'
-                        checked={consumoVegetaisChecked}
-                        onCheckedChange={(c) =>
-                          setConsumoVegetaisChecked(c === true)
-                        }
-                      />
-                      <span className='text-sm'>Consumo diário de vegetais frescos</span>
-                    </div>
-                    <div className='flex items-center gap-2'>
-                      <Checkbox
-                        name='ingestaoLeite'
-                        checked={ingestaoLeiteChecked}
-                        onCheckedChange={(c) => setIngestaoLeiteChecked(c === true)}
-                      />
-                      <span className='text-sm'>Ingestão de leite e derivados</span>
-                    </div>
+                  <div className='flex items-center gap-2'>
+                    <Checkbox
+                      name='consumoVegetais'
+                      checked={consumoVegetaisChecked}
+                      onCheckedChange={(c) => setConsumoVegetaisChecked(c === true)}
+                    />
+                    <span className='text-sm'>Consumo diário de vegetais frescos</span>
                   </div>
-
-                  <div className='grid gap-2 md:grid-cols-2'>
-                    <div className='flex items-center gap-2'>
-                      <Checkbox
-                        name='consumoSalgados'
-                        checked={consumoSalgadosChecked}
-                        onCheckedChange={(c) =>
-                          setConsumoSalgadosChecked(c === true)
-                        }
-                      />
-                      <span className='text-sm'>Consumo de alimentos salgados</span>
-                    </div>
-                    <div className='flex items-center gap-2'>
-                      <Checkbox
-                        name='consumoAcucarados'
-                        checked={consumoAcucaradosChecked}
-                        onCheckedChange={(c) =>
-                          setConsumoAcucaradosChecked(c === true)
-                        }
-                      />
-                      <span className='text-sm'>Consumo de alimentos açucarados</span>
+                  <div className='flex items-center gap-2'>
+                    <Checkbox
+                      name='ingestaoLeite'
+                      checked={ingestaoLeiteChecked}
+                      onCheckedChange={(c) => setIngestaoLeiteChecked(c === true)}
+                    />
+                    <span className='text-sm'>Ingestão de leite e derivados</span>
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    <Checkbox
+                      name='consumoSalgados'
+                      checked={consumoSalgadosChecked}
+                      onCheckedChange={(c) => setConsumoSalgadosChecked(c === true)}
+                    />
+                    <span className='text-sm'>Consumo de alimentos salgados</span>
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    <Checkbox
+                      name='consumoAcucarados'
+                      checked={consumoAcucaradosChecked}
+                      onCheckedChange={(c) => setConsumoAcucaradosChecked(c === true)}
+                    />
+                    <span className='text-sm'>Consumo de alimentos açucarados</span>
+                  </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Coluna direita - Vícios */}
-                <div className='grid gap-4 md:grid-cols-2'>
-                  {/* Bebidas Alcoólicas */}
+                {/* Coluna 2 — Vícios (álcool) + Outros */}
+                <div className='space-y-4'>
                   <div className='space-y-2'>
                     <p className='text-sm font-semibold text-teal-700 dark:text-teal-100'>
                       Vícios
@@ -1141,87 +1128,85 @@ export function AntecedentesTab({ utenteId = '' }: AntecedentesTabProps) {
                     </div>
                   </div>
 
-                  {/* Tabágicos / Drogas / Outros */}
-                  <div className='space-y-4'>
-                    <div className='space-y-2'>
-                      <p className='text-sm font-semibold text-teal-700 dark:text-teal-100'>
-                        Tabágicos
-                      </p>
-                      <div className='flex items-center gap-2'>
-                        <Checkbox
-                          name='fuma'
-                          checked={fumaChecked}
-                          onCheckedChange={(c) => setFumaChecked(c === true)}
-                        />
-                        <span className='text-sm'>Fuma</span>
-                      </div>
-                      <div className='space-y-1'>
-                        <Label className='text-xs'>Quantos Fuma por dia?</Label>
-                        <Input
-                          name='quantosFumaDia'
-                          defaultValue={habitosEVicios?.quantosFumaDia ?? ''}
-                          disabled={!fumaChecked}
-                        />
-                      </div>
-                      <div className='space-y-1'>
-                        <Label className='text-xs'>Desde quando?</Label>
-                        <Input
-                          name='tabacoDesdeQuando'
-                          type='date'
-                          defaultValue={habitosEVicios?.tabacoDesdeQuando ?? ''}
-                          disabled={!fumaChecked}
-                        />
-                      </div>
+                  <div className='space-y-2'>
+                    <p className='text-sm font-semibold text-teal-700 dark:text-teal-100'>
+                      Outros
+                    </p>
+                    <div className='space-y-1'>
+                      <Label className='text-xs'>Outros Vícios</Label>
+                      <Textarea
+                        name='outrosVicios'
+                        className='min-h-[40px]'
+                        defaultValue={habitosEVicios?.outrosVicios ?? ''}
+                      />
                     </div>
+                    <div className='space-y-1'>
+                      <Label className='text-xs'>Desde quando?</Label>
+                      <Input
+                        name='outrosViciosDesdeQuando'
+                        type='date'
+                        defaultValue={habitosEVicios?.outrosViciosDesdeQuando ?? ''}
+                      />
+                    </div>
+                  </div>
+                </div>
 
-                    <div className='space-y-2'>
-                      <p className='text-sm font-semibold text-teal-700 dark:text-teal-100'>
-                        Estupefacientes
-                      </p>
-                      <div className='flex items-center gap-2'>
+                {/* Coluna 3 — Tabágicos / Estupefacientes */}
+                <div className='space-y-4'>
+                  <div className='space-y-2'>
+                    <p className='text-sm font-semibold text-teal-700 dark:text-teal-100'>
+                      Tabágicos
+                    </p>
+                    <div className='flex items-center gap-2'>
+                      <Checkbox
+                        name='fuma'
+                        checked={fumaChecked}
+                        onCheckedChange={(c) => setFumaChecked(c === true)}
+                      />
+                      <span className='text-sm'>Fuma</span>
+                    </div>
+                    <div className='space-y-1'>
+                      <Label className='text-xs'>Quantos Fuma por dia?</Label>
+                      <Input
+                        name='quantosFumaDia'
+                        defaultValue={habitosEVicios?.quantosFumaDia ?? ''}
+                        disabled={!fumaChecked}
+                      />
+                    </div>
+                    <div className='space-y-1'>
+                      <Label className='text-xs'>Desde quando?</Label>
+                      <Input
+                        name='tabacoDesdeQuando'
+                        type='date'
+                        defaultValue={habitosEVicios?.tabacoDesdeQuando ?? ''}
+                        disabled={!fumaChecked}
+                      />
+                    </div>
+                  </div>
+
+                  <div className='space-y-2'>
+                    <p className='text-sm font-semibold text-teal-700 dark:text-teal-100'>
+                      Estupefacientes
+                    </p>
+                    <div className='flex items-center gap-2'>
                       <Checkbox
                         name='consumoDrogas'
                         checked={consumoDrogasChecked}
-                        onCheckedChange={(c) =>
-                          setConsumoDrogasChecked(c === true)
-                        }
+                        onCheckedChange={(c) => setConsumoDrogasChecked(c === true)}
                       />
-                        <span className='text-sm'>Consumo de Drogas</span>
-                      </div>
-                      <div className='space-y-1'>
-                        <Label className='text-xs'>Quais</Label>
-                        <Input name='drogas' defaultValue={habitosEVicios?.drogas ?? ''} />
-                      </div>
-                      <div className='space-y-1'>
-                        <Label className='text-xs'>Desde quando?</Label>
-                        <Input
-                          name='drogasDesdeQuando'
-                          type='date'
-                          defaultValue={habitosEVicios?.drogasDesdeQuando ?? ''}
-                        />
-                      </div>
+                      <span className='text-sm'>Consumo de Drogas</span>
                     </div>
-
-                    <div className='space-y-2'>
-                      <p className='text-sm font-semibold text-teal-700 dark:text-teal-100'>
-                        Outros
-                      </p>
-                      <div className='space-y-1'>
-                        <Label className='text-xs'>Outros Vícios</Label>
-                        <Textarea
-                          name='outrosVicios'
-                          className='min-h-[40px]'
-                          defaultValue={habitosEVicios?.outrosVicios ?? ''}
-                        />
-                      </div>
-                      <div className='space-y-1'>
-                        <Label className='text-xs'>Desde quando?</Label>
-                        <Input
-                          name='outrosViciosDesdeQuando'
-                          type='date'
-                          defaultValue={habitosEVicios?.outrosViciosDesdeQuando ?? ''}
-                        />
-                      </div>
+                    <div className='space-y-1'>
+                      <Label className='text-xs'>Quais</Label>
+                      <Input name='drogas' defaultValue={habitosEVicios?.drogas ?? ''} />
+                    </div>
+                    <div className='space-y-1'>
+                      <Label className='text-xs'>Desde quando?</Label>
+                      <Input
+                        name='drogasDesdeQuando'
+                        type='date'
+                        defaultValue={habitosEVicios?.drogasDesdeQuando ?? ''}
+                      />
                     </div>
                   </div>
                 </div>

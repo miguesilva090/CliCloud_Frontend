@@ -2,22 +2,19 @@ import state from '@/states/state'
 import type { ResponseApi } from '@/types/responses'
 import type { GSResponse, PaginatedRequest, PaginatedResponse } from '@/types/api/responses'
 import { BaseApiClient } from '@/lib/base-client'
-import type { EstadosDentariosDTO } from '@/types/dtos/odontologia/odontograma-definitivo.dtos'
+import type { EstadosDentariosDTO } from '@/types/dtos/odontologia/estados-dentarios.dtos'
 
 const BASE = '/client/processo-clinico/odontologia/EstadosDentarios'
-
-type EstadosDentariosFilters = {
-  keyword?: string
-}
 
 export type CreateEstadosDentariosRequest = {
   codigo: string
   descricao: string
   estadoPadrao: boolean
-  ativo: boolean
 }
 
-export type UpdateEstadosDentariosRequest = CreateEstadosDentariosRequest
+export type UpdateEstadosDentariosRequest = CreateEstadosDentariosRequest & {
+  ativo: boolean
+}
 
 export class EstadosDentariosClient extends BaseApiClient {
   constructor(idFuncionalidade: string) {
@@ -35,10 +32,10 @@ export class EstadosDentariosClient extends BaseApiClient {
   }
 
   async getPaginated(
-    params: PaginatedRequest & { filters?: EstadosDentariosFilters },
+    params: PaginatedRequest & { keyword?: string },
   ): Promise<ResponseApi<PaginatedResponse<EstadosDentariosDTO>>> {
     return this.httpClient.postRequest<
-      PaginatedRequest & { filters?: EstadosDentariosFilters },
+      PaginatedRequest & { keyword?: string },
       PaginatedResponse<EstadosDentariosDTO>
     >(state.URL, `${BASE}/paginated`, params)
   }
