@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { useQuery } from '@tanstack/react-query'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
+import { DateField } from '@/components/shared/date-field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { fieldGap, inputClass, labelClass } from '@/lib/form-styles'
@@ -83,12 +84,11 @@ export function DocumentoTabOrigemSection({
       </div>
       <div className={fieldGap}>
         <Label className={labelClass}>Data documento origem</Label>
-        <Input
-          type='date'
+        <DateField
           className={inputClass}
           value={state.dataDocumentoOrigem}
           readOnly={readOnly}
-          onChange={(e) => onChange({ dataDocumentoOrigem: e.target.value })}
+          onChange={(value) => onChange({ dataDocumentoOrigem: value })}
         />
       </div>
       <p className='md:col-span-2 text-xs text-muted-foreground'>

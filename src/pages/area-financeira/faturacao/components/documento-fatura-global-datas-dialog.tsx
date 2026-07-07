@@ -6,8 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { DateField } from '@/components/shared/date-field'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { fieldGap, inputClass, labelClass } from '@/lib/form-styles'
 import { toast } from '@/utils/toast-utils'
@@ -81,20 +81,18 @@ export function DocumentoFaturaGlobalDatasDialog({
         <div className='grid gap-4 sm:grid-cols-2'>
           <div className={fieldGap}>
             <Label className={labelClass}>Desde</Label>
-            <Input
-              type='date'
+            <DateField
               className={inputClass}
               value={de}
-              onChange={(e) => setDe(e.target.value)}
+              onChange={setDe}
             />
           </div>
           <div className={fieldGap}>
             <Label className={labelClass}>Até</Label>
-            <Input
-              type='date'
+            <DateField
               className={inputClass}
               value={ate}
-              onChange={(e) => setAte(e.target.value)}
+              onChange={setAte}
             />
           </div>
         </div>

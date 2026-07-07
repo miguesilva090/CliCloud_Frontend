@@ -16,6 +16,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/utils/toast-utils'
 import { FeriadoService } from '@/lib/services/utility/feriados-service'
@@ -143,11 +144,10 @@ const title =
                 <div className='grid gap-4 py-4'>
                     <div className='grid gap-2'>
                         <Label>Data</Label>
-                        <Input
-                            type='date'
+                        <DateField
                             readOnly={isView}
                             value={values.data}
-                            onChange={(e) => setValues((prev) => ({ ...prev, data: e.target.value}))}
+                            onChange={(v) => setValues((prev) => ({ ...prev, data: v }))}
                         />
                     </div>
 

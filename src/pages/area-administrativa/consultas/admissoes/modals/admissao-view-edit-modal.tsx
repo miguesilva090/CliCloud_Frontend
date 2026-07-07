@@ -26,6 +26,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { AsyncCombobox, type ComboboxItem } from '@/components/shared/async-combobox'
+import { DateField } from '@/components/shared/date-field'
+import { TimeField } from '@/components/shared/time-field'
 import {
   Select,
   SelectContent,
@@ -1155,32 +1157,31 @@ export function AdmissaoViewEditModal({
                     <div className={`grid grid-cols-12 ${formBlockGap}`}>
                       <div className={`col-span-4 ${fieldGap}`}>
                         <Label className={labelClass}>Data</Label>
-                        <Input
-                          type='date'
+                        <DateField
                           className={inputClass}
                           disabled={readOnly}
                           value={form.data}
-                          onChange={(e) => patch({ data: e.target.value })}
+                          onChange={(v) => patch({ data: v })}
                         />
                       </div>
                       <div className={`col-span-4 ${fieldGap}`}>
                         <Label className={labelClass}>Hora marc.</Label>
-                        <Input
-                          type='time'
+                        <TimeField
                           className={inputClass}
                           disabled={readOnly}
+                          readOnly={readOnly}
                           value={form.horaInicio}
-                          onChange={(e) => patch({ horaInicio: e.target.value })}
+                          onChange={(v) => patch({ horaInicio: v })}
                         />
                       </div>
                       <div className={`col-span-4 ${fieldGap}`}>
                         <Label className={labelClass}>Hora saída</Label>
-                        <Input
-                          type='time'
+                        <TimeField
                           className={inputClass}
                           disabled={readOnly}
+                          readOnly={readOnly}
                           value={form.horaFim}
-                          onChange={(e) => patch({ horaFim: e.target.value })}
+                          onChange={(v) => patch({ horaFim: v })}
                         />
                       </div>
                       <div className={`col-span-4 ${fieldGap}`}>
@@ -1203,12 +1204,12 @@ export function AdmissaoViewEditModal({
                       </div>
                       <div className={`col-span-4 ${fieldGap}`}>
                         <Label className={labelClass}>Hora chegada</Label>
-                        <Input
-                          type='time'
+                        <TimeField
                           className={inputClass}
                           disabled={readOnly}
+                          readOnly={readOnly}
                           value={form.horaChegada}
-                          onChange={(e) => patch({ horaChegada: e.target.value })}
+                          onChange={(v) => patch({ horaChegada: v })}
                         />
                       </div>
 

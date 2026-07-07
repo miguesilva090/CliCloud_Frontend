@@ -3,6 +3,7 @@ import { useDebounce } from 'use-debounce'
 import { useQuery } from '@tanstack/react-query'
 import { Label } from '@/components/ui/label'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
+import { DateField } from '@/components/shared/date-field'
 import { modules } from '@/config/modules'
 import { MedicosService } from '@/lib/services/saude/medicos-service'
 import { EspecialidadeService } from '@/lib/services/especialidades/especialidade-service'
@@ -84,20 +85,18 @@ export function ListagemOrdemEntradaFilterControls({ filters, onFiltersChange }:
     <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3'>
       <div>
         <Label className='text-xs text-muted-foreground'>Data de</Label>
-        <input
-          type='date'
-          className='mt-1 flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm'
+        <DateField
+          className='mt-1 w-full'
           value={dataDe}
-          onChange={(e) => patch('dataDe', e.target.value)}
+          onChange={(v) => patch('dataDe', v)}
         />
       </div>
       <div>
         <Label className='text-xs text-muted-foreground'>Data até</Label>
-        <input
-          type='date'
-          className='mt-1 flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm'
+        <DateField
+          className='mt-1 w-full'
           value={dataAte}
-          onChange={(e) => patch('dataAte', e.target.value)}
+          onChange={(v) => patch('dataAte', v)}
         />
       </div>
       <div>

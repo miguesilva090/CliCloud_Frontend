@@ -8,6 +8,7 @@ import {
 } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
+import { TimeField } from '@/components/shared/time-field'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Plus } from 'lucide-react'
@@ -438,12 +439,12 @@ export const TabHorarioTecnicoFixo = forwardRef<
             <span className='text-sm text-muted-foreground'>
               Intervalo Marcação
             </span>
-            <Input
-              type='time'
+            <TimeField
               className='h-7 w-28'
               value={intervaloMarcacao}
               disabled={isReadOnly}
-              onChange={(e) => setIntervaloMarcacao(e.target.value || '00:30')}
+              readOnly={isReadOnly}
+              onChange={(value) => setIntervaloMarcacao(value || '00:30')}
             />
           </div>
         </div>
@@ -491,17 +492,17 @@ export const TabHorarioTecnicoFixo = forwardRef<
               {DIAS_DISPLAY.map((d) => (
                 <td key={d} className='p-1.5 text-center'>
                   <div className='flex justify-center'>
-                    <Input
-                      type='time'
+                    <TimeField
                       className='h-7 w-24 mx-auto'
                       value={periodo1[d]?.inicio ?? ''}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setPeriodo1((prev) => ({
                           ...prev,
-                          [d]: { ...prev[d], inicio: e.target.value },
+                          [d]: { ...prev[d], inicio: value },
                         }))
                       }
                       disabled={isReadOnly}
+                      readOnly={isReadOnly}
                     />
                   </div>
                 </td>
@@ -512,17 +513,17 @@ export const TabHorarioTecnicoFixo = forwardRef<
               {DIAS_DISPLAY.map((d) => (
                 <td key={d} className='p-1.5 pt-4 text-center'>
                   <div className='flex justify-center'>
-                    <Input
-                      type='time'
+                    <TimeField
                       className='h-7 w-24 mx-auto'
                       value={periodo1[d]?.fim ?? ''}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setPeriodo1((prev) => ({
                           ...prev,
-                          [d]: { ...prev[d], fim: e.target.value },
+                          [d]: { ...prev[d], fim: value },
                         }))
                       }
                       disabled={isReadOnly}
+                      readOnly={isReadOnly}
                     />
                   </div>
                 </td>
@@ -613,17 +614,17 @@ export const TabHorarioTecnicoFixo = forwardRef<
               {DIAS_DISPLAY.map((d) => (
                 <td key={d} className='p-1.5 text-center'>
                   <div className='flex justify-center'>
-                    <Input
-                      type='time'
+                    <TimeField
                       className='h-7 w-24 mx-auto'
                       value={periodo2[d]?.inicio ?? ''}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setPeriodo2((prev) => ({
                           ...prev,
-                          [d]: { ...prev[d], inicio: e.target.value },
+                          [d]: { ...prev[d], inicio: value },
                         }))
                       }
                       disabled={isReadOnly}
+                      readOnly={isReadOnly}
                     />
                   </div>
                 </td>
@@ -634,17 +635,17 @@ export const TabHorarioTecnicoFixo = forwardRef<
               {DIAS_DISPLAY.map((d) => (
                 <td key={d} className='p-1.5 pt-4 text-center'>
                   <div className='flex justify-center'>
-                    <Input
-                      type='time'
+                    <TimeField
                       className='h-7 w-24 mx-auto'
                       value={periodo2[d]?.fim ?? ''}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setPeriodo2((prev) => ({
                           ...prev,
-                          [d]: { ...prev[d], fim: e.target.value },
+                          [d]: { ...prev[d], fim: value },
                         }))
                       }
                       disabled={isReadOnly}
+                      readOnly={isReadOnly}
                     />
                   </div>
                 </td>

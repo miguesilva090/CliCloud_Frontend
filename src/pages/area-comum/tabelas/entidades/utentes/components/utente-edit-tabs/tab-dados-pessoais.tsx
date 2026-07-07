@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -268,7 +269,7 @@ export function TabDadosPessoais({
               <FormItem className={fieldGap}>
                 <FormLabel className={labelClass}>Data validação</FormLabel>
                 <FormControl>
-                  <Input className={inputClass} type='date' {...field} value={field.value ?? ''} />
+                  <DateField className={inputClass} value={field.value} onChange={field.onChange} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -287,7 +288,7 @@ export function TabDadosPessoais({
               <FormItem className={fieldGap}>
                 <FormLabel className={labelClass}>Data Emissão CC</FormLabel>
                 <FormControl>
-                  <Input className={inputClass} type='date' {...field} value={field.value ?? ''} />
+                  <DateField className={inputClass} value={field.value} onChange={field.onChange} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -300,7 +301,7 @@ export function TabDadosPessoais({
               <FormItem className={fieldGap}>
                 <FormLabel className={labelClass}>Data Validade CC</FormLabel>
                 <FormControl>
-                  <Input className={inputClass} type='date' {...field} value={field.value ?? ''} />
+                  <DateField className={inputClass} value={field.value} onChange={field.onChange} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -315,7 +316,7 @@ export function TabDadosPessoais({
               <FormItem className={fieldGap}>
                 <FormLabel className={labelClass}>Data Nascimento</FormLabel>
                 <FormControl>
-                  <Input className={inputClass} type='date' {...field} value={field.value ?? ''} />
+                  <DateField className={inputClass} value={field.value} onChange={field.onChange} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

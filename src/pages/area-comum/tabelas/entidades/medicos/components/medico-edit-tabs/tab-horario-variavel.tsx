@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
+import { TimeField } from '@/components/shared/time-field'
 import {
   Dialog,
   DialogContent,
@@ -164,50 +166,45 @@ export function TabHorarioVariavel({
           <div className='grid gap-4 py-4'>
             <div className='grid gap-2'>
               <label className='text-sm font-medium'>Data</label>
-              <Input
-                type='date'
+              <DateField
                 className='h-8'
                 value={data}
-                onChange={(e) => setData(e.target.value)}
+                onChange={setData}
               />
             </div>
             <div className='grid grid-cols-2 gap-4'>
               <div className='grid gap-2'>
                 <label className='text-sm font-medium'>Manhã Início</label>
-                <Input
-                  type='time'
+                <TimeField
                   className='h-8'
                   value={manhaInicio}
-                  onChange={(e) => setManhaInicio(e.target.value)}
+                  onChange={setManhaInicio}
                 />
               </div>
               <div className='grid gap-2'>
                 <label className='text-sm font-medium'>Manhã Fim</label>
-                <Input
-                  type='time'
+                <TimeField
                   className='h-8'
                   value={manhaFim}
-                  onChange={(e) => setManhaFim(e.target.value)}
+                  onChange={setManhaFim}
                 />
               </div>
             </div>
             <div className='grid grid-cols-2 gap-4'>
               <div className='grid gap-2'>
                 <label className='text-sm font-medium'>Tarde Início</label>
-                <Input
-                  type='time'
+                <TimeField
                   className='h-8'
                   value={tardeInicio}
-                  onChange={(e) => setTardeInicio(e.target.value)}
+                  onChange={setTardeInicio}
                 />
               </div>
               <div className='grid gap-2'>
                 <label className='text-sm font-medium'>Tarde Fim</label>
-                <Input
-                  type='time'
+                <TimeField
                   className='h-8'
                   value={tardeFim}
-                  onChange={(e) => setTardeFim(e.target.value)}
+                  onChange={setTardeFim}
                 />
               </div>
             </div>

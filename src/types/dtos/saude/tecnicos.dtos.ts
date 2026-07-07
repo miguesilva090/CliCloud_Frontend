@@ -53,6 +53,7 @@ export interface TecnicoTableDTO {
 
   // Técnico
   especialidadeId?: string | null
+  especialidade?: { id: string; nome: string } | null
   especialidadeNome?: string | null
   margem?: number | null
 }

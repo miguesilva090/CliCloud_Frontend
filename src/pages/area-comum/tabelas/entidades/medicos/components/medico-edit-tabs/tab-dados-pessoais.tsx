@@ -2,6 +2,7 @@ import type { UseFormReturn } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Plus, User } from 'lucide-react'
@@ -48,7 +49,7 @@ export function TabDadosPessoais({
               <FormItem className={fieldGap}>
                 <FormLabel className={labelClass}>Data Emissão</FormLabel>
                 <FormControl>
-                  <Input className={inputClass} type='date' placeholder='Data Emissão...' {...field} value={field.value ?? ''} />
+                  <DateField className={inputClass} value={field.value} onChange={field.onChange} placeholder='Data Emissão...' />
                 </FormControl>
                 <FormMessage />
               </FormItem>

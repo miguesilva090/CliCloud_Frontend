@@ -20,6 +20,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { AsyncCombobox, type ComboboxItem } from '@/components/shared/async-combobox'
+import { DateField } from '@/components/shared/date-field'
+import { TimeField } from '@/components/shared/time-field'
 import { fieldGap, inputClass, labelClass, selectTriggerClass } from '@/lib/form-styles'
 import { getDataTrabalhoIsoDate } from '@/lib/utils/data-trabalho'
 import { OrdemEntradaAdministrativoService } from '@/lib/services/consultas/ordem-entrada-administrativo-service'
@@ -593,24 +595,23 @@ export function OrdemEntradaRegistoModal({
             <div className='grid gap-3 md:grid-cols-3'>
               <div className={fieldGap}>
                 <Label className={labelClass}>Data</Label>
-                <Input
-                  type='date'
+                <DateField
                   className={inputClass}
                   value={form.data}
                   disabled={readOnly}
-                  onChange={(e) => patch({ data: e.target.value, horaInicio: '' })}
+                  onChange={(v) => patch({ data: v, horaInicio: '' })}
                 />
               </div>
 
               <div className={fieldGap}>
                 <Label className={labelClass}>Hora</Label>
                 {horasInfo?.horarioFlexivel ? (
-                  <Input
-                    type='time'
+                  <TimeField
                     className={inputClass}
                     value={form.horaInicio}
                     disabled={readOnly}
-                    onChange={(e) => patch({ horaInicio: e.target.value })}
+                    readOnly={readOnly}
+                    onChange={(v) => patch({ horaInicio: v })}
                   />
                 ) : (
                   <Select
@@ -636,12 +637,12 @@ export function OrdemEntradaRegistoModal({
 
               <div className={fieldGap}>
                 <Label className={labelClass}>Duração</Label>
-                <Input
-                  type='time'
+                <TimeField
                   className={inputClass}
                   value={form.duracao}
                   disabled={readOnly || !horasInfo?.horarioFlexivel}
-                  onChange={(e) => patch({ duracao: e.target.value })}
+                  readOnly={readOnly}
+                  onChange={(v) => patch({ duracao: v })}
                   placeholder={horasInfo?.intervalo ? timeHm(horasInfo.intervalo) : undefined}
                 />
               </div>

@@ -1,9 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -21,6 +22,26 @@ import { useProvenienciasUtenteLight } from '@/lib/services/utility/lookups/look
 import { useMedicosLight } from '@/lib/services/saude/medicos-service/medicos-queries'
 import { fieldGap, inputClass, labelClass, selectTriggerClass, buttonIconClass } from './utente-edit-tabs-constants'
 import { openPathInApp } from '@/utils/window-utils'
+
+function LocalDateField({
+  initialValue,
+  className,
+  placeholder,
+}: {
+  initialValue?: string | null
+  className: string
+  placeholder?: string
+}) {
+  const [value, setValue] = useState(initialValue ?? '')
+  return (
+    <DateField
+      className={className}
+      value={value}
+      onChange={setValue}
+      placeholder={placeholder}
+    />
+  )
+}
 
 export function TabOutrasInformacoes({
   form,
@@ -62,6 +83,8 @@ export function TabOutrasInformacoes({
     return list
   }, [proveniencias, utente?.provenienciaUtenteId, utente?.provenienciaUtente])
 
+  const [validadeCartao, setValidadeCartao] = useState('')
+
   return (
     <div className='space-y-6'>
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
@@ -75,7 +98,7 @@ export function TabOutrasInformacoes({
         </div>
         <div className={fieldGap}>
           <FormLabel className={labelClass}>Validade do Cartão</FormLabel>
-          <Input type='date' placeholder='' className={inputClass} />
+          <DateField className={inputClass} value={validadeCartao} onChange={setValidadeCartao} />
         </div>
         <div className={fieldGap}>
           <FormLabel className={labelClass}>Nome do Titular</FormLabel>
@@ -334,8 +357,8 @@ export function TabOutrasInformacoes({
                   {label}
                 </label>
               </div>
-              <Input type='date' placeholder='Consentimento' className={inputClass} defaultValue={consent ?? ''} />
-              <Input type='date' placeholder='Revogação' className={inputClass} defaultValue={revog ?? ''} />
+              <LocalDateField initialValue={consent} placeholder='Consentimento' className={inputClass} />
+              <LocalDateField initialValue={revog} placeholder='Revogação' className={inputClass} />
             </div>
           ))}
         </div>

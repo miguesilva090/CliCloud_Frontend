@@ -8,6 +8,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import type { FuncionarioEditFormValues } from '../types/funcionario-edit-form-types'
@@ -157,12 +158,11 @@ export function TabFuncionarioIdentificacao({
               <FormItem>
                 <FormLabel>Data Emissão</FormLabel>
                 <FormControl>
-                  <Input
-                    type='date'
+                  <DateField
                     className='h-7'
+                    value={field.value}
+                    onChange={field.onChange}
                     readOnly={readOnly}
-                    {...field}
-                    value={field.value ?? ''}
                   />
                 </FormControl>
                 <FormMessage />

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { UseFormReturn } from 'react-hook-form'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
@@ -252,7 +253,7 @@ export function TabOutrosParametros({
               <FormItem>
                 <FormLabel className='text-xs'>Início Contrato</FormLabel>
                 <FormControl>
-                  <Input type='date' className='h-7' readOnly={readOnly} {...field} value={field.value ?? ''} />
+                  <DateField className='h-7' value={field.value} onChange={field.onChange} readOnly={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -265,7 +266,7 @@ export function TabOutrosParametros({
               <FormItem>
                 <FormLabel className='text-xs'>Fim Contrato</FormLabel>
                 <FormControl>
-                  <Input type='date' className='h-7' readOnly={readOnly} {...field} value={field.value ?? ''} />
+                  <DateField className='h-7' value={field.value} onChange={field.onChange} readOnly={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

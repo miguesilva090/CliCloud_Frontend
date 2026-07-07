@@ -6,6 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { DateField } from '@/components/shared/date-field'
+import { TimeField } from '@/components/shared/time-field'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -72,18 +74,17 @@ export function ValidacaoTransporteDialog({
           </div>
           <div className='space-y-2'>
             <Label>Data transporte</Label>
-            <Input
-              type='date'
+            <DateField
               value={dataTransporte}
-              onChange={(e) => setDataTransporte(e.target.value)}
+              onChange={setDataTransporte}
             />
           </div>
           <div className='space-y-2'>
             <Label>Hora transporte</Label>
-            <Input
+            <TimeField
               value={horaTransporte}
-              onChange={(e) => setHoraTransporte(e.target.value)}
-              placeholder='HH:mm'
+              onChange={setHoraTransporte}
+              placeholder='Hora'
             />
           </div>
         </div>

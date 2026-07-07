@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { TimeField } from '@/components/shared/time-field'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ListaEsperaAdministrativoService } from '@/lib/services/consultas/lista-espera-administrativo-service'
@@ -92,20 +92,18 @@ export function ListaEsperaConverterMarcacaoModal({
         <div className='grid gap-3'>
           <div>
             <Label>Hora início</Label>
-            <Input
-              type='time'
+            <TimeField
               className='mt-1'
               value={horaInicio}
-              onChange={(e) => setHoraInicio(e.target.value)}
+              onChange={setHoraInicio}
             />
           </div>
           <div>
             <Label>Hora fim (opcional)</Label>
-            <Input
-              type='time'
+            <TimeField
               className='mt-1'
               value={horaFim}
-              onChange={(e) => setHoraFim(e.target.value)}
+              onChange={setHoraFim}
             />
           </div>
           <label className='flex items-center gap-2 text-sm'>

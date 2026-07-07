@@ -3,6 +3,7 @@ import type { UseFormReturn } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
@@ -190,7 +191,7 @@ export function TabInformacaoSNS({
                     <FormItem className={fieldGap}>
                       <FormLabel className={labelClass}>Data Validade</FormLabel>
                       <FormControl>
-                        <Input className={inputClass} type='date' {...field} value={field.value ?? ''} />
+                        <DateField className={inputClass} value={field.value} onChange={field.onChange} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

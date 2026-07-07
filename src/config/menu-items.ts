@@ -305,6 +305,11 @@ export const roleHeaderMenus = {
         ],
       },
       {
+        label: 'Tratamentos',
+        href: '/area-administrativa/tratamentos',
+        funcionalidadeId: modules.areaAdministrativa.permissions.consultas.id,
+      },
+      {
         label: 'Mapas',
         href: '/area-administrativa',
         funcionalidadeId:
@@ -1641,6 +1646,14 @@ export const roleHeaderMenus = {
             label: 'Replicar Margem/Médicos Consultas',
             href: '/area-comum/utilitarios/replicar-margem-medicos',
             description: 'Replicar margens de serviços entre médicos',
+            icon: 'activity',
+            funcionalidadeId:
+              modules.areaComum.permissions.utilitariosLinhaMenu.id,
+          },
+          {
+            label: 'Fundir Utentes',
+            href: '/area-comum/utilitarios/fundir-utentes',
+            description: 'Fundir dois utentes, mantendo o de origem',
             icon: 'activity',
             funcionalidadeId:
               modules.areaComum.permissions.utilitariosLinhaMenu.id,

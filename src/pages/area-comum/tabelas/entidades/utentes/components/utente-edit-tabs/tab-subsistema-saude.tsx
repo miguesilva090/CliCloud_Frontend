@@ -3,6 +3,7 @@ import { useFieldArray, type UseFormReturn } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import { Button } from '@/components/ui/button'
 import { Plus, Pencil, Trash2, X } from 'lucide-react'
 import { useDebounce } from 'use-debounce'
@@ -424,11 +425,10 @@ export function TabSubsistemaSaude({
           </div>
           <div className={`${fieldGap} w-full min-w-0`}>
             <FormLabel className={labelClass}>Data do cartão</FormLabel>
-            <Input
-              type='date'
+            <DateField
               className={fieldClass}
               value={primaryLinha?.dataCartao ?? ''}
-              onChange={(e) => updatePrimaryLinha({ dataCartao: e.target.value })}
+              onChange={(v) => updatePrimaryLinha({ dataCartao: v })}
             />
           </div>
         </div>

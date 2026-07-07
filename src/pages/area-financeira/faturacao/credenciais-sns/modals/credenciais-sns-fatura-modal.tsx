@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
+import { DateField } from '@/components/shared/date-field'
 import { fieldGap, inputClass, labelClass, selectTriggerClass } from '@/lib/form-styles'
 import { OrganismoService } from '@/lib/services/saude/organismo-service'
 import { ContaBancariaService } from '@/lib/services/bancos/conta-bancaria-service'
@@ -447,11 +448,10 @@ export function CredenciaisSnsFaturaModal({
                   {values.preDatado ? (
                     <div className={`col-span-12 md:col-span-4 ${fieldGap}`}>
                       <Label className={labelClass}>Data Vencimento</Label>
-                      <Input
-                        type='date'
+                      <DateField
                         className={inputClass}
                         value={values.dataVencimento}
-                        onChange={(e) => patch({ dataVencimento: e.target.value })}
+                        onChange={(value) => patch({ dataVencimento: value })}
                       />
                     </div>
                   ) : null}

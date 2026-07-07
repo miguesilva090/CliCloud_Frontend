@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -410,14 +411,13 @@ export function FuncionarioViewCreateModal({
             </div>
             <div className='space-y-2'>
               <Label>Data Emissão</Label>
-              <Input
+              <DateField
                 readOnly={isView}
-                type='date'
                 value={values.dataEmissao}
-                placeholder='Data Emissão...'
-                onChange={(e) =>
-                  setValues((prev) => ({ ...prev, dataEmissao: e.target.value }))
+                onChange={(v) =>
+                  setValues((prev) => ({ ...prev, dataEmissao: v }))
                 }
+                placeholder='Data Emissão...'
               />
             </div>
           </div>

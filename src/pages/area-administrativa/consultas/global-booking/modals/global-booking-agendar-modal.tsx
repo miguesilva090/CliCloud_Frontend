@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
+import { DateField } from '@/components/shared/date-field'
+import { TimeField } from '@/components/shared/time-field'
 import { extrairHorasDisponiveis } from '../utils/global-booking-horas-utils'
 import { PedidosConsultaAdministrativoService } from '@/lib/services/consultas/pedidos-consulta-administrativo-service'
 import { MarcacoesAdministrativoService } from '@/lib/services/consultas/marcacoes-administrativo-service'
@@ -419,7 +421,7 @@ export function GlobalBookingAgendarModal({
             <div className='grid grid-cols-2 gap-2'>
               <div>
                 <Label>Data</Label>
-                <Input type='date' value={data} onChange={(e) => setData(e.target.value)} />
+                <DateField value={data} onChange={setData} />
               </div>
               <div>
                 <Label>Hora</Label>
@@ -437,10 +439,9 @@ export function GlobalBookingAgendarModal({
                     </SelectContent>
                   </Select>
                 ) : (
-                  <Input
-                    type='time'
+                  <TimeField
                     value={hora}
-                    onChange={(e) => setHora(e.target.value)}
+                    onChange={setHora}
                     disabled={!medicoId || !data || calendarioQuery.isFetching}
                   />
                 )}

@@ -7,8 +7,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { DateField } from '@/components/shared/date-field'
+import { TimeField } from '@/components/shared/time-field'
 import { MarcacoesAdministrativoService } from '@/lib/services/consultas/marcacoes-administrativo-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
@@ -98,11 +99,11 @@ export function MarcacaoAdministrativoMudarHorarioModal({
         <div className='grid gap-3'>
           <div className='space-y-1'>
             <Label>Data</Label>
-            <Input type='date' value={data} onChange={(e) => setData(e.target.value)} />
+            <DateField value={data} onChange={setData} />
           </div>
           <div className='space-y-1'>
             <Label>Hora</Label>
-            <Input type='time' value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
+            <TimeField value={horaInicio} onChange={setHoraInicio} placeholder='Hora' />
           </div>
         </div>
         <DialogFooter>

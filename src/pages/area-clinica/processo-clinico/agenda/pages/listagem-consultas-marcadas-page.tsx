@@ -21,6 +21,8 @@ import { AreaComumListagemPageShell } from '@/components/shared/area-comum-lista
 import { DataTable } from '@/components/shared/data-table'
 import type { DataTableAction } from '@/components/shared/data-table'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
+import { DateField } from '@/components/shared/date-field'
+import { TimeField } from '@/components/shared/time-field'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -387,6 +389,8 @@ export function ListagemConsultasMarcadasPage() {
   const { data: tiposConsultaData } = useGetAllTiposConsulta()
   const tiposConsulta = (tiposConsultaData?.info?.data ?? []) as TipoConsultaDTO[]
   const [tipoConsultaId, setTipoConsultaId] = useState<string>('')
+  const [novaConsultaData, setNovaConsultaData] = useState('')
+  const [novaConsultaHora, setNovaConsultaHora] = useState('')
 
   const toolbarEndPrefix = (
     <div className='flex shrink-0 flex-wrap items-center gap-2'>
@@ -480,7 +484,11 @@ export function ListagemConsultasMarcadasPage() {
               open={dialogOpen}
               onOpenChange={(open) => {
                 setDialogOpen(open)
-                if (!open) setTipoConsultaId('')
+                if (!open) {
+                  setTipoConsultaId('')
+                  setNovaConsultaData('')
+                  setNovaConsultaHora('')
+                }
               }}
             >
             <DialogContent className='sm:max-w-lg'>
@@ -495,11 +503,21 @@ export function ListagemConsultasMarcadasPage() {
                 <div className='grid gap-4 md:grid-cols-2'>
                   <div className='grid gap-2'>
                     <Label htmlFor='data-list'>Data</Label>
-                    <Input id='data-list' type='date' placeholder='Data' />
+                    <DateField
+                      id='data-list'
+                      placeholder='Data'
+                      value={novaConsultaData}
+                      onChange={setNovaConsultaData}
+                    />
                   </div>
                   <div className='grid gap-2'>
                     <Label htmlFor='hora-list'>Hora</Label>
-                    <Input id='hora-list' type='time' placeholder='Hora' />
+                    <TimeField
+                      id='hora-list'
+                      placeholder='Hora'
+                      value={novaConsultaHora}
+                      onChange={setNovaConsultaHora}
+                    />
                   </div>
                 </div>
                 <div className='grid gap-2'>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, forwardRef, useImperativeHandle } from 'rea
 import { useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
+import { TimeField } from '@/components/shared/time-field'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Plus, Save } from 'lucide-react'
@@ -398,22 +399,22 @@ export const TabHorarioFixo = forwardRef<TabHorarioFixoRef, {
           </label>
           <div className='flex items-center gap-2'>
             <label className='text-sm'>Intervalo Marcação</label>
-            <Input
-              type='time'
+            <TimeField
               className='h-7 w-24'
               value={intervaloMarcacao}
-              onChange={(e) => setIntervaloMarcacao(e.target.value)}
+              onChange={setIntervaloMarcacao}
               disabled={isReadOnly}
+              readOnly={isReadOnly}
             />
           </div>
           <div className='flex items-center gap-2'>
             <label className='text-sm'>Intervalo Marcação - 1ª Consulta</label>
-            <Input
-              type='time'
+            <TimeField
               className='h-7 w-24'
               value={intervaloPrimeiraConsulta}
-              onChange={(e) => setIntervaloPrimeiraConsulta(e.target.value)}
+              onChange={setIntervaloPrimeiraConsulta}
               disabled={isReadOnly}
+              readOnly={isReadOnly}
             />
           </div>
           <label className='flex items-center space-x-2 cursor-pointer'>
@@ -452,12 +453,12 @@ export const TabHorarioFixo = forwardRef<TabHorarioFixoRef, {
               {DIAS_DISPLAY.map((d) => (
                 <td key={d} className='p-1.5 text-center'>
                   <div className='flex justify-center'>
-                    <Input
-                      type='time'
+                    <TimeField
                       className='h-7 w-24 mx-auto'
                       value={periodo1[d]?.inicio ?? ''}
-                      onChange={(e) => setPeriodo1((prev) => ({ ...prev, [d]: { ...prev[d], inicio: e.target.value } }))}
+                      onChange={(value) => setPeriodo1((prev) => ({ ...prev, [d]: { ...prev[d], inicio: value } }))}
                       disabled={isReadOnly}
+                      readOnly={isReadOnly}
                     />
                   </div>
                 </td>
@@ -468,12 +469,12 @@ export const TabHorarioFixo = forwardRef<TabHorarioFixoRef, {
               {DIAS_DISPLAY.map((d) => (
                 <td key={d} className='p-1.5 pt-4 text-center'>
                   <div className='flex justify-center'>
-                    <Input
-                      type='time'
+                    <TimeField
                       className='h-7 w-24 mx-auto'
                       value={periodo1[d]?.fim ?? ''}
-                      onChange={(e) => setPeriodo1((prev) => ({ ...prev, [d]: { ...prev[d], fim: e.target.value } }))}
+                      onChange={(value) => setPeriodo1((prev) => ({ ...prev, [d]: { ...prev[d], fim: value } }))}
                       disabled={isReadOnly}
+                      readOnly={isReadOnly}
                     />
                   </div>
                 </td>
@@ -543,12 +544,12 @@ export const TabHorarioFixo = forwardRef<TabHorarioFixoRef, {
               {DIAS_DISPLAY.map((d) => (
                 <td key={d} className='p-1.5 text-center'>
                   <div className='flex justify-center'>
-                    <Input
-                      type='time'
+                    <TimeField
                       className='h-7 w-24 mx-auto'
                       value={periodo2[d]?.inicio ?? ''}
-                      onChange={(e) => setPeriodo2((prev) => ({ ...prev, [d]: { ...prev[d], inicio: e.target.value } }))}
+                      onChange={(value) => setPeriodo2((prev) => ({ ...prev, [d]: { ...prev[d], inicio: value } }))}
                       disabled={isReadOnly}
+                      readOnly={isReadOnly}
                     />
                   </div>
                 </td>
@@ -559,12 +560,12 @@ export const TabHorarioFixo = forwardRef<TabHorarioFixoRef, {
               {DIAS_DISPLAY.map((d) => (
                 <td key={d} className='p-1.5 pt-4 text-center'>
                   <div className='flex justify-center'>
-                    <Input
-                      type='time'
+                    <TimeField
                       className='h-7 w-24 mx-auto'
                       value={periodo2[d]?.fim ?? ''}
-                      onChange={(e) => setPeriodo2((prev) => ({ ...prev, [d]: { ...prev[d], fim: e.target.value } }))}
+                      onChange={(value) => setPeriodo2((prev) => ({ ...prev, [d]: { ...prev[d], fim: value } }))}
                       disabled={isReadOnly}
+                      readOnly={isReadOnly}
                     />
                   </div>
                 </td>

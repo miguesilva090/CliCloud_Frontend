@@ -61,6 +61,7 @@ export interface MedicoDTO {
   // Medico
   director: boolean
   especialidadeId?: string | null
+  especialidade?: { id: string; nome: string } | null
   especialidadeNome?: string | null
   margem?: number | null
   loginPRVR?: string | null

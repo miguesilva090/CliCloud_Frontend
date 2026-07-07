@@ -8,6 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { DateField } from '@/components/shared/date-field'
+import { TimeField } from '@/components/shared/time-field'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -107,8 +109,8 @@ export function ConsultaMarcadaViewEditModal({
           <div className='grid gap-2'><Label>Nº Utente</Label><Input value={rowData?.utenteNumero ?? '—'} disabled readOnly /></div>
           <div className='grid gap-2'><Label>Nome utente</Label><Input value={rowData?.utenteNome ?? '—'} disabled readOnly /></div>
           <div className='grid grid-cols-2 gap-4'>
-            <div className='grid gap-2'><Label>Data</Label><Input type='date' value={isView ? (rowData?.data?.slice(0, 10) ?? '') : editData} disabled={isView} readOnly={isView} onChange={(e) => setEditData(e.target.value)} /></div>
-            <div className='grid gap-2'><Label>Hora</Label><Input type='time' value={isView ? (rowData?.horaMarcacao?.slice(0, 5) ?? rowData?.horaMarcacaoLabel ?? '') : editHora} disabled={isView} readOnly={isView} onChange={(e) => setEditHora(e.target.value)} /></div>
+            <div className='grid gap-2'><Label>Data</Label><DateField value={isView ? (rowData?.data?.slice(0, 10) ?? '') : editData} disabled={isView} readOnly={isView} onChange={setEditData} /></div>
+            <div className='grid gap-2'><Label>Hora</Label><TimeField value={isView ? (rowData?.horaMarcacao?.slice(0, 5) ?? rowData?.horaMarcacaoLabel ?? '') : editHora} disabled={isView} readOnly={isView} onChange={setEditHora} placeholder='Hora' /></div>
           </div>
           <div className='grid gap-2'><Label>Organismo</Label><Input value={rowData?.organismoNome ?? rowData?.organismoCodigo ?? '—'} disabled readOnly /></div>
           <div className='grid gap-2'><Label>Estado</Label><Input value={rowData?.statusConsultaLabel ?? '—'} disabled readOnly /></div>

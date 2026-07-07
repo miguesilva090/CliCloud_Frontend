@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import {
   Form,
   FormControl,
@@ -236,7 +237,7 @@ export function SubsistemaSaudeInserirModal({
                 <FormItem className={`${fieldGap} min-w-0`}>
                   <FormLabel className={labelClass}>Data Validade</FormLabel>
                   <FormControl>
-                    <Input type='date' className={inputClass} {...field} />
+                    <DateField className={inputClass} value={field.value} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

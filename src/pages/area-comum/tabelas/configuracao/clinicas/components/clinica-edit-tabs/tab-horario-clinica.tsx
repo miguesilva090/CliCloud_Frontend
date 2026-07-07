@@ -6,7 +6,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+import { TimeField } from '@/components/shared/time-field'
 import { Switch } from '@/components/ui/switch'
 
 function asValue(v: unknown): string {
@@ -56,13 +56,12 @@ export function TabHorarioClinica({
             <FormItem className='md:col-span-2'>
               <FormLabel className='text-xs'>Inicio Manhã</FormLabel>
               <FormControl>
-                <Input
-                  type='time'
-                  step='60'
+                <TimeField
                   className='h-7'
                   readOnly={disabled}
-                  {...field}
+                  disabled={disabled}
                   value={asValue(field.value)}
+                  onChange={field.onChange}
                 />
               </FormControl>
               <FormMessage />
@@ -77,13 +76,12 @@ export function TabHorarioClinica({
             <FormItem className='md:col-span-2'>
               <FormLabel className='text-xs'>Fim Manhã</FormLabel>
               <FormControl>
-                <Input
-                  type='time'
-                  step='60'
+                <TimeField
                   className='h-7'
                   readOnly={disabled || !interrupcao}
-                  {...field}
+                  disabled={disabled || !interrupcao}
                   value={asValue(field.value)}
+                  onChange={field.onChange}
                 />
               </FormControl>
               <FormMessage />
@@ -98,13 +96,12 @@ export function TabHorarioClinica({
             <FormItem className='md:col-span-2'>
               <FormLabel className='text-xs'>Início Tarde</FormLabel>
               <FormControl>
-                <Input
-                  type='time'
-                  step='60'
+                <TimeField
                   className='h-7'
                   readOnly={disabled || !interrupcao}
-                  {...field}
+                  disabled={disabled || !interrupcao}
                   value={asValue(field.value)}
+                  onChange={field.onChange}
                 />
               </FormControl>
               <FormMessage />
@@ -119,13 +116,12 @@ export function TabHorarioClinica({
             <FormItem className='md:col-span-2'>
               <FormLabel className='text-xs'>Fim Tarde</FormLabel>
               <FormControl>
-                <Input
-                  type='time'
-                  step='60'
+                <TimeField
                   className='h-7'
                   readOnly={disabled}
-                  {...field}
+                  disabled={disabled}
                   value={asValue(field.value)}
+                  onChange={field.onChange}
                 />
               </FormControl>
               <FormMessage />

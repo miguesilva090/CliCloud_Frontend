@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DateField } from '@/components/shared/date-field'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { useDebounce } from 'use-debounce'
 import { useQuery } from '@tanstack/react-query'
@@ -1004,12 +1005,11 @@ export function PrescricaoExamesTab({ utenteId }: PrescricaoExamesTabProps) {
           <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
             <div>
               <Label htmlFor='dataPrescricao'>Data da prescrição</Label>
-              <Input
+              <DateField
                 id='dataPrescricao'
-                type='date'
                 className={inputClass}
                 value={dataPrescricao}
-                onChange={(e) => setDataPrescricao(e.target.value)}
+                onChange={setDataPrescricao}
                 disabled={modalMode !== 'create'}
               />
             </div>

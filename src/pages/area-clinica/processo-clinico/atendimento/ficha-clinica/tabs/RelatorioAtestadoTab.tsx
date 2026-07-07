@@ -116,7 +116,6 @@ export function RelatorioAtestadoTab({ utenteId }: RelatorioAtestadoTabProps) {
           setMedicoNomeFromApi(medico.nome ?? '')
           setMedicoNumeroProfFromApi(medico.carteira ?? '')
           // Especialidade pode vir como objeto com nome ou campo direto
-          // @ts-expect-error – DTO pode não tipar especialidade em detalhe
           const especialidadeNome = medico.especialidade?.nome ?? medico.especialidadeNome ?? ''
           setMedicoEspecialidadeFromApi(especialidadeNome)
         }

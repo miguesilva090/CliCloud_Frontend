@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react'
+import { DateField } from '@/components/shared/date-field'
+import { TimeField } from '@/components/shared/time-field'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
@@ -594,19 +596,17 @@ export function SinaisVitaisTab({ utenteId = '', utenteNome }: SinaisVitaisTabPr
 
             <div className='mt-2 space-y-2'>
               <div className='grid grid-cols-2 gap-2'>
-                <Input
-                  type='date'
+                <DateField
                   value={tensaoForm.data}
-                  onChange={(e) =>
-                    setTensaoForm((f) => ({ ...f, data: e.target.value }))
+                  onChange={(value) =>
+                    setTensaoForm((f) => ({ ...f, data: value }))
                   }
                   placeholder='Data'
                 />
-                <Input
-                  type='time'
+                <TimeField
                   value={tensaoForm.hora}
-                  onChange={(e) =>
-                    setTensaoForm((f) => ({ ...f, hora: e.target.value }))
+                  onChange={(value) =>
+                    setTensaoForm((f) => ({ ...f, hora: value }))
                   }
                   placeholder='Hora'
                 />
@@ -796,19 +796,17 @@ export function SinaisVitaisTab({ utenteId = '', utenteNome }: SinaisVitaisTabPr
 
             <div className='mt-2 space-y-2'>
               <div className='grid grid-cols-2 gap-2'>
-                <Input
-                  type='date'
+                <DateField
                   value={glicemiaForm.data}
-                  onChange={(e) =>
-                    setGlicemiaForm((f) => ({ ...f, data: e.target.value }))
+                  onChange={(value) =>
+                    setGlicemiaForm((f) => ({ ...f, data: value }))
                   }
                   placeholder='Data'
                 />
-                <Input
-                  type='time'
+                <TimeField
                   value={glicemiaForm.hora}
-                  onChange={(e) =>
-                    setGlicemiaForm((f) => ({ ...f, hora: e.target.value }))
+                  onChange={(value) =>
+                    setGlicemiaForm((f) => ({ ...f, hora: value }))
                   }
                   placeholder='Hora'
                 />
@@ -973,19 +971,17 @@ export function SinaisVitaisTab({ utenteId = '', utenteNome }: SinaisVitaisTabPr
 
             <div className='mt-2 space-y-2'>
               <div className='grid grid-cols-2 gap-2'>
-                <Input
-                  type='date'
+                <DateField
                   value={temperaturaForm.data}
-                  onChange={(e) =>
-                    setTemperaturaForm((f) => ({ ...f, data: e.target.value }))
+                  onChange={(value) =>
+                    setTemperaturaForm((f) => ({ ...f, data: value }))
                   }
                   placeholder='Data'
                 />
-                <Input
-                  type='time'
+                <TimeField
                   value={temperaturaForm.hora}
-                  onChange={(e) =>
-                    setTemperaturaForm((f) => ({ ...f, hora: e.target.value }))
+                  onChange={(value) =>
+                    setTemperaturaForm((f) => ({ ...f, hora: value }))
                   }
                   placeholder='Hora'
                 />
@@ -1150,19 +1146,17 @@ export function SinaisVitaisTab({ utenteId = '', utenteNome }: SinaisVitaisTabPr
 
             <div className='mt-2 space-y-2'>
               <div className='grid grid-cols-2 gap-2'>
-                <Input
-                  type='date'
+                <DateField
                   value={imcForm.data}
-                  onChange={(e) =>
-                    setImcForm((f) => ({ ...f, data: e.target.value }))
+                  onChange={(value) =>
+                    setImcForm((f) => ({ ...f, data: value }))
                   }
                   placeholder='Data'
                 />
-                <Input
-                  type='time'
+                <TimeField
                   value={imcForm.hora}
-                  onChange={(e) =>
-                    setImcForm((f) => ({ ...f, hora: e.target.value }))
+                  onChange={(value) =>
+                    setImcForm((f) => ({ ...f, hora: value }))
                   }
                   placeholder='Hora'
                 />

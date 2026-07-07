@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { DateField } from '@/components/shared/date-field'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -105,6 +106,10 @@ export function AntecedentesTab({ utenteId = '' }: AntecedentesTabProps) {
   const [tomaFarmacosPrescritosChecked, setTomaFarmacosPrescritosChecked] = useState(false)
   const [tomaFarmacosSemReceita, setTomaFarmacosSemReceita] = useState<'sim' | 'nao' | ''>('')
   const [praticaExercicioFisicoChecked, setPraticaExercicioFisicoChecked] = useState(false)
+  const [alcoolDesdeQuando, setAlcoolDesdeQuando] = useState('')
+  const [outrosViciosDesdeQuando, setOutrosViciosDesdeQuando] = useState('')
+  const [tabacoDesdeQuando, setTabacoDesdeQuando] = useState('')
+  const [drogasDesdeQuando, setDrogasDesdeQuando] = useState('')
 
   useEffect(() => {
     setConsumoDeFrutasChecked(habitosEVicios?.consumoDeFrutas ?? false)
@@ -135,6 +140,10 @@ export function AntecedentesTab({ utenteId = '' }: AntecedentesTabProps) {
     } else {
       setTipoCarne('')
     }
+    setAlcoolDesdeQuando(habitosEVicios?.alcoolDesdeQuando ?? '')
+    setOutrosViciosDesdeQuando(habitosEVicios?.outrosViciosDesdeQuando ?? '')
+    setTabacoDesdeQuando(habitosEVicios?.tabacoDesdeQuando ?? '')
+    setDrogasDesdeQuando(habitosEVicios?.drogasDesdeQuando ?? '')
   }, [habitosEVicios])
 
   const { data: alergiasData } = useGetAlergiasUtentePaginated(utenteId, 1, 100)
@@ -888,15 +897,15 @@ export function AntecedentesTab({ utenteId = '' }: AntecedentesTabProps) {
 
                 bebidasAlcoolicas: getStr('bebidasAlcoolicas'),
                 quantidadeAlcool: getStr('quantidadeAlcool'),
-                alcoolDesdeQuando: getStr('alcoolDesdeQuando'),
+                alcoolDesdeQuando: alcoolDesdeQuando.trim() || null,
 
                 quantosFumaDia: getStr('quantosFumaDia'),
-                tabacoDesdeQuando: getStr('tabacoDesdeQuando'),
+                tabacoDesdeQuando: tabacoDesdeQuando.trim() || null,
                 drogas: getStr('drogas'),
-                drogasDesdeQuando: getStr('drogasDesdeQuando'),
+                drogasDesdeQuando: drogasDesdeQuando.trim() || null,
 
                 outrosVicios: getStr('outrosVicios'),
-                outrosViciosDesdeQuando: getStr('outrosViciosDesdeQuando'),
+                outrosViciosDesdeQuando: outrosViciosDesdeQuando.trim() || null,
 
                 // Medicamentos / Exercício Físico
                 tomaFarmacosPrescritos: tomaFarmacosPrescritosChecked,
@@ -1119,10 +1128,9 @@ export function AntecedentesTab({ utenteId = '' }: AntecedentesTabProps) {
                     </div>
                     <div className='space-y-1'>
                       <Label className='text-xs'>Desde quando?</Label>
-                      <Input
-                        name='alcoolDesdeQuando'
-                        type='date'
-                        defaultValue={habitosEVicios?.alcoolDesdeQuando ?? ''}
+                      <DateField
+                        value={alcoolDesdeQuando}
+                        onChange={setAlcoolDesdeQuando}
                         disabled={!consumoBebidasAlcoolicasChecked}
                       />
                     </div>
@@ -1142,10 +1150,9 @@ export function AntecedentesTab({ utenteId = '' }: AntecedentesTabProps) {
                     </div>
                     <div className='space-y-1'>
                       <Label className='text-xs'>Desde quando?</Label>
-                      <Input
-                        name='outrosViciosDesdeQuando'
-                        type='date'
-                        defaultValue={habitosEVicios?.outrosViciosDesdeQuando ?? ''}
+                      <DateField
+                        value={outrosViciosDesdeQuando}
+                        onChange={setOutrosViciosDesdeQuando}
                       />
                     </div>
                   </div>
@@ -1175,10 +1182,9 @@ export function AntecedentesTab({ utenteId = '' }: AntecedentesTabProps) {
                     </div>
                     <div className='space-y-1'>
                       <Label className='text-xs'>Desde quando?</Label>
-                      <Input
-                        name='tabacoDesdeQuando'
-                        type='date'
-                        defaultValue={habitosEVicios?.tabacoDesdeQuando ?? ''}
+                      <DateField
+                        value={tabacoDesdeQuando}
+                        onChange={setTabacoDesdeQuando}
                         disabled={!fumaChecked}
                       />
                     </div>
@@ -1202,10 +1208,9 @@ export function AntecedentesTab({ utenteId = '' }: AntecedentesTabProps) {
                     </div>
                     <div className='space-y-1'>
                       <Label className='text-xs'>Desde quando?</Label>
-                      <Input
-                        name='drogasDesdeQuando'
-                        type='date'
-                        defaultValue={habitosEVicios?.drogasDesdeQuando ?? ''}
+                      <DateField
+                        value={drogasDesdeQuando}
+                        onChange={setDrogasDesdeQuando}
                       />
                     </div>
                   </div>

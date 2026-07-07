@@ -7,6 +7,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import type { TecnicoEditFormValues } from '../../types/tecnico-edit-form-types'
 
 export function TabTecnicoIdentificacao({
@@ -107,11 +108,11 @@ export function TabTecnicoIdentificacao({
               <FormItem>
                 <FormLabel>Data Nascimento</FormLabel>
                 <FormControl>
-                  <Input
-                    type='date'
+                  <DateField
                     className='h-7'
+                    value={field.value}
+                    onChange={field.onChange}
                     readOnly={readOnly}
-                    {...field}
                   />
                 </FormControl>
                 <FormMessage />
@@ -125,11 +126,11 @@ export function TabTecnicoIdentificacao({
               <FormItem>
                 <FormLabel>Data Emissão do Cartão</FormLabel>
                 <FormControl>
-                  <Input
-                    type='date'
+                  <DateField
                     className='h-7'
+                    value={field.value}
+                    onChange={field.onChange}
                     readOnly={readOnly}
-                    {...field}
                   />
                 </FormControl>
                 <FormMessage />

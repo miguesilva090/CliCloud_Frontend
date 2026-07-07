@@ -1,3 +1,4 @@
+import { DateField } from '@/components/shared/date-field'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import {
@@ -70,22 +71,20 @@ export function ListagemFaturacaoFilterControls({
       </div>
       <div className='space-y-2'>
         <Label>Data de</Label>
-        <Input
-          type='date'
+        <DateField
           value={dataDe}
-          onChange={(e) =>
-            table.getColumn('data_de')?.setFilterValue(e.target.value)
+          onChange={(value) =>
+            table.getColumn('data_de')?.setFilterValue(value)
           }
           className={inputClass}
         />
       </div>
       <div className='space-y-2'>
         <Label>Data até</Label>
-        <Input
-          type='date'
+        <DateField
           value={dataAte}
-          onChange={(e) =>
-            table.getColumn('data_ate')?.setFilterValue(e.target.value)
+          onChange={(value) =>
+            table.getColumn('data_ate')?.setFilterValue(value)
           }
           className={inputClass}
         />

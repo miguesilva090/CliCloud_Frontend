@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
+import { DateField } from '@/components/shared/date-field'
 import { MarcacoesAdministrativoService } from '@/lib/services/consultas/marcacoes-administrativo-service'
 import { MedicosService } from '@/lib/services/saude/medicos-service'
 import { modules } from '@/config/modules'
@@ -176,20 +177,18 @@ export function TrocaMarcacoesMedicosPage() {
             </div>
             <div>
               <Label>Data origem</Label>
-              <Input
-                type='date'
+              <DateField
                 className='mt-1'
                 value={dataOrigem}
-                onChange={(e) => setDataOrigem(e.target.value)}
+                onChange={setDataOrigem}
               />
             </div>
             <div>
               <Label>Data destino</Label>
-              <Input
-                type='date'
+              <DateField
                 className='mt-1'
                 value={dataDestino}
-                onChange={(e) => setDataDestino(e.target.value)}
+                onChange={setDataDestino}
               />
             </div>
           </div>

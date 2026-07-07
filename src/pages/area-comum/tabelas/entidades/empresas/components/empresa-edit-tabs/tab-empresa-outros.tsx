@@ -7,6 +7,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import type { EmpresaEditFormValues } from '../../types/empresa-edit-form-types'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -297,11 +298,11 @@ export function TabEmpresaOutros({
               <FormItem>
                 <FormLabel>Início Contrato</FormLabel>
                 <FormControl>
-                  <Input
-                    type='date'
+                  <DateField
                     className='h-7'
+                    value={field.value}
+                    onChange={field.onChange}
                     readOnly={readOnly}
-                    {...field}
                   />
                 </FormControl>
                 <FormMessage />
@@ -315,11 +316,11 @@ export function TabEmpresaOutros({
               <FormItem>
                 <FormLabel>Fim Contrato</FormLabel>
                 <FormControl>
-                  <Input
-                    type='date'
+                  <DateField
                     className='h-7'
+                    value={field.value}
+                    onChange={field.onChange}
                     readOnly={readOnly}
-                    {...field}
                   />
                 </FormControl>
                 <FormMessage />

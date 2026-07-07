@@ -6,10 +6,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { DateField } from '@/components/shared/date-field'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from '@/utils/toast-utils'
 import type { DocumentoTableDTO } from '@/types/dtos/faturacao/documento.dtos'
@@ -93,10 +93,9 @@ export function AnularDocumentoDialog({
           </div>
           <div className='space-y-2'>
             <Label>Data de anulação</Label>
-            <Input
-              type='date'
+            <DateField
               value={dataAnulacao}
-              onChange={(e) => setDataAnulacao(e.target.value)}
+              onChange={setDataAnulacao}
             />
           </div>
           <div className='flex items-center gap-2'>

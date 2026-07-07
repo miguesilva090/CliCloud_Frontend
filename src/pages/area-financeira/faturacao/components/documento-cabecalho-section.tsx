@@ -1,3 +1,5 @@
+import { DateField } from '@/components/shared/date-field'
+import { TimeField } from '@/components/shared/time-field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -64,21 +66,19 @@ export function DocumentoCabecalhoSection({
       </div>
       <div className={fieldGap}>
         <Label className={labelClass}>Data</Label>
-        <Input
-          type='date'
+        <DateField
           className={inputClass}
           value={state.dataDocumento}
-          onChange={(e) => onChange({ dataDocumento: e.target.value })}
+          onChange={(value) => onChange({ dataDocumento: value })}
           readOnly={readOnly}
         />
       </div>
       <div className={fieldGap}>
         <Label className={labelClass}>Data Vencimento</Label>
-        <Input
-          type='date'
+        <DateField
           className={inputClass}
           value={state.dataVencimentoPagamento}
-          onChange={(e) => onChange({ dataVencimentoPagamento: e.target.value })}
+          onChange={(value) => onChange({ dataVencimentoPagamento: value })}
           readOnly={readOnly}
         />
       </div>
@@ -154,20 +154,18 @@ export function DocumentoCabecalhoSection({
         <>
           <div className={fieldGap}>
             <Label className={labelClass}>Data Transporte</Label>
-            <Input
-              type='date'
+            <DateField
               className={inputClass}
               value={state.dataTransporte}
-              onChange={(e) => onChange({ dataTransporte: e.target.value })}
+              onChange={(value) => onChange({ dataTransporte: value })}
             />
           </div>
           <div className={fieldGap}>
             <Label className={labelClass}>Hora Transporte</Label>
-            <Input
-              type='time'
+            <TimeField
               className={inputClass}
               value={state.horaTransporte}
-              onChange={(e) => onChange({ horaTransporte: e.target.value })}
+              onChange={(value) => onChange({ horaTransporte: value })}
             />
           </div>
           <div className={fieldGap}>

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
+import { DateField } from '@/components/shared/date-field'
 import { fieldGap, inputClass, labelClass } from '@/lib/form-styles'
 import { toast } from '@/utils/toast-utils'
 import { ResponseStatus } from '@/types/api/responses'
@@ -163,20 +164,18 @@ export function DocumentoSinistradosInfoDialog({
           <div className='grid gap-4 sm:grid-cols-2'>
             <div className={fieldGap}>
               <Label className={labelClass}>Serviços desde</Label>
-              <Input
-                type='date'
+              <DateField
                 className={inputClass}
                 value={dataDesde}
-                onChange={(e) => setDataDesde(e.target.value)}
+                onChange={setDataDesde}
               />
             </div>
             <div className={fieldGap}>
               <Label className={labelClass}>Serviços até</Label>
-              <Input
-                type='date'
+              <DateField
                 className={inputClass}
                 value={dataAte}
-                onChange={(e) => setDataAte(e.target.value)}
+                onChange={setDataAte}
               />
             </div>
           </div>

@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
+import { DateField } from '@/components/shared/date-field'
 import { toast } from '@/utils/toast-utils'
 import { ResponseStatus } from '@/types/api/responses'
 import { modules } from '@/config/modules'
@@ -753,11 +754,11 @@ export function SinistradoViewEditModal({
             </div>
             <div className='col-span-2 space-y-1.5'>
               <Label>Data Acidente</Label>
-              <Input disabled={isView} type='date' value={dataAcidente} onChange={(e) => setDataAcidente(e.target.value)} />
+              <DateField disabled={isView} value={dataAcidente} onChange={setDataAcidente} />
             </div>
             <div className='col-span-2 space-y-1.5'>
               <Label>Data Participação</Label>
-              <Input disabled={isView} type='date' value={dataParticipacao} onChange={(e) => setDataParticipacao(e.target.value)} />
+              <DateField disabled={isView} value={dataParticipacao} onChange={setDataParticipacao} />
             </div>
             <div className='col-span-3 space-y-1.5'>
               <Label>Cód. Tipo Acidente</Label>
@@ -845,7 +846,7 @@ export function SinistradoViewEditModal({
               <div className='col-span-6 rounded-md border p-3'>
                 <h4 className='mb-3 text-sm font-semibold'>Dados da Observação Clínica</h4>
                 <div className='grid grid-cols-12 gap-3'>
-                  <div className='col-span-4 space-y-1.5'><Label>Data Primeira Observação</Label><Input disabled={isView} type='date' value={dataPrimeiraObservacao} onChange={(e) => setDataPrimeiraObservacao(e.target.value)} /></div>
+                  <div className='col-span-4 space-y-1.5'><Label>Data Primeira Observação</Label><DateField disabled={isView} value={dataPrimeiraObservacao} onChange={setDataPrimeiraObservacao} /></div>
                   <div className='col-span-8 flex items-end gap-4 pb-1'>
                     <div className='flex items-center gap-2'><Checkbox disabled={isView} checked={internado} onCheckedChange={(v) => setInternado(Boolean(v))} /><Label>Internado</Label></div>
                     <div className='flex items-center gap-2'><Checkbox disabled={isView} checked={rx} onCheckedChange={(v) => setRx(Boolean(v))} /><Label>RX</Label></div>
@@ -878,8 +879,8 @@ export function SinistradoViewEditModal({
                   <div className='col-span-12 space-y-1'><Label>Estado Atual</Label><Input disabled={isView} value={estadoAtual} onChange={(e) => setEstadoAtual(e.target.value)} /></div>
                   <div className='col-span-6 space-y-1'><Label>Incapacidade Permanente Parcial %</Label><Input disabled={isView} value={ipp} onChange={(e) => setIpp(e.target.value)} /></div>
                   <div className='col-span-6 space-y-1'><Label>Artigo</Label><Input disabled={isView} value={artigo} onChange={(e) => setArtigo(e.target.value)} /></div>
-                  <div className='col-span-6 space-y-1'><Label>Data do Último Tratamento</Label><Input disabled={isView} type='date' value={dataUltimoTratamento} onChange={(e) => setDataUltimoTratamento(e.target.value)} /></div>
-                  <div className='col-span-6 space-y-1'><Label>Data Alta</Label><Input disabled={isView} type='date' value={dataAlta} onChange={(e) => setDataAlta(e.target.value)} /></div>
+                  <div className='col-span-6 space-y-1'><Label>Data do Último Tratamento</Label><DateField disabled={isView} value={dataUltimoTratamento} onChange={setDataUltimoTratamento} /></div>
+                  <div className='col-span-6 space-y-1'><Label>Data Alta</Label><DateField disabled={isView} value={dataAlta} onChange={setDataAlta} /></div>
                 </div>
               </div>
             </div>

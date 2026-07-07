@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
+import { DateField } from '@/components/shared/date-field'
 import { SmsService } from '@/lib/services/core/sms-service'
 import { MarcacoesAdministrativoService } from '@/lib/services/consultas/marcacoes-administrativo-service'
 import { MedicosService } from '@/lib/services/saude/medicos-service'
@@ -185,11 +186,10 @@ export function MarcacoesEnvioSmsModal({
           <div className='space-y-3'>
             <div>
               <Label>Hora</Label>
-              <Input
-                type='date'
+              <DateField
                 className='mt-1'
                 value={data}
-                onChange={(e) => setData(e.target.value)}
+                onChange={setData}
               />
             </div>
             <div>

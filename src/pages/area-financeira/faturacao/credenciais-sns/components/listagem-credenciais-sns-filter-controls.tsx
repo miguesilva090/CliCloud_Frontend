@@ -1,5 +1,6 @@
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/shared/date-field'
 import { inputClass, labelClass } from '@/lib/form-styles'
 
 export function ListagemCredenciaisSnsFilterControls({ table }: { table: any }) {
@@ -10,20 +11,18 @@ export function ListagemCredenciaisSnsFilterControls({ table }: { table: any }) 
     <div className='grid gap-4 sm:grid-cols-2'>
       <div className='space-y-2'>
         <Label className={labelClass}>Data lote de</Label>
-        <Input
-          type='date'
+        <DateField
           className={inputClass}
           value={get('datalotede')}
-          onChange={(e) => set('datalotede', e.target.value)}
+          onChange={(value) => set('datalotede', value)}
         />
       </div>
       <div className='space-y-2'>
         <Label className={labelClass}>Data lote até</Label>
-        <Input
-          type='date'
+        <DateField
           className={inputClass}
           value={get('dataloteate')}
-          onChange={(e) => set('dataloteate', e.target.value)}
+          onChange={(value) => set('dataloteate', value)}
         />
       </div>
       <div className='space-y-2'>

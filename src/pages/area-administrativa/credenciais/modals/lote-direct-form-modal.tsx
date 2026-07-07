@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, Printer, Save, X } from 'lucide-react'
+import { ArrowLeft, Plus, Printer, Save, X, List } from 'lucide-react'
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AsyncCombobox, type ComboboxItem } from '@/components/shared/async-combobox'
+import { DateField } from '@/components/shared/date-field'
 import { fieldGap, formBlockGap, inputClass, labelClass, selectTriggerClass } from '@/lib/form-styles'
 import { toast } from '@/utils/toast-utils'
 import { ResponseStatus, type PaginatedResponse } from '@/types/api/responses'
@@ -1455,8 +1456,14 @@ export function LoteDirectFormModal({
             <Button type='button' variant='outline' size='sm' onClick={() => toast.info('Exames Sem Papel ainda não migrado neste ecrã.')}>
               Exames Sem Papel
             </Button>
-            <Button type='button' variant='outline' size='sm' onClick={() => toast.info('Lista ainda não migrada.')}>
-              Lista
+            <Button 
+              type='button'
+              variant='outline'
+              size='sm'
+              onClick={() => onOpenChange(false)} 
+              title='Voltar'
+            >
+              <List className='mr-2 h-4 w-4' /> Lista
             </Button>
             <Button type='button' variant='outline' size='sm' onClick={() => toast.info('Lançamento automático ainda não migrado.')}>
               Lançamento Automático
@@ -1686,22 +1693,20 @@ export function LoteDirectFormModal({
             </div>
             <div className={`col-span-3 ${fieldGap}`}>
               <Label className={labelClass}>Data Início</Label>
-              <Input
+              <DateField
                 className={inputClass}
                 disabled={isView}
-                type='date'
                 value={form.dataInicio}
-                onChange={(e) => patchForm({ dataInicio: e.target.value })}
+                onChange={(v) => patchForm({ dataInicio: v })}
               />
             </div>
             <div className={`col-span-3 ${fieldGap}`}>
               <Label className={labelClass}>Data Fim</Label>
-              <Input
+              <DateField
                 className={inputClass}
                 disabled={isView}
-                type='date'
                 value={form.dataFim}
-                onChange={(e) => patchForm({ dataFim: e.target.value })}
+                onChange={(v) => patchForm({ dataFim: v })}
               />
             </div>
             <div className={`col-span-6 ${fieldGap}`}>

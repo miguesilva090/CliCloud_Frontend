@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
+import { DateField } from '@/components/shared/date-field'
+import { TimeField } from '@/components/shared/time-field'
 import { fieldGap, formBlockGap, inputClass, labelClass } from '@/lib/form-styles'
 import { MarcacoesAdministrativoService } from '@/lib/services/consultas/marcacoes-administrativo-service'
 import { UtentesService } from '@/lib/services/saude/utentes-service'
@@ -572,32 +574,31 @@ export function MarcacaoAdministrativoViewEditModal({
           <div className='grid gap-3 sm:grid-cols-3'>
             <div className={fieldGap}>
               <Label className={labelClass}>Data</Label>
-              <Input
-                type='date'
+              <DateField
                 className={inputClass}
                 readOnly={readOnly}
                 value={form.data}
-                onChange={(e) => patch({ data: e.target.value })}
+                onChange={(v) => patch({ data: v })}
               />
             </div>
             <div className={fieldGap}>
               <Label className={labelClass}>Hora</Label>
-              <Input
-                type='time'
+              <TimeField
                 className={inputClass}
                 readOnly={readOnly}
+                disabled={readOnly}
                 value={form.horaInicio}
-                onChange={(e) => patch({ horaInicio: e.target.value })}
+                onChange={(v) => patch({ horaInicio: v })}
               />
             </div>
             <div className={fieldGap}>
               <Label className={labelClass}>Duração</Label>
-              <Input
-                type='time'
+              <TimeField
                 className={inputClass}
                 readOnly={readOnly}
+                disabled={readOnly}
                 value={form.horaFim}
-                onChange={(e) => patch({ horaFim: e.target.value })}
+                onChange={(v) => patch({ horaFim: v })}
               />
             </div>
           </div>

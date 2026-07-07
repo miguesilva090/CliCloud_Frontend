@@ -32,6 +32,8 @@ import { Button } from '@/components/ui/button'
 
 import { Input } from '@/components/ui/input'
 
+import { DateField } from '@/components/shared/date-field'
+
 import { Label } from '@/components/ui/label'
 
 import { Textarea } from '@/components/ui/textarea'
@@ -434,21 +436,19 @@ export function ContaBancariaViewCreateModal({
 
               <Label htmlFor='cb-data'>Data de Abertura</Label>
 
-              <Input
+              <DateField
 
                 id='cb-data'
 
-                type='date'
-
                 value={values.DataAbertura ?? ''}
 
-                onChange={(e) =>
+                onChange={(v) =>
 
                   setValues((p) => ({
 
                     ...p,
 
-                    DataAbertura: e.target.value || null,
+                    DataAbertura: v || null,
 
                   }))
 
