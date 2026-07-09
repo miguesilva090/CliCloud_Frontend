@@ -18,6 +18,10 @@ import type {
     ValidarCorrigirLotesDTO,
     PassarParaHistoricoRequest,
     PassarParaHistoricoResultDTO,
+    PassarParaAtivoRequest,
+    PassarParaAtivoResultDTO,
+    ObterNovoLoteRequest,
+    ObterNovoLoteResultDTO,
 } from "@/types/dtos/credenciais/lote-direct.dtos"
 
 const BASE = '/client/credenciais/LoteDirect'
@@ -113,6 +117,26 @@ export class LoteDirectClient extends BaseApiClient {
         return this.httpClient.postRequest(
             state.URL,
             `${BASE}/passar-para-historico`,
+            payload
+        )
+    }
+
+    public async passarParaAtivo(
+        payload: PassarParaAtivoRequest
+    ): Promise<ResponseApi<GSResponse<PassarParaAtivoResultDTO>>> {
+        return this.httpClient.postRequest(
+            state.URL,
+            `${BASE}/passar-para-ativo`,
+            payload
+        )
+    }
+
+    public async obterNovoLote(
+        payload: ObterNovoLoteRequest
+    ) : Promise<ResponseApi<GSResponse<ObterNovoLoteResultDTO>>> {
+        return this.httpClient.postRequest(
+            state.URL,
+            `${BASE}/obter-novo-lote`,
             payload
         )
     }

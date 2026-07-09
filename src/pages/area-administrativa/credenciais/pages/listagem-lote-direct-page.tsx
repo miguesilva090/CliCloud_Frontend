@@ -33,6 +33,7 @@ import { LoteDirectViewModal } from '../modals/lote-direct-view-modal'
 import { LoteDirectFormModal } from '../modals/lote-direct-form-modal'
 import { CorrigirLotesModal } from '../modals/corrigir-lotes-modal'
 import { ListagensLoteDirectModal } from '../modals/listagens-lote-direct-modal'
+import { PassarParaAtivoModal } from '../modals/passar-para-ativo-modal'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { openLoteDirectCreationInApp } from '@/utils/window-utils'
 import { relatorioEtiquetaCredencialP1 } from '../utils/credenciais-legado-relatorios'
@@ -64,6 +65,8 @@ export function ListagemLoteDirectPage() {
   const [selectedRow, setSelectedRow] = useState<LoteDirectTableDTO | null>(null)
   const [historicoAtivo, setHistoricoAtivo] = useState(false)
   const [historicoConfirmRow, setHistoricoConfirmRow] = useState<LoteDirectTableDTO | null>(null)
+  const [ativoModalOpen, setAtivoModalOpen] = useState(false)
+  const [ativoModalRow, setAtivoModalRow] = useState<LoteDirectTableDTO | null>(null)
 
   const {
     data,
@@ -212,7 +215,7 @@ export function ListagemLoteDirectPage() {
               setViewModalOpen(true)
             }}
             onOpenEdit={
-              canChange
+              canChange && !historicoAtivo
                 ? (row: LoteDirectTableDTO) => {
                     setFormModalMode('edit')
                     setSelectedRow(row)
@@ -222,7 +225,7 @@ export function ListagemLoteDirectPage() {
                 : undefined
             }
             onOpenDelete={
-              canDelete
+              canDelete && !historicoAtivo
                 ? async (row) => {
                     if (!row?.id) return
                     const response = await LoteDirectService(permId).delete(row.id)
@@ -234,31 +237,46 @@ export function ListagemLoteDirectPage() {
                 : undefined
             }
             renderExtraActions={
-              !historicoAtivo && canChange
-                ? (row) => (
-                    <>
+              canChange
+                ? (row) =>
+                    historicoAtivo ? (
                       <Button
                         type='button'
                         variant='ghost'
                         size='icon'
                         className='h-8 w-8'
-                        title='Etiqueta P1'
-                        onClick={() => relatorioEtiquetaCredencialP1(row.id)}
+                        title='Passar para ativo (novo mês/ano)'
+                        onClick={() => {
+                          setAtivoModalRow(row)
+                          setAtivoModalOpen(true)
+                        }}
                       >
-                        <Tag className='h-4 w-4' />
+                        <RotateCw className='h-4 w-4' />
                       </Button>
-                      <Button
-                        type='button'
-                        variant='ghost'
-                        size='icon'
-                        className='h-8 w-8'
-                        title='Passar para histórico (organismo/mês/ano)'
-                        onClick={() => setHistoricoConfirmRow(row)}
-                      >
-                        <History className='h-4 w-4' />
-                      </Button>
-                    </>
-                  )
+                    ) : (
+                      <>
+                        <Button
+                          type='button'
+                          variant='ghost'
+                          size='icon'
+                          className='h-8 w-8'
+                          title='Etiqueta P1'
+                          onClick={() => relatorioEtiquetaCredencialP1(row.id)}
+                        >
+                          <Tag className='h-4 w-4' />
+                        </Button>
+                        <Button
+                          type='button'
+                          variant='ghost'
+                          size='icon'
+                          className='h-8 w-8'
+                          title='Passar para histórico (organismo/mês/ano)'
+                          onClick={() => setHistoricoConfirmRow(row)}
+                        >
+                          <History className='h-4 w-4' />
+                        </Button>
+                      </>
+                    )
                 : undefined
             }
             canView={canView}
@@ -285,6 +303,12 @@ export function ListagemLoteDirectPage() {
             onSuccess={refresh}
           />
           <ListagensLoteDirectModal open={listagensOpen} onOpenChange={setListagensOpen} />
+          <PassarParaAtivoModal
+            open={ativoModalOpen}
+            onOpenChange={setAtivoModalOpen}
+            row={ativoModalRow}
+            onSuccess={refresh}
+          />
 
           <AlertDialog
             open={historicoConfirmRow != null}

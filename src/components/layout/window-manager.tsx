@@ -308,33 +308,15 @@ export function WindowManager({ children }: WindowManagerProps) {
     return null
   }
 
-  // Limpar tabs ao mudar de Ã¡rea (ex.: administrativa â†’ comum)
+  // Preservar tabs ao mudar de área (ex.: administrativa -> comum).
+  // O utilizador pode alternar entre processos e retomar dados já preenchidos.
   useEffect(() => {
     const area = getNavigationAreaPrefix(location.pathname)
-    if (
-      prevAreaPrefixRef.current &&
-      area &&
-      prevAreaPrefixRef.current !== area
-    ) {
-      suppressAutoWindowRegistration()
-      clearAllWindows()
-    }
     prevAreaPrefixRef.current = area
-  }, [location.pathname, clearAllWindows])
+  }, [location.pathname])
 
-  // Hub (/consultas, etc.): limpar tabs órfãs (Sinistrados preso com URL já no hub).
-  // No dashboard (/) as tabs ficam no footer mesmo minimizadas.
-  useEffect(() => {
-    if (normalizeComparablePath(location.pathname) === '/') return
-
-    if (!shouldManageWindow(location.pathname)) {
-      const { windows: openWindows } = useWindowsStore.getState()
-      if (openWindows.length > 0) {
-        suppressAutoWindowRegistration()
-        clearAllWindows()
-      }
-    }
-  }, [location.pathname, clearAllWindows])
+  // Preservar tabs também ao navegar para hubs/rotas sem gestão direta.
+  // Evita perder contexto quando o utilizador alterna entre áreas/módulos.
 
   // Sincronizar tab activa com path + instanceId (browser + Router)
   useEffect(() => {

@@ -9,6 +9,11 @@ export const LOTE_DIRECT_HIDDEN_FILTER_COLUMNS = [
   'codigoorganismo',
   'mes',
   'ano',
+  'utentenumero_de',
+  'utentenumero_ate',
+  'utentenome',
+  'datafim_de',
+  'datafim_ate',
 ] as const
 
 function formatMoney(value?: number | null): string {

@@ -4,6 +4,7 @@ import { SubsistemaServicoService } from '@/lib/services/servicos/subsistema-ser
 import { TipoServicoService } from '@/lib/services/servicos/tipo-servico-service'
 import { ProvenienciaUtenteService } from '@/lib/services/proveniencias-utente/proveniencia-utente-service'
 import { LoteDirectService } from '@/lib/services/credenciais/lote-direct-service'
+import type { ObterNovoLoteRequest } from '@/types/dtos/credenciais/lote-direct.dtos'
 
 export const useTiposServicoLight = (keyword = '', enabled = true) =>
   useQuery({
@@ -54,4 +55,13 @@ export const useTiposLoteLight = (enabled = true) =>
     enabled,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
+  })
+
+export const useObterNovoLote = ( payload: ObterNovoLoteRequest | null, enabled = true) => 
+  useQuery({
+    queryKey: ['lote-direct', 'obter-novo-lote', payload],
+    queryFn: () => LoteDirectService().obterNovoLote(payload!),
+    enabled: enabled && !!payload,
+    staleTime: 0,
+    gcTime: 60_000,
   })

@@ -178,3 +178,31 @@ export interface PassarParaHistoricoResultDTO {
   mes: number
   ano: number
 }
+
+export interface PassarParaAtivoRequest {
+  loteDirectId: string
+  novoMes: number
+  novoAno: number
+}
+
+export interface PassarParaAtivoResultDTO {
+  credenciaisActualizadas: number
+  codigoOrganismo: number
+  mesOrigem: number
+  anoOrigem: number
+  mesNovo: number
+  anoNovo: number
+}
+
+export interface ObterNovoLoteRequest {
+  codigoOrganismo: number
+  mes: number
+  ano: number
+  tipoLote: number
+  tipoServico: number
+}
+
+export interface ObterNovoLoteResultDTO {
+  novoIndice: number
+  novoLote: number
+}

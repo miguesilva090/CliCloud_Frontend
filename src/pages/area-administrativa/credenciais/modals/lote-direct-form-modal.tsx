@@ -344,7 +344,7 @@ function SubsistemaLinhaCombobox({
   emptyText,
   orphanSelected,
 }: {
-  value: string
+  value: string 
   onChange: (value: string) => void
   disabled?: boolean
   isLoading?: boolean
@@ -503,6 +503,7 @@ function resetFormState(now = new Date()) {
     medicoLabel: '',
     especialidade: '',
     numeroLote: '',
+    indiceLote: '',
     medicoExterno: '',
     medicoExternoLabel: '',
     medicoExternoId: '',
@@ -750,6 +751,62 @@ export function LoteDirectFormModal({
     setForm((prev) => ({ ...prev, ...partial }))
   }
 
+  useEffect(() => {
+    if (!open || !isCreate) return
+
+    const codigoOrganismo = Number(form.codigoOrganismo)
+    const mes = Number(form.mes)
+    const ano = Number(form.ano)
+    const tipoLote = Number(form.tipoLote)
+    const tipoServico = AREA_SERVICO_VALUES[form.areaServico]
+
+    if (!Number.isInteger(codigoOrganismo) || codigoOrganismo <= 0) return
+    if (!Number.isInteger(mes) || mes < 1 || mes > 12) return
+    if (!Number.isInteger(ano) || ano < 1900) return
+    if (!Number.isInteger(tipoLote) || tipoLote <= 0) return
+    if (!Number.isInteger(tipoServico) || tipoServico <= 0) return
+
+    let cancelled = false
+
+    void (async () => {
+      try {
+        const response = await LoteDirectService(permId).obterNovoLote({
+          codigoOrganismo,
+          mes,
+          ano,
+          tipoLote,
+          tipoServico,
+        })
+
+        if (cancelled) return
+        if (response.info.status === ResponseStatus.Success) {
+          const data = response.info.data
+          if (data?.novoLote != null && data?.novoIndice != null) {
+            patchForm({
+              numeroLote: String(data.novoLote),
+              indiceLote: String(data.novoIndice),
+            })
+          }
+        }
+      } catch {
+        // silent on purpose: avoid noisy UX on dependent-field changes
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    open,
+    isCreate,
+    form.codigoOrganismo,
+    form.mes,
+    form.ano,
+    form.tipoLote,
+    form.areaServico,
+    permId,
+  ])
+
   const addLinhaRegisto = (tipo: LinhaRegistoGrelha) => {
     if (tipo === 'examesTratamentos') {
       setLinhasRegisto((prev) => [...prev, newLinhaFormRow()])
@@ -953,6 +1010,7 @@ export function LoteDirectFormModal({
       tipoLote: detail.tipoLote != null ? String(detail.tipoLote) : '',
       areaServico: areaFromTipoServico(detail.tipoServico),
       numeroLote: detail.numeroLote != null ? String(detail.numeroLote) : '',
+      indiceLote: detail.indiceLote != null ? String(detail.indiceLote) : '',
       medicoId: detail.medicoId ?? '',
       medicoLabel,
       codigoMedico: detail.codigoMedico ?? '',
@@ -1364,6 +1422,7 @@ export function LoteDirectFormModal({
     tipoServicoRegistoId: form.tipoServicoRegistoId || undefined,
     tipoLote: parseDecimal(form.tipoLote),
     numeroLote: parseDecimal(form.numeroLote),
+    indiceLote: parseInteger(form.indiceLote),
     centroSaude: form.centroSaude.trim() || undefined,
     isencao: TAXA_MODERADORA_TO_ISENCAO[form.taxaModeradora],
     proveniencia: form.proveniencia.trim() || undefined,
