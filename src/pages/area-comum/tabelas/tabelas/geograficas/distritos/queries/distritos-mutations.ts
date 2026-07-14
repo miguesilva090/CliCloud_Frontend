@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
+import type {
   CreateDistritoDTO,
   UpdateDistritoDTO,
 } from '@/types/dtos/base/distritos.dtos'

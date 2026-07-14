@@ -22,7 +22,7 @@ import {
 import { Plus, Trash2 } from 'lucide-react'
 import type { OrganismoEditFormValues } from '../../types/organismo-edit-form-types'
 import { NATUREZAS_ORGANISMO } from '../../constants/naturezas-organismo'
-import { useUnidadesLocaisSaudeLight } from '@/lib/services/utility/lookups/lookups-queries'
+import { useUnidadesLocaisSaudeLight } from '@/hooks/lookups/use-utility-lookups'
 
 // Regiões usadas no legado para "Cód. Região" (NUTS - 7 regiões em PT).
 // O backend espera um número em `codigoRegiaoAtestadoCC` (parseInt a partir do string).

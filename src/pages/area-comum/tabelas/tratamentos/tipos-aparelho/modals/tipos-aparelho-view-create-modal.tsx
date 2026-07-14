@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/utils/toast-utils'
-import { TipoAparelhoService } from '@/lib/services/tipo-aparelho'
+import { TipoAparelhoService } from '@/lib/services/tipo-aparelho-service'
 import { ResponseStatus } from '@/types/api/responses'
 
 type ModalMode = 'view' | 'create' | 'edit'

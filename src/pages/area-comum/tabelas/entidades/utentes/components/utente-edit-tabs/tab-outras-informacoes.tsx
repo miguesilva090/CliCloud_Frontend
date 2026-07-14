@@ -18,8 +18,8 @@ import {
 } from '@/components/ui/select'
 import type { UtenteEditFormValues } from '../../types/utente-edit-form-types'
 import type { UtenteDTO } from '@/types/dtos/saude/utentes.dtos'
-import { useProvenienciasUtenteLight } from '@/lib/services/utility/lookups/lookups-queries'
-import { useMedicosLight } from '@/lib/services/saude/medicos-service/medicos-queries'
+import { useProvenienciasUtenteLight } from '@/hooks/lookups/use-utility-lookups'
+import { useMedicosLight } from '@/hooks/lookups/use-medicos-light'
 import { fieldGap, inputClass, labelClass, selectTriggerClass, buttonIconClass } from './utente-edit-tabs-constants'
 import { openPathInApp } from '@/utils/window-utils'
 

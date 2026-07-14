@@ -19,8 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from '@/utils/toast-utils'
-import { ModeloAparelhoService } from '@/lib/services/modelo-aparelho'
-import { MarcaAparelhoService } from '@/lib/services/marca-aparelho'
+import { ModeloAparelhoService } from '@/lib/services/modelo-aparelho-service'
+import { MarcaAparelhoService } from '@/lib/services/marca-aparelho-service'
 import { ResponseStatus } from '@/types/api/responses'
 import type { MarcaAparelhoLightDTO } from '@/types/dtos/marca-aparelho/marca-aparelho.dtos'
 

@@ -22,7 +22,7 @@ import { RuaSelectInferCodigoPostal } from '@/components/shared/address-quick-cr
 import {
   usePaisesLight,
   useCodigosPostaisLight,
-} from '@/lib/services/utility/lookups/lookups-queries'
+} from '@/hooks/lookups/use-utility-lookups'
 import {
   type FormLike,
   useAddressCascadingLookups,

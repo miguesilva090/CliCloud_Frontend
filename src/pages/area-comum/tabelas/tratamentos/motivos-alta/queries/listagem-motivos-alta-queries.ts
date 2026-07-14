@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { PaginatedRequest } from '@/types/api/responses'
-import { MotivoAltaService } from '@/lib/services/motivos-alta'
+import { MotivoAltaService } from '@/lib/services/motivo-alta-service'
 
 
 type Sorting = Array<{ id: string; desc: boolean }> | null

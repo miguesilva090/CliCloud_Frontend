@@ -13,8 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useCreateConcelhoQuick } from '@/lib/services/utility/lookups/address-quick-create-mutations'
-import { useConcelhosLight } from '@/lib/services/utility/lookups/lookups-queries'
+import { useCreateConcelhoQuick } from '@/hooks/lookups/use-address-quick-create-mutations'
+import { useConcelhosLight } from '@/hooks/lookups/use-utility-lookups'
 import { useFormValidationFeedback } from '@/hooks/use-form-validation-feedback'
 
 const schema = z.object({

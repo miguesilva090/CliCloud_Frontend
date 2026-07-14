@@ -18,7 +18,7 @@ import type { OrganismoDTO } from '@/types/dtos/saude/organismos.dtos'
 import {
   usePaisesLight,
   useCodigosPostaisLight,
-} from '@/lib/services/utility/lookups/lookups-queries'
+} from '@/hooks/lookups/use-utility-lookups'
 import { useAddressCascadingLookups } from '@/hooks/use-address-cascading-lookups'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { openPathInApp } from '@/utils/window-utils'

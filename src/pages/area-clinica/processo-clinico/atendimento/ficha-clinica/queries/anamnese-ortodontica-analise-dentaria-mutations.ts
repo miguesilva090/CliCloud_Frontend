@@ -1,0 +1,71 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { AnamneseOrtodonticaAnaliseDentariaService } from '@/lib/services/processo-clinico/estomatologia/anamnese-ortodontica-analise-dentaria-service'
+import type {
+  AnamneseOrtodonticaAnaliseDentariaDTO,
+  CreateAnamneseOrtodonticaAnaliseDentariaRequest,
+  UpdateAnamneseOrtodonticaAnaliseDentariaRequest,
+} from '@/types/dtos/saude/anamnese-ortodontica-analise-dentaria.dtos'
+
+const QUERY_KEY = ['anamnese-ortodontica-analise-dentaria']
+
+export function useCreateAnamneseOrtodonticaAnaliseDentaria(utenteId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (
+      data: Omit<CreateAnamneseOrtodonticaAnaliseDentariaRequest, 'utenteId'>,
+    ) => {
+      const body: CreateAnamneseOrtodonticaAnaliseDentariaRequest = {
+        utenteId,
+        ...data,
+      }
+
+      const res = await AnamneseOrtodonticaAnaliseDentariaService().create(body)
+      const status = res.info?.status
+      if (status !== 0) {
+        const msgs = res.info?.messages ?? {}
+        const firstMsg = Object.values(msgs).flat()[0]
+        throw new Error(
+          firstMsg ?? 'Erro ao criar Anamnese Ortodôntica - Análise Dentária',
+        )
+      }
+      return res
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEY, 'by-utente', utenteId],
+      })
+    },
+  })
+}
+
+export function useUpdateAnamneseOrtodonticaAnaliseDentaria(utenteId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (payload: {
+      id: string
+      data: UpdateAnamneseOrtodonticaAnaliseDentariaRequest
+    }) => {
+      const res = await AnamneseOrtodonticaAnaliseDentariaService().update(
+        payload.id,
+        payload.data,
+      )
+      const status = res.info?.status
+      if (status !== 0) {
+        const msgs = res.info?.messages ?? {}
+        const firstMsg = Object.values(msgs).flat()[0]
+        throw new Error(
+          firstMsg ?? 'Erro ao atualizar Anamnese Ortodôntica - Análise Dentária',
+        )
+      }
+
+      return res
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEY, 'by-utente', utenteId],
+      })
+    },
+  })
+}

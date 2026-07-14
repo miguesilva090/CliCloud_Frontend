@@ -15,8 +15,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useCreateRuaQuick } from '@/lib/services/utility/lookups/address-quick-create-mutations'
-import { useCodigosPostaisLight, useRuasLight } from '@/lib/services/utility/lookups/lookups-queries'
+import { useCreateRuaQuick } from '@/hooks/lookups/use-address-quick-create-mutations'
+import { useCodigosPostaisLight, useRuasLight } from '@/hooks/lookups/use-utility-lookups'
 import { useFormValidationFeedback } from '@/hooks/use-form-validation-feedback'
 import { useDebounce } from 'use-debounce'
 

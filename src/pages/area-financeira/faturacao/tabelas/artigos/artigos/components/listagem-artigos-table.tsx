@@ -1,6 +1,7 @@
 import React from 'react'
 import { DataTable } from '@/components/shared/data-table'
 import type { ArtigoTableDTO } from '@/types/dtos/stocks/artigo.dtos'
+import type { TipoArtigoStocks } from '@/types/dtos/stocks/artigo.dtos'
 import { columns, getColumnsWithViewCallback } from './listagem-artigos-table.columns'
 
 type FilterControlsComponent = React.ComponentType<{
@@ -9,8 +10,8 @@ type FilterControlsComponent = React.ComponentType<{
   onApenasInativosChange: (value: boolean) => void
   apenasDescontinuados: boolean
   onApenasDescontinuadosChange: (value: boolean) => void
-  tipoArtigo: number | undefined
-  onTipoArtigoChange: (value: number | undefined) => void
+  tipoArtigo: TipoArtigoStocks | undefined
+  onTipoArtigoChange: (value: TipoArtigoStocks | undefined) => void
 }>
 
 export function ListagemArtigosTable({
@@ -61,8 +62,8 @@ export function ListagemArtigosTable({
   onApenasInativosChange: (value: boolean) => void
   apenasDescontinuados: boolean
   onApenasDescontinuadosChange: (value: boolean) => void
-  tipoArtigo: number | undefined
-  onTipoArtigoChange: (value: number | undefined) => void
+  tipoArtigo: TipoArtigoStocks | undefined
+  onTipoArtigoChange: (value: TipoArtigoStocks | undefined) => void
   onOpenView?: (data: ArtigoTableDTO) => void
   onOpenEdit?: (data: ArtigoTableDTO) => void
   onOpenDelete?: (data: ArtigoTableDTO) => void

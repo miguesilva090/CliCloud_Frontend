@@ -25,7 +25,7 @@ import {
     useGetMotivosDesmarcacaoPaginated,
     usePrefetchAdjacentMotivosDesmarcacao} from '../queries/listagem-motivos-desmarcacao-queries'
 import { MotivosDesmarcacaoViewCreateModal } from '../modals/motivos-desmarcacao-view-create-modal'
-import { MotivosDesmarcacaoService } from '@/lib/services/motivos-desmarcacao'
+import { MotivosDesmarcacaoService } from '@/lib/services/motivos-desmarcacao-service'
 import { ResponseStatus } from '@/types/api/responses'
 
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'

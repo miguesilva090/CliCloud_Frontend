@@ -2,3 +2,5 @@ import { TipoDocumentoClient } from '@/lib/services/faturacao/tipo-documento-ser
 
 export const TipoDocumentoService = (idFuncionalidade = '') =>
     new TipoDocumentoClient(idFuncionalidade)
+export * from './tipo-documento-errors'
+export * from './tipo-documento-client'

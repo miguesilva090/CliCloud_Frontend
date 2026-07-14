@@ -18,9 +18,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from '@/utils/toast-utils'
-import { AparelhoService } from '@/lib/services/aparelho'
-import { TipoAparelhoService } from '@/lib/services/tipo-aparelho'
-import { ModeloAparelhoService } from '@/lib/services/modelo-aparelho'
+import { AparelhoService } from '@/lib/services/aparelho-service'
+import { TipoAparelhoService } from '@/lib/services/tipo-aparelho-service'
+import { ModeloAparelhoService } from '@/lib/services/modelo-aparelho-service'
 import { ResponseStatus } from '@/types/api/responses'
 import type { TipoAparelhoLightDTO } from '@/types/dtos/tipo-aparelho/tipo-aparelho.dtos'
 import type { ModeloAparelhoLightDTO } from '@/types/dtos/modelo-aparelho/modelo-aparelho.dtos'

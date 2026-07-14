@@ -2,7 +2,7 @@ import {
   useDistritosLight,
   useConcelhosLight,
   useFreguesiasLight,
-} from '@/lib/services/utility/lookups/lookups-queries'
+} from '@/hooks/lookups/use-utility-lookups'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface FormLike {

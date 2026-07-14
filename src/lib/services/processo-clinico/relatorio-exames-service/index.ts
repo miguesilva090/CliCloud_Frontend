@@ -46,4 +46,4 @@ export class RelatorioExamesClient extends BaseApiClient {
 
 export const RelatorioExamesService = (idFuncionalidade = 'PClinico_FichaClinica') =>
   new RelatorioExamesClient(idFuncionalidade)
-
+export * from './relatorio-exames-errors'

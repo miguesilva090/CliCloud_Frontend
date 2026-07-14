@@ -25,7 +25,7 @@ import {
     useGetMotivoAltaPaginated,
     usePrefetchAdjacentMotivoAlta} from '../queries/listagem-motivos-alta-queries'
 import { MotivoAltaViewCreateModal } from '../modals/motivos-alta-view-create-modal'
-import { MotivoAltaService } from '@/lib/services/motivos-alta'
+import { MotivoAltaService } from '@/lib/services/motivo-alta-service'
 import { ResponseStatus } from '@/types/api/responses'
 
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'

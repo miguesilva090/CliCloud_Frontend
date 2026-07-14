@@ -38,18 +38,19 @@ const EmptyFilterControls: ComponentType<{
   onClearFilters: () => void
 }> = () => null
 
-/** Modo Nova admissão: checkboxes + enviar linhas da API (o pai mapeia para linhas do formulário). */
-export type ListagemSubsistemasServicosAdmissaoSelecao = {
-  onAddToAdmissao: (rows: SubsistemaServicoTableDTO[]) => void
+/** Modo picker: checkboxes + enviar linhas seleccionadas ao formulário de origem. */
+export type SubsistemasServicosPickerSelecao = {
+  submitLabel: string
+  onSubmit: (rows: SubsistemaServicoTableDTO[]) => void
 }
 
 export type ListagemSubsistemasServicosPanelProps = {
   organismoIdFromUrl?: string
   /** Dentro de Dialog (Nova admissão): sem seta Voltar no shell, cartão mais neutro. */
   embedded?: boolean
-  /** Fluxo picker Nova admissão: voltar sem `navigate()` SPA (evita ecrã preso). */
+  /** Fluxo picker: voltar sem `navigate()` SPA (evita ecrã preso). */
   onBack?: () => void
-  admissaoSelecao?: ListagemSubsistemasServicosAdmissaoSelecao
+  pickerSelecao?: SubsistemasServicosPickerSelecao
 }
 
 /**
@@ -59,7 +60,7 @@ export function ListagemSubsistemasServicosPanel({
   organismoIdFromUrl,
   embedded = false,
   onBack,
-  admissaoSelecao,
+  pickerSelecao,
 }: ListagemSubsistemasServicosPanelProps) {
   const defaultFilters = useMemo((): PageFilter[] | undefined => {
     if (!organismoIdFromUrl) return undefined
@@ -86,7 +87,7 @@ export function ListagemSubsistemasServicosPanel({
 
   useEffect(() => {
     setSelectedById(new Map())
-  }, [organismoIdFromUrl, admissaoSelecao])
+  }, [organismoIdFromUrl, pickerSelecao])
 
   const {
     data,
@@ -221,20 +222,20 @@ export function ListagemSubsistemasServicosPanel({
     })
   }
 
-  const handleEnviarParaAdmissao = () => {
-    if (!admissaoSelecao) return
+  const handleEnviarSelecao = () => {
+    if (!pickerSelecao) return
     const rows = Array.from(selectedById.values()).filter((r) => !r.inativo)
     if (rows.length === 0) {
       toast.error('Seleccione pelo menos um subsistema de serviço.')
       return
     }
-    admissaoSelecao.onAddToAdmissao(rows)
+    pickerSelecao.onSubmit(rows)
     setSelectedById(new Map())
   }
 
   const selectionCount = selectedById.size
 
-  const headerTrailing = admissaoSelecao ? (
+  const headerTrailing = pickerSelecao ? (
       <div className='flex flex-wrap items-center gap-2'>
         <span className='text-xs text-muted-foreground sm:text-sm'>
           {selectionCount} seleccionado(s)
@@ -243,9 +244,9 @@ export function ListagemSubsistemasServicosPanel({
           type='button'
           size='sm'
           disabled={selectionCount === 0}
-          onClick={handleEnviarParaAdmissao}
+          onClick={handleEnviarSelecao}
         >
-          Adicionar à admissão
+          {pickerSelecao.submitLabel}
         </Button>
       </div>
     ) : undefined
@@ -298,8 +299,8 @@ export function ListagemSubsistemasServicosPanel({
           canView={canView}
           canChange={canChange}
           canDelete={canDelete}
-          selectedRows={admissaoSelecao ? selectedIdsOnPage : undefined}
-          onRowSelectionChange={admissaoSelecao ? handleRowSelectionChange : undefined}
+          selectedRows={pickerSelecao ? selectedIdsOnPage : undefined}
+          onRowSelectionChange={pickerSelecao ? handleRowSelectionChange : undefined}
         />
 
         <SubsistemaServicoViewCreateModal

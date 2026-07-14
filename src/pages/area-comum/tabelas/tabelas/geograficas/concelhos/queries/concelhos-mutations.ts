@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
+import type {
   CreateConcelhoDTO,
   UpdateConcelhoDTO,
 } from '@/types/dtos/base/concelhos.dtos'

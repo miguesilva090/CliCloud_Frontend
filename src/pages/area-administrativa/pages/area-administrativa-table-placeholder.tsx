@@ -1,5 +1,5 @@
-import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
+import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 
 type AreaAdministrativaTablePlaceholderPageProps = {
   title: string
@@ -12,9 +12,7 @@ export function AreaAdministrativaTablePlaceholderPage({
     <>
       <PageHead title={`${title} | Área Administrativa`} />
       <DashboardPageContainer>
-        <div className='min-h-[50vh] p-4 text-sm text-muted-foreground'>
-          {title} em preparação.
-        </div>
+        <div className='min-h-[50vh]' />
       </DashboardPageContainer>
     </>
   )

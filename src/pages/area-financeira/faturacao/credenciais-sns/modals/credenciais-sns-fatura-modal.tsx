@@ -35,7 +35,7 @@ import { useGetTiposDocumentoLight } from '@/pages/area-financeira/faturacao/que
 import {
   formatModoPagamentoOptionLabel,
   useModosPagamentoLight,
-} from '@/lib/services/pagamentos/pagamentos-lookups-queries'
+} from '@/hooks/lookups/use-pagamentos-lookups'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { openPathInApp } from '@/utils/window-utils'
 import { toast } from '@/utils/toast-utils'

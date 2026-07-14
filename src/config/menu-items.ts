@@ -1,4 +1,5 @@
 import { modules } from './modules'
+import { administrativaTratamentosHeaderMenu } from './administrativa-tratamentos-header-menu'
 
 /** Categorias da sidebar conforme layout CliCloud: Inicio + Áreas com ícones melhorados */
 export const roleMenuItems = {
@@ -305,11 +306,6 @@ export const roleHeaderMenus = {
         ],
       },
       {
-        label: 'Tratamentos',
-        href: '/area-administrativa/tratamentos',
-        funcionalidadeId: modules.areaAdministrativa.permissions.consultas.id,
-      },
-      {
         label: 'Mapas',
         href: '/area-administrativa',
         funcionalidadeId:
@@ -413,6 +409,7 @@ export const roleHeaderMenus = {
         ],
       },
     ],
+    'administrativa-tratamentos': [...administrativaTratamentosHeaderMenu],
     'area-financeira': [
       {
         label: 'Faturação',

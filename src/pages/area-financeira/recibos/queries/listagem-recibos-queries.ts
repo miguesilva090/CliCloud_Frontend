@@ -1,10 +1,10 @@
-import { useMutation , useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import type { PaginatedRequest } from '@/types/api/responses'
 import { ReciboService } from '@/lib/services/faturacao/recibo-service'
 import type {
-    ReciboAllFilter,
-    ReciboTableFilter,
+  ReciboAllFilter,
+  ReciboTableFilter,
 } from '@/types/dtos/faturacao/recibo.dtos'
-import type { PaginatedRequest, PaginatedResponse } from '@/types/api/responses'
 
 type Sorting = Array<{ id: string; desc: boolean}> | null
 type Filters = Array<{ id: string; value: string}> | null
@@ -48,7 +48,6 @@ export function useGetRecibosPaginated(
         gcTime: 30 * 60 * 1000,
     })
 }
-
 export function useGetRecibosAll(
     params: ReciboAllFilter,
     idFuncionalidade = '',
@@ -60,7 +59,6 @@ export function useGetRecibosAll(
         gcTime: 30 * 60 * 1000,
     })
 }
-
 export function useGetReciboById(
     id: string,
     idFuncionalidade = '',
@@ -73,18 +71,6 @@ export function useGetReciboById(
         gcTime: 30 * 60 * 1000,
     })
 }
-
-export function useInvalidateRecibosMutation() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: async () => true,
-        onSuccess: async () =>{
-            await queryClient.invalidateQueries({ queryKey: reciboQueryKeys.all})
-        } 
-    })
-}
-
 export function useGetRecibosPaginatedPageData(
     pageNumber: number,
     pageSize: number,
@@ -101,7 +87,6 @@ export function useGetRecibosPaginatedPageData(
 
     return useGetRecibosPaginated(params, idFuncionalidade)
 }
-
 export function usePrefetchAdjacentRecibos(
     page: number,
     pageSize: number,
@@ -144,3 +129,4 @@ export function usePrefetchAdjacentRecibos(
     return { prefetchPreviousPage, prefetchNextPage}
 }
 
+export { useInvalidateRecibosMutation } from './listagem-recibos-mutations'

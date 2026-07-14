@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
+import type {
   CreateFreguesiaDTO,
   UpdateFreguesiaDTO,
 } from '@/types/dtos/base/freguesias.dtos'

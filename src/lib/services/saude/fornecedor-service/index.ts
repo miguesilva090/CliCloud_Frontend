@@ -10,3 +10,5 @@ export function FornecedorService(idFuncionalidade = 'fornecedores'): Fornecedor
 }
 
 export { FornecedorClient }
+export * from './fornecedor-errors'
+export * from './fornecedor-client'

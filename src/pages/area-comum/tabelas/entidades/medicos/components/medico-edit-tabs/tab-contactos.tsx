@@ -17,7 +17,7 @@ import type { MedicoDTO } from '@/types/dtos/saude/medicos.dtos'
 import {
   usePaisesLight,
   useCodigosPostaisLight,
-} from '@/lib/services/utility/lookups/lookups-queries'
+} from '@/hooks/lookups/use-utility-lookups'
 import {
   type FormLike,
   useAddressCascadingLookups,

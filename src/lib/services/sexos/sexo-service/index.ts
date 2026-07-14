@@ -2,3 +2,5 @@ import { SexoClient } from './sexo-client'
 
 export const SexoService = (idFuncionalidade = '') =>
   new SexoClient(idFuncionalidade)
+export * from './sexo-errors'
+export * from './sexo-client'

@@ -4,3 +4,4 @@ export const MedicosService = (idFuncionalidade: string) =>
   new MedicosClient(idFuncionalidade)
 
 export * from './medicos-client'
+export * from './medicos-errors'

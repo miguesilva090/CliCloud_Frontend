@@ -25,7 +25,7 @@ import {
   useGetMarcaAparelhoPaginated,
   usePrefetchAdjacentMarcaAparelho} from '../queries/listagem-marcas-aparelho-queries'
 import { MarcasAparelhoViewCreateModal } from '../modals/marcas-aparelho-view-create-modal'
-import { MarcaAparelhoService } from '@/lib/services/marca-aparelho'
+import { MarcaAparelhoService } from '@/lib/services/marca-aparelho-service'
 import { ResponseStatus } from '@/types/api/responses'
 
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'

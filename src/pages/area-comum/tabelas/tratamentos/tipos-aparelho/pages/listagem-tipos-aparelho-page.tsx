@@ -25,7 +25,7 @@ import {
   useGetTipoAparelhoPaginated,
   usePrefetchAdjacentTipoAparelho} from '../queries/listagem-tipos-aparelho-queries'
 import { TiposAparelhoViewCreateModal } from '../modals/tipos-aparelho-view-create-modal'
-import { TipoAparelhoService } from '@/lib/services/tipo-aparelho'
+import { TipoAparelhoService } from '@/lib/services/tipo-aparelho-service'
 import { ResponseStatus } from '@/types/api/responses'
 
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'

@@ -4,4 +4,5 @@ export const RelatorioAtestadoService = (idFuncionalidade = 'PClinico_FichaClini
   new RelatorioAtestadoClient(idFuncionalidade)
 
 export * from '@/lib/services/processo-clinico/relatorio-atestado-service/relatorio-atestado-client'
-
+export * from './relatorio-atestado-errors'
+export * from './relatorio-atestado-client'

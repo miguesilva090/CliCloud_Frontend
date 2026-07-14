@@ -4,4 +4,4 @@ export const ClinicaService = (idFuncionalidade = '') =>
   new ClinicaClient(idFuncionalidade)
 
 export * from './clinica-client'
-
+export * from './clinica-errors'

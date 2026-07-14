@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { TIPO_ARTIGO_OPTIONS } from '@/types/dtos/stocks/artigo.dtos'
+import { TIPO_ARTIGO_OPTIONS, type TipoArtigoStocks } from '@/types/dtos/stocks/artigo.dtos'
 
 const TIPO_TODOS = '__all__'
 
@@ -26,8 +26,8 @@ export function ListagemArtigosFilterControls({
   onApenasInativosChange: (value: boolean) => void
   apenasDescontinuados: boolean
   onApenasDescontinuadosChange: (value: boolean) => void
-  tipoArtigo: number | undefined
-  onTipoArtigoChange: (value: number | undefined) => void
+  tipoArtigo: TipoArtigoStocks | undefined
+  onTipoArtigoChange: (value: TipoArtigoStocks | undefined) => void
 }) {
   const descricao = (table.getColumn('descricao')?.getFilterValue() as string) ?? ''
 
@@ -50,7 +50,9 @@ export function ListagemArtigosFilterControls({
         <Select
           value={tipoArtigo != null ? String(tipoArtigo) : TIPO_TODOS}
           onValueChange={(v) =>
-            onTipoArtigoChange(v === TIPO_TODOS ? undefined : Number(v))
+            onTipoArtigoChange(
+              v === TIPO_TODOS ? undefined : (Number(v) as TipoArtigoStocks),
+            )
           }
         >
           <SelectTrigger className='w-full max-w-[200px]'>

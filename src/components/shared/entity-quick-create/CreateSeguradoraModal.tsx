@@ -13,8 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useCreateSeguradoraQuick } from '@/lib/services/utility/entity-quick-create/entity-quick-create-mutations'
-import { useSeguradorasLight } from '@/lib/services/utility/entity-quick-create/entity-quick-create-queries'
+import { useCreateSeguradoraQuick } from '@/hooks/entity-quick-create/use-entity-quick-create-mutations'
+import { useSeguradorasLight } from '@/hooks/entity-quick-create/use-entity-quick-create-queries'
 import { useFormValidationFeedback } from '@/hooks/use-form-validation-feedback'
 
 const schema = z.object({

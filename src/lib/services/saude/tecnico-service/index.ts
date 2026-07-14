@@ -10,4 +10,5 @@ export function TecnicoService(idFuncionalidade: string): TecnicoClient {
 }
 
 export { TecnicoClient }
-
+export * from './tecnico-errors'
+export * from './tecnico-client'

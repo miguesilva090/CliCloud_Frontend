@@ -14,8 +14,8 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ENTIDADE_TIPO } from '@/lib/entidade-tipo'
-import { useCreateOrganismoQuick } from '@/lib/services/utility/entity-quick-create/entity-quick-create-mutations'
-import { useOrganismosLight } from '@/lib/services/utility/entity-quick-create/entity-quick-create-queries'
+import { useCreateOrganismoQuick } from '@/hooks/entity-quick-create/use-entity-quick-create-mutations'
+import { useOrganismosLight } from '@/hooks/entity-quick-create/use-entity-quick-create-queries'
 import { useFormValidationFeedback } from '@/hooks/use-form-validation-feedback'
 
 const schema = z.object({

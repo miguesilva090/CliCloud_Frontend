@@ -10,8 +10,8 @@ import { SubsistemaServicoService } from '@/lib/services/servicos/subsistema-ser
 import { ServicoService } from '@/lib/services/servicos/servico-service'
 import { DoencaService } from '@/lib/services/doencas/doenca-service'
 import { TipoServicoService } from '@/lib/services/servicos/tipo-servico-service'
-import { useMedicosLight } from '@/lib/services/saude/medicos-service/medicos-queries'
-import { useMedicosExternosLight } from '@/lib/services/utility/lookups/lookups-queries'
+import { useMedicosLight } from '@/hooks/lookups/use-medicos-light'
+import { useMedicosExternosLight } from '@/hooks/lookups/use-utility-lookups'
 
 export const useTiposServicoLightAdmissao = (keyword = '', enabled = true) =>
   useQuery({

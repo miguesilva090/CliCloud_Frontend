@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { EvolucaoTratamentoFicheirosService } from '@/lib/services/tratamentos/evolucao-tratamento-ficheiros-service'
+
 import type {
   EvolucaoTratamentoFicheiroDTO,
   CreateEvolucaoTratamentoFicheiroRequest,
@@ -18,43 +19,4 @@ export function useGetEvolucaoTratamentoFicheiros(evolucaoId: string) {
   })
 }
 
-export function useCreateEvolucaoTratamentoFicheiro(evolucaoId: string) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (payload: Omit<CreateEvolucaoTratamentoFicheiroRequest, 'evolucaoTratamentoId'>) => {
-      const body: CreateEvolucaoTratamentoFicheiroRequest = {
-        evolucaoTratamentoId: evolucaoId,
-        ...payload,
-      }
-      const res = await EvolucaoTratamentoFicheirosService().create(body)
-      if (res.info?.status !== 0) {
-        const msgs = res.info?.messages ?? {}
-        const firstMsg = Object.values(msgs).flat()[0] ?? 'Erro ao anexar ficheiro.'
-        throw new Error(String(firstMsg))
-      }
-      return res
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: ['evolucao-tratamento-ficheiros', evolucaoId],
-      })
-    },
-  })
-}
-
-export function useDeleteEvolucaoTratamentoFicheiro(evolucaoId: string) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await EvolucaoTratamentoFicheirosService().delete(id)
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: ['evolucao-tratamento-ficheiros', evolucaoId],
-      })
-    },
-  })
-}
-
+export { useCreateEvolucaoTratamentoFicheiro, useDeleteEvolucaoTratamentoFicheiro } from './evolucao-tratamento-ficheiros-mutations'

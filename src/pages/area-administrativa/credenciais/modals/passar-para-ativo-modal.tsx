@@ -75,8 +75,7 @@ export function PassarParaAtivoModal({ open, onOpenChange, row, onSuccess }: Pro
             })
 
             if (res.info.status === ResponseStatus.Success) {
-                const n = res.info.data?.credenciaisActualizadas ?? 0
-                toast.success(`${n} credenciais passaram para ativo`)
+                toast.success('Credencial passou para ativo.')
                 onSuccess?.()
                 onOpenChange(false)
                 return
@@ -94,8 +93,8 @@ export function PassarParaAtivoModal({ open, onOpenChange, row, onSuccess }: Pro
                 <DialogHeader>
                     <DialogTitle>Passar para ativo</DialogTitle>
                     <DialogDescription>
-                    Vai reativar todas as credenciais históricas do mesmo organismo/mês/ano do registo
-                    selecionado, aplicando o novo mês/ano.
+                    Vai reativar a credencial selecionada, aplicando o novo mês/ano e recalculando o lote
+                    no período destino.
                     </DialogDescription>
                 </DialogHeader>
 

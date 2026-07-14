@@ -1,13 +1,12 @@
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import type { PaginatedRequest } from '@/types/api/responses'
 import { DocumentoService } from '@/lib/services/faturacao/documento-service'
 import type {
-    AtualizarValidacaoTransporteRequest,
-    DocumentoAllFilter,
-    EnviarDocumentoEmailRequest,
-    DocumentoTableFilter,
+  AtualizarValidacaoTransporteRequest,
+  DocumentoAllFilter,
+  EnviarDocumentoEmailRequest,
+  DocumentoTableFilter,
 } from '@/types/dtos/faturacao/documento.dtos'
-import type { PaginatedRequest } from '@/types/api/responses'
-import { invalidateAdmissaoFaturacaoQueries } from '../utils/invalidate-admissao-faturacao-queries'
 
 type Sorting = Array<{id: string; desc: boolean}> | null
 type Filters = Array<{id: string; value: string}> | null
@@ -43,7 +42,6 @@ export function prefetchDocumentoById(
         ...documentoDetailQueryOptions,
     })
 }
-
 export function prefetchDocumentosByIds(
     queryClient: QueryClient,
     ids: string[],
@@ -53,7 +51,6 @@ export function prefetchDocumentosByIds(
         ids.map((id) => prefetchDocumentoById(queryClient, id, idFuncionalidade)),
     )
 }
-
 export function useGetDocumentosPaginated(
     params: DocumentoTableFilter,
     idFuncionalidade = '',
@@ -66,7 +63,6 @@ export function useGetDocumentosPaginated(
         gcTime: 30 * 60 * 1000,
     })
 }
-
 export function useGetDocumentoById(
     id: string, 
     idFuncionalidade = '',
@@ -79,17 +75,6 @@ export function useGetDocumentoById(
         ...documentoDetailQueryOptions,
     })
 }
-
-export function useInvalidateDocumentosMutation() {
-    const queryClient = useQueryClient()
-    return useMutation({
-        mutationFn: async () => true,
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: documentoQueryKeys.all})
-        }
-    })
-}
-
 export function useGetDocumentosPaginatedPageData(
     pageNumber: number,
     pageSize: number,
@@ -105,7 +90,6 @@ export function useGetDocumentosPaginatedPageData(
     }
     return useGetDocumentosPaginated(params, idFuncionalidade)
 }
-
 export function usePrefetchAdjacentDocumentos(
     page: number,
     pageSize: number,
@@ -140,73 +124,6 @@ export function usePrefetchAdjacentDocumentos(
 
     return { prefetchPreviousPage, prefetchNextPage}
 }
-
-export function useDocumentoPrintMutation(idFuncionalidade = '') {
-    return useMutation({
-        mutationFn: (id: string) => DocumentoService(idFuncionalidade).getDocumentoPrint(id),
-    })
-}
-
-export function useDocumentoPrintOriginalMutation(idFuncionalidade = '') {
-    return useMutation({
-        mutationFn: (id: string) =>
-            DocumentoService(idFuncionalidade).getDocumentoPrintOriginal(id),
-    })
-}
-
-export function useEnviarDocumentoEmailMutation(idFuncionalidade = '') {
-    const queryClient = useQueryClient()
-    return useMutation({
-        mutationFn: ({ id, payload }: { id: string; payload: EnviarDocumentoEmailRequest }) =>
-            DocumentoService(idFuncionalidade).enviarDocumentoPorEmail(id, payload),
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: documentoQueryKeys.all })
-        },
-    })
-}
-
-export function useDocumentoLiquidacaoContextoMutation(idFuncionalidade = '') {
-    return useMutation({
-        mutationFn: (id: string) =>
-            DocumentoService(idFuncionalidade).getDocumentoLiquidacaoContexto(id),
-    })
-}
-
-export function useLiquidarDocumentoMutation(idFuncionalidade = '') {
-    const queryClient = useQueryClient()
-    return useMutation({
-        mutationFn: (id: string) => DocumentoService(idFuncionalidade).liquidarDocumento(id),
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: documentoQueryKeys.all })
-            invalidateAdmissaoFaturacaoQueries(queryClient);
-        },
-    })
-}
-
-export function useAtualizarValidacaoTransporteMutation(idFuncionalidade = '') {
-    const queryClient = useQueryClient()
-    return useMutation({
-        mutationFn: ({ id, payload }: { id: string; payload: AtualizarValidacaoTransporteRequest }) =>
-            DocumentoService(idFuncionalidade).atualizarValidacaoTransporte(id, payload),
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: documentoQueryKeys.all })
-        },
-    })
-}
-
-export function useGetDocumentoByIdMutation(idFuncionalidade = '') {
-    return useMutation({
-        mutationFn: (id: string) => DocumentoService(idFuncionalidade).getDocumentoById(id),
-    })
-}
-
-export function useGetDocumentoDetalhesAdmissoesMutation(idFuncionalidade = '') {
-    return useMutation({
-        mutationFn: (id: string) =>
-            DocumentoService(idFuncionalidade).getDocumentoDetalhesAdmissoes(id),
-    })
-}
-
 export function useGetDocumentoLiquidacaoContexto(
     id: string,
     idFuncionalidade = '',
@@ -220,3 +137,5 @@ export function useGetDocumentoLiquidacaoContexto(
         gcTime: 30 * 60 * 1000,
     })
 }
+
+export { useInvalidateDocumentosMutation, useDocumentoPrintMutation, useDocumentoPrintOriginalMutation, useEnviarDocumentoEmailMutation, useDocumentoLiquidacaoContextoMutation, useLiquidarDocumentoMutation, useAtualizarValidacaoTransporteMutation, useGetDocumentoByIdMutation, useGetDocumentoDetalhesAdmissoesMutation } from './documento-mutations'

@@ -1,5 +1,5 @@
-import { AddressQuickCreateService } from '@/lib/services/utility/lookups/address-quick-create-client'
-import { UtilityLookupsService } from '@/lib/services/utility/lookups'
+import { AddressQuickCreateService } from '@/lib/services/utility/lookups-service'
+import { UtilityLookupsService } from '@/lib/services/utility/lookups-service'
 
 /**
  * Normaliza o nome da rua para comparação (evita duplicados por maiúsculas/espaços).

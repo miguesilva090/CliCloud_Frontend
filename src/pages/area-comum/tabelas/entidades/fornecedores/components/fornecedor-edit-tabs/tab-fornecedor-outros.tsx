@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select'
 import type { FornecedorEditFormValues } from '../../types/fornecedor-edit-form-types'
 import { MoedaService } from '@/lib/services/moedas/moeda-service'
-import { useCondicoesPagamentoLight } from '@/lib/services/pagamentos/pagamentos-lookups-queries'
+import { useCondicoesPagamentoLight } from '@/hooks/lookups/use-pagamentos-lookups'
 
 const ID_FUNCIONALIDADE = 'fornecedores'
 

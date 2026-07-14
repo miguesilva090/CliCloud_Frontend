@@ -5,3 +5,4 @@ const ID_FUNCIONALIDADE = 'exames-sem-papel-service'
 export const ExamesSemPapelService = () => new ExamesSemPapelClient(ID_FUNCIONALIDADE)
 
 export * from './exames-sem-papel-client'
+export * from './exames-sem-papel-errors'

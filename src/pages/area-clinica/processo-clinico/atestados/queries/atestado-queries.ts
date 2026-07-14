@@ -1,1 +1,8 @@
-export { useCreateAtestado } from '@/lib/services/saude/atestados-service'
+export { useCreateAtestado } from './atestados-mutations'
+export {
+  useGetAtestadosPaginated,
+  usePrefetchAdjacentAtestados,
+  useReenviarAtestadoOffline,
+  useReenviarPendentesOffline,
+  useObterErroComunicacao,
+} from './listagem-atestados-queries'

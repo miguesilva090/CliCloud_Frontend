@@ -26,7 +26,7 @@ import {
   useProfissoesLight,
   useSexosLight,
   usePaisesLight,
-} from '@/lib/services/utility/lookups/lookups-queries'
+} from '@/hooks/lookups/use-utility-lookups'
 import { fieldGap, inputClass, labelClass, selectTriggerClass, buttonIconClass } from './utente-edit-tabs-constants'
 
 export function TabDadosPessoais({

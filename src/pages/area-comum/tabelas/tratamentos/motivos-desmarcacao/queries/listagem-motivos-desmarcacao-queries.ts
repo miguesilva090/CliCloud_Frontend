@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { PaginatedRequest } from '@/types/api/responses'
-import { MotivosDesmarcacaoService } from '@/lib/services/motivos-desmarcacao'
+import { MotivosDesmarcacaoService } from '@/lib/services/motivos-desmarcacao-service'
 
 type Sorting = Array<{ id: string; desc: boolean }> | null
 type Filters = Array<{ id: string; value: string }> | null

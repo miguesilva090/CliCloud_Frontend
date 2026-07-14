@@ -26,10 +26,20 @@ import {
   suppressPathnameKeyUrlChange,
 } from '@/hooks/use-pathname-key'
 import {
+  determineCurrentMenuFromPathname,
+  getSidebarMenuItemsForRole,
+} from '@/utils/determine-current-menu'
+import { useAuthStore } from '@/stores/auth-store'
+import {
   clearAdmissaoSubsistemasPickerClosingFlag,
   clearAdmissaoSubsistemasPickerOpeningFlag,
   markAdmissaoSubsistemasPickerOpening,
 } from '@/pages/area-comum/tabelas/consultas/servicos/subsistemas-servicos/subsistemas-servicos-admissao-flow'
+import {
+  clearListaEsperaSubsistemasPickerClosingFlag,
+  clearListaEsperaSubsistemasPickerOpeningFlag,
+  markListaEsperaSubsistemasPickerOpening,
+} from '@/pages/area-administrativa/tratamentos/lista-espera/lista-espera-subsistemas-servicos-flow'
 
 /** Estado de navegação para forçar remount do shell sem reload (última tab). */
 export type WindowShellNavigateState = {
@@ -129,6 +139,68 @@ export function returnToAdmissaoAfterSubsistemasPicker(
   window.location.replace(dest)
 }
 
+function closeSubsistemasPickerWindow(
+  pickerWindowId: string | undefined,
+  removeWindow: (id: string) => void
+): void {
+  if (!pickerWindowId) return
+  const store = useWindowsStore.getState()
+  const closedWindow = store.windows.find((w) => w.id === pickerWindowId)
+  const remaining = store.windows.filter((w) => w.id !== pickerWindowId)
+  if (remaining.length > 0) {
+    const last =
+      pickRestoreWindowAfterClose(remaining, closedWindow) ??
+      remaining[remaining.length - 1]
+    store.restoreWindow(last.id)
+  }
+  removeWindow(pickerWindowId)
+}
+
+/**
+ * Fecha a tab do picker e volta ao formulário de Lista de Espera (sem reload).
+ * Os serviços chegam via BroadcastChannel ao formulário que permanece montado noutra tab.
+ */
+export function returnToListaEsperaAfterSubsistemasPicker(
+  pickerWindowId: string | undefined,
+  listaEsperaInstanceId: string,
+  removeWindow: (id: string) => void,
+  navigate: NavigateFunction
+): void {
+  const store = useWindowsStore.getState()
+  const pickerWindow = pickerWindowId
+    ? store.windows.find((w) => w.id === pickerWindowId)
+    : undefined
+  const remaining = pickerWindowId
+    ? store.windows.filter((w) => w.id !== pickerWindowId)
+    : store.windows
+
+  const listaEsperaWindow =
+    remaining.find(
+      (w) =>
+        w.instanceId === listaEsperaInstanceId &&
+        w.path.includes('lista-espera')
+    ) ??
+    pickRestoreWindowAfterClose(remaining, pickerWindow) ??
+    remaining[remaining.length - 1]
+
+  if (remaining.length > 0 && listaEsperaWindow) {
+    store.restoreWindow(listaEsperaWindow.id)
+    navigateToWindowPath(
+      navigate,
+      listaEsperaWindow.path,
+      listaEsperaWindow.instanceId,
+      listaEsperaWindow.searchParams
+    )
+  }
+
+  if (pickerWindowId) {
+    removeWindow(pickerWindowId)
+  }
+
+  clearListaEsperaSubsistemasPickerOpeningFlag()
+  clearListaEsperaSubsistemasPickerClosingFlag()
+}
+
 /**
  * Resolve a tab da listagem de subsistemas (picker da admissão) mesmo quando o match
  * pathname+instanceId falha por pequenas diferenças de path ou ordem na store.
@@ -138,6 +210,7 @@ export function resolveSubsistemasServicosPickerWindowId(): string {
   const search = new URLSearchParams(window.location.search)
   const inst = search.get('instanceId')
   const fromAdm = search.get('fromAdmissao')
+  const fromListaEspera = search.get('fromListaEspera')
   const { windows } = useWindowsStore.getState()
 
   if (inst) {
@@ -158,6 +231,16 @@ export function resolveSubsistemasServicosPickerWindowId(): string {
       (w) =>
         w.path.includes('subsistemas-servicos') &&
         w.searchParams?.fromAdmissao === fromAdm &&
+        (!inst || w.instanceId === inst)
+    )
+    if (byContext) return byContext.id
+  }
+
+  if (fromListaEspera) {
+    const byContext = windows.find(
+      (w) =>
+        w.path.includes('subsistemas-servicos') &&
+        w.searchParams?.fromListaEspera === fromListaEspera &&
         (!inst || w.instanceId === inst)
     )
     if (byContext) return byContext.id
@@ -521,13 +604,35 @@ export function openPathInApp(
   addWindow: AddWindowFn,
   href: string,
   title: string,
-  options?: { parentWindowId?: string }
+  options?: {
+    parentWindowId?: string
+    sidebarMenuKey?: string
+    navigationContextPath?: string
+  }
 ): void {
   const { path, searchParams } = parseAppHref(href)
   const instanceId = generateInstanceId()
   const windowId = generateInstanceId()
   const parentWindowId =
     options?.parentWindowId ?? getActiveWindowState()?.id
+
+  const parent = parentWindowId
+    ? useWindowsStore.getState().windows.find((w) => w.id === parentWindowId)
+    : undefined
+
+  const navigationContextPath =
+    options?.navigationContextPath ??
+    parent?.navigationContextPath ??
+    parent?.path ??
+    path
+
+  const role = useAuthStore.getState().roleId?.toLowerCase() ?? 'client'
+  const sidebarItems = getSidebarMenuItemsForRole(role)
+
+  const sidebarMenuKey =
+    options?.sidebarMenuKey ??
+    parent?.sidebarMenuKey ??
+    determineCurrentMenuFromPathname(navigationContextPath, sidebarItems, role)
 
   addWindow({
     id: windowId,
@@ -538,6 +643,8 @@ export function openPathInApp(
     searchParams:
       Object.keys(searchParams).length > 0 ? searchParams : undefined,
     parentWindowId,
+    sidebarMenuKey,
+    navigationContextPath,
   })
 
   const params = new URLSearchParams(searchParams)
@@ -711,6 +818,18 @@ export function openSinistradoCreationInApp(
   )
 }
 
+export function openListaEsperaTratamentoCreationInApp(
+  navigate: NavigateFunction,
+  addWindow: AddWindowFn
+): void {
+  openPathInApp(
+    navigate,
+    addWindow,
+    '/area-administrativa/tratamentos/lista-espera/novo',
+    'Lista de Espera'
+  )
+}
+
 export function openLoteDirectCreationInApp(
   navigate: NavigateFunction,
   addWindow: AddWindowFn
@@ -829,6 +948,34 @@ export function openSubsistemasServicosFromAdmissao(
     ? `Subsistemas — ${orgLabel.length > 24 ? `${orgLabel.slice(0, 24)}…` : orgLabel}`
     : 'Subsistemas de Serviços'
   markAdmissaoSubsistemasPickerOpening()
+  openPathInApp(
+    navigate,
+    addWindow,
+    `/area-administrativa/tabelas/subsistemas-servicos?${qs.toString()}`,
+    title
+  )
+}
+
+/** Abre listagem de subsistemas/serviços a partir da Lista de Espera Tratamentos (legado Acor_InsLst). */
+export function openSubsistemasServicosFromListaEspera(
+  navigate: NavigateFunction,
+  addWindow: AddWindowFn,
+  options: {
+    listaEsperaInstanceId: string
+    organismoId?: string
+    organismoLabel?: string
+  }
+): void {
+  const qs = new URLSearchParams()
+  qs.set('fromListaEspera', options.listaEsperaInstanceId)
+  if (options.organismoId) {
+    qs.set('organismoId', options.organismoId)
+  }
+  const orgLabel = options.organismoLabel?.trim()
+  const title = orgLabel
+    ? `Subsistemas — ${orgLabel.length > 24 ? `${orgLabel.slice(0, 24)}…` : orgLabel}`
+    : 'Subsistemas de Serviços'
+  markListaEsperaSubsistemasPickerOpening()
   openPathInApp(
     navigate,
     addWindow,

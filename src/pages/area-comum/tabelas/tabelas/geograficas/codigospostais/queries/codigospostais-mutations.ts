@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
+import type {
   CreateCodigoPostalDTO,
   UpdateCodigoPostalDTO,
 } from '@/types/dtos/base/codigospostais.dtos'

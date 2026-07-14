@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { openPathInApp } from '@/utils/window-utils'
+import { useWindowsStore } from '@/stores/use-windows-store'
 import { useQueryClient } from '@tanstack/react-query'
 import { FileText, Layers, List, Plus, RotateCw, Trash2 } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
@@ -43,6 +45,7 @@ export function ListagemCredenciaisSnsModuloPage({
   modulo,
 }: ListagemCredenciaisSnsModuloPageProps) {
   const navigate = useNavigate()
+  const addWindow = useWindowsStore((s) => s.addWindow)
   const queryClient = useQueryClient()
   const title = credenciaisSnsPageTitle(modulo)
   const { canView, canDelete } = useAreaComumEntityListPermissions(
@@ -83,7 +86,7 @@ export function ListagemCredenciaisSnsModuloPage({
     usePrefetchAdjacentData: usePrefetchAdjacent,
   })
 
-  const rows = data?.info?.data ?? []
+  const rows: CredenciaisSnsLoteTableDTO[] = data?.info?.data ?? []
   const deleteSupported = credenciaisSnsModuloHasBackendDelete(modulo)
 
   const errorMessage =
@@ -94,7 +97,7 @@ export function ListagemCredenciaisSnsModuloPage({
       queryKey: credenciaisSnsPaginatedQueryKey(modulo),
     })
 
-  const openOperacao = (tipo: CredenciaisSnsOperacaoTipo) => {
+  const openOperacao = (tipo: CredenciaisSnsOperacaoTipo | 'fatura') => {
     if (tipo === 'fatura') {
       setFaturaOpen(true)
       return
@@ -105,7 +108,12 @@ export function ListagemCredenciaisSnsModuloPage({
 
   const handleView = (row: CredenciaisSnsLoteTableDTO) => {
     if (modulo === 'especialidades') {
-      navigate(`/area-administrativa/credenciais?indicelote=${row.indice}`)
+      openPathInApp(
+        navigate,
+        addWindow,
+        `/area-administrativa/credenciais?indicelote=${row.indice}`,
+        'Lançamento de Credenciais'
+      )
       return
     }
     if (modulo === 'exames') {

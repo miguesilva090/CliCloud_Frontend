@@ -122,6 +122,26 @@ const ListagemListaEsperaPage = lazy(() =>
     '@/pages/area-administrativa/consultas/lista-espera/pages/listagem-lista-espera-page'
   ).then((m) => ({ default: m.ListagemListaEsperaPage }))
 )
+const ListagemListaEsperaTratamentoPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/lista-espera/pages/listagem-lista-espera-tratamento-page'
+  ).then((m) => ({ default: m.ListagemListaEsperaTratamentoPage }))
+)
+const NovaListaEsperaTratamentoPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/lista-espera/pages/nova-lista-espera-tratamento-page'
+  ).then((m) => ({ default: m.NovaListaEsperaTratamentoPage }))
+)
+const TratamentosAdminPlaceholderPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/pages/tratamentos-admin-placeholder-page'
+  ).then((m) => ({ default: m.TratamentosAdminPlaceholderPage }))
+)
+const AreaAdministrativaTratamentosHomePage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/pages/area-administrativa-tratamentos-home'
+  ).then((m) => ({ default: m.AreaAdministrativaTratamentosHomePage }))
+)
 const ListagemGlobalBookingPage = lazy(() =>
   import(
     '@/pages/area-administrativa/consultas/global-booking/pages/listagem-global-booking-page'
@@ -180,7 +200,48 @@ export const areaAdministrativaRoutes = [
         requiredPermission={modules.areaAdministrativa.permissions.consultas.id}
         actionType={actionTypes.AuthVer}
       >
-        <AreaAdministrativaTablePlaceholderPage title='Tratamentos' />
+        <AreaAdministrativaTratamentosHomePage />
+      </LicenseGuard>
+    ),
+    manageWindow: false,
+  },
+  {
+    path: 'area-administrativa/tratamentos/lista-espera',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.listaEsperaTratamentos.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemListaEsperaTratamentoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Lista de Espera — Tratamentos',
+  },
+  {
+    path: 'area-administrativa/tratamentos/lista-espera/novo',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.listaEsperaTratamentos.id}
+        actionType={actionTypes.AuthAdd}
+      >
+        <NovaListaEsperaTratamentoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Lista de Espera',
+  },
+  {
+    path: 'area-administrativa/tratamentos/*',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.consultas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <TratamentosAdminPlaceholderPage />
       </LicenseGuard>
     ),
     manageWindow: false,

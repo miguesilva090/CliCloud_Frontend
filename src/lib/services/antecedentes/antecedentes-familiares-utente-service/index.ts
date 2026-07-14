@@ -2,4 +2,5 @@ import { AntecedentesFamiliaresUtenteClient } from './antecedentes-familiares-ut
 
 export const AntecedentesFamiliaresUtenteService = (idFuncionalidade = '') =>
   new AntecedentesFamiliaresUtenteClient(idFuncionalidade)
-
+export * from './antecedentes-familiares-utente-errors'
+export * from './antecedentes-familiares-utente-client'

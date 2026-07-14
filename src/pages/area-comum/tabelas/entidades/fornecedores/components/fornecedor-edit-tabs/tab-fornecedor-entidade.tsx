@@ -15,7 +15,7 @@ import type { FornecedorEditFormValues } from '../../types/fornecedor-edit-form-
 import {
   usePaisesLight,
   useCodigosPostaisLight,
-} from '@/lib/services/utility/lookups/lookups-queries'
+} from '@/hooks/lookups/use-utility-lookups'
 import { useAddressCascadingLookups } from '@/hooks/use-address-cascading-lookups'
 import { RuaSelectInferCodigoPostal } from '@/components/shared/address-quick-create/RuaSelectInferCodigoPostal'
 import { useWindowsStore } from '@/stores/use-windows-store'

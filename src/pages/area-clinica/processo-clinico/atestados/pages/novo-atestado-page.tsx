@@ -19,14 +19,14 @@ import type { CreateAtestadoRequest } from '@/types/dtos/saude/atestados.dtos'
 import {
   useCartasConducaoLight,
   useCartaConducaoRestricoesLight,
-} from '@/lib/services/saude/cartas-conducao-service'
+} from '@/hooks/lookups/use-cartas-conducao-lookups'
 import {
   useCodigosPostaisLight,
   useConcelhosLight,
   useDistritosLight,
   useFreguesiasLight,
   usePaisesLight,
-} from '@/lib/services/utility/lookups/lookups-queries'
+} from '@/hooks/lookups/use-utility-lookups'
 import { PaisViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/paises/modals/pais-view-create-modal'
 import { DistritoViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/distritos/modals/distrito-view-create-modal'
 import { ConcelhoViewCreateModal } from '@/pages/area-comum/tabelas/tabelas/geograficas/concelhos/modals/concelho-view-create-modal'

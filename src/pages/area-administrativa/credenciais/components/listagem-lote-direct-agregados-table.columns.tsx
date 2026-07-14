@@ -1,6 +1,26 @@
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import type { LoteDirectAgregadoTableDTO } from '@/types/dtos/credenciais/lote-direct.dtos'
 
+export const LOTE_DIRECT_AGREGADOS_HIDDEN_FILTER_COLUMNS = [
+  'numerolote',
+  'codigoorganismo',
+  'mes',
+  'ano',
+  'tiposervico',
+] as const
+
+const hiddenFilterColumn = (
+  id: string
+): DataTableColumnDef<LoteDirectAgregadoTableDTO> => ({
+  id,
+  accessorKey: id,
+  header: '',
+  enableSorting: false,
+  enableHiding: false,
+  meta: { hidden: true },
+  cell: () => null,
+})
+
 const MESES = [
   'Janeiro',
   'Fevereiro',
@@ -31,6 +51,9 @@ function formatMesAno(mes: number, ano: number): string {
 
 export const loteDirectAgregadosColumns: DataTableColumnDef<LoteDirectAgregadoTableDTO>[] =
   [
+    ...LOTE_DIRECT_AGREGADOS_HIDDEN_FILTER_COLUMNS.map((id) =>
+      hiddenFilterColumn(id)
+    ),
     {
       accessorKey: 'indice',
       header: 'Índice',

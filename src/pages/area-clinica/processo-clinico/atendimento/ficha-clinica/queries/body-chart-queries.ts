@@ -1,5 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { PaginatedRequest } from '@/types/api/responses'
+import { useQuery } from '@tanstack/react-query'
 import {
   MapaBodyChartService,
   NotasBodyChartService,
@@ -9,9 +8,6 @@ import type {
   MapaBodyChartLightDTO,
   NotasBodyChartDTO,
   NotasBodyChartTableFilterRequest,
-  CreateNotasBodyChartRequest,
-  UpdateNotasBodyChartRequest,
-  DeleteMultipleNotasBodyChartRequest,
 } from '@/types/dtos/processo-clinico/body-chart.dtos'
 
 type NotasFilters = NotasBodyChartTableFilterRequest['filters']
@@ -54,98 +50,24 @@ export function useNotasBodyChartByMapa(mapaBodyChartId?: string, tratamentoId?:
     filters.push({ id: 'tratamentoId', value: tratamentoId })
   }
 
-  const params: PaginatedRequest & { filters?: NotasFilters } = {
-    pageNumber,
-    pageSize,
-    filters: filters.length > 0 ? (filters as unknown as Record<string, string> & NotasFilters) : undefined,
-  }
-
   return useQuery({
     queryKey: ['bodychart', 'notas', mapaBodyChartId, tratamentoId],
     queryFn: async () => {
-      const res = await NotasBodyChartService().getPaginated(params)
-      return (res.info.data ?? []) as NotasBodyChartDTO[]
+      const res = await NotasBodyChartService().getPaginated({
+        pageNumber,
+        pageSize,
+        filters: filters.length > 0 ? filters : undefined,
+      })
+      return (res.info?.data ?? []) as NotasBodyChartDTO[]
     },
-    enabled: !!mapaBodyChartId && mapaBodyChartId.length > 0,
+    enabled: !!mapaBodyChartId,
     staleTime: 60 * 1000,
     gcTime: 10 * 60 * 1000,
   })
 }
 
-export function useSaveNotaBodyChart(
-  mapaBodyChartId: string | undefined,
-  tratamentoId: string | undefined,
-) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (payload: {
-      existingId?: string | null
-      data: Omit<CreateNotasBodyChartRequest, 'mapaBodyChartId' | 'tratamentoId'>
-    }) => {
-      const service = NotasBodyChartService()
-      if (!mapaBodyChartId) throw new Error('MapaBodyChartId é obrigatório')
-      if (!tratamentoId) throw new Error('TratamentoId é obrigatório')
-
-      if (payload.existingId) {
-        const body: UpdateNotasBodyChartRequest = {
-          tratamentoId,
-          mapaBodyChartId,
-          ...payload.data,
-        }
-        return service.update(payload.existingId, body)
-      } else {
-        const body: CreateNotasBodyChartRequest = {
-          tratamentoId,
-          mapaBodyChartId,
-          ...payload.data,
-        }
-        return service.create(body)
-      }
-    },
-    onSuccess: () => {
-      if (mapaBodyChartId) {
-        void queryClient.invalidateQueries({
-          queryKey: ['bodychart', 'notas', mapaBodyChartId],
-        })
-      }
-    },
-  })
-}
-
-export function useDeleteNotaBodyChart(mapaBodyChartId: string | undefined) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const service = NotasBodyChartService()
-      return service.delete(id)
-    },
-    onSuccess: () => {
-      if (mapaBodyChartId) {
-        void queryClient.invalidateQueries({
-          queryKey: ['bodychart', 'notas', mapaBodyChartId],
-        })
-      }
-    },
-  })
-}
-
-export function useDeleteMultipleNotasBodyChart(mapaBodyChartId: string | undefined) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (body: DeleteMultipleNotasBodyChartRequest) => {
-      const service = NotasBodyChartService()
-      return service.deleteMultiple(body)
-    },
-    onSuccess: () => {
-      if (mapaBodyChartId) {
-        void queryClient.invalidateQueries({
-          queryKey: ['bodychart', 'notas', mapaBodyChartId],
-        })
-      }
-    },
-  })
-}
-
+export {
+  useSaveNotaBodyChart,
+  useDeleteNotaBodyChart,
+  useDeleteMultipleNotasBodyChart,
+} from './body-chart-mutations'

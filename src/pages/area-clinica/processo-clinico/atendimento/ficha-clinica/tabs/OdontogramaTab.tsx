@@ -609,7 +609,6 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
             codigo: estadoSel,
             descricao: String(desc ?? ''),
             estadoPadrao: true,
-            ativo: true,
           })
         }
         if (tratSel && !selectedTrat) {
@@ -1763,7 +1762,6 @@ export function OdontogramaTab({ utenteId }: DentariaTabProps) {
                       codigo: addCodigo.trim(),
                       descricao: addDescricao.trim(),
                       estadoPadrao: addEstadoPadrao,
-                      ativo: addAtivo,
                     })
                   } else {
                     await createTratMutation.mutateAsync({

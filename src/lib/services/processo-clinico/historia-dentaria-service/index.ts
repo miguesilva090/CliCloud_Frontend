@@ -45,3 +45,4 @@ export class HistoriaDentariaClient extends BaseApiClient {
 
 export const HistoriaDentariaService = (idFuncionalidade = 'PClinico_FichaClinica') =>
   new HistoriaDentariaClient(idFuncionalidade)
+export * from './historia-dentaria-errors'

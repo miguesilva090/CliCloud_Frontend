@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Archive, History, Layers, List, Plus, RotateCw, Tag, Wrench } from 'lucide-react'
@@ -21,6 +21,7 @@ import {
   applyFiltersIfChanged,
   buildFiltersWithValue,
   usePageData,
+  type PageFilter,
 } from '@/utils/page-data-utils'
 import { useEntityListPermissionsFromMany } from '@/hooks/use-area-comum-entity-list-permissions'
 import { ResponseStatus } from '@/types/api/responses'
@@ -48,8 +49,12 @@ import {
 export function ListagemLoteDirectPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const appliedUrlFilters = useRef(false)
   const addWindow = useWindowsStore((s) => s.addWindow)
+  const urlIndiceLoteFilters = useMemo((): PageFilter[] | undefined => {
+    const indiceLote = searchParams.get('indicelote')
+    if (!indiceLote) return undefined
+    return [{ id: 'indicelote', value: indiceLote }]
+  }, [searchParams])
   const permId = useLoteDirectFuncionalidadeId()
   const { canView, canAdd, canChange, canDelete } = useEntityListPermissionsFromMany([
     ...loteDirectPermissionIds,
@@ -83,17 +88,8 @@ export function ListagemLoteDirectPage() {
   } = usePageData({
     useGetDataPaginated: useGetLoteDirectPaginated,
     usePrefetchAdjacentData: usePrefetchAdjacentLoteDirect,
+    defaultFilters: urlIndiceLoteFilters,
   })
-
-  useEffect(() => {
-    if (appliedUrlFilters.current) return
-    const indiceLote = searchParams.get('indicelote')
-    if (!indiceLote) return
-
-    appliedUrlFilters.current = true
-    const next = buildFiltersWithValue(filters, 'indicelote', indiceLote)
-    applyFiltersIfChanged(filters, next, handleFiltersChange)
-  }, [searchParams, filters, handleFiltersChange])
 
   const errorMessage =
     error instanceof Error ? error.message : error ? String(error) : ''

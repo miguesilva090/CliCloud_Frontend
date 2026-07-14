@@ -23,9 +23,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from '@/utils/toast-utils'
-import { AparelhoService } from '@/lib/services/aparelho'
-import { TipoAparelhoService } from '@/lib/services/tipo-aparelho'
-import { ModeloAparelhoService } from '@/lib/services/modelo-aparelho'
+import { AparelhoService } from '@/lib/services/aparelho-service'
+import { TipoAparelhoService } from '@/lib/services/tipo-aparelho-service'
+import { ModeloAparelhoService } from '@/lib/services/modelo-aparelho-service'
 import { ResponseStatus } from '@/types/api/responses'
 import { MarcasAparelhoViewCreateModal } from '../../marcas-aparelho/modals/marcas-aparelho-view-create-modal'
 import { ModelosAparelhoViewCreateModal } from '../../modelos-aparelho/modals/modelos-aparelho-view-create-modal'

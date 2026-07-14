@@ -10,4 +10,5 @@ export function EmpresaService(idFuncionalidade = 'empresas'): EmpresaClient {
 }
 
 export { EmpresaClient }
-
+export * from './empresa-errors'
+export * from './empresa-client'

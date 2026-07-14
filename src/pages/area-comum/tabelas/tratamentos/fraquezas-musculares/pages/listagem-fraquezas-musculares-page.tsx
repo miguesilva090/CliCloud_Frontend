@@ -25,7 +25,7 @@ import {
     useGetFraquezasMuscularesPaginated,
     usePrefetchAdjacentFraquezasMusculares} from '../queries/listagem-fraquezas-musculares-queries'
 import { FraquezasMuscularesViewCreateModal } from '../modals/fraquezas-musculares-view-create-modal'
-import { FraquezasMuscularesService } from '@/lib/services/fraquezas-musculares'
+import { FraquezasMuscularesService } from '@/lib/services/fraquezas-musculares-service'
 import { ResponseStatus } from '@/types/api/responses'
 
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'

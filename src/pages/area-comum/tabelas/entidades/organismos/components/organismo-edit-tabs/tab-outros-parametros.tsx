@@ -20,7 +20,7 @@ import {
   formatModoPagamentoOptionLabel,
   useCondicoesPagamentoLight,
   useModosPagamentoLight,
-} from '@/lib/services/pagamentos/pagamentos-lookups-queries'
+} from '@/hooks/lookups/use-pagamentos-lookups'
 import type { OrganismoEditFormValues } from '../../types/organismo-edit-form-types'
 
 const ID_FUNCIONALIDADE = 'organismos'

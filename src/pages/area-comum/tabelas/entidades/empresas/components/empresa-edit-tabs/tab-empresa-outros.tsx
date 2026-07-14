@@ -17,12 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useOrganismosLight } from '@/lib/services/utility/entity-quick-create/entity-quick-create-queries'
+import { useOrganismosLight } from '@/hooks/entity-quick-create/use-entity-quick-create-queries'
 import {
   formatModoPagamentoOptionLabel,
   useCondicoesPagamentoLight,
   useModosPagamentoLight,
-} from '@/lib/services/pagamentos/pagamentos-lookups-queries'
+} from '@/hooks/lookups/use-pagamentos-lookups'
 
 const ID_FUNCIONALIDADE = 'empresas'
 

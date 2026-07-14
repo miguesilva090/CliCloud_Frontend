@@ -5,4 +5,4 @@ const TipoEntidadeFinanceiraService = (idFuncionalidade: string) =>
 
 export { TipoEntidadeFinanceiraService }
 export * from './tipo-entidade-financeira-client'
-
+export * from './tipo-entidade-financeira-errors'

@@ -6,4 +6,4 @@ export const MapaBodyChartService = (idFuncionalidade = '') =>
 
 export const NotasBodyChartService = (idFuncionalidade = '') =>
   new NotasBodyChartClient(idFuncionalidade)
-
+export * from './body-chart-errors'

@@ -1,8 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { CreateExameRequest, UpdateExameRequest } from '@/types/dtos/exames/exame.dtos'
+import { useQuery } from '@tanstack/react-query'
 import type { PaginatedRequest } from '@/types/api/responses'
 import { ExameService } from '@/lib/services/exames/exame-service'
-import { ResponseStatus } from '@/types/api/responses'
+
 
 type Sorting = Array<{ id: string; desc: boolean }> | null
 type Filters = Array<{ id: string; value: string }> | null
@@ -40,7 +39,6 @@ export function useGetExamesByUtentePaginated(
     gcTime: 30 * 60 * 1000,
   })
 }
-
 export function useGetExameById(id: string | null | undefined) {
   return useQuery({
     queryKey: ['exame-by-id', id],
@@ -50,52 +48,4 @@ export function useGetExameById(id: string | null | undefined) {
   })
 }
 
-export function useCreateExame() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (payload: CreateExameRequest) => ExameService().createExame(payload),
-    onSuccess: (res) => {
-      if (res.info?.status === ResponseStatus.Success) {
-        // Invalidar todas as queries de exames prescritos (qualquer combinação de filtros/paginação)
-        void queryClient.invalidateQueries({
-          queryKey: ['exames-prescritos-paginated'],
-          exact: false,
-        })
-      }
-    },
-  })
-}
-
-export function useUpdateExame() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (args: { id: string; data: UpdateExameRequest }) =>
-      ExameService().updateExame(args.id, args.data),
-    onSuccess: (res) => {
-      if (res.info?.status === ResponseStatus.Success) {
-        void queryClient.invalidateQueries({
-          queryKey: ['exames-prescritos-paginated'],
-          exact: false,
-        })
-      }
-    },
-  })
-}
-
-export function useDeleteExame() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (id: string) => ExameService().deleteExame(id),
-    onSuccess: (res) => {
-      if (res.info?.status === ResponseStatus.Success) {
-        void queryClient.invalidateQueries({
-          queryKey: ['exames-prescritos-paginated'],
-          exact: false,
-        })
-      }
-    },
-  })
-}
+export { useCreateExame, useUpdateExame, useDeleteExame } from './prescricao-exames-mutations'

@@ -12,6 +12,7 @@ import {
   usePageData,
 } from '@/utils/page-data-utils'
 import { ListagemLoteDirectAgregadosTable } from '../components/listagem-lote-direct-agregados-table'
+import { ListagemLoteDirectAgregadosFilterControls } from '../components/listagem-lote-direct-agregados-filter-controls'
 import {
   useGetLoteDirectAgregadosPaginated,
   usePrefetchAdjacentLoteDirectAgregados,
@@ -90,6 +91,7 @@ export function ListagemLoteDirectAgregadosPage() {
             onPaginationChange={handlePaginationChange}
             onFiltersChange={handleFiltersChange}
             onSortingChange={handleSortingChange}
+            FilterControls={ListagemLoteDirectAgregadosFilterControls}
             toolbarActions={[
               {
                 label: 'Lançamentos',

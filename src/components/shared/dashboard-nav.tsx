@@ -16,7 +16,7 @@ import { useSidebar } from '@/hooks/use-sidebar'
 import { useMenuItems } from '@/hooks/use-menu-items'
 import { Icons } from '@/components/ui/icons'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { determineCurrentMenuFromPathname } from '@/utils/determine-current-menu'
+import { determineCurrentMenuFromPathname, resolveNavigationContext } from '@/utils/determine-current-menu'
 
 interface DashboardNavProps {
   items: NavItem[]
@@ -29,6 +29,12 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
   const sidebarMenuItems = useMenuItems()
   const location = useLocation()
   const navigate = useNavigate()
+  const navigation = resolveNavigationContext(
+    location.pathname,
+    location.search,
+    sidebarMenuItems
+  )
+  const navPath = navigation.contextPath
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(
     {}
   )
@@ -63,19 +69,19 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
     }
   ) => {
     const isSinistradosAdministrativeContext =
-      location.pathname.startsWith('/area-administrativa/consultas/sinistrados') ||
-      location.pathname.startsWith('/area-administrativa/consultas/historico-sinistrados') ||
-      location.pathname.startsWith('/area-administrativa/consultas/historico/') ||
-      location.pathname.startsWith('/area-administrativa/credenciais') ||
-      location.pathname.startsWith('/area-administrativa/credenciais/exames-sem-papel') ||
-      location.pathname.startsWith('/area-comum/tabelas/consultas/estado-sinistro')
+      navPath.startsWith('/area-administrativa/consultas/sinistrados') ||
+      navPath.startsWith('/area-administrativa/consultas/historico-sinistrados') ||
+      navPath.startsWith('/area-administrativa/consultas/historico/') ||
+      navPath.startsWith('/area-administrativa/credenciais') ||
+      navPath.startsWith('/area-administrativa/credenciais/exames-sem-papel') ||
+      navPath.startsWith('/area-comum/tabelas/consultas/estado-sinistro')
 
     const isAreaAdministrativaConsultasContext =
       itemHref === '/area-administrativa/consultas' &&
       (
-        (location.pathname.startsWith('/area-administrativa/') &&
-          !location.pathname.startsWith('/area-administrativa/tratamentos') &&
-          !location.pathname.startsWith('/area-administrativa/modalidades')) ||
+        (navPath.startsWith('/area-administrativa/') &&
+          !navPath.startsWith('/area-administrativa/tratamentos') &&
+          !navPath.startsWith('/area-administrativa/modalidades')) ||
         isSinistradosAdministrativeContext
       )
 
@@ -84,15 +90,15 @@ export function DashboardNav({ items, setOpen }: DashboardNavProps) {
       return false
     }
 
-    const isExactMatch = location.pathname === itemHref
+    const isExactMatch = navPath === itemHref
     const isSameHrefAsParent =
       !!options?.parentHref && options.parentHref === itemHref
     const isNestedMatch =
-      !isSameHrefAsParent && location.pathname.startsWith(itemHref + '/')
+      !isSameHrefAsParent && navPath.startsWith(itemHref + '/')
     const isChildActive = items?.some(
       (item) =>
-        location.pathname === item.href ||
-        location.pathname.startsWith(item.href + '/')
+        navPath === item.href ||
+        navPath.startsWith(item.href + '/')
     )
 
     return (

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useRuasLight } from '@/lib/services/utility/lookups/lookups-queries'
+import { useRuasLight } from '@/hooks/lookups/use-utility-lookups'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 type AddressFormLike = {

@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select'
 import { Plus } from 'lucide-react'
 import { toast } from '@/utils/toast-utils'
-import { useCodigosPostaisLight } from '@/lib/services/utility/lookups/lookups-queries'
+import { useCodigosPostaisLight } from '@/hooks/lookups/use-utility-lookups'
 import { FuncionarioService } from '@/lib/services/saude/funcionario-service'
 import { resolveRuaNomeToId } from '@/lib/utils/resolve-rua'
 import { ResponseStatus } from '@/types/api/responses'

@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { usePermissionsStore } from '@/stores/permissions-store'
 import { useHeaderMenu } from '@/hooks/use-header-menu'
 import { useMenuItems } from '@/hooks/use-menu-items'
-import { determineCurrentMenuFromPathname } from '@/utils/determine-current-menu'
+import { resolveNavigationContext } from '@/utils/determine-current-menu'
 
 interface HeaderNavContextType {
   currentMenu: string
@@ -94,16 +94,24 @@ export const HeaderNavProvider: React.FC<{ children: React.ReactNode }> = ({
   }
 
   useEffect(() => {
-    setCurrentMenu(
-      determineCurrentMenuFromPathname(location.pathname, menuItems)
+    const { menuKey, contextPath } = resolveNavigationContext(
+      location.pathname,
+      location.search,
+      menuItems
     )
-  }, [location.pathname, menuItems])
+    setCurrentMenu(menuKey)
+  }, [location.pathname, location.search, menuItems])
 
   // Update active menu item when location or permissions change
   useEffect(() => {
-    const newActiveMenuItem = findActiveMenuItem(location.pathname)
+    const { contextPath } = resolveNavigationContext(
+      location.pathname,
+      location.search,
+      menuItems
+    )
+    const newActiveMenuItem = findActiveMenuItem(contextPath)
     setActiveMenuItem(newActiveMenuItem)
-  }, [location.pathname, headerMenuItems, permissions])
+  }, [location.pathname, location.search, menuItems, headerMenuItems, permissions])
 
   return (
     <HeaderNavContext.Provider

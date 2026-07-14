@@ -23,7 +23,7 @@ import { useGetCodigosPostaisSelect } from '@/pages/area-comum/tabelas/tabelas/g
 import {
   useConcelhosLight,
   useDistritosLight,
-} from '@/lib/services/utility/lookups/lookups-queries'
+} from '@/hooks/lookups/use-utility-lookups'
 import { handleApiResponse } from '@/utils/response-handlers'
 import { toast } from '@/utils/toast-utils'
 

@@ -4,3 +4,5 @@ import { AdseComunicacaoClient } from './adse-comunicacao-client'
 export const AdseService = (idFuncionalidade = '') => new AdseClient(idFuncionalidade)
 export const AdseComunicacaoService = (idFuncionalidade = '') =>
   new AdseComunicacaoClient(idFuncionalidade)
+export * from './adse-errors'
+export * from './adse-client'

@@ -23,7 +23,7 @@ import { ListagemModelosAparelhoTable } from '../components/listagem-modelos-apa
 import { ListagemModelosAparelhoFilterControls } from '../components/listagem-modelos-aparelho-filter-controls'
 import { useGetModeloAparelhoPaginated, usePrefetchAdjacentModeloAparelho } from '../queries/listagem-modelos-aparelho-queries'
 import { ModelosAparelhoViewCreateModal } from '../modals/modelos-aparelho-view-create-modal'
-import { ModeloAparelhoService } from '@/lib/services/modelo-aparelho'
+import { ModeloAparelhoService } from '@/lib/services/modelo-aparelho-service'
 import { ResponseStatus } from '@/types/api/responses'
 
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'

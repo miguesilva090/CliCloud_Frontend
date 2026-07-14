@@ -24,7 +24,7 @@ import {
   selectTriggerClass,
 } from '@/lib/form-styles'
 import { OrganismoService } from '@/lib/services/saude/organismo-service'
-import { useCodigosPostaisLight } from '@/lib/services/utility/lookups/lookups-queries'
+import { useCodigosPostaisLight } from '@/hooks/lookups/use-utility-lookups'
 import { useGetUtente, useUtentesLight } from '@/pages/area-comum/tabelas/entidades/utentes/queries/utentes-queries'
 import {
   buildUtenteOrganismoOptions,

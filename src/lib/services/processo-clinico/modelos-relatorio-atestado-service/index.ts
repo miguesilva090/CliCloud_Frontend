@@ -4,4 +4,4 @@ export const ModelosRelatorioAtestadoService = (idFuncionalidade = 'PClinico_Fic
   new ModelosRelatorioAtestadoClient(idFuncionalidade)
 
 export * from './modelos-relatorio-atestado-client'
-
+export * from './modelos-relatorio-atestado-errors'

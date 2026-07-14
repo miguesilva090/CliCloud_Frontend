@@ -1,0 +1,6 @@
+import { AparelhoClient } from './aparelho-client'
+
+export const AparelhoService = (idFuncionalidade = '') =>
+  new AparelhoClient(idFuncionalidade)
+export * from './aparelho-errors'
+export * from './aparelho-client'

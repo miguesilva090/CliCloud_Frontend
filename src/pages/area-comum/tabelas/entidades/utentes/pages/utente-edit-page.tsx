@@ -32,7 +32,7 @@ import {
   TabAvisos,
   TabDocumentos,
 } from '../components/utente-edit-tabs'
-import { usePaisesLight, useSexosLight } from '@/lib/services/utility/lookups/lookups-queries'
+import { usePaisesLight, useSexosLight } from '@/hooks/lookups/use-utility-lookups'
 
 type FormFieldKey = Extract<keyof UtenteEditFormValues, string>
 type RnuPrefillPayload = {

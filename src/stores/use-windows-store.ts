@@ -16,6 +16,10 @@ export interface WindowState {
   // New fields for window communication
   parentWindowId?: string // ID of the parent window that opened this window
   returnData?: any // Data to be returned to the parent window when this window closes
+  /** Mantém sidebar/header no módulo de origem (ex.: Faturação ao abrir Lançamento desde SNS). */
+  sidebarMenuKey?: string
+  /** Path usado para destacar menu lateral e header quando o `path` da janela é noutra área. */
+  navigationContextPath?: string
 }
 
 interface WindowStore {
