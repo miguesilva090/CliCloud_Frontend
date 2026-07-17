@@ -45,6 +45,9 @@ import { SeparadorDinamicoTab } from '../ficha-clinica/tabs/SeparadorDinamicoTab
 import { MedicosService } from '@/lib/services/saude/medicos-service'
 import { SeparadoresGestaoService } from '@/lib/services/processo-clinico/separadores-gestao-service'
 import type { SeparadorFichaClinicaDTO } from '@/types/dtos/processo-clinico/separadores-gestao.dtos'
+import { useUtentePatologiasComparticipacao } from '../ficha-clinica/queries/utente-patologia-comparticipacao-queries'
+import { buildPatologiasInfarmedParam } from '../ficha-clinica/utils/build-patologias-infarmed-param'
+
 
 type FichaClinicaLocationState = {
   utenteId?: string
@@ -162,6 +165,14 @@ export function FichaClinicaPage() {
     ) ?? []
 
   const utente = utenteDetalhe.data?.info?.data as UtenteDTO | undefined
+
+  const patologiasQuery = useUtentePatologiasComparticipacao(utenteId)
+
+  const patologiasInfarmed = useMemo(() => {
+    const envelope = patologiasQuery.data?.info
+    if (!envelope || envelope.status !== ResponseStatus.Success) return undefined
+    return buildPatologiasInfarmedParam(envelope.data ?? [] )
+  }, [patologiasQuery.data])
 
   const { data: alergiasObsData } = useQuery({
     queryKey: ['alergias-utente-obs', utenteId],
@@ -367,7 +378,7 @@ export function FichaClinicaPage() {
       render: () => <RelatorioAtestadoTab utenteId={utenteId} />,
     },
     medicacao: {
-      render: () => <MedicacaoTab />,
+      render: () => <MedicacaoTab patologiasInfarmed={patologiasInfarmed} />,
     },
     documentos: {
       render: () => <DocumentosTab utenteId={utenteId} />,

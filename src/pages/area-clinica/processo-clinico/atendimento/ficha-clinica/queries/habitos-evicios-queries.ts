@@ -16,16 +16,16 @@ export function useGetHabitosEViciosByUtente(utenteId: string) {
 
   return useQuery({
     queryKey: ['habitos-evicios', utenteId],
-    queryFn: async (): Promise<HabitosEViciosDTO | undefined> => {
+    queryFn: async (): Promise<HabitosEViciosDTO | null> => {
       const paginated = await HabitosEViciosService().getHabitosEViciosPaginated({
         pageNumber,
         pageSize,
         filters: filters.length > 0 ? filters : undefined,
       })
       const first = paginated.info?.data?.[0]
-      if (!first?.id) return undefined
+      if (!first?.id) return null
       const detail = await HabitosEViciosService().getById(first.id)
-      return detail.info ?? undefined
+      return detail.info ?? null
     },
     enabled: utenteId.length > 0,
     staleTime: 0,
