@@ -15,6 +15,8 @@ export type TratamentoFichaFormValues = {
   organismoLabel: string
   medicoId: string
   medicoLabel: string
+  /** Médico associado ao utente (RO) */
+  medicoUtenteNome: string
   fisioterapeutaId: string
   fisioterapeutaLabel: string
   auxiliarId: string
@@ -23,6 +25,8 @@ export type TratamentoFichaFormValues = {
   outroTecnicoLabel: string
   localTratamentoId: string
   localTratamentoLabel: string
+  localOrigemId: string
+  localOrigemLabel: string
   designacao: string
   nomePatologia: string
   numSessao: string
@@ -41,6 +45,17 @@ export type TratamentoFichaFormValues = {
   dataSuspensao: string
   provisorio: boolean
   terapiaFala: boolean
+  /** Alta → confDfim no legado */
+  alta: boolean
+  /** Checkbox “Taxa Moderadora” → taxaMod */
+  taxaModAtiva: boolean
+  /** 1 = Isento, 2 = Não Isento (legado) */
+  isencao: string
+  numCartao: string
+  cartaoDevolv: boolean
+  numDevolucao: string
+  /** Display RO (data última alteração) */
+  utilizadorLabel: string
   obs: string
   tecObs: string
 }
@@ -50,6 +65,18 @@ export function toDateInput(value?: string | null): string {
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return ''
   return d.toISOString().slice(0, 10)
+}
+
+function formatDateTimeLabel(value?: string | null): string {
+  if (!value) return ''
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return ''
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mi = String(d.getMinutes()).padStart(2, '0')
+  return `${dd}-${mm}-${yyyy} ${hh}:${mi}`
 }
 
 export function emptyTratamentoFichaForm(): TratamentoFichaFormValues {
@@ -64,6 +91,7 @@ export function emptyTratamentoFichaForm(): TratamentoFichaFormValues {
     organismoLabel: '',
     medicoId: '',
     medicoLabel: '',
+    medicoUtenteNome: '',
     fisioterapeutaId: '',
     fisioterapeutaLabel: '',
     auxiliarId: '',
@@ -72,6 +100,8 @@ export function emptyTratamentoFichaForm(): TratamentoFichaFormValues {
     outroTecnicoLabel: '',
     localTratamentoId: '',
     localTratamentoLabel: '',
+    localOrigemId: '',
+    localOrigemLabel: '',
     designacao: '',
     nomePatologia: '',
     numSessao: '',
@@ -90,6 +120,13 @@ export function emptyTratamentoFichaForm(): TratamentoFichaFormValues {
     dataSuspensao: '',
     provisorio: false,
     terapiaFala: false,
+    alta: false,
+    taxaModAtiva: false,
+    isencao: '',
+    numCartao: '',
+    cartaoDevolv: false,
+    numDevolucao: '',
+    utilizadorLabel: '',
     obs: '',
     tecObs: '',
   }
@@ -107,6 +144,7 @@ export function dtoToTratamentoFichaForm(
     auxiliarId: dto.auxiliarId ?? '',
     outroTecnicoId: dto.outroTecnicoId ?? '',
     localTratamentoId: dto.localTratamentoId ?? '',
+    localOrigemId: dto.localOrigemId ?? '',
     designacao: dto.designacao ?? '',
     nomePatologia: dto.nomePatologia ?? '',
     numSessao: dto.numSessao != null ? String(dto.numSessao) : '',
@@ -125,6 +163,16 @@ export function dtoToTratamentoFichaForm(
     dataSuspensao: toDateInput(dto.dataSuspensao),
     provisorio: dto.provisorio === 1,
     terapiaFala: dto.terapiaFala === 1,
+    alta: dto.confDfim === 1,
+    taxaModAtiva: dto.taxaMod === 1,
+    isencao:
+      dto.isencao === 1 || dto.isencao === 2 ? String(dto.isencao) : '',
+    numCartao: dto.numCartao ?? '',
+    cartaoDevolv: dto.cartaoDevolv === 1,
+    numDevolucao: dto.numDevolucao ?? '',
+    utilizadorLabel: formatDateTimeLabel(
+      dto.lastModifiedOn ?? dto.createdOn
+    ),
     obs: dto.obs ?? '',
     tecObs: dto.tecObs ?? '',
   }
@@ -162,11 +210,11 @@ export function buildUpdateTratamentoPayload(
     organismoId: idOrNull(form.organismoId),
     localTratamentoId: idOrNull(form.localTratamentoId),
     tratamentoPredId: dto.tratamentoPredId ?? null,
-    localOrigemId: dto.localOrigemId ?? null,
+    localOrigemId: idOrNull(form.localOrigemId),
     designacao: form.designacao.trim() || null,
     numSessao: parseOptionalInt(form.numSessao),
     dataInic: dateOrNull(form.dataInic),
-    confDfim: dto.confDfim ?? null,
+    confDfim: form.alta ? 1 : 0,
     dataFim: dateOrNull(form.dataFim),
     data: dateOrNull(form.data),
     nFaltMax: parseOptionalInt(form.nFaltMax),
@@ -182,7 +230,7 @@ export function buildUpdateTratamentoPayload(
     dataRecibo: dto.dataRecibo ?? null,
     pago: dto.pago ?? null,
     faturado: dto.faturado ?? null,
-    numDevolucao: dto.numDevolucao ?? null,
+    numDevolucao: form.numDevolucao.trim() || null,
     numDestacavel: dto.numDestacavel ?? null,
     estadoU: dto.estadoU ?? null,
     estadoI: dto.estadoI ?? null,
@@ -191,18 +239,18 @@ export function buildUpdateTratamentoPayload(
     provisorio: form.provisorio ? 1 : 0,
     obs: form.obs.trim() || null,
     tecObs: form.tecObs.trim() || null,
-    isencao: dto.isencao ?? null,
+    isencao: parseOptionalInt(form.isencao),
     credencial: form.credencial.trim() || null,
     credencialExterna: dto.credencialExterna ?? null,
     destacavelCredencial: dto.destacavelCredencial ?? null,
-    taxaMod: dto.taxaMod ?? null,
+    taxaMod: form.taxaModAtiva ? 1 : 0,
     inisess: dto.inisess ?? null,
     horaFisio: dto.horaFisio ?? null,
     horaAux: dto.horaAux ?? null,
     horaOutro: dto.horaOutro ?? null,
     duracaoTotal: dto.duracaoTotal ?? null,
     selOutro: dto.selOutro ?? null,
-    numCartao: dto.numCartao ?? null,
+    numCartao: form.numCartao.trim() || null,
     orespons: dto.orespons ?? null,
     confirmaLoc: dto.confirmaLoc ?? null,
     sinistroId: idOrNull(form.sinistroId) ?? dto.sinistroId ?? null,
@@ -210,7 +258,7 @@ export function buildUpdateTratamentoPayload(
     documentoId: dto.documentoId ?? null,
     semanaCompleta: dto.semanaCompleta ?? null,
     vemListEsp: dto.vemListEsp ?? null,
-    cartaoDevolv: dto.cartaoDevolv ?? null,
+    cartaoDevolv: form.cartaoDevolv ? 1 : 0,
     terapiaFala: form.terapiaFala ? 1 : 0,
     numBenif: form.numBenif.trim() || null,
     apolice: form.apolice.trim() || null,

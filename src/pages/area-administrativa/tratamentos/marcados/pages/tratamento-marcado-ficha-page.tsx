@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { modules } from '@/config/modules'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
@@ -202,6 +203,7 @@ export function TratamentoMarcadoFichaPage() {
             patchLabels.telemovel =
               u.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 2)
                 ?.valor ?? ''
+            patchLabels.medicoUtenteNome = u.medico?.nome?.trim() ?? ''
           }
         } catch {
           /* ignore */
@@ -236,11 +238,29 @@ export function TratamentoMarcadoFichaPage() {
         try {
           const res =
             await LocalTratamentoService(listPermId).getLocaisTratamentoLight()
-          const hit = (res.info?.data ?? []).find(
-            (l) => l.id === dto.localTratamentoId
-          )
+          const list = res.info?.data ?? []
+          const hit = list.find((l) => l.id === dto.localTratamentoId)
           if (hit?.designacao) {
             patchLabels.localTratamentoLabel = hit.designacao
+          }
+          if (dto.localOrigemId) {
+            const origem = list.find((l) => l.id === dto.localOrigemId)
+            if (origem?.designacao) {
+              patchLabels.localOrigemLabel = origem.designacao
+            }
+          }
+        } catch {
+          /* ignore */
+        }
+      } else if (dto.localOrigemId) {
+        try {
+          const res =
+            await LocalTratamentoService(listPermId).getLocaisTratamentoLight()
+          const origem = (res.info?.data ?? []).find(
+            (l) => l.id === dto.localOrigemId
+          )
+          if (origem?.designacao) {
+            patchLabels.localOrigemLabel = origem.designacao
           }
         } catch {
           /* ignore */
@@ -304,6 +324,15 @@ export function TratamentoMarcadoFichaPage() {
     }))
     return withSelected(mapped, form.localTratamentoId, form.localTratamentoLabel)
   }, [locaisQuery.data, form.localTratamentoId, form.localTratamentoLabel])
+
+  const localOrigemItems = useMemo(() => {
+    const list = locaisQuery.data?.info?.data ?? []
+    const mapped = list.map((l) => ({
+      value: l.id,
+      label: l.designacao ?? '',
+    }))
+    return withSelected(mapped, form.localOrigemId, form.localOrigemLabel)
+  }, [locaisQuery.data, form.localOrigemId, form.localOrigemLabel])
 
   const fisioItems = useMemo(() => {
     const list = fisiosQuery.data ?? []
@@ -469,7 +498,8 @@ export function TratamentoMarcadoFichaPage() {
               <div className='mb-4 space-y-4 rounded-md border border-border/60 bg-muted/20 p-4'>
                 <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
                   <Field label='Código'>
-                    <Input value={dto.id.slice(0, 8).toUpperCase()} disabled />
+                    {/* Sem C_Tratamen legado no modelo novo — nunca usar pedaço do Guid. */}
+                    <Input value='—' disabled />
                   </Field>
                   <Field label='Designação'>
                     <Input
@@ -609,30 +639,9 @@ export function TratamentoMarcadoFichaPage() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value='tratamento' className='mt-4 space-y-6'>
-                  <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
-                    <Field label='Local de tratamento'>
-                      <AsyncCombobox
-                        value={form.localTratamentoId}
-                        disabled={!canChange}
-                        onChange={(v) => {
-                          const label =
-                            localItems.find((i) => i.value === v)?.label ?? ''
-                          setForm((prev) => ({
-                            ...prev,
-                            localTratamentoId: v,
-                            localTratamentoLabel: label,
-                          }))
-                        }}
-                        searchValue={localSearch}
-                        onSearchValueChange={setLocalSearch}
-                        items={localItems}
-                        isLoading={locaisQuery.isFetching}
-                        placeholder='Seleccionar local…'
-                        searchPlaceholder='Pesquisar…'
-                        emptyText='Sem resultados'
-                      />
-                    </Field>
+                <TabsContent value='tratamento' className='mt-4 space-y-5'>
+                  {/* Médicos */}
+                  <div className='grid gap-4 sm:grid-cols-2'>
                     <Field label='Médico'>
                       <AsyncCombobox
                         value={form.medicoId}
@@ -655,6 +664,13 @@ export function TratamentoMarcadoFichaPage() {
                         emptyText='Sem resultados'
                       />
                     </Field>
+                    <Field label='Médico do Utente'>
+                      <Input value={form.medicoUtenteNome || '—'} disabled />
+                    </Field>
+                  </div>
+
+                  {/* Técnicos */}
+                  <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
                     <Field label='Fisioterapeuta'>
                       <AsyncCombobox
                         value={form.fisioterapeutaId}
@@ -699,7 +715,7 @@ export function TratamentoMarcadoFichaPage() {
                         emptyText='Sem resultados'
                       />
                     </Field>
-                    <Field label='Terapeuta Ocup./Fala'>
+                    <Field label='Outro'>
                       <AsyncCombobox
                         value={form.outroTecnicoId}
                         disabled={!canChange}
@@ -721,21 +737,91 @@ export function TratamentoMarcadoFichaPage() {
                         emptyText='Sem resultados'
                       />
                     </Field>
-                    <Field label='Patologia'>
-                      <Input
-                        value={form.nomePatologia}
+                  </div>
+
+                  {/* Locais */}
+                  <div className='grid gap-4 sm:grid-cols-2'>
+                    <Field label='Local Tratamento'>
+                      <AsyncCombobox
+                        value={form.localTratamentoId}
                         disabled={!canChange}
-                        onChange={(e) => patch('nomePatologia', e.target.value)}
+                        onChange={(v) => {
+                          const label =
+                            localItems.find((i) => i.value === v)?.label ?? ''
+                          setForm((prev) => ({
+                            ...prev,
+                            localTratamentoId: v,
+                            localTratamentoLabel: label,
+                          }))
+                        }}
+                        searchValue={localSearch}
+                        onSearchValueChange={setLocalSearch}
+                        items={localItems}
+                        isLoading={locaisQuery.isFetching}
+                        placeholder='Seleccionar local…'
+                        searchPlaceholder='Pesquisar…'
+                        emptyText='Sem resultados'
                       />
                     </Field>
-                    <Field label='Data'>
-                      <Input
-                        type='date'
-                        value={form.data}
+                    <Field label='Local Origem'>
+                      <AsyncCombobox
+                        value={form.localOrigemId}
                         disabled={!canChange}
-                        onChange={(e) => patch('data', e.target.value)}
+                        onChange={(v) => {
+                          const label =
+                            localOrigemItems.find((i) => i.value === v)
+                              ?.label ?? ''
+                          setForm((prev) => ({
+                            ...prev,
+                            localOrigemId: v,
+                            localOrigemLabel: label,
+                          }))
+                        }}
+                        searchValue={localSearch}
+                        onSearchValueChange={setLocalSearch}
+                        items={localOrigemItems}
+                        isLoading={locaisQuery.isFetching}
+                        placeholder='Seleccionar local…'
+                        searchPlaceholder='Pesquisar…'
+                        emptyText='Sem resultados'
                       />
                     </Field>
+                  </div>
+
+                  {/* Taxa moderadora + Credencial */}
+                  <div className='grid gap-4 lg:grid-cols-2'>
+                    <div className='space-y-3 rounded-md border border-border/50 p-3'>
+                      <label className='flex items-center gap-2 text-sm font-medium'>
+                        <Checkbox
+                          checked={form.taxaModAtiva}
+                          disabled={!canChange}
+                          onCheckedChange={(v) => {
+                            const on = v === true
+                            setForm((prev) => ({
+                              ...prev,
+                              taxaModAtiva: on,
+                              isencao: on ? prev.isencao || '2' : '',
+                            }))
+                          }}
+                        />
+                        Taxa Moderadora
+                      </label>
+                      <RadioGroup
+                        value={form.isencao}
+                        disabled={!canChange || !form.taxaModAtiva}
+                        onValueChange={(v) => patch('isencao', v)}
+                        className='flex flex-wrap gap-4'
+                      >
+                        <label className='flex items-center gap-2 text-sm'>
+                          <RadioGroupItem value='1' id='tm-isento' />
+                          Isento
+                        </label>
+                        <label className='flex items-center gap-2 text-sm'>
+                          <RadioGroupItem value='2' id='tm-nao-isento' />
+                          Não Isento
+                        </label>
+                      </RadioGroup>
+                    </div>
                     <Field label='Credencial'>
                       <Input
                         value={form.credencial}
@@ -743,49 +829,90 @@ export function TratamentoMarcadoFichaPage() {
                         onChange={(e) => patch('credencial', e.target.value)}
                       />
                     </Field>
-                    <Field label='Faltas máx.'>
-                      <Input
-                        type='number'
-                        value={form.nFaltMax}
-                        disabled={!canChange}
-                        onChange={(e) => patch('nFaltMax', e.target.value)}
-                      />
-                    </Field>
-                    <Field label='Faltas consec. máx.'>
-                      <Input
-                        type='number'
-                        value={form.nFaltComax}
-                        disabled={!canChange}
-                        onChange={(e) => patch('nFaltComax', e.target.value)}
-                      />
-                    </Field>
-                    <Field label='Faltas (actual)'>
-                      <Input value={form.nFalta} disabled />
-                    </Field>
-                    <Field label='Faltas consec. (actual)'>
-                      <Input value={form.nFaltaCons} disabled />
-                    </Field>
                   </div>
 
-                  <div className='flex flex-wrap gap-6'>
-                    <label className='flex items-center gap-2 text-sm'>
-                      <Checkbox
-                        checked={form.terapiaFala}
-                        disabled={!canChange}
-                        onCheckedChange={(v) => patch('terapiaFala', v === true)}
-                      />
-                      Terapia da fala
-                    </label>
+                  {/* Faltas + flags + cartão */}
+                  <div className='grid gap-4 lg:grid-cols-3'>
+                    <div className='space-y-3 rounded-md border border-border/50 p-3'>
+                      <p className='text-sm font-medium'>Faltas</p>
+                      <Field label='Actual'>
+                        <Input value={form.nFalta || '0'} disabled />
+                      </Field>
+                      <Field label='Máximo'>
+                        <Input
+                          type='number'
+                          value={form.nFaltMax}
+                          disabled={!canChange}
+                          onChange={(e) => patch('nFaltMax', e.target.value)}
+                        />
+                      </Field>
+                    </div>
+                    <div className='space-y-3 rounded-md border border-border/50 p-3'>
+                      <p className='text-sm font-medium'>Faltas Consecutivas</p>
+                      <Field label='Actual'>
+                        <Input value={form.nFaltaCons || '0'} disabled />
+                      </Field>
+                      <Field label='Máximo'>
+                        <Input
+                          type='number'
+                          value={form.nFaltComax}
+                          disabled={!canChange}
+                          onChange={(e) => patch('nFaltComax', e.target.value)}
+                        />
+                      </Field>
+                    </div>
+                    <div className='space-y-3 rounded-md border border-border/50 p-3'>
+                      <p className='text-sm font-medium'>Cartão</p>
+                      <Field label='Nº Cartão'>
+                        <Input
+                          value={form.numCartao}
+                          disabled={!canChange}
+                          onChange={(e) => patch('numCartao', e.target.value)}
+                        />
+                      </Field>
+                      <label className='flex items-center gap-2 text-sm'>
+                        <Checkbox
+                          checked={form.cartaoDevolv}
+                          disabled={!canChange}
+                          onCheckedChange={(v) =>
+                            patch('cartaoDevolv', v === true)
+                          }
+                        />
+                        Cartão devolvido
+                      </label>
+                    </div>
                   </div>
 
-                  <div className='grid gap-4 sm:grid-cols-2'>
-                    <Field label='Obs. técnicas'>
-                      <Textarea
-                        value={form.tecObs}
+                  <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
+                    <Field label='Nº Devolução'>
+                      <Input
+                        value={form.numDevolucao}
                         disabled={!canChange}
-                        rows={4}
-                        onChange={(e) => patch('tecObs', e.target.value)}
+                        onChange={(e) => patch('numDevolucao', e.target.value)}
                       />
+                    </Field>
+                    <div className='flex flex-wrap items-end gap-4 pb-1'>
+                      <label className='flex items-center gap-2 text-sm'>
+                        <Checkbox
+                          checked={form.alta}
+                          disabled={!canChange}
+                          onCheckedChange={(v) => patch('alta', v === true)}
+                        />
+                        Alta
+                      </label>
+                      <label className='flex items-center gap-2 text-sm'>
+                        <Checkbox
+                          checked={form.terapiaFala}
+                          disabled={!canChange}
+                          onCheckedChange={(v) =>
+                            patch('terapiaFala', v === true)
+                          }
+                        />
+                        Terapia da fala
+                      </label>
+                    </div>
+                    <Field label='Utilizador'>
+                      <Input value={form.utilizadorLabel || '—'} disabled />
                     </Field>
                   </div>
                 </TabsContent>
@@ -819,13 +946,26 @@ export function TratamentoMarcadoFichaPage() {
                   <DialogHeader>
                     <DialogTitle>Observações</DialogTitle>
                   </DialogHeader>
-                  <Textarea
-                    value={form.obs}
-                    disabled={!canChange}
-                    rows={8}
-                    placeholder='Observações do tratamento…'
-                    onChange={(e) => patch('obs', e.target.value)}
-                  />
+                  <div className='space-y-4'>
+                    <Field label='Observações'>
+                      <Textarea
+                        value={form.obs}
+                        disabled={!canChange}
+                        rows={5}
+                        placeholder='Observações do tratamento…'
+                        onChange={(e) => patch('obs', e.target.value)}
+                      />
+                    </Field>
+                    <Field label='Obs. técnicas'>
+                      <Textarea
+                        value={form.tecObs}
+                        disabled={!canChange}
+                        rows={4}
+                        placeholder='Notas técnicas…'
+                        onChange={(e) => patch('tecObs', e.target.value)}
+                      />
+                    </Field>
+                  </div>
                   <DialogFooter>
                     <Button
                       type='button'
