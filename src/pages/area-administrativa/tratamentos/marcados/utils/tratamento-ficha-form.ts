@@ -5,6 +5,11 @@ import type {
 
 export type TratamentoFichaFormValues = {
   utenteId: string
+  /** Nome do utente (sem número) — display tab Info. Utente */
+  utenteNome: string
+  numeroUtente: string
+  telefone: string
+  telemovel: string
   utenteLabel: string
   organismoId: string
   organismoLabel: string
@@ -27,6 +32,7 @@ export type TratamentoFichaFormValues = {
   numBenif: string
   apolice: string
   credencial: string
+  sinistroId: string
   nFaltMax: string
   nFaltComax: string
   nFalta: string
@@ -49,6 +55,10 @@ export function toDateInput(value?: string | null): string {
 export function emptyTratamentoFichaForm(): TratamentoFichaFormValues {
   return {
     utenteId: '',
+    utenteNome: '',
+    numeroUtente: '',
+    telefone: '',
+    telemovel: '',
     utenteLabel: '',
     organismoId: '',
     organismoLabel: '',
@@ -71,6 +81,7 @@ export function emptyTratamentoFichaForm(): TratamentoFichaFormValues {
     numBenif: '',
     apolice: '',
     credencial: '',
+    sinistroId: '',
     nFaltMax: '',
     nFaltComax: '',
     nFalta: '',
@@ -105,6 +116,7 @@ export function dtoToTratamentoFichaForm(
     numBenif: dto.numBenif ?? '',
     apolice: dto.apolice ?? '',
     credencial: dto.credencial ?? '',
+    sinistroId: dto.sinistroId ?? '',
     nFaltMax: dto.nFaltMax != null ? String(dto.nFaltMax) : '',
     nFaltComax: dto.nFaltComax != null ? String(dto.nFaltComax) : '',
     nFalta: dto.nFalta != null ? String(dto.nFalta) : '',
@@ -193,7 +205,7 @@ export function buildUpdateTratamentoPayload(
     numCartao: dto.numCartao ?? null,
     orespons: dto.orespons ?? null,
     confirmaLoc: dto.confirmaLoc ?? null,
-    sinistroId: dto.sinistroId ?? null,
+    sinistroId: idOrNull(form.sinistroId) ?? dto.sinistroId ?? null,
     seguradoraId: dto.seguradoraId ?? null,
     documentoId: dto.documentoId ?? null,
     semanaCompleta: dto.semanaCompleta ?? null,

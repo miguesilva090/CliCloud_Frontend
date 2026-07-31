@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
-import { Save } from 'lucide-react'
+import { MessageSquare, Save } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumDashboardCard } from '@/components/shared/area-comum-dashboard-card'
@@ -14,6 +14,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { modules } from '@/config/modules'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
@@ -29,6 +36,7 @@ import { TIPO_TECNICO } from '@/pages/area-comum/tabelas/entidades/tecnicos/cons
 import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
 import { TratamentoFichaSessoesPanel } from '../components/tratamento-ficha-sessoes-panel'
+import { TratamentoFichaServicosPrescritosPlaceholder } from '../components/tratamento-ficha-servicos-prescritos-placeholder'
 import {
   useGetTratamentoFicha,
   useGetTratamentoFichaSessoes,
@@ -80,13 +88,21 @@ export function TratamentoMarcadoFichaPage() {
   const closeLikeTabBar = useCloseCurrentWindowLikeTabBar()
   const { canView, canChange, canDelete } =
     useAreaComumEntityListPermissions(listPermId)
-  const { activeTab, setActiveTab } = useTabManager({ defaultTab: 'dados' })
+  const { activeTab, setActiveTab } = useTabManager({
+    defaultTab: 'info-utente',
+  })
   const invalidate = useInvalidateTratamentoFicha()
+
+  // Janelas antigas podiam ter tab "dados" (Ficha MVP)
+  useEffect(() => {
+    if (activeTab === 'dados') setActiveTab('tratamento')
+  }, [activeTab, setActiveTab])
 
   const [form, setForm] = useState<TratamentoFichaFormValues>(
     emptyTratamentoFichaForm()
   )
   const [isSaving, setIsSaving] = useState(false)
+  const [obsOpen, setObsOpen] = useState(false)
 
   const [orgSearch, setOrgSearch] = useState('')
   const [medSearch, setMedSearch] = useState('')
@@ -162,7 +178,7 @@ export function TratamentoMarcadoFichaPage() {
     if (dto) setForm(dtoToTratamentoFichaForm(dto))
   }, [dto])
 
-  // Hidratar labels dos FKs já gravados
+  // Hidratar labels / contactos dos FKs já gravados
   useEffect(() => {
     if (!dto) return
     let cancelled = false
@@ -175,9 +191,17 @@ export function TratamentoMarcadoFichaPage() {
           const res = await UtentesService(listPermId).getUtente(dto.utenteId)
           const u = res.info?.data
           if (u) {
-            patchLabels.utenteLabel = [u.numeroUtente, u.nome]
-              .filter(Boolean)
-              .join(' — ')
+            const numero = u.numeroUtente?.trim() ?? ''
+            const nome = u.nome?.trim() ?? ''
+            patchLabels.numeroUtente = numero
+            patchLabels.utenteNome = nome
+            patchLabels.utenteLabel = [numero, nome].filter(Boolean).join(' — ')
+            patchLabels.telefone =
+              u.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 1)
+                ?.valor ?? ''
+            patchLabels.telemovel =
+              u.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 2)
+                ?.valor ?? ''
           }
         } catch {
           /* ignore */
@@ -340,7 +364,7 @@ export function TratamentoMarcadoFichaPage() {
     if (!id || !dto || !canChange) return
     if (!form.organismoId.trim()) {
       toast.error('Certifique-se que o organismo está preenchido')
-      setActiveTab('dados')
+      setActiveTab('info-utente')
       return
     }
     setIsSaving(true)
@@ -398,18 +422,31 @@ export function TratamentoMarcadoFichaPage() {
             onBack={handleBack}
             onRefresh={handleRefresh}
             rightActions={
-              canChange ? (
+              <div className='flex flex-wrap items-center gap-2'>
                 <Button
                   type='button'
                   size='sm'
+                  variant='outline'
                   className='gap-2'
-                  disabled={isSaving || !dto}
-                  onClick={() => void handleSave()}
+                  disabled={!dto}
+                  onClick={() => setObsOpen(true)}
                 >
-                  <Save className='h-4 w-4' />
-                  {isSaving ? 'A guardar…' : 'Guardar'}
+                  <MessageSquare className='h-4 w-4' />
+                  Observações
                 </Button>
-              ) : null
+                {canChange ? (
+                  <Button
+                    type='button'
+                    size='sm'
+                    className='gap-2'
+                    disabled={isSaving || !dto}
+                    onClick={() => void handleSave()}
+                  >
+                    <Save className='h-4 w-4' />
+                    {isSaving ? 'A guardar…' : 'Guardar'}
+                  </Button>
+                ) : null}
+              </div>
             }
           />
 
@@ -427,148 +464,12 @@ export function TratamentoMarcadoFichaPage() {
           ) : null}
 
           {dto ? (
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value='dados'>Dados</TabsTrigger>
-                <TabsTrigger value='sessoes'>Sessões</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value='dados' className='mt-4 space-y-6'>
-                <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
-                  <Field label='Utente'>
-                    <Input value={form.utenteLabel || '—'} disabled />
-                  </Field>
-                  <Field label='Organismo *'>
-                    <AsyncCombobox
-                      value={form.organismoId}
-                      disabled={!canChange}
-                      onChange={(v) => {
-                        const label =
-                          orgItems.find((i) => i.value === v)?.label ?? ''
-                        setForm((prev) => ({
-                          ...prev,
-                          organismoId: v,
-                          organismoLabel: label,
-                        }))
-                      }}
-                      searchValue={orgSearch}
-                      onSearchValueChange={setOrgSearch}
-                      items={orgItems}
-                      isLoading={orgQuery.isFetching}
-                      placeholder='Seleccionar organismo…'
-                      searchPlaceholder='Pesquisar…'
-                      emptyText='Sem resultados'
-                    />
-                  </Field>
-                  <Field label='Local de tratamento'>
-                    <AsyncCombobox
-                      value={form.localTratamentoId}
-                      disabled={!canChange}
-                      onChange={(v) => {
-                        const label =
-                          localItems.find((i) => i.value === v)?.label ?? ''
-                        setForm((prev) => ({
-                          ...prev,
-                          localTratamentoId: v,
-                          localTratamentoLabel: label,
-                        }))
-                      }}
-                      searchValue={localSearch}
-                      onSearchValueChange={setLocalSearch}
-                      items={localItems}
-                      isLoading={locaisQuery.isFetching}
-                      placeholder='Seleccionar local…'
-                      searchPlaceholder='Pesquisar…'
-                      emptyText='Sem resultados'
-                    />
-                  </Field>
-                  <Field label='Médico'>
-                    <AsyncCombobox
-                      value={form.medicoId}
-                      disabled={!canChange}
-                      onChange={(v) => {
-                        const label =
-                          medicoItems.find((i) => i.value === v)?.label ?? ''
-                        setForm((prev) => ({
-                          ...prev,
-                          medicoId: v,
-                          medicoLabel: label,
-                        }))
-                      }}
-                      searchValue={medSearch}
-                      onSearchValueChange={setMedSearch}
-                      items={medicoItems}
-                      isLoading={medicosQuery.isFetching}
-                      placeholder='Seleccionar médico…'
-                      searchPlaceholder='Pesquisar…'
-                      emptyText='Sem resultados'
-                    />
-                  </Field>
-                  <Field label='Fisioterapeuta'>
-                    <AsyncCombobox
-                      value={form.fisioterapeutaId}
-                      disabled={!canChange}
-                      onChange={(v) => {
-                        const label =
-                          fisioItems.find((i) => i.value === v)?.label ?? ''
-                        setForm((prev) => ({
-                          ...prev,
-                          fisioterapeutaId: v,
-                          fisioterapeutaLabel: label,
-                        }))
-                      }}
-                      searchValue={fisioSearch}
-                      onSearchValueChange={setFisioSearch}
-                      items={fisioItems}
-                      isLoading={fisiosQuery.isFetching}
-                      placeholder='Seleccionar…'
-                      searchPlaceholder='Pesquisar…'
-                      emptyText='Sem resultados'
-                    />
-                  </Field>
-                  <Field label='Auxiliar'>
-                    <AsyncCombobox
-                      value={form.auxiliarId}
-                      disabled={!canChange}
-                      onChange={(v) => {
-                        const label =
-                          auxItems.find((i) => i.value === v)?.label ?? ''
-                        setForm((prev) => ({
-                          ...prev,
-                          auxiliarId: v,
-                          auxiliarLabel: label,
-                        }))
-                      }}
-                      searchValue={auxSearch}
-                      onSearchValueChange={setAuxSearch}
-                      items={auxItems}
-                      isLoading={auxQuery.isFetching}
-                      placeholder='Seleccionar…'
-                      searchPlaceholder='Pesquisar…'
-                      emptyText='Sem resultados'
-                    />
-                  </Field>
-                  <Field label='Terapeuta Ocup./Fala'>
-                    <AsyncCombobox
-                      value={form.outroTecnicoId}
-                      disabled={!canChange}
-                      onChange={(v) => {
-                        const label =
-                          outroItems.find((i) => i.value === v)?.label ?? ''
-                        setForm((prev) => ({
-                          ...prev,
-                          outroTecnicoId: v,
-                          outroTecnicoLabel: label,
-                        }))
-                      }}
-                      searchValue={outroSearch}
-                      onSearchValueChange={setOutroSearch}
-                      items={outroItems}
-                      isLoading={outroQuery.isFetching}
-                      placeholder='Seleccionar…'
-                      searchPlaceholder='Pesquisar…'
-                      emptyText='Sem resultados'
-                    />
+            <>
+              {/* Cabeçalho acima das tabs (paridade legado TratamentosEdt) */}
+              <div className='mb-4 space-y-4 rounded-md border border-border/60 bg-muted/20 p-4'>
+                <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+                  <Field label='Código'>
+                    <Input value={dto.id.slice(0, 8).toUpperCase()} disabled />
                   </Field>
                   <Field label='Designação'>
                     <Input
@@ -577,21 +478,34 @@ export function TratamentoMarcadoFichaPage() {
                       onChange={(e) => patch('designacao', e.target.value)}
                     />
                   </Field>
-                  <Field label='Patologia'>
+                  <div className='flex flex-wrap items-end gap-4 pb-1'>
+                    <label className='flex items-center gap-2 text-sm'>
+                      <Checkbox
+                        checked={form.suspenso}
+                        disabled={!canChange}
+                        onCheckedChange={(v) => patch('suspenso', v === true)}
+                      />
+                      Suspender
+                    </label>
+                    <label className='flex items-center gap-2 text-sm'>
+                      <Checkbox
+                        checked={form.provisorio}
+                        disabled={!canChange}
+                        onCheckedChange={(v) => patch('provisorio', v === true)}
+                      />
+                      Provisório
+                    </label>
+                  </div>
+                  <Field label='Data suspensão'>
                     <Input
-                      value={form.nomePatologia}
+                      type='date'
+                      value={form.dataSuspensao}
                       disabled={!canChange}
-                      onChange={(e) => patch('nomePatologia', e.target.value)}
+                      onChange={(e) => patch('dataSuspensao', e.target.value)}
                     />
                   </Field>
-                  <Field label='N.º sessões'>
-                    <Input
-                      type='number'
-                      value={form.numSessao}
-                      disabled={!canChange}
-                      onChange={(e) => patch('numSessao', e.target.value)}
-                    />
-                  </Field>
+                </div>
+                <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
                   <Field label='Data início'>
                     <Input
                       type='date'
@@ -608,133 +522,334 @@ export function TratamentoMarcadoFichaPage() {
                       onChange={(e) => patch('dataFim', e.target.value)}
                     />
                   </Field>
-                  <Field label='Data'>
-                    <Input
-                      type='date'
-                      value={form.data}
-                      disabled={!canChange}
-                      onChange={(e) => patch('data', e.target.value)}
-                    />
-                  </Field>
-                  <Field label='N.º benefício'>
-                    <Input
-                      value={form.numBenif}
-                      disabled={!canChange}
-                      onChange={(e) => patch('numBenif', e.target.value)}
-                    />
-                  </Field>
-                  <Field label='Apólice'>
-                    <Input
-                      value={form.apolice}
-                      disabled={!canChange}
-                      onChange={(e) => patch('apolice', e.target.value)}
-                    />
-                  </Field>
-                  <Field label='Credencial'>
-                    <Input
-                      value={form.credencial}
-                      disabled={!canChange}
-                      onChange={(e) => patch('credencial', e.target.value)}
-                    />
-                  </Field>
-                  <Field label='Faltas máx.'>
+                  <Field label='N.º sessões'>
                     <Input
                       type='number'
-                      value={form.nFaltMax}
+                      value={form.numSessao}
                       disabled={!canChange}
-                      onChange={(e) => patch('nFaltMax', e.target.value)}
-                    />
-                  </Field>
-                  <Field label='Faltas consec. máx.'>
-                    <Input
-                      type='number'
-                      value={form.nFaltComax}
-                      disabled={!canChange}
-                      onChange={(e) => patch('nFaltComax', e.target.value)}
-                    />
-                  </Field>
-                  <Field label='Faltas (actual)'>
-                    <Input value={form.nFalta} disabled />
-                  </Field>
-                  <Field label='Faltas consec. (actual)'>
-                    <Input value={form.nFaltaCons} disabled />
-                  </Field>
-                  <Field label='Data suspensão'>
-                    <Input
-                      type='date'
-                      value={form.dataSuspensao}
-                      disabled={!canChange}
-                      onChange={(e) => patch('dataSuspensao', e.target.value)}
+                      onChange={(e) => patch('numSessao', e.target.value)}
                     />
                   </Field>
                 </div>
+              </div>
 
-                <div className='flex flex-wrap gap-6'>
-                  <label className='flex items-center gap-2 text-sm'>
-                    <Checkbox
-                      checked={form.suspenso}
-                      disabled={!canChange}
-                      onCheckedChange={(v) => patch('suspenso', v === true)}
-                    />
-                    Suspenso
-                  </label>
-                  <label className='flex items-center gap-2 text-sm'>
-                    <Checkbox
-                      checked={form.provisorio}
-                      disabled={!canChange}
-                      onCheckedChange={(v) => patch('provisorio', v === true)}
-                    />
-                    Provisório
-                  </label>
-                  <label className='flex items-center gap-2 text-sm'>
-                    <Checkbox
-                      checked={form.terapiaFala}
-                      disabled={!canChange}
-                      onCheckedChange={(v) => patch('terapiaFala', v === true)}
-                    />
-                    Terapia da fala
-                  </label>
-                </div>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className='flex h-auto flex-wrap gap-1'>
+                  <TabsTrigger value='info-utente'>Info. Utente</TabsTrigger>
+                  <TabsTrigger value='tratamento'>Tratamento</TabsTrigger>
+                  <TabsTrigger value='servicos-prescritos'>
+                    Serviços Prescritos
+                  </TabsTrigger>
+                  <TabsTrigger value='sessoes'>
+                    Sessões Realizadas / Por Realizar
+                  </TabsTrigger>
+                </TabsList>
 
-                <div className='grid gap-4 sm:grid-cols-2'>
-                  <Field label='Observações'>
-                    <Textarea
-                      value={form.obs}
-                      disabled={!canChange}
-                      rows={4}
-                      onChange={(e) => patch('obs', e.target.value)}
-                    />
-                  </Field>
-                  <Field label='Obs. técnicas'>
-                    <Textarea
-                      value={form.tecObs}
-                      disabled={!canChange}
-                      rows={4}
-                      onChange={(e) => patch('tecObs', e.target.value)}
-                    />
-                  </Field>
-                </div>
-              </TabsContent>
+                <TabsContent value='info-utente' className='mt-4 space-y-6'>
+                  <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
+                    <Field label='Cód. Utente'>
+                      <Input value={form.numeroUtente || '—'} disabled />
+                    </Field>
+                    <Field label='Utente'>
+                      <Input value={form.utenteNome || '—'} disabled />
+                    </Field>
+                    <Field label='N.º benefício'>
+                      <Input
+                        value={form.numBenif}
+                        disabled={!canChange}
+                        onChange={(e) => patch('numBenif', e.target.value)}
+                      />
+                    </Field>
+                    <Field label='Apólice'>
+                      <Input
+                        value={form.apolice}
+                        disabled={!canChange}
+                        onChange={(e) => patch('apolice', e.target.value)}
+                      />
+                    </Field>
+                    <Field label='Nº Utente SNS'>
+                      <Input value={form.numeroUtente || '—'} disabled />
+                    </Field>
+                    <Field label='Telefone'>
+                      <Input value={form.telefone || '—'} disabled />
+                    </Field>
+                    <Field label='Telemóvel'>
+                      <Input value={form.telemovel || '—'} disabled />
+                    </Field>
+                    <Field label='Nº Sinistrado'>
+                      <Input
+                        value={form.sinistroId}
+                        disabled={!canChange}
+                        placeholder='Guid do sinistro…'
+                        onChange={(e) => patch('sinistroId', e.target.value)}
+                      />
+                    </Field>
+                    <Field label='Organismo *'>
+                      <AsyncCombobox
+                        value={form.organismoId}
+                        disabled={!canChange}
+                        onChange={(v) => {
+                          const label =
+                            orgItems.find((i) => i.value === v)?.label ?? ''
+                          setForm((prev) => ({
+                            ...prev,
+                            organismoId: v,
+                            organismoLabel: label,
+                          }))
+                        }}
+                        searchValue={orgSearch}
+                        onSearchValueChange={setOrgSearch}
+                        items={orgItems}
+                        isLoading={orgQuery.isFetching}
+                        placeholder='Seleccionar organismo…'
+                        searchPlaceholder='Pesquisar…'
+                        emptyText='Sem resultados'
+                      />
+                    </Field>
+                  </div>
+                </TabsContent>
 
-              <TabsContent value='sessoes' className='mt-4'>
-                <TratamentoFichaSessoesPanel
-                  tratamentoId={dto.id}
-                  listPermId={listPermId}
-                  canView={canView}
-                  canChange={canChange}
-                  canDelete={!!canDelete}
-                  sessoes={sessoes}
-                  isLoading={sessoesQuery.isLoading}
-                  onRefresh={() => invalidate(id)}
-                  defaultFisioId={form.fisioterapeutaId}
-                  defaultFisioLabel={form.fisioterapeutaLabel}
-                  defaultAuxId={form.auxiliarId}
-                  defaultAuxLabel={form.auxiliarLabel}
-                  defaultOutroId={form.outroTecnicoId}
-                  defaultOutroLabel={form.outroTecnicoLabel}
-                />
-              </TabsContent>
-            </Tabs>
+                <TabsContent value='tratamento' className='mt-4 space-y-6'>
+                  <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
+                    <Field label='Local de tratamento'>
+                      <AsyncCombobox
+                        value={form.localTratamentoId}
+                        disabled={!canChange}
+                        onChange={(v) => {
+                          const label =
+                            localItems.find((i) => i.value === v)?.label ?? ''
+                          setForm((prev) => ({
+                            ...prev,
+                            localTratamentoId: v,
+                            localTratamentoLabel: label,
+                          }))
+                        }}
+                        searchValue={localSearch}
+                        onSearchValueChange={setLocalSearch}
+                        items={localItems}
+                        isLoading={locaisQuery.isFetching}
+                        placeholder='Seleccionar local…'
+                        searchPlaceholder='Pesquisar…'
+                        emptyText='Sem resultados'
+                      />
+                    </Field>
+                    <Field label='Médico'>
+                      <AsyncCombobox
+                        value={form.medicoId}
+                        disabled={!canChange}
+                        onChange={(v) => {
+                          const label =
+                            medicoItems.find((i) => i.value === v)?.label ?? ''
+                          setForm((prev) => ({
+                            ...prev,
+                            medicoId: v,
+                            medicoLabel: label,
+                          }))
+                        }}
+                        searchValue={medSearch}
+                        onSearchValueChange={setMedSearch}
+                        items={medicoItems}
+                        isLoading={medicosQuery.isFetching}
+                        placeholder='Seleccionar médico…'
+                        searchPlaceholder='Pesquisar…'
+                        emptyText='Sem resultados'
+                      />
+                    </Field>
+                    <Field label='Fisioterapeuta'>
+                      <AsyncCombobox
+                        value={form.fisioterapeutaId}
+                        disabled={!canChange}
+                        onChange={(v) => {
+                          const label =
+                            fisioItems.find((i) => i.value === v)?.label ?? ''
+                          setForm((prev) => ({
+                            ...prev,
+                            fisioterapeutaId: v,
+                            fisioterapeutaLabel: label,
+                          }))
+                        }}
+                        searchValue={fisioSearch}
+                        onSearchValueChange={setFisioSearch}
+                        items={fisioItems}
+                        isLoading={fisiosQuery.isFetching}
+                        placeholder='Seleccionar…'
+                        searchPlaceholder='Pesquisar…'
+                        emptyText='Sem resultados'
+                      />
+                    </Field>
+                    <Field label='Auxiliar'>
+                      <AsyncCombobox
+                        value={form.auxiliarId}
+                        disabled={!canChange}
+                        onChange={(v) => {
+                          const label =
+                            auxItems.find((i) => i.value === v)?.label ?? ''
+                          setForm((prev) => ({
+                            ...prev,
+                            auxiliarId: v,
+                            auxiliarLabel: label,
+                          }))
+                        }}
+                        searchValue={auxSearch}
+                        onSearchValueChange={setAuxSearch}
+                        items={auxItems}
+                        isLoading={auxQuery.isFetching}
+                        placeholder='Seleccionar…'
+                        searchPlaceholder='Pesquisar…'
+                        emptyText='Sem resultados'
+                      />
+                    </Field>
+                    <Field label='Terapeuta Ocup./Fala'>
+                      <AsyncCombobox
+                        value={form.outroTecnicoId}
+                        disabled={!canChange}
+                        onChange={(v) => {
+                          const label =
+                            outroItems.find((i) => i.value === v)?.label ?? ''
+                          setForm((prev) => ({
+                            ...prev,
+                            outroTecnicoId: v,
+                            outroTecnicoLabel: label,
+                          }))
+                        }}
+                        searchValue={outroSearch}
+                        onSearchValueChange={setOutroSearch}
+                        items={outroItems}
+                        isLoading={outroQuery.isFetching}
+                        placeholder='Seleccionar…'
+                        searchPlaceholder='Pesquisar…'
+                        emptyText='Sem resultados'
+                      />
+                    </Field>
+                    <Field label='Patologia'>
+                      <Input
+                        value={form.nomePatologia}
+                        disabled={!canChange}
+                        onChange={(e) => patch('nomePatologia', e.target.value)}
+                      />
+                    </Field>
+                    <Field label='Data'>
+                      <Input
+                        type='date'
+                        value={form.data}
+                        disabled={!canChange}
+                        onChange={(e) => patch('data', e.target.value)}
+                      />
+                    </Field>
+                    <Field label='Credencial'>
+                      <Input
+                        value={form.credencial}
+                        disabled={!canChange}
+                        onChange={(e) => patch('credencial', e.target.value)}
+                      />
+                    </Field>
+                    <Field label='Faltas máx.'>
+                      <Input
+                        type='number'
+                        value={form.nFaltMax}
+                        disabled={!canChange}
+                        onChange={(e) => patch('nFaltMax', e.target.value)}
+                      />
+                    </Field>
+                    <Field label='Faltas consec. máx.'>
+                      <Input
+                        type='number'
+                        value={form.nFaltComax}
+                        disabled={!canChange}
+                        onChange={(e) => patch('nFaltComax', e.target.value)}
+                      />
+                    </Field>
+                    <Field label='Faltas (actual)'>
+                      <Input value={form.nFalta} disabled />
+                    </Field>
+                    <Field label='Faltas consec. (actual)'>
+                      <Input value={form.nFaltaCons} disabled />
+                    </Field>
+                  </div>
+
+                  <div className='flex flex-wrap gap-6'>
+                    <label className='flex items-center gap-2 text-sm'>
+                      <Checkbox
+                        checked={form.terapiaFala}
+                        disabled={!canChange}
+                        onCheckedChange={(v) => patch('terapiaFala', v === true)}
+                      />
+                      Terapia da fala
+                    </label>
+                  </div>
+
+                  <div className='grid gap-4 sm:grid-cols-2'>
+                    <Field label='Obs. técnicas'>
+                      <Textarea
+                        value={form.tecObs}
+                        disabled={!canChange}
+                        rows={4}
+                        onChange={(e) => patch('tecObs', e.target.value)}
+                      />
+                    </Field>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value='servicos-prescritos' className='mt-4'>
+                  <TratamentoFichaServicosPrescritosPlaceholder />
+                </TabsContent>
+
+                <TabsContent value='sessoes' className='mt-4'>
+                  <TratamentoFichaSessoesPanel
+                    tratamentoId={dto.id}
+                    listPermId={listPermId}
+                    canView={canView}
+                    canChange={canChange}
+                    canDelete={!!canDelete}
+                    sessoes={sessoes}
+                    isLoading={sessoesQuery.isLoading}
+                    onRefresh={() => invalidate(id)}
+                    defaultFisioId={form.fisioterapeutaId}
+                    defaultFisioLabel={form.fisioterapeutaLabel}
+                    defaultAuxId={form.auxiliarId}
+                    defaultAuxLabel={form.auxiliarLabel}
+                    defaultOutroId={form.outroTecnicoId}
+                    defaultOutroLabel={form.outroTecnicoLabel}
+                  />
+                </TabsContent>
+              </Tabs>
+
+              <Dialog open={obsOpen} onOpenChange={setObsOpen}>
+                <DialogContent className='max-w-lg'>
+                  <DialogHeader>
+                    <DialogTitle>Observações</DialogTitle>
+                  </DialogHeader>
+                  <Textarea
+                    value={form.obs}
+                    disabled={!canChange}
+                    rows={8}
+                    placeholder='Observações do tratamento…'
+                    onChange={(e) => patch('obs', e.target.value)}
+                  />
+                  <DialogFooter>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      onClick={() => setObsOpen(false)}
+                    >
+                      Fechar
+                    </Button>
+                    {canChange ? (
+                      <Button
+                        type='button'
+                        disabled={isSaving}
+                        onClick={() => {
+                          setObsOpen(false)
+                          void handleSave()
+                        }}
+                      >
+                        Guardar
+                      </Button>
+                    ) : null}
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
           ) : null}
         </AreaComumDashboardCard>
       </DashboardPageContainer>
