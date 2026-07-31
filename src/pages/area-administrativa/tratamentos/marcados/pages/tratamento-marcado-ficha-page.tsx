@@ -8,8 +8,6 @@ import { DashboardPageContainer } from '@/components/shared/dashboard-page-conta
 import { AreaComumDashboardCard } from '@/components/shared/area-comum-dashboard-card'
 import { EntityFormPageHeader } from '@/components/shared/entity-form-page-header'
 import { AsyncCombobox, type ComboboxItem } from '@/components/shared/async-combobox'
-import { DataTable } from '@/components/shared/data-table'
-import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,7 +28,7 @@ import { LocalTratamentoService } from '@/lib/services/locais-tratamento/local-t
 import { TIPO_TECNICO } from '@/pages/area-comum/tabelas/entidades/tecnicos/constants/tipo-tecnico'
 import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
-import type { SessaoTratamentoTableDTO } from '@/types/dtos/tratamentos/sessao-tratamento.dtos'
+import { TratamentoFichaSessoesPanel } from '../components/tratamento-ficha-sessoes-panel'
 import {
   useGetTratamentoFicha,
   useGetTratamentoFichaSessoes,
@@ -44,16 +42,6 @@ import {
 } from '../utils/tratamento-ficha-form'
 
 const listPermId = modules.areaAdministrativa.permissions.consultas.id
-
-function fmtDate(v?: string | null) {
-  if (!v) return '—'
-  const d = new Date(v)
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('pt-PT')
-}
-
-function bitCell(v?: number | null) {
-  return v === 1 ? 'Sim' : 'Não'
-}
 
 function withSelected(
   items: ComboboxItem[],
@@ -77,65 +65,6 @@ async function loadTecnicosByTipo(tipo: number, keyword: string) {
   return res.info?.data ?? []
 }
 
-const EmptyFilterControls = () => null
-
-const sessoesColumns: DataTableColumnDef<SessaoTratamentoTableDTO>[] = [
-  {
-    accessorKey: 'numSessao',
-    header: 'N.º',
-    enableSorting: false,
-    cell: ({ row }) => row.original.numSessao ?? '—',
-  },
-  {
-    accessorKey: 'data',
-    header: 'Data',
-    enableSorting: false,
-    cell: ({ row }) => fmtDate(row.original.data),
-  },
-  {
-    accessorKey: 'horaInic',
-    header: 'Início',
-    enableSorting: false,
-    cell: ({ row }) => row.original.horaInic?.trim() || '—',
-  },
-  {
-    accessorKey: 'duracao',
-    header: 'Duração',
-    enableSorting: false,
-    cell: ({ row }) => row.original.duracao?.trim() || '—',
-  },
-  {
-    accessorKey: 'confirmado',
-    header: 'Confirmado',
-    enableSorting: false,
-    cell: ({ row }) => bitCell(row.original.confirmado),
-  },
-  {
-    accessorKey: 'efetuado',
-    header: 'Efectuado',
-    enableSorting: false,
-    cell: ({ row }) => bitCell(row.original.efetuado),
-  },
-  {
-    accessorKey: 'faltou',
-    header: 'Faltou',
-    enableSorting: false,
-    cell: ({ row }) => bitCell(row.original.faltou),
-  },
-  {
-    accessorKey: 'desmarcado',
-    header: 'Desmarcado',
-    enableSorting: false,
-    cell: ({ row }) => bitCell(row.original.desmarcado),
-  },
-  {
-    accessorKey: 'pago',
-    header: 'Pago',
-    enableSorting: false,
-    cell: ({ row }) => bitCell(row.original.pago),
-  },
-]
-
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className='space-y-1.5'>
@@ -149,7 +78,8 @@ export function TratamentoMarcadoFichaPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const closeLikeTabBar = useCloseCurrentWindowLikeTabBar()
-  const { canView, canChange } = useAreaComumEntityListPermissions(listPermId)
+  const { canView, canChange, canDelete } =
+    useAreaComumEntityListPermissions(listPermId)
   const { activeTab, setActiveTab } = useTabManager({ defaultTab: 'dados' })
   const invalidate = useInvalidateTratamentoFicha()
 
@@ -787,19 +717,21 @@ export function TratamentoMarcadoFichaPage() {
               </TabsContent>
 
               <TabsContent value='sessoes' className='mt-4'>
-                <DataTable
-                  columns={sessoesColumns}
-                  data={sessoes}
+                <TratamentoFichaSessoesPanel
+                  tratamentoId={dto.id}
+                  listPermId={listPermId}
+                  canView={canView}
+                  canChange={canChange}
+                  canDelete={!!canDelete}
+                  sessoes={sessoes}
                   isLoading={sessoesQuery.isLoading}
-                  pageCount={1}
-                  totalRows={sessoes.length}
-                  initialPage={1}
-                  initialPageSize={50}
-                  FilterControls={EmptyFilterControls}
-                  hideToolbarFilters
-                  onPaginationChange={() => undefined}
-                  onFiltersChange={() => undefined}
-                  onSortingChange={() => undefined}
+                  onRefresh={() => invalidate(id)}
+                  defaultFisioId={form.fisioterapeutaId}
+                  defaultFisioLabel={form.fisioterapeutaLabel}
+                  defaultAuxId={form.auxiliarId}
+                  defaultAuxLabel={form.auxiliarLabel}
+                  defaultOutroId={form.outroTecnicoId}
+                  defaultOutroLabel={form.outroTecnicoLabel}
                 />
               </TabsContent>
             </Tabs>
