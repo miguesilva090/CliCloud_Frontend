@@ -30,5 +30,7 @@ export interface TecnicoEditFormValues {
   especialidadeId?: string
   carteira?: string
   margem?: string
+  /** 1=Fisioterapeuta, 2=Auxiliar, 3=Outro */
+  tipoTecnico?: number
 }
 

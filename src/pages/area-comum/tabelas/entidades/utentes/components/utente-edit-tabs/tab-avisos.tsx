@@ -37,7 +37,7 @@ export function TabAvisos({
         name='observacoes'
         render={({ field }) => (
           <FormItem className={fieldGap}>
-            <FormLabel className={labelClass}>Observações *</FormLabel>
+            <FormLabel className={labelClass}>Observações</FormLabel>
             <FormControl>
               <Textarea
                 rows={6}

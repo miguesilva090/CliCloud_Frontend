@@ -57,6 +57,16 @@ const ListagemFornecedoresPage = lazy(() =>
     '@/pages/area-comum/tabelas/entidades/fornecedores/pages/listagem-fornecedores-page'
   ).then((m) => ({ default: m.ListagemFornecedoresPage })),
 )
+const ListagemTecnicosPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/entidades/tecnicos/pages/listagem-tecnicos-page'
+  ).then((m) => ({ default: m.ListagemTecnicosPage })),
+)
+const TecnicoEditPage = lazy(() =>
+  import(
+    '@/pages/area-comum/tabelas/entidades/tecnicos/pages/tecnico-edit-page'
+  ).then((m) => ({ default: m.TecnicoEditPage })),
+)
 const ListagemFuncionariosPage = lazy(() =>
   import(
     '@/pages/area-comum/tabelas/entidades/funcionarios/pages/listagem-funcionarios-page'
@@ -131,6 +141,41 @@ const NovaListaEsperaTratamentoPage = lazy(() =>
   import(
     '@/pages/area-administrativa/tratamentos/lista-espera/pages/nova-lista-espera-tratamento-page'
   ).then((m) => ({ default: m.NovaListaEsperaTratamentoPage }))
+)
+const ListagemAdmissoesTratamentoPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/admissoes/pages/listagem-admissoes-tratamento-page'
+  ).then((m) => ({ default: m.ListagemAdmissoesTratamentoPage }))
+)
+const ListagemAdmissoesTratamentoPresentesPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/admissoes/pages/listagem-admissoes-tratamento-page'
+  ).then((m) => ({ default: m.ListagemAdmissoesTratamentoPresentesPage }))
+)
+const ListagemAdmissoesTratamentoLocalPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/admissoes/pages/listagem-admissoes-tratamento-page'
+  ).then((m) => ({ default: m.ListagemAdmissoesTratamentoLocalPage }))
+)
+const ListagemTratamentosMarcadosPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/marcados/pages/listagem-tratamentos-marcados-page'
+  ).then((m) => ({ default: m.ListagemTratamentosMarcadosPage }))
+)
+const ListagemTratamentosMarcadosPorLocalPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/marcados/pages/listagem-tratamentos-marcados-page'
+  ).then((m) => ({ default: m.ListagemTratamentosMarcadosPorLocalPage }))
+)
+const ListagemTratamentosMarcadosPorUtentePage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/marcados/pages/listagem-tratamentos-marcados-page'
+  ).then((m) => ({ default: m.ListagemTratamentosMarcadosPorUtentePage }))
+)
+const TratamentoMarcadoFichaPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/marcados/pages/tratamento-marcado-ficha-page'
+  ).then((m) => ({ default: m.TratamentoMarcadoFichaPage }))
 )
 const TratamentosAdminPlaceholderPage = lazy(() =>
   import(
@@ -232,6 +277,273 @@ export const areaAdministrativaRoutes = [
     ),
     manageWindow: true,
     windowName: 'Lista de Espera',
+  },
+  {
+    path: 'area-administrativa/tratamentos/entidades/fisioterapeutas',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.fisioterapeutas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemTecnicosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Fisioterapeutas',
+  },
+  {
+    path: 'area-administrativa/tratamentos/entidades/fisioterapeutas/novo',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.fisioterapeutas.id}
+        actionType={actionTypes.AuthAdd}
+      >
+        <TecnicoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Novo fisioterapeuta',
+  },
+  {
+    path: 'area-administrativa/tratamentos/entidades/fisioterapeutas/:id',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.fisioterapeutas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <TecnicoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Fisioterapeuta',
+  },
+  {
+    path: 'area-administrativa/tratamentos/entidades/fisioterapeutas/:id/editar',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.fisioterapeutas.id}
+        actionType={actionTypes.AuthChg}
+      >
+        <TecnicoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Editar fisioterapeuta',
+  },
+  {
+    path: 'area-administrativa/tratamentos/entidades/tecnicos-auxiliares',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.fisioterapeutas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemTecnicosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Técnicos Auxiliares',
+  },
+  {
+    path: 'area-administrativa/tratamentos/entidades/tecnicos-auxiliares/novo',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.fisioterapeutas.id}
+        actionType={actionTypes.AuthAdd}
+      >
+        <TecnicoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Novo técnico auxiliar',
+  },
+  {
+    path: 'area-administrativa/tratamentos/entidades/tecnicos-auxiliares/:id',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.fisioterapeutas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <TecnicoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Técnico Auxiliar',
+  },
+  {
+    path: 'area-administrativa/tratamentos/entidades/tecnicos-auxiliares/:id/editar',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.fisioterapeutas.id}
+        actionType={actionTypes.AuthChg}
+      >
+        <TecnicoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Editar técnico auxiliar',
+  },
+  {
+    path: 'area-administrativa/tratamentos/entidades/terapeutas-ocupacionais',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.fisioterapeutas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemTecnicosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Terapeutas Fala/Ocupacionais',
+  },
+  {
+    path: 'area-administrativa/tratamentos/entidades/terapeutas-ocupacionais/novo',
+    element: (
+      <LicenseGuard 
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.fisioterapeutas.id}
+        actionType={actionTypes.AuthAdd}
+      >
+        <TecnicoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Novo terapeuta fala/ocupacional',
+  },
+  {
+    path: 'area-administrativa/tratamentos/entidades/terapeutas-ocupacionais/:id',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.fisioterapeutas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <TecnicoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Terapeuta Ocupacional',
+  },
+  {
+    path: 'area-administrativa/tratamentos/entidades/terapeutas-ocupacionais/:id/editar',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.fisioterapeutas.id}
+        actionType={actionTypes.AuthChg}
+      >
+
+        <TecnicoEditPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Editar terapeuta ocupacional',
+  },
+  {
+    path: 'area-administrativa/tratamentos/admissoes',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.admissoes.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemAdmissoesTratamentoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Admissões — Utentes/Hora',
+  },
+  {
+    path: 'area-administrativa/tratamentos/admissoes/presentes',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.admissoes.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemAdmissoesTratamentoPresentesPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Admissões — Presentes',
+  },
+  {
+    path: 'area-administrativa/tratamentos/admissoes/local-tratamento',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.admissoes.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemAdmissoesTratamentoLocalPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Admissões — Local',
+  },
+  {
+    path: 'area-administrativa/tratamentos/tratamentos-marcados',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.consultas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemTratamentosMarcadosPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Tratamentos — Marcados/Iniciados',
+  },
+  {
+    path: 'area-administrativa/tratamentos/tratamentos-por-local',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.consultas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemTratamentosMarcadosPorLocalPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Tratamentos — Por Local',
+  },
+  {
+    path: 'area-administrativa/tratamentos/tratamentos-por-utente',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.consultas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <ListagemTratamentosMarcadosPorUtentePage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Tratamentos — Por Utente',
+  },
+  {
+    path: 'area-administrativa/tratamentos/marcados/:id',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.consultas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <TratamentoMarcadoFichaPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Ficha de Tratamento',
   },
   {
     path: 'area-administrativa/tratamentos/*',

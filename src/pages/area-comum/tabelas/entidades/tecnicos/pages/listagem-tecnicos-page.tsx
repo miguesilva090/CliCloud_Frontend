@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
-import { Plus, List, RotateCw, RefreshCw } from 'lucide-react'
-import { usePageData } from '@/utils/page-data-utils'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Plus, List, RotateCw } from 'lucide-react'
+import { usePageData, type PageFilter } from '@/utils/page-data-utils'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
-import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   AlertDialog,
@@ -32,20 +31,34 @@ import { useWindowsStore } from '@/stores/use-windows-store'
 import { openEntityEditInApp, openPathInApp } from '@/utils/window-utils'
 import { ResponseStatus } from '@/types/api/responses'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useScopedFuncionalidadeId } from '@/hooks/use-scoped-funcionalidade-id'
 import { modules } from '@/config/modules'
-
-const LISTAGEM_PATH = '/area-comum/tabelas/entidades/tecnicos'
-const tecnicosPermId = modules.areaComum.permissions.tecnicos.id
+import { getEntityRoutesForPathname } from '@/config/entity-routes'
+import { getTratamentosTecnicoStickyFromListagem } from '../constants/tipo-tecnico'
 
 export function ListagemTecnicosPage() {
+  const { pathname } = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const addWindow = useWindowsStore((s) => s.addWindow)
+  const routes = getEntityRoutesForPathname(pathname)
+  const listagemPath = routes.tecnicos.listagem
+  const sticky = getTratamentosTecnicoStickyFromListagem(listagemPath)
+  const entityLabel = sticky?.entityLabel ?? 'Técnico'
+  const pageTitle = sticky?.pageTitle ?? 'Técnicos'
+  const tecnicosPermId = useScopedFuncionalidadeId(
+    modules.areaComum.permissions.tecnicos.id,
+    modules.areaAdministrativa.permissions.fisioterapeutas.id
+  )
   const { canView, canAdd, canChange, canDelete } =
     useAreaComumEntityListPermissions(tecnicosPermId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<TecnicoTableDTO | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const contextFilters = sticky
+    ? [{ id: 'tipoTecnico', value: String(sticky.tipoTecnico) }]
+    : []
 
   const {
     data,
@@ -62,7 +75,29 @@ export function ListagemTecnicosPage() {
   } = usePageData({
     useGetDataPaginated: useGetTecnicosPaginated,
     usePrefetchAdjacentData: usePrefetchAdjacentTecnicos,
+    defaultFilters: contextFilters.length ? contextFilters : undefined,
   })
+
+  const ensureStickyTipo = (next: PageFilter[]): PageFilter[] => {
+    if (!sticky) return next
+    const rest = next.filter((f) => f.id !== 'tipoTecnico')
+    return [
+      ...rest,
+      { id: 'tipoTecnico', value: String(sticky.tipoTecnico) },
+    ]
+  }
+
+  const onFiltersChangeSticky = (next: PageFilter[]) => {
+    handleFiltersChange(ensureStickyTipo(next))
+  }
+
+  const resetListFilters = () => {
+    handleFiltersChange(contextFilters)
+    handlePaginationChange(1, pageSize)
+    queryClient.invalidateQueries({
+      queryKey: ['tecnicos-paginated'],
+    })
+  }
 
   const tecnicos = data?.info?.data ?? []
   const pageCount = data?.info?.totalPages ?? 0
@@ -80,8 +115,8 @@ export function ListagemTecnicosPage() {
               openPathInApp(
                 navigate,
                 addWindow,
-                `${LISTAGEM_PATH}/novo`,
-                'Novo Técnico',
+                routes.tecnicos.novo,
+                `Novo ${entityLabel}`,
               ),
             variant: 'destructive' as const,
             className:
@@ -92,19 +127,14 @@ export function ListagemTecnicosPage() {
     {
       label: 'Listagens',
       icon: <List className='h-4 w-4' />,
-      onClick: () => {},
+      onClick: () =>
+        toast.info(`Listagens de ${pageTitle.toLowerCase()} em desenvolvimento.`),
       variant: 'outline',
     },
     {
       label: 'Atualizar',
       icon: <RotateCw className='h-4 w-4' />,
-      onClick: () => {
-        handleFiltersChange([])
-        handlePaginationChange(1, pageSize)
-        queryClient.invalidateQueries({
-          queryKey: ['tecnicos-paginated'],
-        })
-      },
+      onClick: resetListFilters,
       variant: 'outline',
     },
   ]
@@ -123,19 +153,21 @@ export function ListagemTecnicosPage() {
       const response = await TecnicoService('tecnicos').deleteTecnico(String(id))
       const status = (response.info as { status?: number })?.status
       if (status === ResponseStatus.Success) {
-        toast.success('Técnico eliminado com sucesso.')
+        toast.success(`${entityLabel} eliminado com sucesso.`)
         setDeleteDialogOpen(false)
         setItemToDelete(null)
         queryClient.invalidateQueries({ queryKey: ['tecnicos-paginated'] })
       } else {
         const msg =
           (response.info as { messages?: Record<string, string[]> })
-            ?.messages?.['$']?.[0] ?? 'Falha ao eliminar Técnico.'
+            ?.messages?.['$']?.[0] ?? `Falha ao eliminar ${entityLabel}.`
         toast.error(msg)
       }
     } catch (error: unknown) {
       const err = error as { message?: string }
-      toast.error(err?.message ?? 'Ocorreu um erro ao eliminar o Técnico.')
+      toast.error(
+        err?.message ?? `Ocorreu um erro ao eliminar o ${entityLabel.toLowerCase()}.`
+      )
     } finally {
       setIsDeleting(false)
     }
@@ -150,17 +182,11 @@ export function ListagemTecnicosPage() {
 
   return (
     <>
-      <PageHead title='Técnicos | Entidades | Tabelas | CliCloud' />
+      <PageHead title={`${pageTitle} | Entidades | Tabelas | CliCloud`} />
       <DashboardPageContainer>
         <AreaComumListagemPageShell
-            title='Técnicos'
-            onRefresh={() => {
-                handleFiltersChange([])
-                handlePaginationChange(1, pageSize)
-                queryClient.invalidateQueries({
-                  queryKey: ['tecnicos-paginated'],
-                })
-            }}
+            title={pageTitle}
+            onRefresh={resetListFilters}
         >
 
         {isError ? (
@@ -183,7 +209,7 @@ export function ListagemTecnicosPage() {
           filters={filters}
           sorting={sorting}
           onPaginationChange={handlePaginationChange}
-          onFiltersChange={handleFiltersChange}
+          onFiltersChange={onFiltersChangeSticky}
           onSortingChange={handleSortingChange}
           toolbarActions={toolbarActions}
           expandableSearch
@@ -199,8 +225,8 @@ export function ListagemTecnicosPage() {
               openPathInApp(
                 navigate,
                 addWindow,
-                `${LISTAGEM_PATH}/${id}`,
-                nome ? `Técnico: ${nome}` : 'Técnico',
+                routes.tecnicos.detail(String(id)),
+                nome ? `${entityLabel}: ${nome}` : entityLabel,
               )
             }
           }}
@@ -213,9 +239,9 @@ export function ListagemTecnicosPage() {
                     openEntityEditInApp(
                       navigate,
                       addWindow,
-                      `${LISTAGEM_PATH}/${id}/editar`,
+                      routes.tecnicos.editar(String(id)),
                       String(id),
-                      nome ? `Técnico: ${nome}` : null
+                      nome ? `${entityLabel}: ${nome}` : null
                     )
                 }
               : undefined
@@ -231,9 +257,10 @@ export function ListagemTecnicosPage() {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Eliminar Técnico</AlertDialogTitle>
+              <AlertDialogTitle>{`Eliminar ${entityLabel}`}</AlertDialogTitle>
               <AlertDialogDescription>
-                Tem a certeza que pretende eliminar o técnico &quot;
+                {`Tem a certeza que pretende eliminar o ${entityLabel.toLowerCase()} `}
+                &quot;
                 {itemToDelete?.nome ?? ''}
                 &quot;? Esta ação não pode ser revertida.
               </AlertDialogDescription>
@@ -255,4 +282,3 @@ export function ListagemTecnicosPage() {
     </>
   )
 }
-

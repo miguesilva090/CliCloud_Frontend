@@ -108,5 +108,9 @@ export const areaAdministrativa: Module = {
       id: '00000002-0000-0000-0014-000000000005',
       name: 'Lista de espera tratamentos',
     },
+    fisioterapeutas: {
+      id: '00000002-0000-0000-0114-000000000004',
+      name: 'Fisioterapeutas',
+    },
   },
 }

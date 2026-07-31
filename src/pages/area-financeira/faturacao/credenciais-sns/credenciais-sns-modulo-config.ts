@@ -25,11 +25,11 @@ export function credenciaisSnsPageTitle(modulo: CredenciaisSnsModulo): string {
   return `Credenciais S.N.S. — ${credenciaisSnsModuloLabel(modulo)}`
 }
 
-/** Legado: só especialidades tem LOTESP no BE novo; fisioterapia = LOTESPFISIO (pendente). */
+/** Legado: especialidades (LOTESP/EF) e fisioterapia (dbo.LOTESPFISIO). */
 export function credenciaisSnsModuloHasBackendList(modulo: CredenciaisSnsModulo): boolean {
-  return modulo === 'especialidades'
+  return modulo === 'especialidades' || modulo === 'fisioterapia'
 }
 
 export function credenciaisSnsModuloHasBackendDelete(modulo: CredenciaisSnsModulo): boolean {
-  return modulo === 'especialidades'
+  return modulo === 'especialidades' || modulo === 'fisioterapia'
 }

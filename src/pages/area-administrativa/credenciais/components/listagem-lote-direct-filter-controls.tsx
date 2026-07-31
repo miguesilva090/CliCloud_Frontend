@@ -53,12 +53,21 @@ export function ListagemLoteDirectFilterControls({ table }: { table: any }) {
         />
       </div>
       <div className='space-y-2'>
-        <Label className={labelClass}>N.º lote</Label>
+        <Label className={labelClass}>N.º lote de</Label>
         <Input
           className={inputClass}
-          value={get('numerolote')}
-          onChange={(e) => set('numerolote', e.target.value)}
-          placeholder='Ex.: 12'
+          value={get('numerolote_de')}
+          onChange={(e) => set('numerolote_de', e.target.value)}
+          placeholder='De'
+        />
+      </div>
+      <div className='space-y-2'>
+        <Label className={labelClass}>N.º lote até</Label>
+        <Input
+          className={inputClass}
+          value={get('numerolote_ate')}
+          onChange={(e) => set('numerolote_ate', e.target.value)}
+          placeholder='Até'
         />
       </div>
       <div className='space-y-2'>
@@ -71,20 +80,38 @@ export function ListagemLoteDirectFilterControls({ table }: { table: any }) {
         />
       </div>
       <div className='space-y-2'>
-        <Label className={labelClass}>Mês</Label>
+        <Label className={labelClass}>Mês de</Label>
         <Input
           className={inputClass}
-          value={get('mes')}
-          onChange={(e) => set('mes', e.target.value)}
+          value={get('mes_de')}
+          onChange={(e) => set('mes_de', e.target.value)}
           placeholder='1–12'
         />
       </div>
       <div className='space-y-2'>
-        <Label className={labelClass}>Ano</Label>
+        <Label className={labelClass}>Mês até</Label>
         <Input
           className={inputClass}
-          value={get('ano')}
-          onChange={(e) => set('ano', e.target.value)}
+          value={get('mes_ate')}
+          onChange={(e) => set('mes_ate', e.target.value)}
+          placeholder='1–12'
+        />
+      </div>
+      <div className='space-y-2'>
+        <Label className={labelClass}>Ano de</Label>
+        <Input
+          className={inputClass}
+          value={get('ano_de')}
+          onChange={(e) => set('ano_de', e.target.value)}
+          placeholder='Ex.: 2026'
+        />
+      </div>
+      <div className='space-y-2'>
+        <Label className={labelClass}>Ano até</Label>
+        <Input
+          className={inputClass}
+          value={get('ano_ate')}
+          onChange={(e) => set('ano_ate', e.target.value)}
           placeholder='Ex.: 2026'
         />
       </div>

@@ -7,7 +7,7 @@ export const utenteEditSchema = z
     nome: z.string().min(1, 'Nome é obrigatório'),
     numeroContribuinte: z.string().min(1, 'NIF é obrigatório'),
     numeroUtente: z.string().optional(),
-    observacoes: z.string().min(1, 'Observações é obrigatório'),
+    observacoes: z.string().optional(),
     status: z.coerce.number().int().min(0).max(3),
     aviso: z.string().optional(),
     desistencia: z.boolean().optional(),
@@ -79,7 +79,15 @@ export const utenteEditSchema = z
       )
       .optional(),
     empresaId: z.string().nullable().optional(),
-    // Status (UI)
+    rgpdConsentimento: z.boolean().optional(),
+    dataConsentimentoRgpd: z.string().optional(),
+    markConsentimento: z.boolean().optional(),
+    dataConsentimentoMark: z.string().optional(),
+    dataRevogacaoMark: z.string().optional(),
+    dataRevogacaoRgpd: z.string().optional(),
+    markTratamentoDados: z.boolean().optional(),
+    dataConsentimentoTratamentoDados: z.string().optional(),
+    dataRevogacaoTratamentoDados: z.string().optional(),
     statusSelecionado: z.boolean().optional(),
   })
   .refine((data) => data.rua?.trim() || data.ruaId?.trim(), {
@@ -144,5 +152,14 @@ export const utenteEditDefaultValues: UtenteEditFormValues = {
   medicoId: null,
   subsistemaLinhas: [],
   empresaId: null,
+  rgpdConsentimento: false,
+  dataConsentimentoRgpd: '',
+  dataRevogacaoRgpd: '',
+  markConsentimento: false,
+  dataConsentimentoMark: '',
+  dataRevogacaoMark: '',
+  markTratamentoDados: false,
+  dataConsentimentoTratamentoDados: '',
+  dataRevogacaoTratamentoDados: '',
   statusSelecionado: true,
 }

@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { entityRoutes, getEntityRoutesForPathname } from '@/config/entity-routes'
+import { getTratamentosTecnicoStickyFromListagem } from '@/pages/area-comum/tabelas/entidades/tecnicos/constants/tipo-tecnico'
 import { roleHeaderMenus } from '@/config/menu-items'
 import {
   matchPath,
@@ -738,6 +739,20 @@ export function openMedicoEditInApp(
     addWindow,
     routes.medicos.editar(id),
     nome ? `Médico: ${nome}` : 'Médico'
+  )
+}
+
+export function openTecnicoCreationInApp(
+  navigate: NavigateFunction,
+  addWindow: AddWindowFn
+): void {
+  const routes = getEntityRoutesForPathname()
+  const sticky = getTratamentosTecnicoStickyFromListagem(routes.tecnicos.listagem)
+  openPathInApp(
+    navigate,
+    addWindow,
+    routes.tecnicos.novo,
+    sticky ? `Novo ${sticky.entityLabel.toLowerCase()}` : 'Novo técnico'
   )
 }
 

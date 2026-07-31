@@ -36,6 +36,12 @@ import {
   TabTecnicoHorarioVariavel,
   TabTecnicoFeriasFolgas,
 } from '../components/tecnico-edit-tabs'
+import {
+  getTratamentosTecnicoStickyFromListagem,
+  isTipoTecnicoValue,
+  TIPO_TECNICO,
+} from '../constants/tipo-tecnico'
+import { getEntityRoutesForPathname } from '@/config/entity-routes'
 
 const schema = z
   .object({
@@ -61,6 +67,7 @@ const schema = z
     especialidadeId: z.string().optional(),
     carteira: z.string().optional(),
     margem: z.string().optional(),
+    tipoTecnico: z.coerce.number().int().min(1).max(3).optional(),
   })
   .passthrough()
 
@@ -123,6 +130,7 @@ function buildCreatePayload(values: TecnicoEditFormValues): CreateTecnicoRequest
     especialidadeId: values.especialidadeId?.trim() || undefined,
     carteira: values.carteira?.trim() || undefined,
     margem: parseFloatSafe(values.margem) ?? undefined,
+    tipoTecnico: values.tipoTecnico ?? TIPO_TECNICO.Fisioterapeuta,
   }
 }
 
@@ -162,6 +170,13 @@ export function TecnicoEditPage() {
   const isEditMode = location.pathname.endsWith('/editar')
   const isReadOnly = !isCreate && !isEditMode
 
+  const routes = getEntityRoutesForPathname(location.pathname)
+  const sticky = getTratamentosTecnicoStickyFromListagem(routes.tecnicos.listagem)
+  const lockTipoTecnico = Boolean(sticky)
+  const defaultTipoTecnico =
+    sticky?.tipoTecnico ?? TIPO_TECNICO.Fisioterapeuta
+  const entityLabel = sticky?.entityLabel ?? 'Técnico'
+
   const [activeTab, setActiveTab] = useState('identificacao')
   const horarioFixoRef = useRef<TabHorarioTecnicoFixoRef | null>(null)
 
@@ -196,6 +211,7 @@ export function TecnicoEditPage() {
       especialidadeId: '',
       carteira: '',
       margem: '',
+      tipoTecnico: defaultTipoTecnico,
     },
     mode: 'onBlur',
   })
@@ -210,6 +226,7 @@ export function TecnicoEditPage() {
         ?.valor ?? ''
     const ruaNome =
       tecnico.rua?.nome ?? (tecnico.rua as { Nome?: string })?.Nome ?? ''
+    const tipoFromDto = tecnico.tipoTecnico
     form.reset({
       nome: tecnico.nome ?? '',
       email: emailContacto ?? '',
@@ -235,8 +252,11 @@ export function TecnicoEditPage() {
       carteira: tecnico.carteira ?? '',
       margem:
         tecnico.margem != null ? String(tecnico.margem).replace('.', ',') : '',
+      tipoTecnico: isTipoTecnicoValue(tipoFromDto)
+        ? tipoFromDto
+        : defaultTipoTecnico,
     })
-  }, [tecnico, form])
+  }, [tecnico, form, defaultTipoTecnico])
 
   const canSave = isCreate
     ? !createTecnico.isPending
@@ -259,7 +279,13 @@ export function TecnicoEditPage() {
       }
     }
 
-    const payloadValues = { ...values, ruaId: ruaId ?? values.ruaId ?? '' }
+    const payloadValues = {
+      ...values,
+      ruaId: ruaId ?? values.ruaId ?? '',
+      tipoTecnico: lockTipoTecnico
+        ? defaultTipoTecnico
+        : (values.tipoTecnico ?? TIPO_TECNICO.Fisioterapeuta),
+    }
 
     if (isCreate) {
       const payload = buildCreatePayload(payloadValues)
@@ -277,12 +303,12 @@ export function TecnicoEditPage() {
   }
 
   const title = isCreate
-    ? 'Criar Técnico'
+    ? `Criar ${entityLabel}`
     : tecnico?.nome
       ? `${isReadOnly ? 'Ver' : 'Editar'}: ${tecnico.nome}`
       : isReadOnly
-        ? 'Ver Técnico'
-        : 'Editar Técnico'
+        ? `Ver ${entityLabel}`
+        : `Editar ${entityLabel}`
 
   return (
     <>
@@ -291,10 +317,10 @@ export function TecnicoEditPage() {
         <EntityFormPageHeader
           title={
             isCreate
-              ? 'Criar Técnico'
+              ? `Criar ${entityLabel}`
               : isReadOnly
-                ? 'Ver Técnico'
-                : 'Editar Técnico'
+                ? `Ver ${entityLabel}`
+                : `Editar ${entityLabel}`
           }
           onBack={() => handleWindowClose(currentWindowId, navigate, removeWindow)}
           onRefresh={() => {
@@ -314,7 +340,7 @@ export function TecnicoEditPage() {
                 className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
               >
                 <Save className='h-4 w-4 mr-2' />
-                Gravar Técnico
+                {`Gravar ${entityLabel}`}
               </Button>
             ) : null
           }
@@ -365,7 +391,10 @@ export function TecnicoEditPage() {
                     <TabTecnicoContactos form={form} />
                   </TabsContent>
                   <TabsContent value='profissionais'>
-                    <TabTecnicoDadosProfissionais form={form} />
+                    <TabTecnicoDadosProfissionais
+                      form={form}
+                      lockTipoTecnico={lockTipoTecnico}
+                    />
                   </TabsContent>
                   <TabsContent value='horario-fixo'>
                     <TabHorarioTecnicoFixo
@@ -441,6 +470,7 @@ export function TecnicoEditPage() {
                     <TabTecnicoDadosProfissionais
                       form={form}
                       readOnly={isReadOnly}
+                      lockTipoTecnico={lockTipoTecnico}
                     />
                   </TabsContent>
                   <TabsContent value='horario-fixo'>

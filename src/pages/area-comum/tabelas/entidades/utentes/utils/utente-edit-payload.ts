@@ -7,6 +7,7 @@ import type {
 import { ENTIDADE_TIPO } from '@/lib/entidade-tipo'
 
 import type { UtenteEditFormValues } from '../types/utente-edit-form-types'
+import { dataTratamentoDadosFromForm } from './utente-consentimento-utils'
 
 /**
  * Converte string vazia em null para campos DateTime?/DateOnly? do backend.
@@ -104,16 +105,6 @@ export function buildUpdatePayload(
   safeContactos = safeContactos.filter(
     (c) => (c.valor ?? '').toString().trim() !== '',
   )
-  if (safeContactos.length === 0) {
-    const fallbackValor = (values.email ?? utente.email ?? '').trim() || '-'
-    safeContactos = [
-      {
-        entidadeContactoTipoId: 3,
-        valor: fallbackValor,
-        principal: true,
-      },
-    ]
-  }
 
   return {
     nome: values.nome,
@@ -132,7 +123,7 @@ export function buildUpdatePayload(
     observacoes: values.observacoes,
     status: values.status,
     urlFoto: utente.urlFoto ?? null,
-    entidadeContactos: safeContactos,
+    entidadeContactos: safeContactos.length > 0 ? safeContactos : null,
     dataNascimento: toDatePayload(values.dataNascimento, utente.dataNascimento),
     sexoId: values.sexoId ?? utente.sexoId ?? null,
     estadoCivilId: values.estadoCivilId ?? utente.estadoCivilId ?? null,
@@ -195,13 +186,19 @@ export function buildUpdatePayload(
     cronico: values.cronico ?? utente.cronico ?? false,
     tipoConsulta: values.tipoConsulta ?? utente.tipoConsulta ?? 0,
     migrante: values.migrante ?? utente.migrante ?? false,
-    markConsentimento: utente.markConsentimento ?? 0,
-    rgpdConsentimento: utente.rgpdConsentimento ?? 0,
-    dataConsentimentoRgpd: normalizeDateTime(utente.dataConsentimentoRgpd) ?? null,
-    dataRevogacaoRgpd: normalizeDateTime(utente.dataRevogacaoRgpd) ?? null,
-    dataConsentimentoMark: normalizeDateTime(utente.dataConsentimentoMark) ?? null,
-    dataRevogacaoMark: normalizeDateTime(utente.dataRevogacaoMark) ?? null,
-    markTratamentoDados: utente.markTratamentoDados ?? false,
+    markConsentimento: values.markConsentimento ? 1 : 0,
+    rgpdConsentimento: values.rgpdConsentimento ? 1 : 0,
+    dataConsentimentoRgpd: normalizeDateTime(values.dataConsentimentoRgpd) ?? null,
+    dataRevogacaoRgpd: normalizeDateTime(values.dataRevogacaoRgpd) ?? null,
+    dataConsentimentoMark: normalizeDateTime(values.dataConsentimentoMark) ?? null,
+    dataRevogacaoMark: normalizeDateTime(values.dataRevogacaoMark) ?? null,
+    markTratamentoDados: values.markTratamentoDados ?? false,
+    dataTratamentoDados: normalizeDateTime(
+      dataTratamentoDadosFromForm(
+        values.dataConsentimentoTratamentoDados,
+        values.dataRevogacaoTratamentoDados,
+      ),
+    ) ?? null,
     ccValidado:
       values.ccValidado != null ? values.ccValidado : utente.ccValidado ?? null,
     ccDataValidacao: toDatePayload(values.ccDataValidacao, utente.ccDataValidacao),
@@ -271,7 +268,7 @@ export function buildCreatePayload(
     andarRua: values.andarRua ?? '',
     observacoes: values.observacoes,
     status: values.status,
-    entidadeContactos: contactos,
+    entidadeContactos: contactos.length > 0 ? contactos : null,
 
     // EntidadePessoa (opcionais)
     dataNascimento: normalizeDateTime(values.dataNascimento),
@@ -333,13 +330,19 @@ export function buildCreatePayload(
     cronico: values.cronico ?? false,
     tipoConsulta: 0,
     migrante: values.migrante ?? false,
-    markConsentimento: 0,
-    rgpdConsentimento: 0,
-    dataConsentimentoRgpd: null,
-    dataRevogacaoRgpd: null,
-    dataConsentimentoMark: null,
-    dataRevogacaoMark: null,
-    markTratamentoDados: false,
+    markConsentimento: values.markConsentimento ? 1 : 0,
+    rgpdConsentimento: values.rgpdConsentimento ? 1 : 0,
+    dataConsentimentoRgpd: normalizeDateTime(values.dataConsentimentoRgpd) ?? null,
+    dataRevogacaoRgpd: normalizeDateTime(values.dataRevogacaoRgpd) ?? null,
+    dataConsentimentoMark: normalizeDateTime(values.dataConsentimentoMark) ?? null,
+    dataRevogacaoMark: normalizeDateTime(values.dataRevogacaoMark) ?? null,
+    markTratamentoDados: values.markTratamentoDados ?? false,
+    dataTratamentoDados: normalizeDateTime(
+      dataTratamentoDadosFromForm(
+        values.dataConsentimentoTratamentoDados,
+        values.dataRevogacaoTratamentoDados,
+      ),
+    ) ?? null,
     ccValidado: values.ccValidado ?? null,
     ccDataValidacao: normalizeDateTime(values.ccDataValidacao),
     nDocMigrante: values.nDocMigrante || null,

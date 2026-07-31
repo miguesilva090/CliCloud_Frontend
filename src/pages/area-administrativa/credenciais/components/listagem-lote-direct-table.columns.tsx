@@ -6,9 +6,15 @@ import type { ReactNode } from 'react'
 
 export const LOTE_DIRECT_HIDDEN_FILTER_COLUMNS = [
   'numerolote',
+  'numerolote_de',
+  'numerolote_ate',
   'codigoorganismo',
   'mes',
+  'mes_de',
+  'mes_ate',
   'ano',
+  'ano_de',
+  'ano_ate',
   'utentenumero_de',
   'utentenumero_ate',
   'utentenome',
@@ -16,12 +22,33 @@ export const LOTE_DIRECT_HIDDEN_FILTER_COLUMNS = [
   'datafim_ate',
 ] as const
 
+function formatMesAnoLegado(mesAno?: string | null): string {
+  if (!mesAno?.trim()) return '-'
+  const [mes, ano] = mesAno.split('/')
+  if (!mes || !ano) return mesAno
+  const mesNum = Number.parseInt(mes, 10)
+  if (mesNum >= 1 && mesNum <= 12) {
+    const nomes = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+    ]
+    return `${nomes[mesNum - 1]}/${ano}`
+  }
+  return mesAno
+}
+
 function formatMoney(value?: number | null): string {
   if (value == null) return '-'
   return Number(value).toLocaleString('pt-PT', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })
+}
+
+function formatTaxaModeradora(isencao?: number | null): string {
+  if (isencao == null || isencao === 0) return ' '
+  const labels = ['Isento', 'Não Isento', 'E111', 'H', '+ 65 anos']
+  return labels[isencao - 1] ?? String(isencao)
 }
 
 const baseColumns: DataTableColumnDef<LoteDirectTableDTO>[] = [
@@ -51,7 +78,7 @@ const baseColumns: DataTableColumnDef<LoteDirectTableDTO>[] = [
     accessorKey: 'mesAno',
     header: 'Mês/Ano',
     enableSorting: false,
-    cell: ({ row }) => row.original.mesAno || '-',
+    cell: ({ row }) => formatMesAnoLegado(row.original.mesAno),
     meta: { align: 'left' as const },
   },
   {
@@ -70,12 +97,15 @@ const baseColumns: DataTableColumnDef<LoteDirectTableDTO>[] = [
     enableSorting: true,
     cell: ({ row }) => {
       const sigla = row.original.organismoSigla?.trim()
+      const nome = row.original.organismoNome?.trim()
       const cod = row.original.codigoOrganismo
       if (sigla) {
-        return (
-          <span title={cod != null ? `Código ULS: ${cod}` : undefined}>{sigla}</span>
-        )
+        const title = [nome, cod != null ? `Código ULS: ${cod}` : null]
+          .filter(Boolean)
+          .join(' — ')
+        return <span title={title || undefined}>{sigla}</span>
       }
+      if (nome) return nome
       if (cod != null) return String(cod)
       return '-'
     },
@@ -100,7 +130,8 @@ const baseColumns: DataTableColumnDef<LoteDirectTableDTO>[] = [
     header: 'Tipo Serviço',
     enableSorting: false,
     cell: ({ row }) =>
-      row.original.tipoServico != null ? String(row.original.tipoServico) : '-',
+      row.original.tipoServicoDesignacao?.trim()
+      || (row.original.tipoServico != null ? String(row.original.tipoServico) : '-'),
     meta: { align: 'left' as const },
   },
   {
@@ -108,7 +139,15 @@ const baseColumns: DataTableColumnDef<LoteDirectTableDTO>[] = [
     header: 'Tipo Lote',
     enableSorting: false,
     cell: ({ row }) =>
-      row.original.tipoLote != null ? String(row.original.tipoLote) : '-',
+      row.original.tipoLoteDesignacao?.trim()
+      || (row.original.tipoLote != null ? String(row.original.tipoLote) : '-'),
+    meta: { align: 'left' as const },
+  },
+  {
+    accessorKey: 'txmoderadora',
+    header: 'Taxa mod.',
+    enableSorting: false,
+    cell: ({ row }) => formatTaxaModeradora(row.original.isencao),
     meta: { align: 'left' as const },
   },
 ]

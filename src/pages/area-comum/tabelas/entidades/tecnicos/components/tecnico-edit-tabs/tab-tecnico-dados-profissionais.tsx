@@ -18,6 +18,11 @@ import {
 } from '@/components/ui/select'
 import type { TecnicoEditFormValues } from '../../types/tecnico-edit-form-types'
 import { EspecialidadeService } from '@/lib/services/especialidades/especialidade-service'
+import {
+  TIPO_TECNICO,
+  TIPO_TECNICO_LABELS,
+  type TipoTecnicoValue,
+} from '../../constants/tipo-tecnico'
 
 /** Valor reservado para "nenhum" - Radix Select não permite value="" em SelectItem */
 const NONE_VALUE = '__none__'
@@ -25,9 +30,12 @@ const NONE_VALUE = '__none__'
 export function TabTecnicoDadosProfissionais({
   form,
   readOnly,
+  lockTipoTecnico,
 }: {
   form: UseFormReturn<TecnicoEditFormValues>
   readOnly?: boolean
+  /** Quando true (ex. contexto Fisioterapeutas admin), o tipo fica fixo e não editável. */
+  lockTipoTecnico?: boolean
 }) {
   const especialidadesQuery = useQuery({
     queryKey: ['especialidades-light', 'tecnicos'],
@@ -36,6 +44,9 @@ export function TabTecnicoDadosProfissionais({
   })
 
   const especialidades = especialidadesQuery.data?.info?.data ?? []
+  const tipoOptions = Object.entries(TIPO_TECNICO_LABELS) as Array<
+    [string, string]
+  >
 
   return (
     <div className='space-y-4'>
@@ -44,6 +55,36 @@ export function TabTecnicoDadosProfissionais({
           Dados Profissionais
         </h3>
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-2'>
+          <FormField
+            control={form.control}
+            name='tipoTecnico'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo</FormLabel>
+                <FormControl>
+                  <Select
+                    value={String(field.value ?? TIPO_TECNICO.Fisioterapeuta)}
+                    onValueChange={(v) =>
+                      field.onChange(Number(v) as TipoTecnicoValue)
+                    }
+                    disabled={readOnly || lockTipoTecnico}
+                  >
+                    <SelectTrigger className='h-7'>
+                      <SelectValue placeholder='Tipo...' />
+                    </SelectTrigger>
+                    <SelectContent className='z-[100]'>
+                      {tipoOptions.map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name='especialidadeId'
@@ -138,7 +179,9 @@ export function TabTecnicoDadosProfissionais({
                     className='mt-0.5'
                   />
                 </FormControl>
-                <FormLabel className='!mt-0 !mb-0 whitespace-nowrap'>Inativo</FormLabel>
+                <FormLabel className='!mt-0 !mb-0 whitespace-nowrap'>
+                  Inativo
+                </FormLabel>
               </FormItem>
             )}
           />
@@ -147,4 +190,3 @@ export function TabTecnicoDadosProfissionais({
     </div>
   )
 }
-

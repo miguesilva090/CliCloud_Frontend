@@ -6,6 +6,8 @@ const permAdmissoes = modules.areaAdministrativa.permissions.admissoes.id
 const permSinistrados = modules.areaAdministrativa.permissions.sinistrados.id
 const permEntidades = modules.areaAdministrativa.permissions.entidades.id
 const permMedicos = modules.areaAdministrativa.permissions.medicos.id
+const permFisioterapeutas =
+  modules.areaAdministrativa.permissions.fisioterapeutas.id
 const permTabelas = modules.areaAdministrativa.permissions.tabelas.id
 const permServicos = modules.areaAdministrativa.permissions.servicos.id
 const permSubsistemas = modules.areaAdministrativa.permissions.subsistemaServicos.id
@@ -321,17 +323,17 @@ export const administrativaTratamentosHeaderMenu = [
       {
         label: 'Fisioterapeutas',
         href: '/area-administrativa/tratamentos/entidades/fisioterapeutas',
-        funcionalidadeId: perm,
+        funcionalidadeId: permFisioterapeutas,
       },
       {
         label: 'Técnicos Auxiliares',
         href: '/area-administrativa/tratamentos/entidades/tecnicos-auxiliares',
-        funcionalidadeId: perm,
+        funcionalidadeId: permFisioterapeutas,
       },
       {
         label: 'Terapeutas Fala/Ocupacionais',
         href: '/area-administrativa/tratamentos/entidades/terapeutas-ocupacionais',
-        funcionalidadeId: perm,
+        funcionalidadeId: permFisioterapeutas,
       },
     ],
   },

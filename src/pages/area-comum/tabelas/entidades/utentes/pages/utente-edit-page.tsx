@@ -22,6 +22,7 @@ import { useCurrentWindowId, handleWindowClose } from '@/utils/window-utils'
 import { useTabManager } from '@/hooks/use-tab-manager'
 import { utenteEditDefaultValues, utenteEditSchema } from '../utils/utente-edit-form'
 import { buildCreatePayload, buildUpdatePayload } from '../utils/utente-edit-payload'
+import { tratamentoDadosDatesFromStored } from '../utils/utente-consentimento-utils'
 import { UTENTE_FIELD_LABELS, UTENTE_FIELD_TO_TAB, UTENTE_FORM_FIELD_ORDER } from '../utils/utente-edit-validation'
 import {
   TabDadosPessoais,
@@ -241,6 +242,10 @@ export function UtenteEditPage() {
 
   useEffect(() => {
     if (!utente) return
+    const tratamentoDadosDates = tratamentoDadosDatesFromStored(
+      utente.markTratamentoDados ?? false,
+      utente.dataTratamentoDados,
+    )
     const emailContacto = utente.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 3)?.valor ?? ''
     const telefoneContacto = utente.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 1)?.valor ?? ''
     const telemovelContacto = utente.entidadeContactos?.find((c) => c.entidadeContactoTipoId === 2)?.valor ?? ''
@@ -301,6 +306,15 @@ export function UtenteEditPage() {
       centroSaudeId: utente.centroSaudeId ?? null,
       medicoExternoId: utente.medicoExternoId ?? null,
       medicoId: utente.medicoId ?? null,
+      rgpdConsentimento: (utente.rgpdConsentimento ?? 0) === 1,
+      dataConsentimentoRgpd: utente.dataConsentimentoRgpd?.slice(0, 10) ?? '',
+      dataRevogacaoRgpd: utente.dataRevogacaoRgpd?.slice(0, 10) ?? '',
+      markConsentimento: (utente.markConsentimento ?? 0) === 1,
+      dataConsentimentoMark: utente.dataConsentimentoMark?.slice(0, 10) ?? '',
+      dataRevogacaoMark: utente.dataRevogacaoMark?.slice(0, 10) ?? '',
+      markTratamentoDados: utente.markTratamentoDados ?? false,
+      dataConsentimentoTratamentoDados: tratamentoDadosDates.consentDate,
+      dataRevogacaoTratamentoDados: tratamentoDadosDates.revokeDate,
       subsistemaLinhas:
         (utente.subsistemaLinhas as UtenteDTO['subsistemaLinhas'] | undefined)?.map((linha) => {
           const L = linha as unknown as Record<string, unknown>

@@ -56,6 +56,7 @@ export interface TecnicoTableDTO {
   especialidade?: { id: string; nome: string } | null
   especialidadeNome?: string | null
   margem?: number | null
+  tipoTecnico?: number | null
 }
 
 export interface TecnicoLightDTO {
@@ -63,6 +64,7 @@ export interface TecnicoLightDTO {
   nome?: string | null
   /** GUID da conta na plataforma — necessário para notificações a utilizadores. */
   idUtilizador?: string | null
+  tipoTecnico?: number | null
 }
 
 export interface TecnicoDTO {
@@ -114,6 +116,7 @@ export interface TecnicoDTO {
   especialidadeNome?: string | null
   margem?: number | null
   idUtilizador?: string | null
+  tipoTecnico?: number | null
 }
 
 export interface CreateTecnicoRequest {
@@ -154,6 +157,7 @@ export interface CreateTecnicoRequest {
   especialidadeId?: string | null
   margem?: number | null
   idUtilizador?: string | null
+  tipoTecnico?: number | null
 }
 
 export interface UpdateTecnicoRequest {
@@ -194,6 +198,7 @@ export interface UpdateTecnicoRequest {
   especialidadeId?: string | null
   margem?: number | null
   idUtilizador?: string | null
+  tipoTecnico?: number | null
 }
 
 export interface TecnicoTableFilterRequest extends PaginationFilterRequest {

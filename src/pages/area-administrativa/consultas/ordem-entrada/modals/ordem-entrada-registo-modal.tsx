@@ -302,6 +302,9 @@ export function OrdemEntradaRegistoModal({
     return items
   }, [form.organismoId, form.organismoLabel, utenteQuery.data?.info?.data])
 
+  const organismoLoading =
+    Boolean(form.utenteId) && (utenteQuery.isFetching || utenteQuery.isLoading)
+
   const salasItems: ComboboxItem[] = useMemo(() => {
     const items: ComboboxItem[] = (salasQuery.data ?? []).map((s: SalaTableDTO) => ({
       value: s.id,
@@ -322,6 +325,23 @@ export function OrdemEntradaRegistoModal({
       organismoLabel: organismoItems[0].label,
     }))
   }, [form.organismoId, organismoItems, open, readOnly])
+
+  useEffect(() => {
+    if (!open || readOnly || !form.utenteId || organismoLoading) return
+    if (utenteQuery.isError) return
+    if (organismoItems.length === 0) {
+      toast.error(
+        'O utente não tem organismo selecionado! É necessário alterar a ficha do utente'
+      )
+    }
+  }, [
+    open,
+    readOnly,
+    form.utenteId,
+    organismoLoading,
+    organismoItems.length,
+    utenteQuery.isError,
+  ])
 
   const horasInfo = horasQuery.data?.info?.data
   const gestaoSalasAtiva = clinicaQuery.data?.info?.data?.gestaoSalas === true
@@ -345,8 +365,14 @@ export function OrdemEntradaRegistoModal({
       toast.error('Indique o utente.')
       return false
     }
+    if (organismoLoading) {
+      toast.error('Aguarde o carregamento do organismo.')
+      return false
+    }
     if (!form.organismoId) {
-      toast.error('Indique o organismo.')
+      toast.error(
+        'O utente não tem organismo selecionado! É necessário alterar a ficha do utente'
+      )
       return false
     }
     if (!form.medicoId) {
@@ -471,10 +497,12 @@ export function OrdemEntradaRegistoModal({
                     const selected = organismoItems.find((o) => o.value === value)
                     patch({ organismoId: value, organismoLabel: selected?.label ?? '' })
                   }}
-                  disabled={readOnly || organismoItems.length === 0}
+                  disabled={readOnly || organismoLoading || organismoItems.length === 0}
                 >
                   <SelectTrigger className={selectTriggerClass}>
-                    <SelectValue placeholder='Selecionar organismo' />
+                    <SelectValue
+                      placeholder={organismoLoading ? 'A carregar…' : 'Selecionar organismo'}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {organismoItems.map((item) => (
@@ -496,7 +524,8 @@ export function OrdemEntradaRegistoModal({
                     const selected = medicosQuery.data?.info?.data?.find((m) => m.id === value)
                     patch({
                       medicoId: value,
-                      medicoLabel: selected?.nome ?? medicosItems.find((m) => m.value === value)?.label ?? '',
+                      medicoLabel:
+                        selected?.nome ?? medicosItems.find((m) => m.value === value)?.label ?? '',
                       especialidadeId: selected?.especialidadeId ?? '',
                       especialidadeLabel: selected?.especialidadeNome ?? '',
                       horaInicio: '',
@@ -681,7 +710,11 @@ export function OrdemEntradaRegistoModal({
             {readOnly ? 'Fechar' : 'Cancelar'}
           </Button>
           {!readOnly ? (
-            <Button type='button' disabled={saving || loading} onClick={handleSave}>
+            <Button
+              type='button'
+              disabled={saving || loading || organismoLoading}
+              onClick={handleSave}
+            >
               {saving ? 'A guardar…' : 'Guardar'}
             </Button>
           ) : null}

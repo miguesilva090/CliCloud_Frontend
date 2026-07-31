@@ -4,7 +4,6 @@ import type { UtenteEditFormValues } from '../types/utente-edit-form-types'
 export const UTENTE_FORM_FIELD_ORDER: (keyof UtenteEditFormValues)[] = [
   'nome',
   'numeroContribuinte',
-  'observacoes',
   'paisId',
   'distritoId',
   'concelhoId',

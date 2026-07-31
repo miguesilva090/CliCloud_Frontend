@@ -65,6 +65,16 @@ export interface UtenteEditFormValues {
   // Outras Informações
   provenienciaUtenteId?: string | null
 
+  rgpdConsentimento?: boolean
+  dataConsentimentoRgpd?: string
+  dataRevogacaoRgpd?: string
+  markConsentimento?: boolean
+  dataConsentimentoMark?: string
+  dataRevogacaoMark?: string
+  markTratamentoDados?: boolean
+  dataConsentimentoTratamentoDados?: string
+  dataRevogacaoTratamentoDados?: string
+
   // Subsistema de Saúde (um organismo e uma seguradora por utente)
   organismoId?: string | null
   seguradoraId?: string | null

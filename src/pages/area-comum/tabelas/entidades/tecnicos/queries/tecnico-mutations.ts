@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { getEntityRoutesForPathname } from '@/config/entity-routes'
 import { TecnicoService } from '@/lib/services/saude/tecnico-service'
 import { ResponseStatus } from '@/types/api/responses'
 import type {
@@ -8,8 +9,6 @@ import type {
 } from '@/types/dtos/saude/tecnicos.dtos'
 import { toast } from '@/utils/toast-utils'
 import { BaseApiError } from '@/lib/base-client'
-
-const LISTAGEM_PATH = '/area-comum/tabelas/entidades/tecnicos'
 
 function getValidationMessage(error: unknown): string {
   if (
@@ -40,7 +39,7 @@ export const useCreateTecnico = () => {
       if (info?.status === ResponseStatus.Success) {
         toast.success('Técnico criado com sucesso')
         await queryClient.invalidateQueries({ queryKey: ['tecnicos-paginated'] })
-        navigate(LISTAGEM_PATH)
+        navigate(getEntityRoutesForPathname().tecnicos.listagem)
       } else {
         const msg =
           (response.info as { messages?: Record<string, string[]> })

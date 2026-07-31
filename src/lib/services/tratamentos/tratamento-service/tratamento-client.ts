@@ -57,5 +57,12 @@ export class TratamentoClient extends BaseApiClient {
   async getById(id: string): Promise<ResponseApi<GSResponse<TratamentoDTO>>> {
     return this.httpClient.getRequest<GSResponse<TratamentoDTO>>(state.URL, `${BASE}/${id}`)
   }
+
+  async delete(id: string): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.deleteRequest<GSResponse<string>>(
+      state.URL,
+      `${BASE}/${id}`
+    )
+  }
 }
 

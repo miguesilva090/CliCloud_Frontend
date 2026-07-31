@@ -9,10 +9,14 @@ export interface LoteDirectTableDTO {
   codigoOrganismo?: number
   /** Abreviatura / sigla (resolvida pelo código ULS no organismo). */
   organismoSigla?: string
+  organismoNome?: string
   valorTaxas?: number
   valorTotal?: number
   tipoServico?: number
+  tipoServicoDesignacao?: string
   tipoLote?: number
+  tipoLoteDesignacao?: string
+  isencao?: number
   historico: boolean
   createdOn?: string
 }
@@ -123,6 +127,7 @@ export interface LoteDirectLinhaUpsertRequest {
   valorInstituicaoOriginal: number
   valorUtente: number
   valorInstituicao: number
+  codigoMcdt?: string
 }
 
 export interface CreateLoteDirectRequest {

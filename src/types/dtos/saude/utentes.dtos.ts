@@ -106,6 +106,7 @@ export interface UtenteDTO {
   dataConsentimentoMark?: string | null
   dataRevogacaoMark?: string | null
   markTratamentoDados?: boolean
+  dataTratamentoDados?: string | null
   ccValidado?: number | null
   ccDataValidacao?: string | null
   dataValidadeCU?: string | null
@@ -299,6 +300,7 @@ export interface CreateUtenteRequest {
   dataConsentimentoMark?: string | null
   dataRevogacaoMark?: string | null
   markTratamentoDados: boolean
+  dataTratamentoDados?: string | null
   ccValidado?: number | null
   ccDataValidacao?: string | null
   dataValidadeCU?: string | null // DateOnly

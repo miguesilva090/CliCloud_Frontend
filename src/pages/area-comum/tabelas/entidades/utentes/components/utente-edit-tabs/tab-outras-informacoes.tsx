@@ -22,26 +22,10 @@ import { useProvenienciasUtenteLight } from '@/hooks/lookups/use-utility-lookups
 import { useMedicosLight } from '@/hooks/lookups/use-medicos-light'
 import { fieldGap, inputClass, labelClass, selectTriggerClass, buttonIconClass } from './utente-edit-tabs-constants'
 import { openPathInApp } from '@/utils/window-utils'
-
-function LocalDateField({
-  initialValue,
-  className,
-  placeholder,
-}: {
-  initialValue?: string | null
-  className: string
-  placeholder?: string
-}) {
-  const [value, setValue] = useState(initialValue ?? '')
-  return (
-    <DateField
-      className={className}
-      value={value}
-      onChange={setValue}
-      placeholder={placeholder}
-    />
-  )
-}
+import {
+  applyConsentimentoToggle,
+  tratamentoDadosDatesFromStored,
+} from '../../utils/utente-consentimento-utils'
 
 export function TabOutrasInformacoes({
   form,
@@ -327,40 +311,173 @@ export function TabOutrasInformacoes({
       <div className='space-y-4 pt-4 border-t'>
         <h4 className='text-sm font-semibold'>Consentimento</h4>
         <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-          {[
-            {
-              key: 'rgpd',
-              label: 'RGPD',
-              consent: utente?.dataConsentimentoRgpd,
-              revog: utente?.dataRevogacaoRgpd,
-              checked: !!utente?.rgpdConsentimento,
-            },
-            {
-              key: 'marketing',
-              label: 'Marketing',
-              consent: utente?.dataConsentimentoMark,
-              revog: utente?.dataRevogacaoMark,
-              checked: !!utente?.markConsentimento,
-            },
-            {
-              key: 'tratamentoDados',
-              label: 'Tratamento Dados',
-              consent: null,
-              revog: null,
-              checked: utente?.markTratamentoDados ?? false,
-            },
-          ].map(({ key, label, consent, revog, checked }) => (
-            <div key={key} className='flex flex-col gap-2 p-3 rounded-lg border'>
-              <div className='flex items-center space-x-2'>
-                <Checkbox id={key} defaultChecked={checked} />
-                <label htmlFor={key} className='text-sm font-medium cursor-pointer'>
-                  {label}
-                </label>
+          <FormField
+            control={form.control}
+            name='rgpdConsentimento'
+            render={({ field }) => (
+              <div className='flex flex-col gap-2 p-3 rounded-lg border'>
+                <div className='flex items-center space-x-2'>
+                  <Checkbox
+                    id='consent-rgpd'
+                    checked={!!field.value}
+                    onCheckedChange={(checked) => {
+                      const next = checked === true
+                      const wasChecked = !!field.value
+                      const dates = applyConsentimentoToggle({
+                        checked: next,
+                        wasChecked,
+                        consentDate: form.getValues('dataConsentimentoRgpd') ?? '',
+                        revokeDate: form.getValues('dataRevogacaoRgpd') ?? '',
+                      })
+                      field.onChange(next)
+                      form.setValue('dataConsentimentoRgpd', dates.consentDate)
+                      form.setValue('dataRevogacaoRgpd', dates.revokeDate)
+                    }}
+                  />
+                  <label htmlFor='consent-rgpd' className='text-sm font-medium cursor-pointer'>
+                    RGPD
+                  </label>
+                </div>
+                <FormField
+                  control={form.control}
+                  name='dataConsentimentoRgpd'
+                  render={({ field: dateField }) => (
+                    <DateField
+                      className={inputClass}
+                      value={dateField.value ?? ''}
+                      onChange={dateField.onChange}
+                      placeholder='Consentimento'
+                    />
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='dataRevogacaoRgpd'
+                  render={({ field: dateField }) => (
+                    <DateField
+                      className={inputClass}
+                      value={dateField.value ?? ''}
+                      onChange={dateField.onChange}
+                      placeholder='Revogação'
+                    />
+                  )}
+                />
               </div>
-              <LocalDateField initialValue={consent} placeholder='Consentimento' className={inputClass} />
-              <LocalDateField initialValue={revog} placeholder='Revogação' className={inputClass} />
-            </div>
-          ))}
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='markConsentimento'
+            render={({ field }) => (
+              <div className='flex flex-col gap-2 p-3 rounded-lg border'>
+                <div className='flex items-center space-x-2'>
+                  <Checkbox
+                    id='consent-marketing'
+                    checked={!!field.value}
+                    onCheckedChange={(checked) => {
+                      const next = checked === true
+                      const wasChecked = !!field.value
+                      const dates = applyConsentimentoToggle({
+                        checked: next,
+                        wasChecked,
+                        consentDate: form.getValues('dataConsentimentoMark') ?? '',
+                        revokeDate: form.getValues('dataRevogacaoMark') ?? '',
+                      })
+                      field.onChange(next)
+                      form.setValue('dataConsentimentoMark', dates.consentDate)
+                      form.setValue('dataRevogacaoMark', dates.revokeDate)
+                    }}
+                  />
+                  <label htmlFor='consent-marketing' className='text-sm font-medium cursor-pointer'>
+                    Marketing
+                  </label>
+                </div>
+                <FormField
+                  control={form.control}
+                  name='dataConsentimentoMark'
+                  render={({ field: dateField }) => (
+                    <DateField
+                      className={inputClass}
+                      value={dateField.value ?? ''}
+                      onChange={dateField.onChange}
+                      placeholder='Consentimento'
+                    />
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='dataRevogacaoMark'
+                  render={({ field: dateField }) => (
+                    <DateField
+                      className={inputClass}
+                      value={dateField.value ?? ''}
+                      onChange={dateField.onChange}
+                      placeholder='Revogação'
+                    />
+                  )}
+                />
+              </div>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='markTratamentoDados'
+            render={({ field }) => (
+              <div className='flex flex-col gap-2 p-3 rounded-lg border'>
+                <div className='flex items-center space-x-2'>
+                  <Checkbox
+                    id='consent-tratamento-dados'
+                    checked={!!field.value}
+                    onCheckedChange={(checked) => {
+                      const next = checked === true
+                      const wasChecked = !!field.value
+                      const dates = applyConsentimentoToggle({
+                        checked: next,
+                        wasChecked,
+                        consentDate: form.getValues('dataConsentimentoTratamentoDados') ?? '',
+                        revokeDate: form.getValues('dataRevogacaoTratamentoDados') ?? '',
+                      })
+                      field.onChange(next)
+                      form.setValue('dataConsentimentoTratamentoDados', dates.consentDate)
+                      form.setValue('dataRevogacaoTratamentoDados', dates.revokeDate)
+                    }}
+                  />
+                  <label
+                    htmlFor='consent-tratamento-dados'
+                    className='text-sm font-medium cursor-pointer'
+                  >
+                    Tratamento Dados
+                  </label>
+                </div>
+                <FormField
+                  control={form.control}
+                  name='dataConsentimentoTratamentoDados'
+                  render={({ field: dateField }) => (
+                    <DateField
+                      className={inputClass}
+                      value={dateField.value ?? ''}
+                      onChange={dateField.onChange}
+                      placeholder='Consentimento'
+                    />
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='dataRevogacaoTratamentoDados'
+                  render={({ field: dateField }) => (
+                    <DateField
+                      className={inputClass}
+                      value={dateField.value ?? ''}
+                      onChange={dateField.onChange}
+                      placeholder='Revogação'
+                    />
+                  )}
+                />
+              </div>
+            )}
+          />
         </div>
       </div>
 
