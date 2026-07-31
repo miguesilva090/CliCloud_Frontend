@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
+import { TimeField } from '@/components/shared/time-field'
 import { TecnicoService } from '@/lib/services/saude/tecnico-service'
 import { SessaoTratamentoService } from '@/lib/services/tratamentos/sessao-tratamento-service'
 import { TIPO_TECNICO } from '@/pages/area-comum/tabelas/entidades/tecnicos/constants/tipo-tecnico'
@@ -348,24 +349,20 @@ export function SessaoTratamentoFichaModal({
           </div>
           <div className='space-y-1.5'>
             <Label>Hora início</Label>
-            <Input
-              placeholder='HH:mm'
+            <TimeField
               value={form.horaInic}
               disabled={readOnly}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, horaInic: e.target.value }))
-              }
+              placeholder='HH:mm'
+              onChange={(v) => setForm((p) => ({ ...p, horaInic: v }))}
             />
           </div>
           <div className='space-y-1.5'>
             <Label>Duração</Label>
-            <Input
-              placeholder='HH:mm'
+            <TimeField
               value={form.duracao}
               disabled={readOnly}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, duracao: e.target.value }))
-              }
+              placeholder='HH:mm'
+              onChange={(v) => setForm((p) => ({ ...p, duracao: v }))}
             />
           </div>
 
