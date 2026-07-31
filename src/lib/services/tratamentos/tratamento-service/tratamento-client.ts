@@ -7,6 +7,7 @@ import type {
   TratamentoTableDTO,
   CreateTratamentoRequest,
   TratamentoDTO,
+  UpdateTratamentoRequest,
 } from '@/types/dtos/tratamentos/tratamento.dtos'
 
 const BASE = '/client/tratamentos/Tratamento'
@@ -56,6 +57,17 @@ export class TratamentoClient extends BaseApiClient {
 
   async getById(id: string): Promise<ResponseApi<GSResponse<TratamentoDTO>>> {
     return this.httpClient.getRequest<GSResponse<TratamentoDTO>>(state.URL, `${BASE}/${id}`)
+  }
+
+  async update(
+    id: string,
+    body: UpdateTratamentoRequest
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.putRequest<UpdateTratamentoRequest, GSResponse<string>>(
+      state.URL,
+      `${BASE}/${id}`,
+      body
+    )
   }
 
   async delete(id: string): Promise<ResponseApi<GSResponse<string>>> {
