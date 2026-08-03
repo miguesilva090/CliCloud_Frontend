@@ -29,6 +29,7 @@ export type TratamentoFichaFormValues = {
   localOrigemLabel: string
   designacao: string
   nomePatologia: string
+  duracaoTotal: string
   numSessao: string
   dataInic: string
   dataFim: string
@@ -104,6 +105,7 @@ export function emptyTratamentoFichaForm(): TratamentoFichaFormValues {
     localOrigemLabel: '',
     designacao: '',
     nomePatologia: '',
+    duracaoTotal: '',
     numSessao: '',
     dataInic: '',
     dataFim: '',
@@ -147,6 +149,7 @@ export function dtoToTratamentoFichaForm(
     localOrigemId: dto.localOrigemId ?? '',
     designacao: dto.designacao ?? '',
     nomePatologia: dto.nomePatologia ?? '',
+    duracaoTotal: dto.duracaoTotal ?? '',
     numSessao: dto.numSessao != null ? String(dto.numSessao) : '',
     dataInic: toDateInput(dto.dataInic),
     dataFim: toDateInput(dto.dataFim),
@@ -248,7 +251,7 @@ export function buildUpdateTratamentoPayload(
     horaFisio: dto.horaFisio ?? null,
     horaAux: dto.horaAux ?? null,
     horaOutro: dto.horaOutro ?? null,
-    duracaoTotal: dto.duracaoTotal ?? null,
+    duracaoTotal: form.duracaoTotal.trim() || null,
     selOutro: dto.selOutro ?? null,
     numCartao: form.numCartao.trim() || null,
     orespons: dto.orespons ?? null,

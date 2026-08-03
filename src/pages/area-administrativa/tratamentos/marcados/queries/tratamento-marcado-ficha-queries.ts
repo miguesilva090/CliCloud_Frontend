@@ -2,12 +2,16 @@ import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-quer
 import { modules } from '@/config/modules'
 import { TratamentoService } from '@/lib/services/tratamentos/tratamento-service'
 import { SessaoTratamentoService } from '@/lib/services/tratamentos/sessao-tratamento-service'
+import { ServicoTratamentoService } from '@/lib/services/tratamentos/servico-tratamento-service'
 
 const permId = modules.areaAdministrativa.permissions.consultas.id
 
 export const TRATAMENTO_FICHA_QUERY_KEY = ['tratamento-marcado-ficha'] as const
 export const TRATAMENTO_FICHA_SESSOES_QUERY_KEY = [
   'tratamento-marcado-ficha-sessoes',
+] as const
+export const TRATAMENTO_FICHA_SERVICOS_QUERY_KEY = [
+  'tratamento-marcado-ficha-servicos',
 ] as const
 
 export function useGetTratamentoFicha(id: string | undefined, enabled: boolean) {
@@ -30,6 +34,18 @@ export function useGetTratamentoFichaSessoes(
   })
 }
 
+export function useGetTratamentoFichaServicos(
+  tratamentoId: string | undefined,
+  enabled: boolean
+) {
+  return useQuery({
+    queryKey: [...TRATAMENTO_FICHA_SERVICOS_QUERY_KEY, tratamentoId],
+    queryFn: () =>
+      ServicoTratamentoService(permId).getAllByTratamentoId(tratamentoId!),
+    enabled: !!tratamentoId && enabled,
+  })
+}
+
 export function invalidateTratamentoFichaQueries(
   queryClient: QueryClient,
   id?: string
@@ -43,6 +59,11 @@ export function invalidateTratamentoFichaQueries(
     queryKey: id
       ? [...TRATAMENTO_FICHA_SESSOES_QUERY_KEY, id]
       : TRATAMENTO_FICHA_SESSOES_QUERY_KEY,
+  })
+  void queryClient.invalidateQueries({
+    queryKey: id
+      ? [...TRATAMENTO_FICHA_SERVICOS_QUERY_KEY, id]
+      : TRATAMENTO_FICHA_SERVICOS_QUERY_KEY,
   })
 }
 

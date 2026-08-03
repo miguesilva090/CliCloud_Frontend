@@ -251,7 +251,7 @@ export interface CreateUtenteRequest {
   observacoes: string
   status: number
   urlFoto?: string | null
-  entidadeContactos?: CreateEntidadeContactoItemRequest[]
+  entidadeContactos?: CreateEntidadeContactoItemRequest[] | null
 
   // EntidadePessoa (opcional)
   dataNascimento?: string | null // DateOnly => "YYYY-MM-DD"
@@ -319,7 +319,7 @@ export interface CreateUtenteRequest {
  */
 export interface UpdateUtenteRequest
   extends Omit<CreateUtenteRequest, 'entidadeContactos'> {
-  entidadeContactos?: UpsertEntidadeContactoItemRequest[]
+  entidadeContactos?: UpsertEntidadeContactoItemRequest[] | null
 }
 
 

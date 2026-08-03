@@ -18,6 +18,7 @@ import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
 import type { SessaoTratamentoTableDTO } from '@/types/dtos/tratamentos/sessao-tratamento.dtos'
 import { SessaoTratamentoFichaModal } from '../modals/sessao-tratamento-ficha-modal'
+import { CompensarFaltaSessaoModal } from '../modals/compensar-falta-sessao-modal'
 
 function fmtDate(v?: string | null) {
   if (!v) return '—'
@@ -46,6 +47,7 @@ type Props = {
   defaultAuxLabel?: string
   defaultOutroId?: string
   defaultOutroLabel?: string
+  defaultDuracao?: string
 }
 
 export function TratamentoFichaSessoesPanel({
@@ -63,6 +65,7 @@ export function TratamentoFichaSessoesPanel({
   defaultAuxLabel,
   defaultOutroId,
   defaultOutroLabel,
+  defaultDuracao,
 }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>(
@@ -71,6 +74,14 @@ export function TratamentoFichaSessoesPanel({
   const [row, setRow] = useState<SessaoTratamentoTableDTO | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [compensarAskOpen, setCompensarAskOpen] = useState(false)
+  const [compensarModalOpen, setCompensarModalOpen] = useState(false)
+
+  const canCompensar = useMemo(() => {
+    const faltas = sessoes.filter((s) => s.faltou === 1).length
+    const comps = sessoes.filter((s) => s.compensaFalta === 1).length
+    return faltas > comps
+  }, [sessoes])
 
   const columns = useMemo((): DataTableColumnDef<SessaoTratamentoTableDTO>[] => {
     const base: DataTableColumnDef<SessaoTratamentoTableDTO>[] = [
@@ -115,6 +126,12 @@ export function TratamentoFichaSessoesPanel({
         header: 'Faltou',
         enableSorting: false,
         cell: ({ row: r }) => bitCell(r.original.faltou),
+      },
+      {
+        accessorKey: 'compensaFalta',
+        header: 'Compensa',
+        enableSorting: false,
+        cell: ({ row: r }) => bitCell(r.original.compensaFalta),
       },
       {
         accessorKey: 'desmarcado',
@@ -185,7 +202,16 @@ export function TratamentoFichaSessoesPanel({
   return (
     <div className='space-y-3'>
       {canChange ? (
-        <div className='flex justify-end'>
+        <div className='flex justify-end gap-2'>
+          <Button
+            type='button'
+            size='sm'
+            variant='secondary'
+            disabled={!canCompensar}
+            onClick={() => setCompensarModalOpen(true)}
+          >
+            Compensar falta
+          </Button>
           <Button
             type='button'
             size='sm'
@@ -225,13 +251,51 @@ export function TratamentoFichaSessoesPanel({
         listPermId={listPermId}
         existingSessoes={sessoes}
         row={row}
-        onSaved={onRefresh}
+        onSaved={(ctx) => {
+          onRefresh()
+          if (ctx?.offerCompensar) setCompensarAskOpen(true)
+        }}
         defaultFisioId={defaultFisioId}
         defaultFisioLabel={defaultFisioLabel}
         defaultAuxId={defaultAuxId}
         defaultAuxLabel={defaultAuxLabel}
         defaultOutroId={defaultOutroId}
         defaultOutroLabel={defaultOutroLabel}
+      />
+
+      <AlertDialog open={compensarAskOpen} onOpenChange={setCompensarAskOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deseja compensar esta falta?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setCompensarAskOpen(false)
+                setCompensarModalOpen(true)
+              }}
+            >
+              Sim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <CompensarFaltaSessaoModal
+        open={compensarModalOpen}
+        onOpenChange={setCompensarModalOpen}
+        tratamentoId={tratamentoId}
+        listPermId={listPermId}
+        sessoes={sessoes}
+        defaultFisioId={defaultFisioId}
+        defaultFisioLabel={defaultFisioLabel}
+        defaultAuxId={defaultAuxId}
+        defaultAuxLabel={defaultAuxLabel}
+        defaultOutroId={defaultOutroId}
+        defaultOutroLabel={defaultOutroLabel}
+        defaultDuracao={defaultDuracao}
+        onSaved={onRefresh}
       />
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

@@ -1,4 +1,7 @@
-import type { PaginationFilterRequest } from '@/types/dtos/common/table-filters.dtos'
+import type {
+  PaginationFilterRequest,
+  TableFilter,
+} from '@/types/dtos/common/table-filters.dtos'
 
 export enum ModoListagemAdmissaoTratamento {
   UtentesHora = 0,
@@ -40,6 +43,8 @@ export interface AdmissaoTratamentoTableFilterRequest
   localTratamentoId?: string | null
   fisioterapeutaId?: string | null
   utenteId?: string | null
+  /** Espelha Filters do BE (PaginationFilter + TableFilter). */
+  filters?: TableFilter[]
 }
 
 export interface UpdateAdmissaoTratamentoSituacaoRequest {

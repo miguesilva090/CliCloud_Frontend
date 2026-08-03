@@ -8,6 +8,7 @@ import type {
   CreateTratamentoRequest,
   TratamentoDTO,
   UpdateTratamentoRequest,
+  CreateMarcacaoManualTratamentoRequest,
 } from '@/types/dtos/tratamentos/tratamento.dtos'
 
 const BASE = '/client/tratamentos/Tratamento'
@@ -74,6 +75,12 @@ export class TratamentoClient extends BaseApiClient {
     return this.httpClient.deleteRequest<GSResponse<string>>(
       state.URL,
       `${BASE}/${id}`
+    )
+  }
+
+  async createMarcacaoManual(body: CreateMarcacaoManualTratamentoRequest): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest<CreateMarcacaoManualTratamentoRequest, GSResponse<string>>(
+      state.URL, `${BASE}/marcacao-manual`, body
     )
   }
 }

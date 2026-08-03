@@ -8,6 +8,7 @@ import type {
   SessaoTratamentoDTO,
   SessaoTratamentoTableDTO,
   UpdateSessaoTratamentoRequest,
+  CompensarFaltaSessaoTratamentoRequest,
 } from '@/types/dtos/tratamentos/sessao-tratamento.dtos'
 
 const BASE = '/client/tratamentos/SessaoTratamento'
@@ -62,5 +63,14 @@ export class SessaoTratamentoClient extends BaseApiClient {
       state.URL,
       `${BASE}/${id}`
     )
+  }
+
+  async compensarFalta(
+    body: CompensarFaltaSessaoTratamentoRequest
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest<
+      CompensarFaltaSessaoTratamentoRequest,
+      GSResponse<string>
+    >(state.URL, `${BASE}/compensar-falta`, body)
   }
 }

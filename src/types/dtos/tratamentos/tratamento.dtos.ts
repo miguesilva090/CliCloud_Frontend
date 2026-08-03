@@ -125,6 +125,7 @@ export interface TratamentoDTO {
   frespons?: boolean | null
   arespons?: boolean | null
   lotes: number
+  listaEsperaTratamentoId?: string | null
 }
 
 export interface UpdateTratamentoRequest {
@@ -195,5 +196,66 @@ export interface UpdateTratamentoRequest {
   sendEmail?: boolean
 }
 
+export interface CreateMarcacaoManualServicoItem {
+  servicoId: string
+  duracao?: string | null
+  ordem?: number | null
+  usaFisioter?: number | null
+  usaAuxiliar?: number | null
+  usaOutro?: number | null
+  preco?: number | null
+  descInst?: number | null
+  valorUt?: number | null
+  obs?: string | null
+}
+
+export interface CreateMarcacaoManualSessaoItem {
+  numSessao?: number | null
+  data: string
+  horaInic?: string | null
+  duracao?: string | null
+  fisioterapeutaId?: string | null
+  auxiliarId?: string | null
+  outroTecnicoId?: string | null
+}
+
+export interface CreateMarcacaoManualTratamentoRequest {
+  listaEsperaTratamentoId?: string | null
+  utenteId: string
+  organismoId: string
+  medicoId?: string | null
+  fisioterapeutaId?: string | null
+  auxiliarId?: string | null
+  outroTecnicoId?: string | null
+  localTratamentoId?: string | null
+  localOrigemId?: string | null
+  designacao?: string | null
+  nomePatologia?: string | null
+  numSessao?: number | null
+  dataInic?: string | null
+  dataFim?: string | null
+  duracaoTotal?: string | null
+  credencial?: string | null
+  numBenif?: string | null
+  apolice?: string | null
+  nFaltMax?: number | null
+  nFaltComax?: number | null
+  taxaMod?: number | null
+  provisorio?: number | null
+  obs?: string | null
+  tecObs?: string | null
+  sinistroId?: string | null
+  seguradoraId?: string | null
+  isencao?: number | null
+  confDfim?: number | null
+  credencialExterna?: number | null
+  terapiaFala?: number
+  numCartao?: string | null
+  horaFisio?: string | null
+  horaAux?: string | null
+  horaOutro?: string | null
+  servicos: CreateMarcacaoManualServicoItem[]
+  sessoes: CreateMarcacaoManualSessaoItem[]
+}
 
 

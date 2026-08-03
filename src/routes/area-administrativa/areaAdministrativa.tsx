@@ -177,6 +177,11 @@ const TratamentoMarcadoFichaPage = lazy(() =>
     '@/pages/area-administrativa/tratamentos/marcados/pages/tratamento-marcado-ficha-page'
   ).then((m) => ({ default: m.TratamentoMarcadoFichaPage }))
 )
+const MarcacoesManuaisPage = lazy(() => 
+  import(
+    '@/pages/area-administrativa/tratamentos/marcacoes-manuais/pages/marcacoes-manuais-page'
+  ).then((m) => ({ default: m.MarcacoesManuaisPage }))
+)
 const TratamentosAdminPlaceholderPage = lazy(() =>
   import(
     '@/pages/area-administrativa/tratamentos/pages/tratamentos-admin-placeholder-page'
@@ -236,6 +241,20 @@ export const areaAdministrativaRoutes = [
       </LicenseGuard>
     ),
     manageWindow: false,
+  },
+  {
+    path: 'area-administrativa/tratamentos/marcacoes-manuais',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.consultas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <MarcacoesManuaisPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Marcações Manuais',
   },
   {
     path: 'area-administrativa/tratamentos',

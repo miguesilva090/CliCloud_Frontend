@@ -15,8 +15,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Alias */
-    "baseUrl": ".",
+    /* Alias — sem baseUrl (deprecated TS 6+/7; paths relativos ao tsconfig bastam) */
     "paths": {
       "@/*": ["./src/*"]
     },

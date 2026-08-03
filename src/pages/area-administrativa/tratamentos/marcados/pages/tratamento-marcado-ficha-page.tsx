@@ -37,10 +37,11 @@ import { TIPO_TECNICO } from '@/pages/area-comum/tabelas/entidades/tecnicos/cons
 import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
 import { TratamentoFichaSessoesPanel } from '../components/tratamento-ficha-sessoes-panel'
-import { TratamentoFichaServicosPrescritosPlaceholder } from '../components/tratamento-ficha-servicos-prescritos-placeholder'
+import { TratamentoFichaServicosPrescritosPanel } from '@/pages/area-administrativa/tratamentos/marcados/components/tratamento-ficha-servicos-prescritos-panel'
 import {
   useGetTratamentoFicha,
   useGetTratamentoFichaSessoes,
+  useGetTratamentoFichaServicos,
   useInvalidateTratamentoFicha,
 } from '../queries/tratamento-marcado-ficha-queries'
 import {
@@ -121,6 +122,7 @@ export function TratamentoMarcadoFichaPage() {
 
   const tratamentoQuery = useGetTratamentoFicha(id, canView)
   const sessoesQuery = useGetTratamentoFichaSessoes(id, canView)
+  const servicosQuery = useGetTratamentoFichaServicos(id, canView)
 
   const dto =
     tratamentoQuery.data?.info?.status === ResponseStatus.Success
@@ -172,8 +174,14 @@ export function TratamentoMarcadoFichaPage() {
       sessoesQuery.data?.info?.status === ResponseStatus.Success
         ? (sessoesQuery.data.info.data ?? [])
         : []
-    return [...raw].sort((a, b) => (a.numSessao ?? 0) - (b.numSessao ?? 0))
+    return [...raw].sort((a, b) => (a.numSessao ?? 9999) - (b.numSessao ?? 9999))
   }, [sessoesQuery.data])
+
+  const servicos = useMemo(() => {
+    return servicosQuery.data?.info?.status === ResponseStatus.Success
+      ? (servicosQuery.data.info.data ?? [])
+      : []
+  }, [servicosQuery.data])
 
   useEffect(() => {
     if (dto) setForm(dtoToTratamentoFichaForm(dto))
@@ -918,7 +926,20 @@ export function TratamentoMarcadoFichaPage() {
                 </TabsContent>
 
                 <TabsContent value='servicos-prescritos' className='mt-4'>
-                  <TratamentoFichaServicosPrescritosPlaceholder />
+                  <TratamentoFichaServicosPrescritosPanel
+                    tratamentoId={dto.id}
+                    listPermId={listPermId}
+                    canView={canView}
+                    canChange={canChange}
+                    canDelete={!!canDelete}
+                    servicos={servicos}
+                    isLoading={servicosQuery.isLoading}
+                    onRefresh={() => invalidate(id)}
+                    nomePatologia={form.nomePatologia}
+                    onNomePatologiaChange={(v: string) => patch('nomePatologia', v)}
+                    duracaoTotal={form.duracaoTotal}
+                    onDuracaoTotalChange={(v: string) => patch('duracaoTotal', v)}
+                  />
                 </TabsContent>
 
                 <TabsContent value='sessoes' className='mt-4'>
@@ -937,6 +958,7 @@ export function TratamentoMarcadoFichaPage() {
                     defaultAuxLabel={form.auxiliarLabel}
                     defaultOutroId={form.outroTecnicoId}
                     defaultOutroLabel={form.outroTecnicoLabel}
+                    defaultDuracao={form.duracaoTotal}
                   />
                 </TabsContent>
               </Tabs>

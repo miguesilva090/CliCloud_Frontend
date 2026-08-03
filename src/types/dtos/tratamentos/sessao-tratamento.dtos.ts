@@ -10,6 +10,7 @@ export interface SessaoTratamentoTableDTO {
   pago?: number | null
   faturado?: number | null
   faltou?: number | null
+  compensaFalta?: number | null
   confirmado?: number | null
   efetuado?: number | null
   desmarcado?: number | null
@@ -66,8 +67,25 @@ export interface CreateSessaoTratamentoRequest {
   duracaoAux?: string | null
   duracaoOutro?: string | null
   faltou?: number | null
+  compensaFalta?: number | null
   obsFalta?: string | null
   sendEmail?: boolean
+}
+
+export interface CompensarFaltaSessaoTratamentoRequest {
+  tratamentoId: string
+  data: string
+  horaInic?: string | null
+  duracao?: string | null
+  fisioterapeutaId?: string | null
+  auxiliarId?: string | null
+  outroTecnicoId?: string | null
+  horaFisio?: string | null
+  horaAux?: string | null 
+  horaOutro?: string | null
+  duracaoFisio?: string | null
+  duracaoAux?: string | null
+  duracaoOutro?: string | null
 }
 
 export type UpdateSessaoTratamentoRequest = CreateSessaoTratamentoRequest

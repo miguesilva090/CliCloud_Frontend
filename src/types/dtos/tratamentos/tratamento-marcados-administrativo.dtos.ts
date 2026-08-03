@@ -1,4 +1,7 @@
-import type { PaginationFilterRequest } from '@/types/dtos/common/table-filters.dtos'
+import type {
+  PaginationFilterRequest,
+  TableFilter,
+} from '@/types/dtos/common/table-filters.dtos'
 
 export enum ModoListagemTratamentoMarcados {
   Marcados = 0,
@@ -32,4 +35,6 @@ export interface TratamentoMarcadosTableFilterRequest
   modo: ModoListagemTratamentoMarcados
   localTratamentoId?: string | null
   utenteId?: string | null
+  /** Espelha Filters do BE (PaginationFilter + TableFilter). */
+  filters?: TableFilter[]
 }

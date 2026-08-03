@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { RotateCw, Search } from 'lucide-react'
+import { Plus, RotateCw, Search } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
@@ -49,7 +49,8 @@ export function ListagemTratamentosMarcadosPage({
   modo?: ModoListagemTratamentoMarcados
 }) {
   const navigate = useNavigate()
-  const { canView, canDelete } = useAreaComumEntityListPermissions(listPermId)
+  const { canView, canDelete, canAdd, canChange } =
+    useAreaComumEntityListPermissions(listPermId)
   const queryClient = useQueryClient()
   const isModoLocal = modo === ModoListagemTratamentoMarcados.PorLocal
   const isModoUtente = modo === ModoListagemTratamentoMarcados.PorUtente
@@ -150,7 +151,20 @@ export function ListagemTratamentosMarcadosPage({
     }
   }
 
+  const isModoMarcados = modo === ModoListagemTratamentoMarcados.Marcados
+
   const toolbarActions: DataTableAction[] = [
+    ...(isModoMarcados && (canAdd || canChange)
+      ? [
+          {
+            label: 'Novo',
+            icon: <Plus className='h-4 w-4' />,
+            onClick: () =>
+              navigate('/area-administrativa/tratamentos/marcacoes-manuais'),
+            variant: 'destructive' as const,
+          },
+        ]
+      : []),
     {
       label: 'Atualizar',
       icon: <RotateCw className='h-4 w-4' />,

@@ -92,7 +92,7 @@ type Props = {
   defaultOutroLabel?: string
   existingSessoes: SessaoTratamentoTableDTO[]
   row: SessaoTratamentoTableDTO | null
-  onSaved: () => void
+  onSaved: (ctx?: { offerCompensar?: boolean }) => void
 }
 
 export function SessaoTratamentoFichaModal({
@@ -116,6 +116,7 @@ export function SessaoTratamentoFichaModal({
     existingSessoes.reduce((m, s) => Math.max(m, s.numSessao ?? 0), 0) + 1
 
   const [form, setForm] = useState<FormState>(() => emptyForm(nextNum))
+  const [faltouInicial, setFaltouInicial] = useState(false)
   const [saving, setSaving] = useState(false)
   const [fisioSearch, setFisioSearch] = useState('')
   const [auxSearch, setAuxSearch] = useState('')
@@ -128,6 +129,7 @@ export function SessaoTratamentoFichaModal({
     if (!open) return
 
     if (mode === 'create') {
+      setFaltouInicial(false)
       setForm({
         ...emptyForm(nextNum),
         fisioterapeutaId: defaultFisioId,
@@ -165,6 +167,7 @@ export function SessaoTratamentoFichaModal({
       const auxiliarLabel = await loadNome(dto.auxiliarId)
       const outroTecnicoLabel = await loadNome(dto.outroTecnicoId)
 
+      setFaltouInicial(dto.faltou === 1)
       setForm({
         numSessao: dto.numSessao != null ? String(dto.numSessao) : '',
         data: toDateInput(dto.data),
@@ -305,11 +308,12 @@ export function SessaoTratamentoFichaModal({
           : await SessaoTratamentoService(listPermId).update(row!.id, payload)
 
       if (res.info?.status === ResponseStatus.Success) {
+        const offerCompensar = form.faltou && !faltouInicial
         toast.success(
           mode === 'create' ? 'Sessão criada.' : 'Sessão actualizada.'
         )
         onOpenChange(false)
-        onSaved()
+        onSaved(offerCompensar ? { offerCompensar: true } : undefined)
       } else {
         const msg =
           Object.values(res.info?.messages ?? {})

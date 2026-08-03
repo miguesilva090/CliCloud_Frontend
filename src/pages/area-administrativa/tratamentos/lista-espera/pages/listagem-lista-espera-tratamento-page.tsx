@@ -191,6 +191,20 @@ export function ListagemListaEsperaTratamentoPage() {
                   >
                     <MessageSquare className='h-4 w-4' />
                   </Button>
+                  <Button 
+                    type='button'
+                    variant='ghost'
+                    size='icon'
+                    className='h-8 w-8'
+                    title='Marcar tratamento'
+                    onClick={() => {
+                      navigate(
+                        `/area-administrativa/tratamentos/marcacoes-manuais?listaEsperaId=${row.id}`
+                      )
+                    }}
+                  >
+                    <Plus className='h-4 w-4' />
+                  </Button>
                 </div>
               ) : null
             }

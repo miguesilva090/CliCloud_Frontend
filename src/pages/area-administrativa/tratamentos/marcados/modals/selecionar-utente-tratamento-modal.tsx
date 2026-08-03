@@ -54,12 +54,10 @@ export function SelecionarUtenteTratamentoModal({
 
   const items = useMemo(() => {
     const list = utentesQuery.data ?? []
-    return list.map(
-      (u: { id: string; nome?: string; numeroUtente?: string }) => ({
-        value: u.id,
-        label: [u.numeroUtente, u.nome].filter(Boolean).join(' — ') || u.id,
-      })
-    )
+    return list.map((u) => ({
+      value: u.id,
+      label: [u.numeroUtente, u.nome].filter(Boolean).join(' — ') || u.id,
+    }))
   }, [utentesQuery.data])
 
   const handleConfirm = () => {
