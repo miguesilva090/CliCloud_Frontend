@@ -5,7 +5,6 @@ import type {
 
 export type TratamentoFichaFormValues = {
   utenteId: string
-  /** Nome do utente (sem número) — display tab Info. Utente */
   utenteNome: string
   numeroUtente: string
   telefone: string
@@ -23,6 +22,9 @@ export type TratamentoFichaFormValues = {
   auxiliarLabel: string
   outroTecnicoId: string
   outroTecnicoLabel: string
+  unidadeTempoFisio: number
+  unidadeTempoAux: number
+  unidadeTempoOutro: number
   localTratamentoId: string
   localTratamentoLabel: string
   localOrigemId: string
@@ -99,6 +101,9 @@ export function emptyTratamentoFichaForm(): TratamentoFichaFormValues {
     auxiliarLabel: '',
     outroTecnicoId: '',
     outroTecnicoLabel: '',
+    unidadeTempoFisio: 1,
+    unidadeTempoAux: 1,
+    unidadeTempoOutro: 1,
     localTratamentoId: '',
     localTratamentoLabel: '',
     localOrigemId: '',
@@ -145,6 +150,9 @@ export function dtoToTratamentoFichaForm(
     fisioterapeutaId: dto.fisioterapeutaId ?? '',
     auxiliarId: dto.auxiliarId ?? '',
     outroTecnicoId: dto.outroTecnicoId ?? '',
+    unidadeTempoFisio: dto.unidadeTempoFisio ?? 1,
+    unidadeTempoAux: dto.unidadeTempoAux ?? 1,
+    unidadeTempoOutro: dto.unidadeTempoOutro ?? 1,
     localTratamentoId: dto.localTratamentoId ?? '',
     localOrigemId: dto.localOrigemId ?? '',
     designacao: dto.designacao ?? '',
@@ -270,5 +278,8 @@ export function buildUpdateTratamentoPayload(
     arespons: dto.arespons ?? null,
     lotes: dto.lotes ?? 0,
     sendEmail: false,
+    unidadeTempoFisio: form.fisioterapeutaId ? form.unidadeTempoFisio : null,
+    unidadeTempoAux: form.auxiliarId ? form.unidadeTempoAux : null,
+    unidadeTempoOutro: form.outroTecnicoId ? form.unidadeTempoOutro : null,
   }
 }

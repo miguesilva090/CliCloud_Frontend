@@ -55,6 +55,9 @@ export interface CreateTratamentoRequest {
   obs?: string | null
   nomePatologia?: string | null
   sendEmail?: boolean
+  unidadeTempoFisio?: number | null
+  unidadeTempoAux?: number | null
+  unidadeTempoOutro?: number | null
 }
 
 export interface TratamentoDTO {
@@ -126,6 +129,9 @@ export interface TratamentoDTO {
   arespons?: boolean | null
   lotes: number
   listaEsperaTratamentoId?: string | null
+  unidadeTempoFisio?: number | null
+  unidadeTempoAux?: number | null
+  unidadeTempoOutro?: number | null
 }
 
 export interface UpdateTratamentoRequest {
@@ -194,6 +200,9 @@ export interface UpdateTratamentoRequest {
   arespons?: boolean | null
   lotes: number
   sendEmail?: boolean
+  unidadeTempoFisio?: number | null
+  unidadeTempoAux?: number | null
+  unidadeTempoOutro?: number | null
 }
 
 export interface CreateMarcacaoManualServicoItem {
@@ -255,7 +264,10 @@ export interface CreateMarcacaoManualTratamentoRequest {
   horaAux?: string | null
   horaOutro?: string | null
   servicos: CreateMarcacaoManualServicoItem[]
-  sessoes: CreateMarcacaoManualSessaoItem[]
+  sessoes: CreateMarcacaoManualSessaoItem[] 
+  unidadeTempoFisio?: number | null
+  unidadeTempoAux?: number | null
+  unidadeTempoOutro?: number | null
 }
 
 

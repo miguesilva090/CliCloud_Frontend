@@ -68,6 +68,7 @@ const schema = z
     carteira: z.string().optional(),
     margem: z.string().optional(),
     tipoTecnico: z.coerce.number().int().min(1).max(3).optional(),
+    maxTratamentos: z.coerce.number().int().min(1).max(50).optional(),
   })
   .passthrough()
 
@@ -131,6 +132,7 @@ function buildCreatePayload(values: TecnicoEditFormValues): CreateTecnicoRequest
     carteira: values.carteira?.trim() || undefined,
     margem: parseFloatSafe(values.margem) ?? undefined,
     tipoTecnico: values.tipoTecnico ?? TIPO_TECNICO.Fisioterapeuta,
+    maxTratamentos: values.maxTratamentos ?? 1,
   }
 }
 
@@ -212,6 +214,7 @@ export function TecnicoEditPage() {
       carteira: '',
       margem: '',
       tipoTecnico: defaultTipoTecnico,
+      maxTratamentos: 1,
     },
     mode: 'onBlur',
   })
@@ -255,6 +258,7 @@ export function TecnicoEditPage() {
       tipoTecnico: isTipoTecnicoValue(tipoFromDto)
         ? tipoFromDto
         : defaultTipoTecnico,
+      maxTratamentos: tecnico.maxTratamentos ?? 1,
     })
   }, [tecnico, form, defaultTipoTecnico])
 

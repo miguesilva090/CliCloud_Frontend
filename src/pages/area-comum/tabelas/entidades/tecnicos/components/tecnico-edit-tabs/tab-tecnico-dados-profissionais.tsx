@@ -164,6 +164,29 @@ export function TabTecnicoDadosProfissionais({
           />
           <FormField
             control={form.control}
+            name='maxTratamentos'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Máx. tratamentos / slot</FormLabel>
+                <FormControl>
+                  <Input
+                    className='h-7'
+                    type='number'
+                    min={1}
+                    max={50}
+                    readOnly={readOnly}
+                    value={field.value ?? 1}
+                    onChange={(e) =>
+                      field.onChange(Number(e.target.value) || 1)
+                    }
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name='status'
             render={({ field }) => (
               <FormItem className='flex flex-row items-center gap-2 space-y-0 mt-6'>

@@ -34,6 +34,11 @@ import { ServicoService } from '@/lib/services/servicos/servico-service'
 import { PatologiaService } from '@/lib/services/patologias/patologia-service'
 import { TratamentoService } from '@/lib/services/tratamentos/tratamento-service'
 import { ListaEsperaTratamentoAdministrativoService } from '@/lib/services/tratamentos/lista-espera-tratamento-administrativo-service'
+import { TecnicoUnidadeTempoField } from '@/components/tratamentos/tecnico-unidade-tempo-field'
+import {
+  MarcacaoManualSessaoModal,
+  type MarcacaoManualSessaoConfirm,
+} from '../modals/marcacao-manual-sessao-modal'
 import { TIPO_TECNICO } from '@/pages/area-comum/tabelas/entidades/tecnicos/constants/tipo-tecnico'
 import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
@@ -124,6 +129,9 @@ export function MarcacoesManuaisPage() {
   const [usaOutro, setUsaOutro] = useState(false)
   const [outroId, setOutroId] = useState('')
   const [outroLabel, setOutroLabel] = useState('')
+  const [uTempoFisio, setUTempoFisio] = useState(1)
+  const [uTempoAux, setUTempoAux] = useState(1)
+  const [uTempoOutro, setUTempoOutro] = useState(1)
   const [provisorio, setProvisorio] = useState(false)
   const [alta, setAlta] = useState(false)
   const [terapiaFala, setTerapiaFala] = useState(false)
@@ -162,22 +170,6 @@ export function MarcacoesManuaisPage() {
   const [sessoes, setSessoes] = useState<SessaoRow[]>([])
   const [selSessoes, setSelSessoes] = useState<string[]>([])
   const [sessaoModalOpen, setSessaoModalOpen] = useState(false)
-  const [mData, setMData] = useState('')
-  const [mUsaFisio, setMUsaFisio] = useState(true)
-  const [mFisioId, setMFisioId] = useState('')
-  const [mFisioLabel, setMFisioLabel] = useState('')
-  const [mHoraFisio, setMHoraFisio] = useState('')
-  const [mDurFisio, setMDurFisio] = useState('')
-  const [mUsaAux, setMUsaAux] = useState(false)
-  const [mAuxId, setMAuxId] = useState('')
-  const [mAuxLabel, setMAuxLabel] = useState('')
-  const [mHoraAux, setMHoraAux] = useState('')
-  const [mDurAux, setMDurAux] = useState('')
-  const [mUsaOutro, setMUsaOutro] = useState(false)
-  const [mOutroId, setMOutroId] = useState('')
-  const [mOutroLabel, setMOutroLabel] = useState('')
-  const [mHoraOutro, setMHoraOutro] = useState('')
-  const [mDurOutro, setMDurOutro] = useState('')
 
   const [saving, setSaving] = useState(false)
 
@@ -189,9 +181,6 @@ export function MarcacoesManuaisPage() {
   const [outroSearch, setOutroSearch] = useState('')
   const [localSearch, setLocalSearch] = useState('')
   const [localOrigSearch, setLocalOrigSearch] = useState('')
-  const [mFisioSearch, setMFisioSearch] = useState('')
-  const [mAuxSearch, setMAuxSearch] = useState('')
-  const [mOutroSearch, setMOutroSearch] = useState('')
 
   const [dUtente] = useDebounce(utenteSearch, 300)
   const [dOrg] = useDebounce(orgSearch, 300)
@@ -203,9 +192,6 @@ export function MarcacoesManuaisPage() {
   const [dLocalOrig] = useDebounce(localOrigSearch, 300)
   const [dServico] = useDebounce(servicoSearch, 300)
   const [dPatologia] = useDebounce(patologiaSearch, 300)
-  const [dMFisio] = useDebounce(mFisioSearch, 300)
-  const [dMAux] = useDebounce(mAuxSearch, 300)
-  const [dMOutro] = useDebounce(mOutroSearch, 300)
 
   const leQuery = useQuery({
     queryKey: ['marcacao-manual-le', listaEsperaId],
@@ -307,21 +293,6 @@ export function MarcacoesManuaisPage() {
     queryFn: () => PatologiaService(listPermId).getPatologiasLight(dPatologia),
     enabled: canSave,
   })
-  const mFisioQ = useQuery({
-    queryKey: ['mm-modal-fisio', dMFisio],
-    queryFn: () => loadTecnicos(TIPO_TECNICO.Fisioterapeuta, dMFisio, listPermId),
-    enabled: canSave && sessaoModalOpen && mUsaFisio,
-  })
-  const mAuxQ = useQuery({
-    queryKey: ['mm-modal-aux', dMAux],
-    queryFn: () => loadTecnicos(TIPO_TECNICO.Auxiliar, dMAux, listPermId),
-    enabled: canSave && sessaoModalOpen && mUsaAux,
-  })
-  const mOutroQ = useQuery({
-    queryKey: ['mm-modal-outro', dMOutro],
-    queryFn: () => loadTecnicos(TIPO_TECNICO.Outro, dMOutro, listPermId),
-    enabled: canSave && sessaoModalOpen && mUsaOutro,
-  })
 
   const utenteItems = useMemo(
     () =>
@@ -385,33 +356,6 @@ export function MarcacoesManuaisPage() {
         outroLabel
       ),
     [outroQ.data, outroId, outroLabel]
-  )
-  const mFisioItems = useMemo(
-    () =>
-      withSelected(
-        (mFisioQ.data ?? []).map((t) => ({ value: t.id, label: t.nome ?? t.id })),
-        mFisioId,
-        mFisioLabel
-      ),
-    [mFisioQ.data, mFisioId, mFisioLabel]
-  )
-  const mAuxItems = useMemo(
-    () =>
-      withSelected(
-        (mAuxQ.data ?? []).map((t) => ({ value: t.id, label: t.nome ?? t.id })),
-        mAuxId,
-        mAuxLabel
-      ),
-    [mAuxQ.data, mAuxId, mAuxLabel]
-  )
-  const mOutroItems = useMemo(
-    () =>
-      withSelected(
-        (mOutroQ.data ?? []).map((t) => ({ value: t.id, label: t.nome ?? t.id })),
-        mOutroId,
-        mOutroLabel
-      ),
-    [mOutroQ.data, mOutroId, mOutroLabel]
   )
   const localItems = useMemo(
     () =>
@@ -531,87 +475,28 @@ export function MarcacoesManuaisPage() {
   }
 
   const openSessaoModal = () => {
-    let base = dataInic
-    if (!base && sessoes.length > 0) {
-      const d = new Date(sessoes[sessoes.length - 1].data + 'T12:00:00')
-      d.setDate(d.getDate() + 1)
-      base = d.toISOString().slice(0, 10)
-    }
-    const dur = duracaoTotal || '01:00'
-    setMData(base)
-    setMUsaFisio(usaFisio)
-    setMFisioId(fisioId)
-    setMFisioLabel(fisioLabel)
-    setMHoraFisio('')
-    setMDurFisio(dur)
-    setMUsaAux(usaAux)
-    setMAuxId(auxId)
-    setMAuxLabel(auxLabel)
-    setMHoraAux('')
-    setMDurAux(dur)
-    setMUsaOutro(usaOutro)
-    setMOutroId(outroId)
-    setMOutroLabel(outroLabel)
-    setMHoraOutro('')
-    setMDurOutro(dur)
-    setMFisioSearch('')
-    setMAuxSearch('')
-    setMOutroSearch('')
     setSessaoModalOpen(true)
   }
 
-  const confirmSessaoModal = () => {
-    if (!mData) {
-      toast.error('A data é obrigatória.')
-      return
-    }
-    if (sessoes.some((s) => s.data === mData)) {
-      toast.error('Já existe sessão nesta data.')
-      return
-    }
-    if (!mUsaFisio && !mUsaAux && !mUsaOutro) {
-      toast.error('Seleccione pelo menos um técnico.')
-      return
-    }
-    if (mUsaFisio && (!mFisioId || !mHoraFisio.trim() || !mDurFisio.trim())) {
-      toast.error('Preencha fisioterapeuta, início e duração.')
-      return
-    }
-    if (mUsaAux && (!mAuxId || !mHoraAux.trim() || !mDurAux.trim())) {
-      toast.error('Preencha auxiliar, início e duração.')
-      return
-    }
-    if (mUsaOutro && (!mOutroId || !mHoraOutro.trim() || !mDurOutro.trim())) {
-      toast.error('Preencha terapeuta, início e duração.')
-      return
-    }
-
-    const horas = [
-      mUsaFisio ? mHoraFisio.trim() : null,
-      mUsaAux ? mHoraAux.trim() : null,
-      mUsaOutro ? mHoraOutro.trim() : null,
-    ].filter(Boolean) as string[]
-    const horaInic = horas.sort()[0] ?? null
-
+  const handleConfirmSessao = (s: MarcacaoManualSessaoConfirm) => {
     setSessoes((prev) =>
       [
         ...prev,
         {
           key: crypto.randomUUID(),
           numSessao: prev.length + 1,
-          data: mData,
-          horaInic,
-          duracao: mDurFisio || mDurAux || mDurOutro || duracaoTotal || null,
-          fisioterapeutaId: mUsaFisio ? mFisioId : null,
-          auxiliarId: mUsaAux ? mAuxId : null,
-          outroTecnicoId: mUsaOutro ? mOutroId : null,
-          fisioLabel: mUsaFisio ? mFisioLabel : '',
-          auxLabel: mUsaAux ? mAuxLabel : '',
-          outroLabel: mUsaOutro ? mOutroLabel : '',
+          data: s.data,
+          horaInic: s.horaInic,
+          duracao: s.duracao,
+          fisioterapeutaId: s.fisioterapeutaId,
+          auxiliarId: s.auxiliarId,
+          outroTecnicoId: s.outroTecnicoId,
+          fisioLabel: s.fisioLabel,
+          auxLabel: s.auxLabel,
+          outroLabel: s.outroLabel,
         },
-      ].map((s, i) => ({ ...s, numSessao: i + 1 }))
+      ].map((row, i) => ({ ...row, numSessao: i + 1 }))
     )
-    setSessaoModalOpen(false)
   }
 
   const removeSelectedSessoes = () => {
@@ -683,6 +568,9 @@ export function MarcacoesManuaisPage() {
         tecObs: tecObs.trim() || null,
         sinistroId:
           sinistroId.trim() && isGuid(sinistroId) ? sinistroId.trim() : null,
+        unidadeTempoFisio: usaFisio ? uTempoFisio : null,
+        unidadeTempoAux: usaAux ? uTempoAux : null,
+        unidadeTempoOutro: usaOutro ? uTempoOutro : null,
         servicos: servicos.map(({ key: _k, label: _l, ...rest }) => rest),
         sessoes: sessoes.map(
           ({ key: _k, fisioLabel: _f, auxLabel: _a, outroLabel: _o, ...rest }) => rest
@@ -920,6 +808,7 @@ export function MarcacoesManuaisPage() {
                         const hit = fisioItems.find((i) => i.value === v)
                         setFisioId(v)
                         setFisioLabel(hit?.label ?? '')
+                        setUTempoFisio(1)
                       }}
                       items={fisioItems}
                       searchValue={fisioSearch}
@@ -928,6 +817,13 @@ export function MarcacoesManuaisPage() {
                       placeholder='Seleccionar…'
                       searchPlaceholder='Pesquisar…'
                       emptyText='Sem resultados'
+                    />
+                    <TecnicoUnidadeTempoField
+                      enabled={canSave && usaFisio}
+                      tecnicoId={fisioId}
+                      idFuncionalidade={listPermId}
+                      value={uTempoFisio}
+                      onChange={setUTempoFisio}
                     />
                   </div>
                   <div className='space-y-1.5 sm:col-span-2 lg:col-span-3'>
@@ -946,6 +842,7 @@ export function MarcacoesManuaisPage() {
                         const hit = auxItems.find((i) => i.value === v)
                         setAuxId(v)
                         setAuxLabel(hit?.label ?? '')
+                        setUTempoAux(1)
                       }}
                       items={auxItems}
                       searchValue={auxSearch}
@@ -954,6 +851,13 @@ export function MarcacoesManuaisPage() {
                       placeholder='Seleccionar…'
                       searchPlaceholder='Pesquisar…'
                       emptyText='Sem resultados'
+                    />
+                    <TecnicoUnidadeTempoField
+                      enabled={canSave && usaAux}
+                      tecnicoId={auxId}
+                      idFuncionalidade={listPermId}
+                      value={uTempoAux}
+                      onChange={setUTempoAux}
                     />
                   </div>
                   <div className='space-y-1.5 sm:col-span-2 lg:col-span-3'>
@@ -972,6 +876,7 @@ export function MarcacoesManuaisPage() {
                         const hit = outroItems.find((i) => i.value === v)
                         setOutroId(v)
                         setOutroLabel(hit?.label ?? '')
+                        setUTempoOutro(1)
                       }}
                       items={outroItems}
                       searchValue={outroSearch}
@@ -980,6 +885,13 @@ export function MarcacoesManuaisPage() {
                       placeholder='Seleccionar…'
                       searchPlaceholder='Pesquisar…'
                       emptyText='Sem resultados'
+                    />
+                    <TecnicoUnidadeTempoField
+                      enabled={canSave && usaOutro}
+                      tecnicoId={outroId}
+                      idFuncionalidade={listPermId}
+                      value={uTempoOutro}
+                      onChange={setUTempoOutro}
                     />
                   </div>
 
@@ -1331,6 +1243,21 @@ export function MarcacoesManuaisPage() {
                       const hit = servicoItems.find((i) => i.value === v)
                       setPickServicoId(v)
                       setPickServicoLabel(hit?.label ?? '')
+                      if (!v) return
+                      void (async () => {
+                        try {
+                          const res = await ServicoService(listPermId).getServico(v)
+                          const dto = res.info?.data
+                          if (!dto) return
+                          if (dto.duracao) setPickDuracao(dto.duracao)
+                          if (dto.preco != null) {
+                            setPickPreco(String(dto.preco))
+                            setPickValorUt(String(dto.preco))
+                          }
+                        } catch {
+                          /* ignore */
+                        }
+                      })()
                     }}
                     items={servicoItems}
                     searchValue={servicoSearch}
@@ -1452,181 +1379,35 @@ export function MarcacoesManuaisPage() {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={sessaoModalOpen} onOpenChange={setSessaoModalOpen}>
-            <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
-              <DialogHeader>
-                <DialogTitle>Inserir Sessões</DialogTitle>
-              </DialogHeader>
-
-              <div className='grid gap-4 sm:grid-cols-2'>
-                <div className='space-y-1.5'>
-                  <Label>Data Início</Label>
-                  <Input
-                    type='date'
-                    value={mData}
-                    onChange={(e) => setMData(e.target.value)}
-                  />
-                </div>
-                <div className='space-y-1.5'>
-                  <Label>Dia da Semana</Label>
-                  <Input value={diaSemana(mData)} disabled />
-                </div>
-              </div>
-
-              <div className='mt-4 space-y-4'>
-                <div className='space-y-2 rounded border p-3'>
-                  <label className='flex items-center gap-2 text-sm font-medium'>
-                    <Checkbox
-                      checked={mUsaFisio}
-                      onCheckedChange={(v) => setMUsaFisio(v === true)}
-                    />
-                    Fisioterapeuta
-                  </label>
-                  <div className='grid gap-3 sm:grid-cols-[1fr_7rem_7rem]'>
-                    <AsyncCombobox
-                      value={mFisioId}
-                      disabled={!mUsaFisio}
-                      onChange={(v) => {
-                        const hit = mFisioItems.find((i) => i.value === v)
-                        setMFisioId(v)
-                        setMFisioLabel(hit?.label ?? '')
-                      }}
-                      items={mFisioItems}
-                      searchValue={mFisioSearch}
-                      onSearchValueChange={setMFisioSearch}
-                      isLoading={mFisioQ.isFetching}
-                      placeholder='Seleccionar…'
-                      searchPlaceholder='Pesquisar…'
-                      emptyText='Sem resultados'
-                    />
-                    <div className='space-y-1'>
-                      <Label className='text-xs'>Início</Label>
-                      <Input
-                        value={mHoraFisio}
-                        disabled={!mUsaFisio}
-                        placeholder='HH:mm'
-                        onChange={(e) => setMHoraFisio(e.target.value)}
-                      />
-                    </div>
-                    <div className='space-y-1'>
-                      <Label className='text-xs'>Duração</Label>
-                      <Input
-                        value={mDurFisio}
-                        disabled={!mUsaFisio}
-                        placeholder='HH:mm'
-                        onChange={(e) => setMDurFisio(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className='space-y-2 rounded border p-3'>
-                  <label className='flex items-center gap-2 text-sm font-medium'>
-                    <Checkbox
-                      checked={mUsaAux}
-                      onCheckedChange={(v) => setMUsaAux(v === true)}
-                    />
-                    Auxiliar
-                  </label>
-                  <div className='grid gap-3 sm:grid-cols-[1fr_7rem_7rem]'>
-                    <AsyncCombobox
-                      value={mAuxId}
-                      disabled={!mUsaAux}
-                      onChange={(v) => {
-                        const hit = mAuxItems.find((i) => i.value === v)
-                        setMAuxId(v)
-                        setMAuxLabel(hit?.label ?? '')
-                      }}
-                      items={mAuxItems}
-                      searchValue={mAuxSearch}
-                      onSearchValueChange={setMAuxSearch}
-                      isLoading={mAuxQ.isFetching}
-                      placeholder='Seleccionar…'
-                      searchPlaceholder='Pesquisar…'
-                      emptyText='Sem resultados'
-                    />
-                    <div className='space-y-1'>
-                      <Label className='text-xs'>Início</Label>
-                      <Input
-                        value={mHoraAux}
-                        disabled={!mUsaAux}
-                        placeholder='HH:mm'
-                        onChange={(e) => setMHoraAux(e.target.value)}
-                      />
-                    </div>
-                    <div className='space-y-1'>
-                      <Label className='text-xs'>Duração</Label>
-                      <Input
-                        value={mDurAux}
-                        disabled={!mUsaAux}
-                        placeholder='HH:mm'
-                        onChange={(e) => setMDurAux(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className='space-y-2 rounded border p-3'>
-                  <label className='flex items-center gap-2 text-sm font-medium'>
-                    <Checkbox
-                      checked={mUsaOutro}
-                      onCheckedChange={(v) => setMUsaOutro(v === true)}
-                    />
-                    Terapeuta Ocup./Fala
-                  </label>
-                  <div className='grid gap-3 sm:grid-cols-[1fr_7rem_7rem]'>
-                    <AsyncCombobox
-                      value={mOutroId}
-                      disabled={!mUsaOutro}
-                      onChange={(v) => {
-                        const hit = mOutroItems.find((i) => i.value === v)
-                        setMOutroId(v)
-                        setMOutroLabel(hit?.label ?? '')
-                      }}
-                      items={mOutroItems}
-                      searchValue={mOutroSearch}
-                      onSearchValueChange={setMOutroSearch}
-                      isLoading={mOutroQ.isFetching}
-                      placeholder='Seleccionar…'
-                      searchPlaceholder='Pesquisar…'
-                      emptyText='Sem resultados'
-                    />
-                    <div className='space-y-1'>
-                      <Label className='text-xs'>Início</Label>
-                      <Input
-                        value={mHoraOutro}
-                        disabled={!mUsaOutro}
-                        placeholder='HH:mm'
-                        onChange={(e) => setMHoraOutro(e.target.value)}
-                      />
-                    </div>
-                    <div className='space-y-1'>
-                      <Label className='text-xs'>Duração</Label>
-                      <Input
-                        value={mDurOutro}
-                        disabled={!mUsaOutro}
-                        placeholder='HH:mm'
-                        onChange={(e) => setMDurOutro(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <DialogFooter className='gap-2 sm:gap-2'>
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={() => setSessaoModalOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button type='button' onClick={confirmSessaoModal}>
-                  OK
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <MarcacaoManualSessaoModal
+            open={sessaoModalOpen}
+            onOpenChange={setSessaoModalOpen}
+            listPermId={listPermId}
+            existingDates={sessoes.map((s) => s.data)}
+            defaultData={(() => {
+              let base = dataInic
+              if (!base && sessoes.length > 0) {
+                const d = new Date(sessoes[sessoes.length - 1].data + 'T12:00:00')
+                d.setDate(d.getDate() + 1)
+                base = d.toISOString().slice(0, 10)
+              }
+              return base
+            })()}
+            defaultDuracao={duracaoTotal || '01:00'}
+            defaultUsaFisio={usaFisio}
+            defaultFisioId={fisioId}
+            defaultFisioLabel={fisioLabel}
+            defaultUsaAux={usaAux}
+            defaultAuxId={auxId}
+            defaultAuxLabel={auxLabel}
+            defaultUsaOutro={usaOutro}
+            defaultOutroId={outroId}
+            defaultOutroLabel={outroLabel}
+            defaultUTempoFisio={uTempoFisio}
+            defaultUTempoAux={uTempoAux}
+            defaultUTempoOutro={uTempoOutro}
+            onConfirm={handleConfirmSessao}
+          />
         </AreaComumDashboardCard>
       </DashboardPageContainer>
     </>

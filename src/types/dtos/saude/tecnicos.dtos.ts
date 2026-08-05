@@ -57,6 +57,7 @@ export interface TecnicoTableDTO {
   especialidadeNome?: string | null
   margem?: number | null
   tipoTecnico?: number | null
+  maxTratamentos?: number | null
 }
 
 export interface TecnicoLightDTO {
@@ -117,6 +118,8 @@ export interface TecnicoDTO {
   margem?: number | null
   idUtilizador?: string | null
   tipoTecnico?: number | null
+  /** Máx. tratamentos no mesmo slot (legado maxtrat). */
+  maxTratamentos?: number | null
 }
 
 export interface CreateTecnicoRequest {
@@ -158,6 +161,7 @@ export interface CreateTecnicoRequest {
   margem?: number | null
   idUtilizador?: string | null
   tipoTecnico?: number | null
+  maxTratamentos?: number | null
 }
 
 export interface UpdateTecnicoRequest {
@@ -199,6 +203,7 @@ export interface UpdateTecnicoRequest {
   margem?: number | null
   idUtilizador?: string | null
   tipoTecnico?: number | null
+  maxTratamentos?: number | null
 }
 
 export interface TecnicoTableFilterRequest extends PaginationFilterRequest {

@@ -36,6 +36,7 @@ import { LocalTratamentoService } from '@/lib/services/locais-tratamento/local-t
 import { TIPO_TECNICO } from '@/pages/area-comum/tabelas/entidades/tecnicos/constants/tipo-tecnico'
 import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
+import { TecnicoUnidadeTempoField } from '@/components/tratamentos/tecnico-unidade-tempo-field'
 import { TratamentoFichaSessoesPanel } from '../components/tratamento-ficha-sessoes-panel'
 import { TratamentoFichaServicosPrescritosPanel } from '@/pages/area-administrativa/tratamentos/marcados/components/tratamento-ficha-servicos-prescritos-panel'
 import {
@@ -677,74 +678,104 @@ export function TratamentoMarcadoFichaPage() {
                     </Field>
                   </div>
 
-                  {/* Técnicos */}
+                  {/* Técnicos + U.Tempo (legado modFldUTempo*) */}
                   <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
-                    <Field label='Fisioterapeuta'>
-                      <AsyncCombobox
-                        value={form.fisioterapeutaId}
-                        disabled={!canChange}
-                        onChange={(v) => {
-                          const label =
-                            fisioItems.find((i) => i.value === v)?.label ?? ''
-                          setForm((prev) => ({
-                            ...prev,
-                            fisioterapeutaId: v,
-                            fisioterapeutaLabel: label,
-                          }))
-                        }}
-                        searchValue={fisioSearch}
-                        onSearchValueChange={setFisioSearch}
-                        items={fisioItems}
-                        isLoading={fisiosQuery.isFetching}
-                        placeholder='Seleccionar…'
-                        searchPlaceholder='Pesquisar…'
-                        emptyText='Sem resultados'
+                    <div className='space-y-2'>
+                      <Field label='Fisioterapeuta'>
+                        <AsyncCombobox
+                          value={form.fisioterapeutaId}
+                          disabled={!canChange}
+                          onChange={(v) => {
+                            const label =
+                              fisioItems.find((i) => i.value === v)?.label ?? ''
+                            setForm((prev) => ({
+                              ...prev,
+                              fisioterapeutaId: v,
+                              fisioterapeutaLabel: label,
+                              unidadeTempoFisio: 1,
+                            }))
+                          }}
+                          searchValue={fisioSearch}
+                          onSearchValueChange={setFisioSearch}
+                          items={fisioItems}
+                          isLoading={fisiosQuery.isFetching}
+                          placeholder='Seleccionar…'
+                          searchPlaceholder='Pesquisar…'
+                          emptyText='Sem resultados'
+                        />
+                      </Field>
+                      <TecnicoUnidadeTempoField
+                        enabled={canChange}
+                        tecnicoId={form.fisioterapeutaId}
+                        idFuncionalidade={listPermId}
+                        value={form.unidadeTempoFisio}
+                        onChange={(v) => patch('unidadeTempoFisio', v)}
                       />
-                    </Field>
-                    <Field label='Auxiliar'>
-                      <AsyncCombobox
-                        value={form.auxiliarId}
-                        disabled={!canChange}
-                        onChange={(v) => {
-                          const label =
-                            auxItems.find((i) => i.value === v)?.label ?? ''
-                          setForm((prev) => ({
-                            ...prev,
-                            auxiliarId: v,
-                            auxiliarLabel: label,
-                          }))
-                        }}
-                        searchValue={auxSearch}
-                        onSearchValueChange={setAuxSearch}
-                        items={auxItems}
-                        isLoading={auxQuery.isFetching}
-                        placeholder='Seleccionar…'
-                        searchPlaceholder='Pesquisar…'
-                        emptyText='Sem resultados'
+                    </div>
+                    <div className='space-y-2'>
+                      <Field label='Auxiliar'>
+                        <AsyncCombobox
+                          value={form.auxiliarId}
+                          disabled={!canChange}
+                          onChange={(v) => {
+                            const label =
+                              auxItems.find((i) => i.value === v)?.label ?? ''
+                            setForm((prev) => ({
+                              ...prev,
+                              auxiliarId: v,
+                              auxiliarLabel: label,
+                              unidadeTempoAux: 1,
+                            }))
+                          }}
+                          searchValue={auxSearch}
+                          onSearchValueChange={setAuxSearch}
+                          items={auxItems}
+                          isLoading={auxQuery.isFetching}
+                          placeholder='Seleccionar…'
+                          searchPlaceholder='Pesquisar…'
+                          emptyText='Sem resultados'
+                        />
+                      </Field>
+                      <TecnicoUnidadeTempoField
+                        enabled={canChange}
+                        tecnicoId={form.auxiliarId}
+                        idFuncionalidade={listPermId}
+                        value={form.unidadeTempoAux}
+                        onChange={(v) => patch('unidadeTempoAux', v)}
                       />
-                    </Field>
-                    <Field label='Outro'>
-                      <AsyncCombobox
-                        value={form.outroTecnicoId}
-                        disabled={!canChange}
-                        onChange={(v) => {
-                          const label =
-                            outroItems.find((i) => i.value === v)?.label ?? ''
-                          setForm((prev) => ({
-                            ...prev,
-                            outroTecnicoId: v,
-                            outroTecnicoLabel: label,
-                          }))
-                        }}
-                        searchValue={outroSearch}
-                        onSearchValueChange={setOutroSearch}
-                        items={outroItems}
-                        isLoading={outroQuery.isFetching}
-                        placeholder='Seleccionar…'
-                        searchPlaceholder='Pesquisar…'
-                        emptyText='Sem resultados'
+                    </div>
+                    <div className='space-y-2'>
+                      <Field label='Outro'>
+                        <AsyncCombobox
+                          value={form.outroTecnicoId}
+                          disabled={!canChange}
+                          onChange={(v) => {
+                            const label =
+                              outroItems.find((i) => i.value === v)?.label ?? ''
+                            setForm((prev) => ({
+                              ...prev,
+                              outroTecnicoId: v,
+                              outroTecnicoLabel: label,
+                              unidadeTempoOutro: 1,
+                            }))
+                          }}
+                          searchValue={outroSearch}
+                          onSearchValueChange={setOutroSearch}
+                          items={outroItems}
+                          isLoading={outroQuery.isFetching}
+                          placeholder='Seleccionar…'
+                          searchPlaceholder='Pesquisar…'
+                          emptyText='Sem resultados'
+                        />
+                      </Field>
+                      <TecnicoUnidadeTempoField
+                        enabled={canChange}
+                        tecnicoId={form.outroTecnicoId}
+                        idFuncionalidade={listPermId}
+                        value={form.unidadeTempoOutro}
+                        onChange={(v) => patch('unidadeTempoOutro', v)}
                       />
-                    </Field>
+                    </div>
                   </div>
 
                   {/* Locais */}
@@ -959,6 +990,9 @@ export function TratamentoMarcadoFichaPage() {
                     defaultOutroId={form.outroTecnicoId}
                     defaultOutroLabel={form.outroTecnicoLabel}
                     defaultDuracao={form.duracaoTotal}
+                    defaultUTempoFisio={form.unidadeTempoFisio}
+                    defaultUTempoAux={form.unidadeTempoAux}
+                    defaultUTempoOutro={form.unidadeTempoOutro}
                   />
                 </TabsContent>
               </Tabs>

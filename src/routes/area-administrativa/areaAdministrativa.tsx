@@ -182,6 +182,16 @@ const MarcacoesManuaisPage = lazy(() =>
     '@/pages/area-administrativa/tratamentos/marcacoes-manuais/pages/marcacoes-manuais-page'
   ).then((m) => ({ default: m.MarcacoesManuaisPage }))
 )
+const PlanningGeralPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/planning/pages/planning-geral-page'
+  ).then((m) => ({ default: m.PlanningGeralPage }))
+)
+const PesquisaVagaPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/planning/pages/pesquisa-vaga-page'
+  ).then((m) => ({ default: m.PesquisaVagaPage }))
+)
 const TratamentosAdminPlaceholderPage = lazy(() =>
   import(
     '@/pages/area-administrativa/tratamentos/pages/tratamentos-admin-placeholder-page'
@@ -563,6 +573,34 @@ export const areaAdministrativaRoutes = [
     ),
     manageWindow: true,
     windowName: 'Ficha de Tratamento',
+  },
+  {
+    path: 'area-administrativa/tratamentos/planning',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.consultas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <PlanningGeralPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Planning Geral',
+  },
+  {
+    path: 'area-administrativa/tratamentos/planning/pesquisa',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.consultas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <PesquisaVagaPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Pesquisa de Vaga',
   },
   {
     path: 'area-administrativa/tratamentos/*',

@@ -86,6 +86,9 @@ export interface CompensarFaltaSessaoTratamentoRequest {
   duracaoFisio?: string | null
   duracaoAux?: string | null
   duracaoOutro?: string | null
+  unidadeTempoFisio?: number | null
+  unidadeTempoAux?: number | null
+  unidadeTempoOutro?: number | null
 }
 
 export type UpdateSessaoTratamentoRequest = CreateSessaoTratamentoRequest

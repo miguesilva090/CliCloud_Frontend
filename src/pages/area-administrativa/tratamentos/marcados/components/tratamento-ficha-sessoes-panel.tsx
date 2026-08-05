@@ -48,6 +48,9 @@ type Props = {
   defaultOutroId?: string
   defaultOutroLabel?: string
   defaultDuracao?: string
+  defaultUTempoFisio?: number
+  defaultUTempoAux?: number
+  defaultUTempoOutro?: number
 }
 
 export function TratamentoFichaSessoesPanel({
@@ -66,6 +69,9 @@ export function TratamentoFichaSessoesPanel({
   defaultOutroId,
   defaultOutroLabel,
   defaultDuracao,
+  defaultUTempoFisio,
+  defaultUTempoAux,
+  defaultUTempoOutro,
 }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>(
@@ -295,6 +301,9 @@ export function TratamentoFichaSessoesPanel({
         defaultOutroId={defaultOutroId}
         defaultOutroLabel={defaultOutroLabel}
         defaultDuracao={defaultDuracao}
+        defaultUTempoFisio={defaultUTempoFisio}
+        defaultUTempoAux={defaultUTempoAux}
+        defaultUTempoOutro={defaultUTempoOutro}
         onSaved={onRefresh}
       />
 

@@ -246,6 +246,23 @@ export function ServicoTratamentoFichaModal({
                   servicoId: v,
                   servicoLabel: hit?.label ?? '',
                 }))
+                if (!v || readOnly || mode !== 'create') return
+                void (async () => {
+                  try {
+                    const res = await ServicoService(listPermId).getServico(v)
+                    const dto = res.info?.data
+                    if (!dto) return
+                    setForm((prev) => ({
+                      ...prev,
+                      duracao: dto.duracao ?? prev.duracao,
+                      preco: dto.preco != null ? String(dto.preco) : prev.preco,
+                      valorUt:
+                        dto.preco != null ? String(dto.preco) : prev.valorUt,
+                    }))
+                  } catch {
+                    /* mantém valores manuais */
+                  }
+                })()
               }}
               items={servicoItems}
               searchValue={servicoSearch}

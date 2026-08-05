@@ -32,5 +32,7 @@ export interface TecnicoEditFormValues {
   margem?: string
   /** 1=Fisioterapeuta, 2=Auxiliar, 3=Outro */
   tipoTecnico?: number
+  /** Máx. tratamentos no mesmo slot (legado maxtrat) */
+  maxTratamentos?: number
 }
 
