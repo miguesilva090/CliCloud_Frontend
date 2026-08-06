@@ -1,25 +1,32 @@
 import { useCallback, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import {
   TIPO_TECNICO,
+  isTipoTecnicoValue,
   type TipoTecnicoValue,
 } from '@/pages/area-comum/tabelas/entidades/tecnicos/constants/tipo-tecnico'
+import { PlanningAgendaAcoesToolbar } from '../components/planning-agenda-acoes-toolbar'
 import { PlanningTecnicosToolbar } from '../components/planning-tecnicos-toolbar'
 import { PlanningAgendaCalendario } from '../components/planning-agenda-calendario'
+import { PlanningAgendaLegenda } from '../components/planning-agenda-legenda'
 import { usePlanningSessoes } from '../queries/planning-queries'
 import type { PlanningSessoesRequest } from '@/types/dtos/tratamentos/planning-tratamento.dtos'
-import {
-  PLANNING_TIPO_CORES,
-  PLANNING_TIPO_LABELS,
-} from '../utils/planning-agenda-cores'
 
 export function PlanningGeralPage() {
+  const queryClient = useQueryClient()
+  const [params] = useSearchParams()
+  const tipoFromUrl = Number(params.get('tipoTecnico'))
+  const tecnicoFromUrl = params.get('tecnicoId')
+  const nomeFromUrl = params.get('tecnicoNome')
+
   const [tipoTecnico, setTipoTecnico] = useState<TipoTecnicoValue>(
-    TIPO_TECNICO.Fisioterapeuta
+    isTipoTecnicoValue(tipoFromUrl) ? tipoFromUrl : TIPO_TECNICO.Fisioterapeuta
   )
-  const [tecnicoId, setTecnicoId] = useState<string | null>(null)
-  const [tecnicoNome, setTecnicoNome] = useState<string | null>(null)
+  const [tecnicoId, setTecnicoId] = useState<string | null>(tecnicoFromUrl)
+  const [tecnicoNome, setTecnicoNome] = useState<string | null>(nomeFromUrl)
   const [range, setRange] = useState<{ de: string; ate: string } | null>(null)
 
   const request: PlanningSessoesRequest | null = useMemo(() => {
@@ -42,18 +49,20 @@ export function PlanningGeralPage() {
     )
   }, [])
 
+  const onRefresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ['planning-sessoes'] })
+    void queryClient.invalidateQueries({ queryKey: ['planning-tecnicos'] })
+  }
+
   return (
     <>
       <PageHead title='Planning Geral | Tratamentos' />
-      <DashboardPageContainer>
-        <div className='space-y-4 p-4'>
-          <div>
-            <h1 className='text-lg font-semibold'>Planning Geral</h1>
-            <p className='text-sm text-muted-foreground'>
-              Ocupação por técnico (sessões do newCC).
-              {tecnicoNome ? ` · ${tecnicoNome}` : ''}
-            </p>
-          </div>
+      <DashboardPageContainer className='!m-0 !mt-1 !rounded-none !pt-14 !md:my-0 !md:rounded-none !md:pt-14'>
+        <div className='flex flex-col gap-0 overflow-hidden rounded-none border border-t-0 bg-card shadow-sm'>
+          <PlanningAgendaAcoesToolbar
+            tecnicoNome={tecnicoNome}
+            onRefresh={onRefresh}
+          />
 
           <PlanningTecnicosToolbar
             tipoTecnico={tipoTecnico}
@@ -65,38 +74,23 @@ export function PlanningGeralPage() {
             }}
           />
 
-          <div className='flex flex-wrap gap-3 text-xs'>
-            {Object.entries(PLANNING_TIPO_LABELS).map(([k, label]) => (
-              <span key={k} className='inline-flex items-center gap-1.5'>
-                <span
-                  className='inline-block h-3 w-3 rounded-sm'
-                  style={{
-                    backgroundColor: PLANNING_TIPO_CORES[Number(k)],
-                  }}
-                />
-                {label}
-              </span>
-            ))}
-          </div>
-
           {!tecnicoId ? (
-            <p className='text-sm text-muted-foreground'>
+            <p className='px-4 py-6 text-sm text-muted-foreground'>
               Selecciona um técnico para ver o calendário.
             </p>
           ) : sessoesQuery.isError ? (
-            <p className='text-sm text-destructive'>
+            <p className='px-4 py-6 text-sm text-destructive'>
               {(sessoesQuery.error as Error)?.message ?? 'Erro ao carregar.'}
             </p>
           ) : (
             <PlanningAgendaCalendario
               eventos={sessoesQuery.data ?? []}
               onRangeChange={onRangeChange}
+              isLoading={sessoesQuery.isLoading || sessoesQuery.isFetching}
             />
           )}
 
-          {tecnicoId && sessoesQuery.isFetching && (
-            <p className='text-xs text-muted-foreground'>A actualizar…</p>
-          )}
+          <PlanningAgendaLegenda />
         </div>
       </DashboardPageContainer>
     </>

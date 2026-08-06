@@ -1,0 +1,191 @@
+.planning-agenda-calendario {
+  --agenda-nav-bg: #f0f0f0;
+  --agenda-nav-fg: #c5c5c5;
+  --agenda-grid-bg: #ffffff;
+  --agenda-slot-bg: #ffffff;
+  --agenda-border: #918f8f;
+  --agenda-indisponivel: #dcdcdc;
+  --agenda-slot-height: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.planning-agenda-calendario .fc {
+  --fc-border-color: var(--agenda-border);
+  --fc-page-bg-color: var(--agenda-grid-bg);
+  --fc-neutral-bg-color: #797979;
+  --fc-today-bg-color: #f7f7f7;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.planning-agenda-calendario .fc .fc-view-harness {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+.planning-agenda-calendario .fc .fc-scrollgrid,
+.planning-agenda-calendario .fc .fc-scrollgrid-sync-table {
+  width: 100% !important;
+}
+
+.planning-agenda-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--agenda-nav-bg);
+  color: var(--agenda-nav-fg);
+  border-top: 1px solid #e0e0e0;
+}
+
+.planning-agenda-toolbar__left {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-self: start;
+}
+
+.planning-agenda-toolbar__center {
+  justify-self: center;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  color: #334155;
+}
+
+.planning-agenda-toolbar__right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-self: end;
+}
+
+.planning-agenda-calendario .fc .fc-scroller-harness,
+.planning-agenda-calendario .fc .fc-scroller {
+  overflow: hidden !important;
+}
+
+.planning-agenda-calendario .fc .fc-col-header {
+  background: #ffffff;
+}
+
+.planning-agenda-calendario .fc .fc-col-header-cell.fc-day {
+  background: #ffffff;
+  border-left: none !important;
+  border-right: 1px solid var(--agenda-border) !important;
+  border-bottom: 1px solid var(--agenda-border) !important;
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-body {
+  position: relative;
+}
+
+.planning-agenda-calendario .planning-agenda-day-dividers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.planning-agenda-calendario .planning-agenda-day-dividers__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--agenda-border);
+}
+
+.planning-agenda-calendario .fc .fc-col-header-cell-cushion {
+  display: block;
+  padding: 0.4rem 0.15rem;
+  color: #334155;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-axis {
+  background: #f3f3f3;
+  border-right: 1px solid var(--agenda-border) !important;
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-slot-label {
+  background: #f3f3f3;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-slot {
+  background: var(--agenda-slot-bg);
+  height: var(--agenda-slot-height);
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-slot-lane {
+  background-color: var(--agenda-slot-bg);
+  border-bottom: none !important;
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-slot:not(.fc-timegrid-slot-minor) {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-slot-minor,
+.planning-agenda-calendario .fc .fc-timegrid-slot-lane.fc-timegrid-slot-minor {
+  border-bottom: none !important;
+  border-bottom-width: 0 !important;
+  border-bottom-style: none !important;
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-col {
+  background: var(--agenda-grid-bg);
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-col.fc-day-today {
+  background: #fafafa;
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-axis-cushion,
+.planning-agenda-calendario .fc .fc-timegrid-slot-label-cushion {
+  color: #475569;
+  font-size: 0.7rem;
+}
+
+.planning-agenda-calendario .fc .fc-non-business {
+  background: var(--agenda-indisponivel) !important;
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-event {
+  border-radius: 2px;
+  font-size: 0.6875rem;
+  line-height: 1.15;
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-event .fc-event-main {
+  padding: 1px 3px 2px;
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-event .fc-event-time {
+  display: none;
+}
+
+.planning-agenda-calendario .fc .fc-timegrid-event .fc-event-title {
+  padding: 0;
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.planning-agenda-calendario .fc .fc-event.planning-agenda-selecionada {
+  outline: 2px solid #dc2626;
+  outline-offset: 1px;
+  z-index: 4 !important;
+}

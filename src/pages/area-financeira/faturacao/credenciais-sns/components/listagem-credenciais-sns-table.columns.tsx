@@ -5,7 +5,7 @@ import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { createAreaComumListActionsColumnDef } from '@/components/shared/area-comum-list-actions-column'
 import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import type { CredenciaisSnsLoteTableDTO } from '@/types/dtos/faturacao/credenciais-sns.dtos'
-import { imprimirEtiquetasCredenciaisSns } from '../utils/credenciais-sns-legado-acoes'
+import { imprimirEtiquetasCredenciaisSns } from '../utils/credenciais-sns-acoes'
 
 export const CREDENCIAIS_SNS_HIDDEN_FILTER_COLUMNS = [
   'filtrobox',

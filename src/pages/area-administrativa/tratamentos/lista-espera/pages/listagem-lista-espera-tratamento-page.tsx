@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { MessageSquare, Plus, RotateCw } from 'lucide-react'
+import { MessageSquare, Plus, CalendarClock, RotateCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -204,6 +204,20 @@ export function ListagemListaEsperaTratamentoPage() {
                     }}
                   >
                     <Plus className='h-4 w-4' />
+                  </Button>
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='icon'
+                    className='h-8 w-8'
+                    title='Marcação automática'
+                    onClick={() => {
+                      navigate(
+                        `/area-administrativa/tratamentos/marcacoes-automaticas?listaEsperaId=${row.id}`
+                      )
+                    }}
+                  >
+                    <CalendarClock className='h-4 w-4' />
                   </Button>
                 </div>
               ) : null

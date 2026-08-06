@@ -20,7 +20,7 @@ import { inputClass, labelClass } from '@/lib/form-styles'
 import {
   emitirListagemLoteDirect,
   type ListagemLoteDirectReportTipo,
-} from '../utils/credenciais-legado-relatorios'
+} from '../utils/credenciais-relatorios'
 
 const TIPOS: { value: ListagemLoteDirectReportTipo; label: string }[] = [
   { value: '1', label: 'Por código / lote / organismo' },

@@ -22,7 +22,7 @@ export const LOTE_DIRECT_HIDDEN_FILTER_COLUMNS = [
   'datafim_ate',
 ] as const
 
-function formatMesAnoLegado(mesAno?: string | null): string {
+function formatMesAno(mesAno?: string | null): string {
   if (!mesAno?.trim()) return '-'
   const [mes, ano] = mesAno.split('/')
   if (!mes || !ano) return mesAno
@@ -78,7 +78,7 @@ const baseColumns: DataTableColumnDef<LoteDirectTableDTO>[] = [
     accessorKey: 'mesAno',
     header: 'Mês/Ano',
     enableSorting: false,
-    cell: ({ row }) => formatMesAnoLegado(row.original.mesAno),
+    cell: ({ row }) => formatMesAno(row.original.mesAno),
     meta: { align: 'left' as const },
   },
   {

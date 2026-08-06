@@ -1,35 +1,35 @@
 import { toast } from '@/utils/toast-utils'
 
-/** Relatórios ainda sem motor no novo cliente — mensagem alinhada ao legado (AdmissoesLst.js). */
-export function emitirRelatorioAdmissaoLegado(
+/** Relatórios ainda sem motor no novo cliente. */
+export function emitirRelatorioAdmissao(
   titulo: string,
-  caminhoLegado?: string
+  origemRelatorio?: string
 ) {
-  const detalhe = caminhoLegado ? ` (${caminhoLegado})` : ''
+  const detalhe = origemRelatorio ? ` (${origemRelatorio})` : ''
   toast.info(`${titulo} — disponível em breve no motor de relatórios${detalhe}.`)
 }
 
 export function relatorioDeclaracaoPresenca(utenteId: string, admissaoId: string) {
-  emitirRelatorioAdmissaoLegado(
+  emitirRelatorioAdmissao(
     'Declaração de presença',
     `Utente ${utenteId}, admissão ${admissaoId}`
   )
 }
 
 export function relatorioLevantamentoExames(admissaoId: string) {
-  emitirRelatorioAdmissaoLegado('Levantamento de exames', `Admissão ${admissaoId}`)
+  emitirRelatorioAdmissao('Levantamento de exames', `Admissão ${admissaoId}`)
 }
 
 export function relatorioProcessoOrganismo(admissaoId: string) {
-  emitirRelatorioAdmissaoLegado('Processo organismo', `Admissão ${admissaoId}`)
+  emitirRelatorioAdmissao('Processo organismo', `Admissão ${admissaoId}`)
 }
 
 export function relatorioEtiquetaUtente(utenteId: string) {
-  emitirRelatorioAdmissaoLegado('Etiqueta 1', `Utente ${utenteId}`)
+  emitirRelatorioAdmissao('Etiqueta 1', `Utente ${utenteId}`)
 }
 
 export function relatorioEtiquetaAdmissao(utenteId: string, admissaoId: string) {
-  emitirRelatorioAdmissaoLegado(
+  emitirRelatorioAdmissao(
     'Etiqueta admissão',
     `Utente ${utenteId}, admissão ${admissaoId}`
   )

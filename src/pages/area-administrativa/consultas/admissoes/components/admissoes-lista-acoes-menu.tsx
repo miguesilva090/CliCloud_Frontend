@@ -39,7 +39,7 @@ import {
   relatorioEtiquetaUtente,
   relatorioLevantamentoExames,
   relatorioProcessoOrganismo,
-} from '../utils/admissao-legado-relatorios'
+} from '../utils/admissao-relatorios'
 
 export type AdmissoesListaAcoesCallbacks = {
   onOpenObservacoes: (row: AdmissaoTableDTO) => void

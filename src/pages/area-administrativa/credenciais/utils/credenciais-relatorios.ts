@@ -1,7 +1,7 @@
 import { toast } from '@/utils/toast-utils'
 
-function emitirRelatorioCredenciaisLegado(titulo: string, caminhoLegado?: string) {
-  const detalhe = caminhoLegado ? ` (${caminhoLegado})` : ''
+function emitirRelatorioCredenciais(titulo: string, origemRelatorio?: string) {
+  const detalhe = origemRelatorio ? ` (${origemRelatorio})` : ''
   toast.info(`${titulo} — disponível em breve no motor de relatórios${detalhe}.`)
 }
 
@@ -20,12 +20,12 @@ export function emitirListagemLoteDirect(
     '6': 'ListagemLancamentoCredenciaisConsultasMedico.rpt',
     '7': 'ListagemLancamentoCredenciaisConsultasMedicoExterno.rpt',
   }
-  emitirRelatorioCredenciaisLegado(`Listagem tipo ${tipo}`, map[tipo])
+  emitirRelatorioCredenciais(`Listagem tipo ${tipo}`, map[tipo])
   void params
 }
 
 export function relatorioEtiquetaCredencialP1(loteDirectId: string) {
-  emitirRelatorioCredenciaisLegado(
+  emitirRelatorioCredenciais(
     'Etiqueta credencial P1',
     `ListagemLancamentoCredenciaisConsultasEtiquetaP1.rpt · id ${loteDirectId}`
   )

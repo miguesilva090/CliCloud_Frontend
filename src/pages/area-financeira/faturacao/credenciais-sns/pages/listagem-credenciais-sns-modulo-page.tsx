@@ -35,7 +35,7 @@ import { CredenciaisSnsFaturaModal } from '../modals/credenciais-sns-fatura-moda
 import {
   credenciaisSnsOperacaoEmBreve,
   emitirCredenciaisSnsListagemRelatorio,
-} from '../utils/credenciais-sns-legado-acoes'
+} from '../utils/credenciais-sns-acoes'
 
 type ListagemCredenciaisSnsModuloPageProps = {
   modulo: CredenciaisSnsModulo

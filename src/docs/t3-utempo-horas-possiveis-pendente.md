@@ -1,15 +1,18 @@
 # T3 — U.Tempo / Horas possíveis / Planning
 
-Documento de continuidade (estado a **2026-08-03**).  
-Serve para retomar amanhã: o que já está feito, o que falta aplicar (T3.1), e as fatias seguintes.
+Documento de continuidade (estado a **2026-08-05**).  
+Serve para retomar: o que já está feito, o que foi saltado de propósito, e as fatias seguintes.
 
 **Regra do projecto:** o agente só escreve no repo com instrução explícita (`implementa tu`, etc.). Packs ficam em chat / neste doc para o utilizador copiar.
+
+**Arquitectura:** template Luma (newCC). Legado (`CliCloud.ASPcli`, `Dados`) = **só referência** de comportamento / mensagens — **não** portar `dbo` nem comunicar com o ASP.
 
 **Referências legado (só comportamento):**
 - `CliCloud.ASPcli/Client/Tratamentos/Services/MarcacoesManuais.cs` — `GetMaximoTratamentos*`, `ObterHorasPossiveisDia*`
 - `CliCloud.ASPcli/Client/Tratamentos/Services/Admissoes.cs` — compensar falta + horas
 - `Dados/CliCloud.Dados.Tratamentos/Terapeutas.cs` — `GetNrMaxTratamentos` / `maxtrat`
-- `Dados/CliCloud.Dados.Tratamentos/Planning.cs` — ocupação `dbo.PLANING` (só a partir de T3.5)
+- `CliCloud.ASPcli/Client/Tratamentos/Planning.aspx` (+ JS) — calendário por técnico (paridade UI T3.6)
+- `CliCloud.ASPcli/Client/Tratamentos/PesquisaPlanning.aspx` — pesquisa de vaga (**T3.7**)
 
 ---
 
@@ -19,176 +22,138 @@ Serve para retomar amanhã: o que já está feito, o que falta aplicar (T3.1), e
 |-------|--------|--------|
 | T1 — Ficha serviços prescritos | Feito | |
 | T2.1 / T2.2 — Marcações manuais + bridge LE | Feito | `ListaEsperaTratamentoId` no tratamento |
-| T2.UI — 3 tabs + modais (serviços / sessões) | Feito | Sem U.Tempo |
-| T2.3 — Compensar falta | Feito | `TimeField` livre; combo slots = T3.2 |
-| **T3.1 — API U.Tempo + horas possíveis** | **Implementado** (2026-08-03) | Migration aplicada; controller + FE técnico + client |
-| T3.2 … T3.8 | Pendente | Depois de T3.1 |
+| T2.UI — 3 tabs + modais (serviços / sessões) | Feito | |
+| T2.3 — Compensar falta | Feito | |
+| **T3.1** — API U.Tempo + horas possíveis | **Feito** | `MaxTratamentos`; ocupação via `SessaoTratamento` |
+| **T3.2** — Combos nos ecrãs | **Feito** | Compensar falta + marcações manuais |
+| **T3.3** — Persistência U.Tempo | **Feito** | `UnidadeTempoFisio/Aux/Outro` + UI + ocupação real |
+| **T3.4** — Folga clínica / feriados | **Feito** | `Clinica.Folga*` + `Utility.Feriado`; msgs legado |
+| **T3.5** — Gateway `dbo.PLANING` | **Saltado** | newCC **não** comunica com legado; revertido (sem `CodigoLegado` / `IPlaningGateway`) |
+| **T3.6** — Planning UI (Geral) | **Feito (MVP)** | Calendário FullCalendar + sessões EF; pesquisa = stub |
+| **T3.6.2** — Blocos horário/folga no calendário | Pendente | Opcional (fundo indisponível / folga / feriado) |
+| **T3.7** — Pesquisa de vaga | Pendente | Stub de página; lógica a implementar |
+| **T3.8** — Marcações automáticas | Pendente | |
 
 ---
 
 ## Roadmap T3 (fatias)
 
-| Fatia | Objectivo | Entrega |
-|-------|-----------|---------|
-| **T3.1** | Base U.Tempo + horas possíveis | `MaxTratamentos` no técnico; API `unidades-tempo` + `horas-possiveis` (horário fixo/variável + folgas técnico + ocupação via `SessaoTratamento`) |
-| **T3.2** | Ligar aos ecrãs T2 | Combos U.Tempo + horas em **Compensar falta** e **Marcações Manuais** (sessões); substituir `TimeField` livre onde fizer sentido |
-| **T3.3** | Persistência U.Tempo no tratamento | Campos `UnidadeTempoFisio/Aux/Outro` + UI no tab Tratamento (manuais/ficha) |
-| **T3.4** | Folgas clínica / feriados | Excluir dias de folga clínica (`ClinFolg`) |
-| **T3.5** | Occupancy legado (opcional) | Gateway mínimo `dbo.PLANING` se coexistência de dados o exigir |
-| **T3.6** | Planning UI | Página Planning (ocupação diária/semanal) |
-| **T3.7** | Pesquisa vaga | Fluxo “encontrar slot livre” |
-| **T3.8** | Marcações automáticas | Geração automática de sessões com disponibilidade |
+| Fatia | Objectivo | Entrega | Estado |
+|-------|-----------|---------|--------|
+| **T3.1** | Base U.Tempo + horas possíveis | `MaxTratamentos`; API `unidades-tempo` + `horas-possiveis` | Feito |
+| **T3.2** | Ligar aos ecrãs T2 | Combos U.Tempo + horas (compensar / manuais) | Feito |
+| **T3.3** | Persistência U.Tempo | Campos no tratamento + UI + soma unidades na ocupação | Feito |
+| **T3.4** | Folgas clínica / feriados | Bloquear dia + mensagem | Feito |
+| **T3.5** | Occupancy legado (opcional) | Gateway `dbo.PLANING` — **não aplicável** sem coexistência | Saltado |
+| **T3.6** | Planning Geral | Página calendário por técnico (`SessaoTratamento`) | Feito (MVP) |
+| **T3.6.2** | Planning polish | Background: horário / folga / feriado no calendário | Pendente |
+| **T3.7** | Pesquisa vaga | Encontrar técnicos livres + abrir Planning | Pendente |
+| **T3.8** | Marcações automáticas | Geração de sessões com disponibilidade | Pendente |
 
 ---
 
-## T3.1 — Alterações necessárias (por aplicar)
+## Decisão T3.5 (importante)
 
-Pack completo foi enviado no chat (2026-08-03). Resumo operacional:
+Foi iniciado um pack com `IPlaningGateway` + `CodigoLegado` no técnico para ler `dbo.PLANING`.  
+**Revertido** porque o newCC **não vai comunicar com o legado**.
 
-### Comportamento alvo
+Ocupação no newCC = **`SessaoTratamento`** (já em T3.1–T3.4). Não reintroduzir gateway `dbo.PLANING` sem decisão explícita de coexistência.
 
-- `MaxTratamentos` em `Tecnicos.Tecnico` (legado `maxtrat`) → lista U.Tempo = `1..Max`
-- Horas possíveis = slots de `MinMarcacao` no horário fixo do dia **+** horário variável **−** folgas do técnico **−** ocupação em `SessaoTratamento`
-- Até T3.3: cada sessão existente no slot conta **1** unidade
-- **Fora de T3.1:** folga clínica (`ClinFolg`), `dbo.PLANING`, combos nos ecrãs
+---
 
-### Endpoints a criar
+## T3.1–T3.4 — Onde está (referência rápida)
+
+### Endpoints disponibilidade
 
 | Método | Rota |
 |--------|------|
 | GET | `/client/tratamentos/DisponibilidadeTecnicoTratamento/unidades-tempo/{tecnicoId}` |
 | POST | `/client/tratamentos/DisponibilidadeTecnicoTratamento/horas-possiveis` |
 
-Body `horas-possiveis`: `{ tecnicoId, data, unidadeTempo, ignorarSessaoId? }`  
-Response: `{ duracao: "HH:mm", horas: ["09:00", ...] }`
+Body: `{ tecnicoId, data, unidadeTempo, ignorarSessaoId? }`  
+Response sucesso: `{ duracao, horas }` · Fail: `"Dia de Folga Clínica"` / `"Dia de Feriado: …"`
 
-### Backend — ficheiros
+### Ficheiros-chave
 
-| Acção | Path |
+| Área | Path |
+|------|------|
+| Service | `.../DisponibilidadeTecnicoTratamentoService/` (+ Helper, Specs, DTOs) |
+| Controller | `WebApi/Controllers/Tratamentos/DisponibilidadeTecnicoTratamentoController.cs` |
+| FE hook / UI slots | `hooks/tratamentos/use-disponibilidade-tecnico-slot.ts`, `components/tratamentos/tecnico-slot-horario-fields.tsx`, `tecnico-unidade-tempo-field.tsx` |
+| U.Tempo tratamento | entidade `Tratamento` + DTOs + ficha / manuais / compensar |
+
+---
+
+## T3.6 — Planning Geral (implementado)
+
+**Comportamento:** tipo técnico → lista técnicos → calendário dia/semana/mês com eventos de `SessaoTratamento` (cores por estado: 1ª / marcada / última / alta / provisório / falta / multi-técnico).
+
+**Não usa** `dbo.PLANING`. Legado só para paridade visual / tipo de evento.
+
+### Endpoint
+
+| Método | Rota |
 |--------|------|
-| EDIT | `Backend/CliCloud.Domain/Entities/Tecnicos/Tecnico.cs` — propriedade `MaxTratamentos` (default 1) |
-| EDIT | `Backend/CliCloud.Infrastructure/Persistence/Configurations/TecnicoConfiguration.cs` |
-| MIGRATE | `dotnet ef migrations add Add_Tecnico_MaxTratamentos` (Infrastructure + WebApi) |
-| EDIT | `.../TecnicoService/DTOs/CreateTecnicoRequest.cs` (+ validator 1..50) |
-| EDIT | `.../TecnicoService/DTOs/UpdateTecnicoRequest.cs` (+ validator) |
-| EDIT | `.../TecnicoService/DTOs/TecnicoDTO.cs` (+ Light/Table se útil) |
-| NEW | `.../DisponibilidadeTecnicoTratamentoService/IDisponibilidadeTecnicoTratamentoService.cs` |
-| NEW | `.../DisponibilidadeTecnicoTratamentoService/DisponibilidadeTecnicoTratamentoService.cs` |
-| NEW | `.../DisponibilidadeTecnicoTratamentoService/DisponibilidadeTecnicoTratamentoHelper.cs` |
-| NEW | `.../DisponibilidadeTecnicoTratamentoService/DTOs/UnidadesTempoTecnicoResponse.cs` |
-| NEW | `.../DisponibilidadeTecnicoTratamentoService/DTOs/HorasPossiveisTecnicoRequest.cs` |
-| NEW | `.../DisponibilidadeTecnicoTratamentoService/DTOs/HorasPossiveisTecnicoResponse.cs` |
-| NEW | `.../DisponibilidadeTecnicoTratamentoService/Specifications/SessoesOcupacaoTecnicoDiaSpec.cs` |
-| NEW | `Backend/CliCloud.WebApi/Controllers/Tratamentos/DisponibilidadeTecnicoTratamentoController.cs` |
+| POST | `/client/tratamentos/PlanningTratamentoAdministrativo/sessoes` |
 
-DI: `ITransientService` → scan automático (sem registo manual).
+Body: `{ tecnicoId, tipoTecnico, dataDe, dataAte }`  
+Response: `{ eventos: PlanningSessaoEventoDTO[] }`
 
-### Frontend — ficheiros (T3.1)
+### Backend
 
-| Acção | Path |
-|--------|------|
-| EDIT | `Frontend/src/types/dtos/saude/tecnicos.dtos.ts` — `maxTratamentos` |
-| EDIT | `Frontend/.../tecnicos/types/tecnico-edit-form-types.ts` |
-| EDIT | `Frontend/.../tecnicos/pages/tecnico-edit-page.tsx` — default/reset/submit |
-| EDIT | `Frontend/.../tecnicos/components/tecnico-edit-tabs/tab-tecnico-dados-profissionais.tsx` — campo “Máx. tratamentos / slot” |
-| NEW | `Frontend/src/types/dtos/tratamentos/disponibilidade-tecnico-tratamento.dtos.ts` |
-| NEW | `Frontend/src/lib/services/tratamentos/disponibilidade-tecnico-tratamento-service/disponibilidade-tecnico-tratamento-client.ts` |
+| Path |
+|------|
+| `Application/.../PlanningTratamentoAdministrativoService/IPlanningTratamentoAdministrativoService.cs` |
+| `.../PlanningTratamentoAdministrativoService.cs` |
+| `.../DTOs/PlanningSessoesRequest.cs` (+ validator + response) |
+| `.../DTOs/PlanningSessaoEventoDTO.cs` |
+| `.../Specifications/SessoesPlanningTecnicoPeriodoSpec.cs` |
+| `WebApi/Controllers/Tratamentos/PlanningTratamentoAdministrativoController.cs` |
 
-### Entidades já existentes a reutilizar (não criar)
+### Frontend
 
-- `HorarioTecnico` / `HorarioTecnicoDia` (`MinMarcacao`, períodos manhã/tarde)
-- `HorarioTecnicoVariavel`
-- `FolgasTecnico` (`TodoDia`, intervalos)
-- `SessaoTratamento` (`HoraFisio` / `HoraAux` / `HoraOutro` / `HoraInic` + IDs de técnicos)
-- Specs: `HorarioTecnicoSearchByTecnicoId`, `HorarioTecnicoVariavelSearchByTecnicoId`, `FolgasTecnicoSearchByTecnicoId`
+| Path |
+|------|
+| `types/dtos/tratamentos/planning-tratamento.dtos.ts` |
+| `lib/services/tratamentos/planning-tratamento-administrativo-service/planning-tratamento-administrativo-client.ts` |
+| `pages/.../tratamentos/planning/pages/planning-geral-page.tsx` |
+| `pages/.../tratamentos/planning/pages/pesquisa-vaga-page.tsx` (stub T3.7) |
+| `pages/.../tratamentos/planning/components/planning-tecnicos-toolbar.tsx` |
+| `pages/.../tratamentos/planning/components/planning-agenda-calendario.tsx` |
+| `pages/.../tratamentos/planning/queries/planning-queries.ts` |
+| `pages/.../tratamentos/planning/utils/planning-agenda-*.ts` |
+| Rotas em `routes/area-administrativa/areaAdministrativa.tsx` (`/planning`, `/planning/pesquisa`) |
 
-### Checklist de teste T3.1
+Menu: `config/administrativa-tratamentos-header-menu.ts` (já apontava para estas rotas).
 
-1. Migrar BD; técnico com `MaxTratamentos = 3` → `GET unidades-tempo` devolve `[1,2,3]`
-2. Horário fixo 09:00–12:00, `MinMarcacao = 00:30` → horas 09:00 … 11:30
-3. Folga `TodoDia` nesse dia → `horas: []`
-4. Sessão no slot + `max=1` + `unidadeTempo=1` → slot desaparece; com `max=2` continua
-5. Sem horário / sem `MinMarcacao` → intervalo default 15 min; lista vazia se não houver slots (não erro)
+### Fora do MVP T3.6
 
-### Migração (comandos)
-
-```powershell
-cd Backend
-dotnet ef migrations add Add_Tecnico_MaxTratamentos --project CliCloud.Infrastructure --startup-project CliCloud.WebApi
-dotnet ef database update --project CliCloud.Infrastructure --startup-project CliCloud.WebApi
-```
+- Drag-drop / inserir sessão no calendário  
+- Blocos de fundo (horário, folga clínica, feriado) → **T3.6.2**  
+- Pesquisa de vaga completa → **T3.7**  
+- Marcações automáticas → **T3.8**
 
 ---
 
-## O que ainda falta depois do T3.1
+## Gaps / próximos
 
-### T3.2 — Ligar combos aos ecrãs (próxima após aplicar T3.1)
-
-**Objectivo:** deixar de usar hora livre onde o legado usa combo de slots.
-
-| Ecrã | Ficheiro típico | Alteração |
-|------|-----------------|-----------|
-| Compensar falta | `Frontend/.../marcados/modals/compensar-falta-sessao-modal.tsx` | Combo U.Tempo por técnico + combo horas via API; duração = `duracao` da API |
-| Marcações manuais (sessões) | `Frontend/.../marcacoes-manuais/pages/marcacoes-manuais-page.tsx` (+ modal sessão) | Idem ao escolher fisio/aux/outro + data |
-| (Opcional) Editar sessão ficha | `sessao-tratamento-ficha-modal.tsx` | Mesmo padrão se quiseres paridade total |
-
-Dependências: client T3.1 já criado; técnicos com `MaxTratamentos` e horário configurado.
-
-### T3.3 — Persistência U.Tempo no tratamento
-
-- Campos no tratamento (legado `Unidadetempofisio/aux/outro`)
-- UI no tab Tratamento (manuais + ficha)
-- Helper de ocupação passa a somar unidades reais (deixar de contar 1 por sessão)
-
-### T3.4 — Folgas clínica / feriados
-
-- Paridade com `ClinFolg` em `ObterHorasPossiveisDia*`
-- Mensagem legado tipo “folga da clínica” quando o dia da semana está bloqueado
-
-### T3.5 — Gateway `dbo.PLANING` (opcional)
-
-- Só se coexistência com dados legado o exigir
-- Atenção: PLANING usa códigos `int`; newCC usa `Guid` — precisa de estratégia de mapeamento
-- Não criar gateway por operação; um por tabela/workflow
-
-### T3.6 / T3.7 / T3.8
-
-- UI Planning, pesquisa de vaga, marcações automáticas  
-- Hoje o menu pode ter placeholders — implementação depois da base T3.1–T3.3
+| Item | Fase | Notas |
+|------|------|--------|
+| Blocos indisponíveis no Planning | T3.6.2 | Reusar horário técnico + folgas + feriados (como disponibilidade) |
+| Pesquisa de vaga | T3.7 | Paridade `PesquisaPlanning`; motor ≈ `horas-possiveis` / disponibilidade |
+| Marcações automáticas | T3.8 | Orquestração multi-sessão |
+| Recibo na compensação | Polish | Fora do core T3 |
+| Editar sessão ficha com combos U.Tempo | Opcional | Paridade total se necessário |
 
 ---
 
-## Gaps conscientes (já fechados em T2, ficam para T3+)
+## Como retomar
 
-| Gap | Onde se nota | Fase |
-|-----|--------------|------|
-| Combo horas livres (U.Tempo) | Compensar falta / manuais | T3.2 |
-| Validação ocupação tipo PLANING | Guardar sessão | T3.5 (ou T3.1 parcial via SessaoTratamento) |
-| Folgas/feriados clínica | Data sugerida | T3.4 |
-| U.Tempo gravado no tratamento | Tab Tratamento | T3.3 |
-| Visualizar ocupação técnicos | Botão legado | T3.6 |
-| Recibo ligado à compensação | Financeiro | polish (fora T3 core) |
+1. Abrir este ficheiro.  
+2. **Próximo pack útil:** **T3.7** (Pesquisa de Vaga) — ou **T3.6.2** se quiseres primeiro o fundo do calendário.  
+3. Pedidos típicos:  
+   - “manda o pack T3.7”  
+   - “implementa tu o T3.7”  
+   - “manda o pack T3.6.2 (blocos no calendário)”
 
----
-
-## Ficheiros-chave já implementados (contexto T2.3)
-
-Úteis ao fazer T3.2 (wiring):
-
-- BE: `SessaoTratamentoService.CompensarFaltaAsync`, `CompensarFaltaSessaoTratamentoRequest`, `POST .../compensar-falta`
-- FE: `compensar-falta-sessao-modal.tsx`, painel ficha sessões, `sessao-tratamento-client.ts`
-- Manuais: `marcacoes-manuais-page.tsx`
-- Helper: `TratamentoIntegridadeHelper.cs` (`RecalcularFaltas` = faltas − compensações)
-
----
-
-## Como retomar amanhã
-
-1. Abrir este ficheiro + pack T3.1 no chat (ou pedir “reenvia o pack T3.1 completo”).
-2. Aplicar T3.1 (entidade → migração → service/controller → FE técnico + client).
-3. Testar endpoints com Postman/Swagger + um técnico com horário.
-4. Pedir pack **T3.2** (combos nos modais).
-5. Só depois T3.3 (persistir U.Tempo) — melhora a ocupação real.
-
-**Pedido típico ao agente:**  
-“reenvia o pack T3.1 com o código completo” / “implementa tu o T3.1” / “manda o pack T3.2”.
+**Não retomar T3.5** salvo decisão explícita de coexistência com `dbo.PLANING`.

@@ -1574,7 +1574,7 @@ export const roleHeaderMenus = {
       {
         label: 'Notificações',
         href: '/area-comum/tabelas/notificacoes',
-        title: 'Notificações (legado CliCloud.ASPcli\\Client\\Comum)',
+        title: 'Notificações',
         items: [
           {
             label: 'Notificações',

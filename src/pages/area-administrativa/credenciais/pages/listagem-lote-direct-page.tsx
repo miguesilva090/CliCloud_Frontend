@@ -37,7 +37,7 @@ import { ListagensLoteDirectModal } from '../modals/listagens-lote-direct-modal'
 import { PassarParaAtivoModal } from '../modals/passar-para-ativo-modal'
 import { useWindowsStore } from '@/stores/use-windows-store'
 import { openLoteDirectCreationInApp } from '@/utils/window-utils'
-import { relatorioEtiquetaCredencialP1 } from '../utils/credenciais-legado-relatorios'
+import { relatorioEtiquetaCredencialP1 } from '../utils/credenciais-relatorios'
 import { usePassarLoteDirectParaHistorico } from '../queries/lote-direct-historico-mutations'
 import {
   useGetLoteDirectPaginated,

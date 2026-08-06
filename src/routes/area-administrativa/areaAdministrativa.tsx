@@ -182,6 +182,11 @@ const MarcacoesManuaisPage = lazy(() =>
     '@/pages/area-administrativa/tratamentos/marcacoes-manuais/pages/marcacoes-manuais-page'
   ).then((m) => ({ default: m.MarcacoesManuaisPage }))
 )
+const MarcacoesAutomaticasPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/marcacoes-automaticas/pages/marcacoes-automaticas-page'
+  ).then((m) => ({ default: m.MarcacoesAutomaticasPage }))
+)
 const PlanningGeralPage = lazy(() =>
   import(
     '@/pages/area-administrativa/tratamentos/planning/pages/planning-geral-page'
@@ -601,6 +606,20 @@ export const areaAdministrativaRoutes = [
     ),
     manageWindow: true,
     windowName: 'Pesquisa de Vaga',
+  },
+  {
+    path: 'area-administrativa/tratamentos/marcacoes-automaticas',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.consultas.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <MarcacoesAutomaticasPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Marcações Automáticas',
   },
   {
     path: 'area-administrativa/tratamentos/*',
