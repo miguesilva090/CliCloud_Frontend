@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
@@ -16,6 +16,7 @@ import { usePlanningSessoes } from '../queries/planning-queries'
 import type { PlanningSessoesRequest } from '@/types/dtos/tratamentos/planning-tratamento.dtos'
 
 export function PlanningGeralPage() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [params] = useSearchParams()
   const tipoFromUrl = Number(params.get('tipoTecnico'))
@@ -48,6 +49,14 @@ export function PlanningGeralPage() {
         : { de: dataDe, ate: dataAte }
     )
   }, [])
+
+  const onOpenTratamento = useCallback(
+    (tratamentoId: string) => {
+      if (!tratamentoId) return
+      navigate(`/area-administrativa/tratamentos/marcados/${tratamentoId}`)
+    },
+    [navigate]
+  )
 
   const onRefresh = () => {
     void queryClient.invalidateQueries({ queryKey: ['planning-sessoes'] })
@@ -86,6 +95,7 @@ export function PlanningGeralPage() {
             <PlanningAgendaCalendario
               eventos={sessoesQuery.data ?? []}
               onRangeChange={onRangeChange}
+              onOpenTratamento={onOpenTratamento}
               isLoading={sessoesQuery.isLoading || sessoesQuery.isFetching}
             />
           )}

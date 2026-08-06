@@ -26,10 +26,11 @@ type AgendaViewId = 'timeGridDay' | 'timeGridWeek' | 'dayGridMonth'
 type Props = {
   eventos: PlanningSessaoEventoDTO[]
   onRangeChange: (dataDe: string, dataAte: string) => void
+  /** Paridade legado: duplo clique / Abrir ficha → Marcados/Iniciados. */
+  onOpenTratamento: (tratamentoId: string) => void
   isLoading?: boolean
 }
 
-/** Linhas verticais alinhadas às colunas do timegrid (paridade agenda consultas). */
 function syncAgendaDayDividers(root: HTMLElement | null) {
   if (!root) return
   const timeBody = root.querySelector('.fc-timegrid-body')
@@ -65,11 +66,15 @@ function syncAgendaDayDividers(root: HTMLElement | null) {
 export function PlanningAgendaCalendario({
   eventos,
   onRangeChange,
+  onOpenTratamento,
   isLoading = false,
 }: Props) {
   const calRef = useRef<FullCalendar>(null)
   const agendaRootRef = useRef<HTMLDivElement>(null)
   const rangeReady = useRef(false)
+  const onOpenTratamentoRef = useRef(onOpenTratamento)
+  onOpenTratamentoRef.current = onOpenTratamento
+
   const [selected, setSelected] = useState<PlanningSessaoEventoDTO | null>(null)
   const [toolbarTitle, setToolbarTitle] = useState('')
   const [activeView, setActiveView] = useState<AgendaViewId>('timeGridWeek')
@@ -280,6 +285,23 @@ export function PlanningAgendaCalendario({
               ? ['planning-agenda-selecionada']
               : []
           }
+          eventDidMount={(info) => {
+            const tratamentoId = info.event.extendedProps.tratamentoId as
+              | string
+              | undefined
+            if (!tratamentoId) return
+            const onDbl = () => onOpenTratamentoRef.current(tratamentoId)
+            info.el.addEventListener('dblclick', onDbl)
+            info.el.style.cursor = 'pointer'
+            ;(info.el as HTMLElement & { __dblPlanning?: () => void }).__dblPlanning =
+              onDbl
+          }}
+          eventWillUnmount={(info) => {
+            const el = info.el as HTMLElement & { __dblPlanning?: () => void }
+            if (el.__dblPlanning) {
+              el.removeEventListener('dblclick', el.__dblPlanning)
+            }
+          }}
           viewDidMount={() => {
             requestAnimationFrame(() => {
               refreshToolbarFromApi()
@@ -290,7 +312,7 @@ export function PlanningAgendaCalendario({
       </div>
 
       {selected && (
-        <div className='rounded border border-slate-200 bg-white p-3 text-sm space-y-1'>
+        <div className='space-y-1 rounded border border-slate-200 bg-white p-3 text-sm'>
           <div className='font-medium'>{selected.utenteNome}</div>
           <div>
             {PLANNING_TIPO_LABELS[selected.tipoEvento] ?? 'Sessão'}
@@ -307,15 +329,28 @@ export function PlanningAgendaCalendario({
             <div>Nº sessões tratamento: {selected.numSessoesTratamento}</div>
           )}
           {selected.nFaltas != null && <div>Faltas: {selected.nFaltas}</div>}
-          <Button
-            type='button'
-            size='sm'
-            variant='ghost'
-            className='mt-1'
-            onClick={() => setSelected(null)}
-          >
-            Fechar
-          </Button>
+          <div className='mt-2 flex flex-wrap gap-2'>
+            {selected.tratamentoId ? (
+              <Button
+                type='button'
+                size='sm'
+                onClick={() => onOpenTratamento(selected.tratamentoId)}
+              >
+                Abrir ficha
+              </Button>
+            ) : null}
+            <Button
+              type='button'
+              size='sm'
+              variant='ghost'
+              onClick={() => setSelected(null)}
+            >
+              Fechar
+            </Button>
+          </div>
+          <p className='text-xs text-muted-foreground'>
+            Duplo clique no bloco também abre a ficha (Marcados/Iniciados).
+          </p>
         </div>
       )}
     </div>
