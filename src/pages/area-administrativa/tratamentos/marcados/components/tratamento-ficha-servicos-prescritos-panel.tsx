@@ -1,4 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState , useEffect } from 'react'
+import { useDebounce } from 'use-debounce'
+import { useQuery } from '@tanstack/react-query'
+import { AsyncCombobox } from '@/components/shared/async-combobox'
+import { TimeField } from '@/components/shared/time-field'
+import { PatologiaService } from '@/lib/services/patologias/patologia-service'
 import { Plus } from 'lucide-react'
 import { DataTable } from '@/components/shared/data-table'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
@@ -63,6 +68,24 @@ export function TratamentoFichaServicosPrescritosPanel({
   const [row, setRow] = useState<ServicoTratamentoTableDTO | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [patSearch, setPatSearch] = useState('')
+  const [debPat] = useDebounce(patSearch, 300)
+
+  const patologiaQ = useQuery({
+    queryKey: ['ficha-trat-patologia', debPat],
+    queryFn: () => PatologiaService(listPermId).getPatologiasLight(debPat),
+  })
+
+  const patologiaItems = useMemo(() => {
+    const list = (patologiaQ.data?.info?.data ?? []).map((p) => ({
+      value: p.designacao,
+      label: p.designacao,
+    }))
+    if (nomePatologia.trim() && !list.some((i) => i.value === nomePatologia)) {
+      list.unshift({value: nomePatologia, label: nomePatologia})
+    }
+    return list 
+  }, [patologiaQ.data, nomePatologia])
 
   const sorted = useMemo(
     () => [...servicos].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0)),
@@ -181,19 +204,29 @@ export function TratamentoFichaServicosPrescritosPanel({
       <div className='grid gap-4 sm:grid-cols-2'>
         <div className='space-y-1.5'>
           <Label>Patologia</Label>
-          <Input
+          <AsyncCombobox
             value={nomePatologia}
             disabled={!canChange}
-            onChange={(e) => onNomePatologiaChange(e.target.value)}
+            onChange={(v) => {
+              const hit = patologiaItems.find((i) => i.value === v)
+              onNomePatologiaChange(hit?.label ?? v)
+            }}
+            items={patologiaItems}
+            searchValue={patSearch}
+            onSearchValueChange={setPatSearch}
+            isLoading={patologiaQ.isFetching}
+            placeholder='Selecionar...'
+            searchPlaceholder='Pesquisar patologia...'
+            emptyText='Sem resultados'
           />
         </div>
         <div className='space-y-1.5'>
           <Label>Duração total</Label>
-          <Input
+          <TimeField
             value={duracaoTotal}
             disabled={!canChange}
             placeholder='HH:mm'
-            onChange={(e) => onDuracaoTotalChange(e.target.value)}
+            onChange={onDuracaoTotalChange}
           />
         </div>
       </div>

@@ -5,6 +5,16 @@ import { PageHead } from '@/components/shared/page-head'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { usePageData, buildFiltersWithValue } from '@/utils/page-data-utils'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import { modules } from '@/config/modules'
@@ -14,6 +24,7 @@ import {
   ModoListagemAdmissaoTratamento,
   type AdmissaoTratamentoTableDTO,
 } from '@/types/dtos/tratamentos/admissao-tratamento-administrativo.dtos'
+import type { SessaoTratamentoTableDTO } from '@/types/dtos/tratamentos/sessao-tratamento.dtos'
 import { AdmissaoTratamentoAdministrativoService } from '@/lib/services/tratamentos/admissao-tratamento-administrativo-service/admissao-tratamento-administrativo-client'
 import { ListagemAdmissoesTratamentoTable } from '../components/listagem-admissoes-tratamento-table'
 import { buildAdmissoesTratamentoColumns } from '../components/listagem-admissoes-tratamento-table.columns'
@@ -24,6 +35,10 @@ import {
 } from '../queries/listagem-admissoes-tratamento-queries'
 import type { DataTableAction } from '@/components/shared/data-table'
 import { SelecionarLocalTratamentoModal } from '../modals/selecionar-local-tratamento-modal'
+import { AdmissaoTratamentoDesmarcarModal } from '../modals/admissao-tratamento-desmarcar-modal'
+import { AdmissaoTratamentoChamarModal } from '../modals/admissao-tratamento-chamar-modal'
+import { SessaoTratamentoFichaModal } from '../../marcados/modals/sessao-tratamento-ficha-modal'
+import { CompensarFaltaSessaoModal } from '../../marcados/modals/compensar-falta-sessao-modal'
 
 const listPermId = modules.areaAdministrativa.permissions.admissoes.id
 
@@ -32,6 +47,22 @@ const TITLE: Record<ModoListagemAdmissaoTratamento, string> = {
   [ModoListagemAdmissaoTratamento.Presentes]: 'Admissões — Utentes Presentes',
   [ModoListagemAdmissaoTratamento.LocalTratamento]:
     'Admissões — Local de Tratamento',
+}
+
+function toSessaoRow(row: AdmissaoTratamentoTableDTO): SessaoTratamentoTableDTO {
+  return {
+    id: row.id,
+    tratamentoId: row.tratamentoId,
+    numSessao: row.numSessao,
+    data: row.data,
+    horaInic: row.horaInic,
+    faltou: row.faltou,
+    confirmado: row.confirmado,
+    efetuado: row.efetuado,
+    desmarcado: row.desmarcado,
+    createdOn: '',
+    servicosCount: 0,
+  }
 }
 
 export function ListagemAdmissoesTratamentoPage({
@@ -44,6 +75,17 @@ export function ListagemAdmissoesTratamentoPage({
   const today = new Date().toISOString().slice(0, 10)
   const isModoLocal = modo === ModoListagemAdmissaoTratamento.LocalTratamento
   const [localModalOpen, setLocalModalOpen] = useState(false)
+  const [desmarcarRow, setDesmarcarRow] =
+    useState<AdmissaoTratamentoTableDTO | null>(null)
+  const [chamarRow, setChamarRow] =
+    useState<AdmissaoTratamentoTableDTO | null>(null)
+  const [fichaRow, setFichaRow] =
+    useState<AdmissaoTratamentoTableDTO | null>(null)
+  const [fichaMode, setFichaMode] = useState<'view' | 'edit'>('view')
+  const [compensarAskRow, setCompensarAskRow] =
+    useState<AdmissaoTratamentoTableDTO | null>(null)
+  const [compensarRow, setCompensarRow] =
+    useState<AdmissaoTratamentoTableDTO | null>(null)
 
   const {
     data,
@@ -129,15 +171,41 @@ export function ListagemAdmissoesTratamentoPage({
       ).updateSituacao(row.id, { campo, valor })
       if (res.info?.status === ResponseStatus.Success) {
         invalidateAdmissoesTratamentoQueries(queryClient)
+        if (campo === 'faltou' && valor === 1) {
+          setCompensarAskRow(row)
+        }
       } else {
         const msg =
-          res.info?.messages?.['$']?.[0] ??
-          'Não foi possível actualizar a situação.'
+          Object.values(res.info?.messages ?? {})
+            .flat()
+            .find(Boolean) ?? 'Não foi possível actualizar a situação.'
         toast.error(msg)
       }
     } catch (e: unknown) {
       const err = e as { message?: string }
       toast.error(err?.message ?? 'Erro ao actualizar situação.')
+    }
+  }
+
+  const onRemoverDesmarcacao = async (row: AdmissaoTratamentoTableDTO) => {
+    if (!canChange || !row.id) return
+    try {
+      const res = await AdmissaoTratamentoAdministrativoService(
+        listPermId
+      ).removerDesmarcacao(row.id)
+      if (res.info?.status === ResponseStatus.Success) {
+        toast.success('Desmarcação removida')
+        invalidateAdmissoesTratamentoQueries(queryClient)
+      } else {
+        const msg =
+          Object.values(res.info?.messages ?? {})
+            .flat()
+            .find(Boolean) ?? 'Não foi possível remover a desmarcação.'
+        toast.error(msg)
+      }
+    } catch (e: unknown) {
+      const err = e as { message?: string }
+      toast.error(err?.message ?? 'Erro ao remover desmarcação.')
     }
   }
 
@@ -167,6 +235,20 @@ export function ListagemAdmissoesTratamentoPage({
     showConfirmado: modo !== ModoListagemAdmissaoTratamento.Presentes,
     showFaltou: modo !== ModoListagemAdmissaoTratamento.Presentes,
     onToggle,
+    onDesmarcar: (row) => setDesmarcarRow(row),
+    onRemoverDesmarcacao,
+    onChamar: (row) => setChamarRow(row),
+    onOpenView: (row) => {
+      setFichaMode('view')
+      setFichaRow(row)
+    },
+    onOpenEdit: canChange
+      ? (row) => {
+          setFichaMode('edit')
+          setFichaRow(row)
+        }
+      : undefined,
+    rowActionPermissions: { canView, canChange, canDelete: false },
   })
 
   if (!canView) {
@@ -224,6 +306,98 @@ export function ListagemAdmissoesTratamentoPage({
           onOpenChange={setLocalModalOpen}
           initialLocalId={localId}
           onConfirm={applyLocal}
+        />
+      ) : null}
+
+      <AdmissaoTratamentoDesmarcarModal
+        open={!!desmarcarRow}
+        onOpenChange={(o) => {
+          if (!o) setDesmarcarRow(null)
+        }}
+        row={desmarcarRow}
+        listPermId={listPermId}
+        onDesmarcada={refresh}
+      />
+
+      <AdmissaoTratamentoChamarModal
+        open={!!chamarRow}
+        onOpenChange={(o) => {
+          if (!o) setChamarRow(null)
+        }}
+        row={chamarRow}
+        listPermId={listPermId}
+      />
+
+      {fichaRow ? (
+        <SessaoTratamentoFichaModal
+          open={!!fichaRow}
+          onOpenChange={(o) => {
+            if (!o) setFichaRow(null)
+          }}
+          mode={fichaMode}
+          tratamentoId={fichaRow.tratamentoId}
+          listPermId={listPermId}
+          defaultFisioId={fichaRow.fisioterapeutaId ?? ''}
+          defaultFisioLabel={fichaRow.fisioterapeutaNome ?? ''}
+          defaultAuxId={fichaRow.auxiliarId ?? ''}
+          defaultAuxLabel={fichaRow.auxiliarNome ?? ''}
+          defaultOutroId={fichaRow.outroTecnicoId ?? ''}
+          defaultOutroLabel={fichaRow.outroTecnicoNome ?? ''}
+          existingSessoes={[]}
+          row={toSessaoRow(fichaRow)}
+          onSaved={() => {
+            setFichaRow(null)
+            refresh()
+          }}
+        />
+      ) : null}
+
+      <AlertDialog
+        open={!!compensarAskRow}
+        onOpenChange={(o) => {
+          if (!o) setCompensarAskRow(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deseja compensar esta falta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Pode criar uma sessão de compensação para este tratamento.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setCompensarRow(compensarAskRow)
+                setCompensarAskRow(null)
+              }}
+            >
+              Sim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {compensarRow ? (
+        <CompensarFaltaSessaoModal
+          open={!!compensarRow}
+          onOpenChange={(o) => {
+            if (!o) setCompensarRow(null)
+          }}
+          tratamentoId={compensarRow.tratamentoId}
+          listPermId={listPermId}
+          sessoes={[toSessaoRow(compensarRow)]}
+          defaultFisioId={compensarRow.fisioterapeutaId ?? ''}
+          defaultFisioLabel={compensarRow.fisioterapeutaNome ?? ''}
+          defaultAuxId={compensarRow.auxiliarId ?? ''}
+          defaultAuxLabel={compensarRow.auxiliarNome ?? ''}
+          defaultOutroId={compensarRow.outroTecnicoId ?? ''}
+          defaultOutroLabel={compensarRow.outroTecnicoNome ?? ''}
+          onSaved={() => {
+            setCompensarRow(null)
+            refresh()
+          }}
         />
       ) : null}
     </>

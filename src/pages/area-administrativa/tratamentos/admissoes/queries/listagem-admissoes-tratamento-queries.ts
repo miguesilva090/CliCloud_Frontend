@@ -29,6 +29,10 @@ function buildParams(
     filterValue(list, 'dataReferencia') ??
     new Date().toISOString().slice(0, 10)
 
+  const incluirRaw = filterValue(list, 'incluirDesmarcados')
+  const incluirDesmarcados =
+    incluirRaw === '1' || incluirRaw === 'true'
+
   return {
     pageNumber: page,
     pageSize,
@@ -37,6 +41,7 @@ function buildParams(
     localTratamentoId: filterGuid(list, 'localTratamentoId'),
     fisioterapeutaId: filterGuid(list, 'fisioterapeutaId'),
     utenteId: filterGuid(list, 'utenteId'),
+    incluirDesmarcados,
     filters: list,
     sorting: sorting ?? undefined,
   }

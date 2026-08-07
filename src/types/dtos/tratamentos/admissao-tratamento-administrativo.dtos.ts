@@ -43,6 +43,7 @@ export interface AdmissaoTratamentoTableFilterRequest
   localTratamentoId?: string | null
   fisioterapeutaId?: string | null
   utenteId?: string | null
+  incluirDesmarcados?: boolean
   /** Espelha Filters do BE (PaginationFilter + TableFilter). */
   filters?: TableFilter[]
 }
@@ -50,4 +51,8 @@ export interface AdmissaoTratamentoTableFilterRequest
 export interface UpdateAdmissaoTratamentoSituacaoRequest {
   campo: 'confirmado' | 'efetuado' | 'faltou'
   valor: 0 | 1
+}
+
+export interface DesmarcarAdmissaoTratamentoRequest {
+  motivoDesmarcacaoId: string
 }

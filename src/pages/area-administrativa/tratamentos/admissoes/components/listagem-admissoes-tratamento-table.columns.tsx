@@ -1,5 +1,9 @@
+import { Volume2 } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
+import { createAreaComumListActionsColumnDef } from '@/components/shared/area-comum-list-actions-column'
+import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
 import type { AdmissaoTratamentoTableDTO } from '@/types/dtos/tratamentos/admissao-tratamento-administrativo.dtos'
 
 type ToggleFn = (
@@ -13,6 +17,12 @@ export function buildAdmissoesTratamentoColumns(opts: {
   showConfirmado: boolean
   showFaltou: boolean
   onToggle: ToggleFn
+  onDesmarcar: (row: AdmissaoTratamentoTableDTO) => void
+  onRemoverDesmarcacao: (row: AdmissaoTratamentoTableDTO) => void
+  onChamar: (row: AdmissaoTratamentoTableDTO) => void
+  onOpenView: (row: AdmissaoTratamentoTableDTO) => void
+  onOpenEdit?: (row: AdmissaoTratamentoTableDTO) => void
+  rowActionPermissions?: AreaComumListRowActionPermissions
 }): ColumnDef<AdmissaoTratamentoTableDTO>[] {
   const cols: ColumnDef<AdmissaoTratamentoTableDTO>[] = [
     {
@@ -66,15 +76,18 @@ export function buildAdmissoesTratamentoColumns(opts: {
       id: 'confirmado',
       header: 'Confirmado',
       enableSorting: false,
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.original.confirmado === 1}
-          disabled={!opts.canChange}
-          onCheckedChange={(c) =>
-            opts.onToggle(row.original, 'confirmado', c ? 1 : 0)
-          }
-        />
-      ),
+      cell: ({ row }) => {
+        const desmarcado = row.original.desmarcado === 1
+        return (
+          <Checkbox
+            checked={row.original.confirmado === 1}
+            disabled={!opts.canChange || desmarcado}
+            onCheckedChange={(c) =>
+              opts.onToggle(row.original, 'confirmado', c ? 1 : 0)
+            }
+          />
+        )
+      },
     })
   }
 
@@ -82,15 +95,18 @@ export function buildAdmissoesTratamentoColumns(opts: {
     id: 'efetuado',
     header: 'Efectuado',
     enableSorting: false,
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.original.efetuado === 1}
-        disabled={!opts.canChange}
-        onCheckedChange={(c) =>
-          opts.onToggle(row.original, 'efetuado', c ? 1 : 0)
-        }
-      />
-    ),
+    cell: ({ row }) => {
+      const desmarcado = row.original.desmarcado === 1
+      return (
+        <Checkbox
+          checked={row.original.efetuado === 1}
+          disabled={!opts.canChange || desmarcado}
+          onCheckedChange={(c) =>
+            opts.onToggle(row.original, 'efetuado', c ? 1 : 0)
+          }
+        />
+      )
+    },
   })
 
   if (opts.showFaltou) {
@@ -98,17 +114,57 @@ export function buildAdmissoesTratamentoColumns(opts: {
       id: 'faltou',
       header: 'Faltou',
       enableSorting: false,
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.original.faltou === 1}
-          disabled={!opts.canChange}
-          onCheckedChange={(c) =>
-            opts.onToggle(row.original, 'faltou', c ? 1 : 0)
-          }
-        />
-      ),
+      cell: ({ row }) => {
+        const desmarcado = row.original.desmarcado === 1
+        return (
+          <Checkbox
+            checked={row.original.faltou === 1}
+            disabled={!opts.canChange || desmarcado}
+            onCheckedChange={(c) =>
+              opts.onToggle(row.original, 'faltou', c ? 1 : 0)
+            }
+          />
+        )
+      },
     })
   }
+
+  cols.push({
+    id: 'desmarcado',
+    header: 'Desmarcado',
+    enableSorting: false,
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.original.desmarcado === 1}
+        disabled={!opts.canChange}
+        onCheckedChange={(c) => {
+          if (c) opts.onDesmarcar(row.original)
+          else if (row.original.desmarcado === 1) {
+            opts.onRemoverDesmarcacao(row.original)
+          }
+        }}
+      />
+    ),
+  })
+
+  cols.push({
+    id: 'chamar',
+    header: '',
+    enableSorting: false,
+    cell: ({ row }) => (
+      <Button
+        type='button'
+        variant='ghost'
+        size='icon'
+        className='h-8 w-8'
+        title='Chamar utente'
+        disabled={!opts.canChange}
+        onClick={() => opts.onChamar(row.original)}
+      >
+        <Volume2 className='h-4 w-4' />
+      </Button>
+    ),
+  })
 
   cols.push({
     id: 'sessoes',
@@ -129,6 +185,15 @@ export function buildAdmissoesTratamentoColumns(opts: {
     cell: ({ row }) =>
       row.original.nFalta != null ? String(row.original.nFalta) : '—',
   })
+
+  cols.push(
+    createAreaComumListActionsColumnDef<AdmissaoTratamentoTableDTO>({
+      onOpenView: opts.onOpenView,
+      onOpenEdit: opts.onOpenEdit,
+      omitDelete: true,
+      rowActionPermissions: opts.rowActionPermissions,
+    })
+  )
 
   return cols
 }

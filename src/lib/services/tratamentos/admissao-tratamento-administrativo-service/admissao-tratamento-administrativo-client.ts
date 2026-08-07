@@ -6,6 +6,7 @@ import type {
   AdmissaoTratamentoTableDTO,
   AdmissaoTratamentoTableFilterRequest,
   UpdateAdmissaoTratamentoSituacaoRequest,
+  DesmarcarAdmissaoTratamentoRequest,
 } from '@/types/dtos/tratamentos/admissao-tratamento-administrativo.dtos'
 
 const BASE = '/client/tratamentos/admissao-tratamento-administrativo'
@@ -29,6 +30,27 @@ export class AdmissaoTratamentoAdministrativoClient extends BaseApiClient {
       state.URL,
       `${BASE}/${id}/situacao`,
       payload
+    )
+  }
+
+  public async desmarcar(
+    id: string,
+    payload: DesmarcarAdmissaoTratamentoRequest
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.putRequest(
+      state.URL,
+      `${BASE}/${id}/desmarcar`,
+      payload
+    )
+  }
+
+  public async removerDesmarcacao(
+    id: string
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.putRequest(
+      state.URL,
+      `${BASE}/${id}/remover-desmarcacao`,
+      {}
     )
   }
 }

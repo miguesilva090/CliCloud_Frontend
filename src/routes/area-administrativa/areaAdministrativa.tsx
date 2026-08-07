@@ -157,6 +157,11 @@ const ListagemAdmissoesTratamentoLocalPage = lazy(() =>
     '@/pages/area-administrativa/tratamentos/admissoes/pages/listagem-admissoes-tratamento-page'
   ).then((m) => ({ default: m.ListagemAdmissoesTratamentoLocalPage }))
 )
+const FechoDiarioTratamentoPage = lazy(() =>
+  import(
+    '@/pages/area-administrativa/tratamentos/fecho-diario/pages/fecho-diario-tratamento-page'
+  ).then((m) => ({ default: m.FechoDiarioTratamentoPage }))
+)
 const ListagemTratamentosMarcadosPage = lazy(() =>
   import(
     '@/pages/area-administrativa/tratamentos/marcados/pages/listagem-tratamentos-marcados-page'
@@ -527,6 +532,20 @@ export const areaAdministrativaRoutes = [
     ),
     manageWindow: true,
     windowName: 'Admissões — Local',
+  },
+  {
+    path: 'area-administrativa/tratamentos/fecho-diario',
+    element: (
+      <LicenseGuard
+        requiredModule={modules.areaAdministrativa.id}
+        requiredPermission={modules.areaAdministrativa.permissions.admissoes.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <FechoDiarioTratamentoPage />
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Fecho Diário — Tratamentos',
   },
   {
     path: 'area-administrativa/tratamentos/tratamentos-marcados',

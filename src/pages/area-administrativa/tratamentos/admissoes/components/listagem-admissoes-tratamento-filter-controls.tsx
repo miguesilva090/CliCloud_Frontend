@@ -3,6 +3,7 @@ import { useDebounce } from 'use-debounce'
 import { useQuery } from '@tanstack/react-query'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { modules } from '@/config/modules'
 import { UtentesService } from '@/lib/services/saude/utentes-service'
@@ -40,6 +41,8 @@ export function ListagemAdmissoesTratamentoFilterControls({
     filters.find((f) => f.id === 'localTratamentoId')?.value ?? ''
   const fisioterapeutaId =
     filters.find((f) => f.id === 'fisioterapeutaId')?.value ?? ''
+  const incluirDesmarcados =
+    filters.find((f) => f.id === 'incluirDesmarcados')?.value === '1'
 
   const utentesQuery = useQuery({
     queryKey: ['adm-trat-filtro', 'utentes', debouncedUt],
@@ -164,6 +167,16 @@ export function ListagemAdmissoesTratamentoFilterControls({
           searchPlaceholder='Pesquisar…'
           emptyText='Sem resultados'
         />
+      </div>
+      <div className='flex items-center gap-2 self-end pb-2'>
+        <Checkbox
+          id='incluir-desmarcados'
+          checked={incluirDesmarcados}
+          onCheckedChange={(c) => patch('incluirDesmarcados', c ? '1' : '')}
+        />
+        <Label htmlFor='incluir-desmarcados' className='text-sm font-normal'>
+          Incluir desmarcados
+        </Label>
       </div>
     </div>
   )

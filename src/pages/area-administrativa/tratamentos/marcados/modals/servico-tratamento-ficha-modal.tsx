@@ -22,6 +22,7 @@ import type {
   CreateServicoTratamentoRequest,
   ServicoTratamentoTableDTO,
 } from '@/types/dtos/tratamentos/servico-tratamento.dtos'
+import { TimeField } from '@/components/shared/time-field'
 
 type Mode = 'create' | 'edit' | 'view'
 
@@ -277,11 +278,11 @@ export function ServicoTratamentoFichaModal({
           <div className='grid grid-cols-2 gap-3'>
             <div className='space-y-1.5'>
               <Label>Duração</Label>
-              <Input
-                value={form.duracao}
-                disabled={readOnly}
-                placeholder='HH:mm'
-                onChange={(e) => patch('duracao', e.target.value)}
+              <TimeField
+                value = {form.duracao}
+                disabled = {readOnly}
+                placeholder = 'HH:mm'
+                onChange={(v) => patch('duracao', v)}
               />
             </div>
             <div className='space-y-1.5'>

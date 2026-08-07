@@ -93,6 +93,11 @@ export const administrativaTratamentosHeaderMenu = [
         href: '/area-administrativa/tratamentos/admissoes/local-tratamento',
         funcionalidadeId: permAdmissoes,
       },
+      {
+        label: 'Fecho Diário',
+        href: '/area-administrativa/tratamentos/fecho-diario',
+        funcionalidadeId: permAdmissoes,
+      },
     ],
   },
   {
