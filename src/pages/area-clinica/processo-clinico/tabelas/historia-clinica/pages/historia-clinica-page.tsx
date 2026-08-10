@@ -13,6 +13,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { usePageData } from '@/utils/page-data-utils'
+import { useDeferredAutoOpenModal } from '@/hooks/use-deferred-auto-open-modal'
 import {
   useGetHistoriasClinicasPaginated,
   usePrefetchAdjacentHistoriasClinicas,
@@ -93,7 +94,13 @@ export function HistoriaClinicaPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [utenteId, setUtenteId] = useState<string>('')
   const [utenteSearch, setUtenteSearch] = useState<string>('')
-  const [utenteModalOpen, setUtenteModalOpen] = useState<boolean>(true)
+  const [utenteModalOpen, setUtenteModalOpen] = useState(false)
+
+  useDeferredAutoOpenModal({
+    claimKey: 'historia-clinica-utente',
+    enabled: true,
+    onOpen: () => setUtenteModalOpen(true),
+  })
 
   const [utenteSearchD] = useDebounce(utenteSearch, 250)
   const utentesLight = useUtentesLight(utenteSearchD)

@@ -72,6 +72,22 @@ const AtendimentoUtentePage = lazy(() =>
   }))
 )
 
+const ListagemReceitasPage = lazy(() =>
+  import(
+    '@/pages/area-clinica/prescricao-eletronica/pages/listagem-receitas-page'
+  ).then((m) => ({
+    default: m.ListagemReceitasPage,
+  }))
+)
+
+const ReceitaEditPage = lazy(() =>
+  import(
+    '@/pages/area-clinica/prescricao-eletronica/pages/receita-edit-page'
+  ).then((m) => ({
+    default: m.ReceitaEditPage,
+  }))
+)
+
 const ConsultasDoDiaPage = lazy(() =>
   import(
     '@/pages/area-clinica/processo-clinico/atendimento/pages/consultas-do-dia-page'
@@ -359,11 +375,45 @@ export const areaClinicaRoutes = [
         requiredPermission={prescricaoEletronica.id}
         actionType={actionTypes.AuthVer}
       >
-        <AreaClinicaPlaceholderPage title='Prescrição eletrónica' />
+        <Suspense fallback={null}>
+          <ListagemReceitasPage />
+        </Suspense>
       </LicenseGuard>
     ),
     manageWindow: true,
     windowName: 'Prescrição Eletrónica',
+  },
+  {
+    path: 'area-clinica/prescricao-eletronica/nova',
+    element: (
+      <LicenseGuard
+        requiredModule={areaClinicaModule.id}
+        requiredPermission={prescricaoEletronica.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <Suspense fallback={null}>
+          <ReceitaEditPage />
+        </Suspense>
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Nova Receita',
+  },
+  {
+    path: 'area-clinica/prescricao-eletronica/:id',
+    element: (
+      <LicenseGuard
+        requiredModule={areaClinicaModule.id}
+        requiredPermission={prescricaoEletronica.id}
+        actionType={actionTypes.AuthVer}
+      >
+        <Suspense fallback={null}>
+          <ReceitaEditPage />
+        </Suspense>
+      </LicenseGuard>
+    ),
+    manageWindow: true,
+    windowName: 'Receita',
   },
   {
     path: 'area-clinica/prescricao-mcdts',

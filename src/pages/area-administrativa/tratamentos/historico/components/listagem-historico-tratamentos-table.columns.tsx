@@ -1,7 +1,9 @@
 import { format, parseISO, isValid } from 'date-fns'
+import { MessageSquareText, RotateCcw } from 'lucide-react'
 import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { createAreaComumListActionsColumnDef } from '@/components/shared/area-comum-list-actions-column'
 import type { AreaComumListRowActionPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { Button } from '@/components/ui/button'
 import type { HistoricoTratamentoTableDTO } from '@/types/dtos/tratamentos/historico-tratamento-administrativo.dtos'
 
 function fmtDate(v?: string | null) {
@@ -88,16 +90,57 @@ const baseColumns: DataTableColumnDef<HistoricoTratamentoTableDTO>[] = [
   },
 ]
 
+export type HistoricoTratamentosColumnHandlers = {
+  onOpenView: (row: HistoricoTratamentoTableDTO) => void
+  onOpenEdit?: (row: HistoricoTratamentoTableDTO) => void
+  onOpenDelete?: (row: HistoricoTratamentoTableDTO) => void
+  onReabrir?: (row: HistoricoTratamentoTableDTO) => void
+  onObservacoes?: (row: HistoricoTratamentoTableDTO) => void
+}
+
 export function buildHistoricoTratamentosColumns(
-  onOpenView: (row: HistoricoTratamentoTableDTO) => void,
+  handlers: HistoricoTratamentosColumnHandlers,
   rowActionPermissions?: AreaComumListRowActionPermissions
 ): DataTableColumnDef<HistoricoTratamentoTableDTO>[] {
+  const { onOpenView, onOpenEdit, onOpenDelete, onReabrir, onObservacoes } =
+    handlers
+
   return [
     ...baseColumns,
     createAreaComumListActionsColumnDef<HistoricoTratamentoTableDTO>({
       onOpenView,
-      omitDelete: true,
+      onOpenEdit,
+      onOpenDelete,
+      omitDelete: !onOpenDelete,
       rowActionPermissions,
+      renderExtraActions: (row) => (
+        <>
+          {onObservacoes ? (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8'
+              title='Observações'
+              onClick={() => onObservacoes(row)}
+            >
+              <MessageSquareText className='h-4 w-4' />
+            </Button>
+          ) : null}
+          {onReabrir ? (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8'
+              title='Reabrir'
+              onClick={() => onReabrir(row)}
+            >
+              <RotateCcw className='h-4 w-4' />
+            </Button>
+          ) : null}
+        </>
+      ),
     }),
   ]
 }

@@ -89,6 +89,7 @@ export interface MedicamentoPrescricaoLinhaDto {
 
 export interface MedicamentosListagemParams {
     nome?: string
+    dci?: string
     tipo?: number
     page?: number
     contar?: boolean

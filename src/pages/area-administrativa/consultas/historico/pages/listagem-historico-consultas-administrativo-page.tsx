@@ -14,6 +14,7 @@ import type { DataTableColumnDef } from '@/components/shared/data-table-types'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useDeferredAutoOpenModal } from '@/hooks/use-deferred-auto-open-modal'
 import { modules } from '@/config/modules'
 import { OrigemAdmissao, type AdmissaoTableDTO } from '@/types/dtos/consultas/admissao.dtos'
 import type { HistoricoConsultaAdministrativoRowDTO } from '@/types/dtos/consultas/historico-consulta-administrativo.dtos'
@@ -263,7 +264,6 @@ export function ListagemHistoricoConsultasAdministrativoPage() {
   const [sorting, setSorting] = useState<Array<{ id: string; desc: boolean }>>([])
   const [criteria, setCriteria] = useState<HistoricoAdmCriteria>(() => emptyHistoricoAdmCriteria())
   const [filtroModalOpen, setFiltroModalOpen] = useState(false)
-  const autoPromptedRef = useRef(false)
   const userDismissedAutoModalRef = useRef(false)
 
   const filters = useMemo(() => buildHistoricoAdmApiFilters(vista, criteria), [vista, criteria])
@@ -287,23 +287,16 @@ export function ListagemHistoricoConsultasAdministrativoPage() {
     setCriteria(emptyHistoricoAdmCriteria())
     setFiltroModalOpen(false)
     userDismissedAutoModalRef.current = false
-    autoPromptedRef.current = false
   }, [urlVista])
 
-  useEffect(() => {
-    if (
-      !vistaValid ||
-      autoPromptedRef.current ||
-      userDismissedAutoModalRef.current ||
-      isHistoricoAdmAutoDismissed(urlVista)
-    ) {
-      return
-    }
-    if (!historicoAdmListQueryEnabled(vista, criteria)) {
-      setFiltroModalOpen(true)
-      autoPromptedRef.current = true
-    }
-  }, [vistaValid, vista, urlVista])
+  useDeferredAutoOpenModal({
+    claimKey: `consultas-historico-filtro:${urlVista || 'datas'}`,
+    enabled:
+      vistaValid &&
+      !isHistoricoAdmAutoDismissed(urlVista) &&
+      !historicoAdmListQueryEnabled(vista, criteria),
+    onOpen: () => setFiltroModalOpen(true),
+  })
 
   const handleFiltroModalOpenChange = (open: boolean) => {
     setFiltroModalOpen(open)

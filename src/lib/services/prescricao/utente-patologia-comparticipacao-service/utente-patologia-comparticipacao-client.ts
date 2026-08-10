@@ -4,6 +4,7 @@ import type { ResponseApi } from '@/types/responses'
 import type { GSResponse } from '@/types/api/responses'
 import type {
   CreateUtentePatologiaComparticipacaoRequest,
+  ReplaceUtentePatologiasComparticipacaoRequest,
   UtentePatologiaComparticipacaoDTO,
 } from '@/types/dtos/prescricao/utente-patologia-comparticipacao.dtos'
 
@@ -30,6 +31,16 @@ export class UtentePatologiaComparticipacaoClient extends BaseApiClient {
       CreateUtentePatologiaComparticipacaoRequest,
       GSResponse<string>
     >(state.URL, BASE, request)
+  }
+
+  async replaceByUtente(
+    utenteId: string,
+    request: ReplaceUtentePatologiasComparticipacaoRequest
+  ): Promise<ResponseApi<GSResponse<UtentePatologiaComparticipacaoDTO[]>>> {
+    return this.httpClient.putRequest<
+      ReplaceUtentePatologiasComparticipacaoRequest,
+      GSResponse<UtentePatologiaComparticipacaoDTO[]>
+    >(state.URL, `${BASE}/by-utente/${utenteId}`, request)
   }
 
   async delete(id: string): Promise<ResponseApi<GSResponse<string>>> {

@@ -109,11 +109,13 @@ export function useMedicamentosListagemResumo(
   enabled = true
 ) {
   const nome = params.nome?.trim() ?? ''
+  const dci = params.dci?.trim() ?? ''
+  const termoOk = nome.length >= 3 || dci.length >= 3
 
   return useQuery({
     queryKey: ['medicamentos-infarmed-listagem-resumo', params],
     queryFn: () => MedicamentosInfarmedService().listagemResumo(params),
-    enabled: enabled && nome.length >= 3,
+    enabled: enabled && termoOk,
     staleTime: 30 * 1000,
   })
 }

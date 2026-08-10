@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, SlidersHorizontal } from 'lucide-react'
@@ -7,10 +7,23 @@ import { DashboardPageContainer } from '@/components/shared/dashboard-page-conta
 import { AreaComumListagemPageShell } from '@/components/shared/area-comum-listagem-page-shell'
 import { DataTable, type DataTableAction } from '@/components/shared/data-table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { modules } from '@/config/modules'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useDeferredAutoOpenModal } from '@/hooks/use-deferred-auto-open-modal'
 import { usePageData } from '@/utils/page-data-utils'
+import { ResponseStatus } from '@/types/api/responses'
+import { toast } from '@/utils/toast-utils'
+import { HistoricoTratamentoAdministrativoService } from '@/lib/services/tratamentos/historico-tratamento-administrativo-service/historico-tratamento-administrativo-client'
 import type { HistoricoTratamentoModo } from '@/types/dtos/tratamentos/historico-tratamento-administrativo.dtos'
 import type { HistoricoTratamentoTableDTO } from '@/types/dtos/tratamentos/historico-tratamento-administrativo.dtos'
 import { buildHistoricoTratamentosColumns } from '../components/listagem-historico-tratamentos-table.columns'
@@ -21,11 +34,13 @@ import {
   historicoTratListEnabled,
   type HistoricoTratCriteria,
 } from '../modals/historico-tratamento-filtro-modal'
+import { HistoricoTratamentoObservacoesModal } from '../modals/historico-tratamento-observacoes-modal'
 import {
   invalidateHistoricoTratamentosQueries,
   useGetHistoricoTratamentosPaginated,
   usePrefetchAdjacentHistoricoTratamentos,
 } from '../queries/listagem-historico-tratamentos-queries'
+import { invalidateTratamentosMarcadosQueries } from '../../marcados/queries/listagem-tratamentos-marcados-queries'
 
 const VALID = new Set<HistoricoTratamentoModo>([
   'datas',
@@ -57,20 +72,39 @@ function HistoricoFilterControls() {
   return null
 }
 
+function firstMessage(messages: unknown): string | undefined {
+  if (!messages) return undefined
+  if (Array.isArray(messages)) return messages.find(Boolean) as string | undefined
+  if (typeof messages === 'object') {
+    return Object.values(messages as Record<string, unknown>)
+      .flat()
+      .find(Boolean) as string | undefined
+  }
+  return undefined
+}
+
 export function ListagemHistoricoTratamentosPage() {
   const { modo: modoParam } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { canView } = useAreaComumEntityListPermissions(perm)
+  const { canView, canChange, canDelete } =
+    useAreaComumEntityListPermissions(perm)
   const vistaValid = isValidModo(modoParam)
   const modo: HistoricoTratamentoModo = vistaValid ? modoParam : 'datas'
 
   const [criteria, setCriteria] = useState<HistoricoTratCriteria>(
-    emptyHistoricoTratCriteria
+    emptyHistoricoTratCriteria()
   )
   const [applied, setApplied] = useState(false)
-  const [filtroOpen, setFiltroOpen] = useState(true)
-
+  const [filtroOpen, setFiltroOpen] = useState(false)
+  const [rowToDelete, setRowToDelete] =
+    useState<HistoricoTratamentoTableDTO | null>(null)
+  const [rowToReabrir, setRowToReabrir] =
+    useState<HistoricoTratamentoTableDTO | null>(null)
+  const [obsRow, setObsRow] = useState<HistoricoTratamentoTableDTO | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isReabrindo, setIsReabrindo] = useState(false)
+  const prevModoRef = useRef<HistoricoTratamentoModo | null>(null)
   const enabled = applied && historicoTratListEnabled(modo, criteria)
   const apiFilters = useMemo(
     () => (enabled ? buildHistoricoTratApiFilters(criteria) : []),
@@ -119,11 +153,27 @@ export function ListagemHistoricoTratamentosPage() {
       ),
   })
 
+  useDeferredAutoOpenModal({
+    claimKey: `tratamentos-historico-filtro:${modo}`,
+    enabled: true,
+    onOpen: () => setFiltroOpen(true),
+  })
+
   useEffect(() => {
+    const prev = prevModoRef.current
+    prevModoRef.current = modo
+
+    if (prev === null) return
+    if (prev === modo) return
+
     setApplied(false)
     setCriteria(emptyHistoricoTratCriteria())
-    setFiltroOpen(true)
   }, [modo])
+
+  const refresh = () => {
+    invalidateHistoricoTratamentosQueries(queryClient)
+    invalidateTratamentosMarcadosQueries(queryClient)
+  }
 
   const rows = (data?.info?.data ?? []) as HistoricoTratamentoTableDTO[]
   const pageCount = Math.max(1, data?.info?.totalPages ?? 1)
@@ -131,14 +181,69 @@ export function ListagemHistoricoTratamentosPage() {
   const errorMessage =
     error instanceof Error ? error.message : error ? String(error) : ''
 
+  const openFicha = (row: HistoricoTratamentoTableDTO) => {
+    navigate(`/area-administrativa/tratamentos/marcados/${row.id}`)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!rowToDelete) return
+    setIsDeleting(true)
+    try {
+      const res = await HistoricoTratamentoAdministrativoService(perm).delete(
+        rowToDelete.id
+      )
+      if (res.info?.status === ResponseStatus.Success) {
+        toast.success('Registo eliminado.')
+        setRowToDelete(null)
+        refresh()
+      } else {
+        toast.error(
+          firstMessage(res.info?.messages) ?? 'Não foi possível eliminar.'
+        )
+      }
+    } catch {
+      toast.error('Erro ao eliminar.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleConfirmReabrir = async () => {
+    if (!rowToReabrir) return
+    setIsReabrindo(true)
+    try {
+      const res = await HistoricoTratamentoAdministrativoService(perm).reabrir(
+        rowToReabrir.id
+      )
+      if (res.info?.status === ResponseStatus.Success) {
+        toast.success('Tratamento reaberto.')
+        setRowToReabrir(null)
+        refresh()
+      } else {
+        toast.error(
+          firstMessage(res.info?.messages) ?? 'Não foi possível reabrir.'
+        )
+      }
+    } catch {
+      toast.error('Erro ao reabrir.')
+    } finally {
+      setIsReabrindo(false)
+    }
+  }
+
   const columns = useMemo(
     () =>
       buildHistoricoTratamentosColumns(
-        (row) =>
-          navigate(`/area-administrativa/tratamentos/marcados/${row.id}`),
-        { canView, canChange: false, canDelete: false }
+        {
+          onOpenView: openFicha,
+          onOpenEdit: canChange ? openFicha : undefined,
+          onOpenDelete: canDelete ? (row) => setRowToDelete(row) : undefined,
+          onReabrir: canChange ? (row) => setRowToReabrir(row) : undefined,
+          onObservacoes: (row) => setObsRow(row),
+        },
+        { canView, canChange, canDelete }
       ),
-    [navigate, canView]
+    [canView, canChange, canDelete, navigate]
   )
 
   const toolbarActions: DataTableAction[] = useMemo(
@@ -152,7 +257,7 @@ export function ListagemHistoricoTratamentosPage() {
       {
         label: 'Atualizar',
         icon: <RefreshCw className='h-4 w-4' />,
-        onClick: () => invalidateHistoricoTratamentosQueries(queryClient),
+        onClick: refresh,
         variant: 'outline',
       },
     ],
@@ -243,6 +348,76 @@ export function ListagemHistoricoTratamentosPage() {
           setApplied(true)
         }}
       />
+
+      <HistoricoTratamentoObservacoesModal
+        open={!!obsRow}
+        onOpenChange={(open) => {
+          if (!open) setObsRow(null)
+        }}
+        tratamentoId={obsRow?.id ?? null}
+        utenteLabel={
+          obsRow
+            ? [obsRow.numeroUtente, obsRow.utenteNome].filter(Boolean).join(' - ')
+            : undefined
+        }
+        listPermId={perm}
+        readOnly={!canChange}
+        onSaved={refresh}
+      />
+
+      <AlertDialog
+        open={!!rowToDelete}
+        onOpenChange={(open) => {
+          if (!open) setRowToDelete(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Deseja realmente apagar o registo?
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault()
+                void handleConfirmDelete()
+              }}
+            >
+              {isDeleting ? 'A apagar…' : 'Apagar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!rowToReabrir}
+        onOpenChange={(open) => {
+          if (!open) setRowToReabrir(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Reabrir este tratamento (volta a Marcados)?
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isReabrindo}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isReabrindo}
+              onClick={(e) => {
+                e.preventDefault()
+                void handleConfirmReabrir()
+              }}
+            >
+              {isReabrindo ? 'A reabrir…' : 'Reabrir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { RotateCw, Search } from 'lucide-react'
 import { PageHead } from '@/components/shared/page-head'
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { usePageData, buildFiltersWithValue } from '@/utils/page-data-utils'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useDeferredAutoOpenModal } from '@/hooks/use-deferred-auto-open-modal'
 import { modules } from '@/config/modules'
 import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
@@ -110,11 +111,11 @@ export function ListagemAdmissoesTratamentoPage({
   const localId =
     filters.find((f) => f.id === 'localTratamentoId')?.value ?? ''
 
-  useEffect(() => {
-    if (isModoLocal && !localId) {
-      setLocalModalOpen(true)
-    }
-  }, [isModoLocal, localId])
+  useDeferredAutoOpenModal({
+    claimKey: 'tratamentos-admissoes-local',
+    enabled: isModoLocal && !localId,
+    onOpen: () => setLocalModalOpen(true),
+  })
 
   const rows = data?.info?.data ?? []
   const pageCount = data?.info?.totalPages ?? 0

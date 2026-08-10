@@ -129,8 +129,11 @@ export function HistoricoTratamentoFiltroModal({
   const [debOrg] = useDebounce(orgSearch, 300)
 
   useEffect(() => {
-    if (open) setLocal(criteria)
-  }, [open, criteria])
+    if (!open) return
+    setLocal(criteria)
+    // Sync só ao abrir o modal (evita reset em loop com nova referência de criteria)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const utQuery = useQuery({
     queryKey: ['hist-trat-ut', debUt],

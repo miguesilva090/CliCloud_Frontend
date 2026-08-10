@@ -48,3 +48,11 @@ export interface HistoricoTratamentoTableFilterRequest
   organismoId?: string | null
   filters?: TableFilter[]
 }
+
+export interface HistoricoTratamentoObservacoesDTO {
+  observacoes: string
+}
+
+export interface AppendHistoricoTratamentoObservacaoRequest {
+  texto: string
+}

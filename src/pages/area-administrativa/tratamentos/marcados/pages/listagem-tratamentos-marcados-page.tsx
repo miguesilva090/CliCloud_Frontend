@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Plus, RotateCw, Search } from 'lucide-react'
@@ -17,10 +17,12 @@ import {
 } from '@/components/ui/alert-dialog'
 import { usePageData, buildFiltersWithValue } from '@/utils/page-data-utils'
 import { useAreaComumEntityListPermissions } from '@/hooks/use-area-comum-entity-list-permissions'
+import { useDeferredAutoOpenModal } from '@/hooks/use-deferred-auto-open-modal'
 import { modules } from '@/config/modules'
 import { ResponseStatus } from '@/types/api/responses'
 import { toast } from '@/utils/toast-utils'
 import { TratamentoService } from '@/lib/services/tratamentos/tratamento-service'
+import { HistoricoTratamentoAdministrativoService } from '@/lib/services/tratamentos/historico-tratamento-administrativo-service/historico-tratamento-administrativo-client'
 import { ModoListagemTratamentoMarcados } from '@/types/dtos/tratamentos/tratamento-marcados-administrativo.dtos'
 import type { TratamentoMarcadosTableDTO } from '@/types/dtos/tratamentos/tratamento-marcados-administrativo.dtos'
 import { ListagemTratamentosMarcadosTable } from '../components/listagem-tratamentos-marcados-table'
@@ -30,6 +32,7 @@ import {
   useGetTratamentosMarcadosPaginated,
   usePrefetchAdjacentTratamentosMarcados,
 } from '../queries/listagem-tratamentos-marcados-queries'
+import { invalidateHistoricoTratamentosQueries } from '../../historico/queries/listagem-historico-tratamentos-queries'
 import type { DataTableAction } from '@/components/shared/data-table'
 import { SelecionarLocalTratamentoModal } from '../../admissoes/modals/selecionar-local-tratamento-modal'
 import { SelecionarUtenteTratamentoModal } from '../modals/selecionar-utente-tratamento-modal'
@@ -60,6 +63,9 @@ export function ListagemTratamentosMarcadosPage({
   const [rowToDelete, setRowToDelete] =
     useState<TratamentoMarcadosTableDTO | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [rowToPassarHistorico, setRowToPassarHistorico] =
+    useState<TratamentoMarcadosTableDTO | null>(null)
+  const [isPassandoHistorico, setIsPassandoHistorico] = useState(false)
 
   const {
     data,
@@ -84,13 +90,17 @@ export function ListagemTratamentosMarcadosPage({
     filters.find((f) => f.id === 'localTratamentoId')?.value ?? ''
   const utenteId = filters.find((f) => f.id === 'utenteId')?.value ?? ''
 
-  useEffect(() => {
-    if (isModoLocal && !localId) setLocalModalOpen(true)
-  }, [isModoLocal, localId])
+  useDeferredAutoOpenModal({
+    claimKey: 'tratamentos-marcados-local',
+    enabled: isModoLocal && !localId,
+    onOpen: () => setLocalModalOpen(true),
+  })
 
-  useEffect(() => {
-    if (isModoUtente && !utenteId) setUtenteModalOpen(true)
-  }, [isModoUtente, utenteId])
+  useDeferredAutoOpenModal({
+    claimKey: 'tratamentos-marcados-utente',
+    enabled: isModoUtente && !utenteId,
+    onOpen: () => setUtenteModalOpen(true),
+  })
 
   const rows = data?.info?.data ?? []
   const pageCount = data?.info?.totalPages ?? 0
@@ -110,7 +120,10 @@ export function ListagemTratamentosMarcadosPage({
     handlePaginationChange(1, pageSize)
   }
 
-  const refresh = () => invalidateTratamentosMarcadosQueries(queryClient)
+  const refresh = () => {
+    invalidateTratamentosMarcadosQueries(queryClient)
+    invalidateHistoricoTratamentosQueries(queryClient)
+  }
 
   const handleOpenView = (row: TratamentoMarcadosTableDTO) => {
     navigate(`/area-administrativa/tratamentos/marcados/${row.id}`)
@@ -148,6 +161,31 @@ export function ListagemTratamentosMarcadosPage({
       toast.error('Erro ao eliminar.')
     } finally {
       setIsDeleting(false)
+    }
+  }
+
+  const handleConfirmPassarHistorico = async () => {
+    if (!rowToPassarHistorico) return
+    setIsPassandoHistorico(true)
+    try {
+      const res = await HistoricoTratamentoAdministrativoService(
+        listPermId
+      ).passarParaHistorico(rowToPassarHistorico.id)
+      if (res.info?.status === ResponseStatus.Success) {
+        toast.success('Tratamento passado para histórico.')
+        setRowToPassarHistorico(null)
+        refresh()
+      } else {
+        const msg =
+          Object.values(res.info?.messages ?? {})
+            .flat()
+            .find(Boolean) ?? 'Não foi possível passar para histórico.'
+        toast.error(msg)
+      }
+    } catch {
+      toast.error('Erro ao passar para histórico.')
+    } finally {
+      setIsPassandoHistorico(false)
     }
   }
 
@@ -196,7 +234,10 @@ export function ListagemTratamentosMarcadosPage({
   const columns = buildTratamentosMarcadosColumns(
     handleOpenView,
     canDelete ? handleOpenDelete : undefined,
-    { canView, canChange: false, canDelete }
+    { canView, canChange: false, canDelete },
+    isModoMarcados && canChange
+      ? (row) => setRowToPassarHistorico(row)
+      : undefined
   )
 
   if (!canView) {
@@ -279,6 +320,35 @@ export function ListagemTratamentosMarcadosPage({
               }}
             >
               {isDeleting ? 'A apagar…' : 'Apagar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!rowToPassarHistorico}
+        onOpenChange={(open) => {
+          if (!open) setRowToPassarHistorico(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Passar este tratamento para o histórico?
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPassandoHistorico}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isPassandoHistorico}
+              onClick={(e) => {
+                e.preventDefault()
+                void handleConfirmPassarHistorico()
+              }}
+            >
+              {isPassandoHistorico ? 'A processar…' : 'Passar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

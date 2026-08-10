@@ -4,6 +4,7 @@ import { useDebounce } from 'use-debounce'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { DashboardPageContainer } from '@/components/shared/dashboard-page-container'
 import { PageHead } from '@/components/shared/page-head'
+import { useDeferredAutoOpenModal } from '@/hooks/use-deferred-auto-open-modal'
 import { useGetUtente, useUtentesLight } from '@/pages/area-comum/tabelas/entidades/utentes/queries/utentes-queries'
 import { usePageData } from '@/utils/page-data-utils'
 import { getCurrentWindowId } from '@/utils/window-utils'
@@ -80,21 +81,30 @@ export function FichaClinicaPage() {
   const hasInitialUtente = !!id
   const [utenteId, setUtenteId] = useState<string>(id)
   const [utenteSearch, setUtenteSearch] = useState<string>('')
-  const [utenteModalOpen, setUtenteModalOpen] = useState<boolean>(!hasInitialUtente)
+  const [utenteModalOpen, setUtenteModalOpen] = useState(false)
   const [consultaServicosModalOpen, setConsultaServicosModalOpen] = useState(false)
   const [consultaSelecionada, setConsultaSelecionada] = useState<ConsultaTableDTO | null>(null)
 
   useEffect(() => {
     if (id) {
       setUtenteId(id)
+      setUtenteModalOpen(false)
       if (consultaId) {
-        queryClient.invalidateQueries({ queryKey: ['consultas-efetuadas-paginated'] })
+        queryClient.invalidateQueries({
+          queryKey: ['consultas-efetuadas-paginated'],
+        })
       }
-    } else {
-      setUtenteId('')
-      setUtenteModalOpen(true)
+      return
     }
+
+    setUtenteId('')
   }, [id, consultaId, queryClient])
+
+  useDeferredAutoOpenModal({
+    claimKey: 'ficha-clinica-utente',
+    enabled: !hasInitialUtente,
+    onOpen: () => setUtenteModalOpen(true),
+  })
 
   const abrirDadosUtenteDefault =
     typeof localStorage !== 'undefined' ? localStorage.getItem('ficha-clinica-abrir-dados-utente') !== 'false' : false

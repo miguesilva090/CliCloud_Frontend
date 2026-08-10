@@ -1,116 +1,126 @@
-import state from "@/states/state"
-import type { GSResponse } from "@/types/api/responses"
-import type { ResponseApi } from "@/types/responses"
-import { BaseApiClient } from "@/lib/base-client"
+import state from '@/states/state'
+import type { GSResponse } from '@/types/api/responses'
+import type { ResponseApi } from '@/types/responses'
+import { BaseApiClient } from '@/lib/base-client'
 import type {
-    MedicamentoAutocompleteItemDto,
-    MedicamentoListagemResumoResultDto,
-    MedicamentoPrescricaoLinhaDto,
-    MedicamentoPrescricaoOpcaoDto,
-    MedicamentosListagemParams,
-} from "@/types/dtos/prescricao/medicamentos-infarmed.dtos"
+  MedicamentoAutocompleteItemDto,
+  MedicamentoListagemResumoResultDto,
+  MedicamentoPrescricaoLinhaDto,
+  MedicamentoPrescricaoOpcaoDto,
+  MedicamentosListagemParams,
+} from '@/types/dtos/prescricao/medicamentos-infarmed.dtos'
+import type { RegimeExcepcionalDto } from '@/types/dtos/prescricao/utente-patologia-comparticipacao.dtos'
 
-const BASE = "/client/prescricao/medicamentos"
+const BASE = '/client/prescricao/medicamentos'
 
 function buildQuery(
-    params: Record<string, string | number | boolean | undefined | null >
+  params: Record<string, string | number | boolean | undefined | null>
 ) {
-    const qs = new URLSearchParams()
+  const qs = new URLSearchParams()
 
-    Object.entries(params).forEach(([key, value]) => {
-        if (value === undefined || value === null || value === "") return
-        qs.set(key, String(value))
-    })
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return
+    qs.set(key, String(value))
+  })
 
-    const query = qs.toString()
-    return query ? `?${query}` : ''
+  const query = qs.toString()
+  return query ? `?${query}` : ''
 }
 
 export class MedicamentosInfarmedClient extends BaseApiClient {
-    constructor(idFuncionalidade: string) {
-        super(idFuncionalidade)
-    }
+  constructor(idFuncionalidade: string) {
+    super(idFuncionalidade)
+  }
 
-    public async autocomplete(
-        q: string,
-        tipoReceita?: number,
-        prescritivel?: boolean,
-    ) : Promise<ResponseApi<GSResponse<MedicamentoAutocompleteItemDto[]>>> {
-        const url = 
-        `${BASE}/autocomplete` + 
-        buildQuery({
-            q, 
-            tipoReceita,
-            prescritivel,
-        })
+  public async autocomplete(
+    q: string,
+    tipoReceita?: number,
+    prescritivel?: boolean
+  ): Promise<ResponseApi<GSResponse<MedicamentoAutocompleteItemDto[]>>> {
+    const url =
+      `${BASE}/autocomplete` +
+      buildQuery({
+        q,
+        tipoReceita,
+        prescritivel,
+      })
 
-        return this.httpClient.getRequest<GSResponse<MedicamentoAutocompleteItemDto[]>>(
-            state.URL,
-            url
-        )
-    }
+    return this.httpClient.getRequest<GSResponse<MedicamentoAutocompleteItemDto[]>>(
+      state.URL,
+      url
+    )
+  }
 
-    public async listagemResumo(
-        params: MedicamentosListagemParams
-    ): Promise<ResponseApi<GSResponse<MedicamentoListagemResumoResultDto>>> {
-        const url = 
-        BASE +
-        buildQuery({
-            nome: params.nome,
-            tipo: params.tipo ?? 10,
-            page: params.page ?? 1,
-            contar: params.contar ?? false,
-            tipoReceita: params.tipoReceita,
-            prescritivel: params.prescritivel,
-        })
+  public async listagemResumo(
+    params: MedicamentosListagemParams
+  ): Promise<ResponseApi<GSResponse<MedicamentoListagemResumoResultDto>>> {
+    const url =
+      BASE +
+      buildQuery({
+        nome: params.nome,
+        dci: params.dci,
+        tipo: params.tipo ?? 30,
+        page: params.page ?? 1,
+        contar: params.contar ?? false,
+        tipoReceita: params.tipoReceita,
+        prescritivel: params.prescritivel,
+      })
 
-        return this.httpClient.getRequest<GSResponse<MedicamentoListagemResumoResultDto>>(
-            state.URL,
-            url
-        )
-    }
+    return this.httpClient.getRequest<GSResponse<MedicamentoListagemResumoResultDto>>(
+      state.URL,
+      url
+    )
+  }
 
-    public async getPrescricaoByEmbId(
-        embId: string,
-        patologias?: string
-    ): Promise<ResponseApi<GSResponse<MedicamentoPrescricaoLinhaDto>>> {
-        const url = 
-        `${BASE}/embalagem/${encodeURIComponent(embId)}/prescricao` +
-        buildQuery({ patologias })
+  public async getPrescricaoByEmbId(
+    embId: string,
+    patologias?: string
+  ): Promise<ResponseApi<GSResponse<MedicamentoPrescricaoLinhaDto>>> {
+    const url =
+      `${BASE}/embalagem/${encodeURIComponent(embId)}/prescricao` +
+      buildQuery({ patologias })
 
-        return this.httpClient.getRequest<GSResponse<MedicamentoPrescricaoLinhaDto>>(
-            state.URL,
-            url
-        )
-    }
+    return this.httpClient.getRequest<GSResponse<MedicamentoPrescricaoLinhaDto>>(
+      state.URL,
+      url
+    )
+  }
 
-    public async getPrescricaoByCnpem(
-        cnpem: string,
-        nrRegisto?: string,
-        patologias?: string
-    ): Promise<ResponseApi<GSResponse<MedicamentoPrescricaoLinhaDto>>> {
-        const url = 
-        `${BASE}/cnpem/${encodeURIComponent(cnpem)}/prescricao` +
-        buildQuery({ nrRegisto, patologias })
+  public async getPrescricaoByCnpem(
+    cnpem: string,
+    nrRegisto?: string,
+    patologias?: string
+  ): Promise<ResponseApi<GSResponse<MedicamentoPrescricaoLinhaDto>>> {
+    const url =
+      `${BASE}/cnpem/${encodeURIComponent(cnpem)}/prescricao` +
+      buildQuery({ nrRegisto, patologias })
 
+    return this.httpClient.getRequest<GSResponse<MedicamentoPrescricaoLinhaDto>>(
+      state.URL,
+      url
+    )
+  }
 
-        return this.httpClient.getRequest<GSResponse<MedicamentoPrescricaoLinhaDto>>(
-            state.URL, 
-            url
-        )
-    }
+  public async getEquivalentesByCnpem(
+    cnpem: string,
+    patologias?: string
+  ): Promise<ResponseApi<GSResponse<MedicamentoPrescricaoOpcaoDto[]>>> {
+    const url =
+      `${BASE}/cnpem/${encodeURIComponent(cnpem)}/equivalentes` +
+      buildQuery({ patologias })
 
-    public async getEquivalentesByCnpem(
-        cnpem: string,
-        patologias?: string
-    ): Promise<ResponseApi<GSResponse<MedicamentoPrescricaoOpcaoDto[]>>> {
-        const url = 
-        `${BASE}/cnpem/${encodeURIComponent(cnpem)}/equivalentes` +
-        buildQuery({ patologias })
+    return this.httpClient.getRequest<GSResponse<MedicamentoPrescricaoOpcaoDto[]>>(
+      state.URL,
+      url
+    )
+  }
 
-        return this.httpClient.getRequest<GSResponse<MedicamentoPrescricaoOpcaoDto[]>>(
-            state.URL, 
-            url
-        )
-    }
+  public async getRegimesExcepcionais(): Promise<
+    ResponseApi<GSResponse<RegimeExcepcionalDto[]>>
+  > {
+    return this.httpClient.getRequest<GSResponse<RegimeExcepcionalDto[]>>(
+      state.URL,
+      `${BASE}/regimes-excecionais`
+    )
+  }
 }
