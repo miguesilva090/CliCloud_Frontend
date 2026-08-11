@@ -22,6 +22,12 @@ export interface ReceitaLinhaDTO {
   dataValidade?: string | null
   codJustificacaoQuantidade?: string | null
   justificacaoQuantidade?: string | null
+  /** 1 = por nome/marca · 2 = por DCI */
+  codTipoPrescricao?: number | null
+  codMotivo?: number | null
+  codIndicacaoTerapeutica?: number | null
+  /** Diploma/despacho Infarmed (read-only na UI). */
+  diploma?: string | null
 }
 
 export interface ReceitaMedicaDTO {
@@ -87,6 +93,11 @@ export interface CreateReceitaLinhaRequest {
   codValidade?: number | null
   codJustificacaoQuantidade?: string | null
   justificacaoQuantidade?: string | null
+  codTipoPrescricao?: number | null
+  codMotivo?: number | null
+  codIndicacaoTerapeutica?: number | null
+  /** Diploma/despacho Infarmed (read-only na UI). */
+  diploma?: string | null
 }
 
 export interface CreateReceitaMedicaRequest {

@@ -120,7 +120,7 @@ export function UtenteEditPage() {
     if (!raw && !rnuRaw) return
 
     let draft: Partial<UtenteEditFormValues> = {}
-    let rnuPrefill: Partial<UtenteEditFormValues> = {}
+    let fromRnu: Partial<UtenteEditFormValues> = {}
 
     if (raw) {
       try {
@@ -134,7 +134,7 @@ export function UtenteEditPage() {
       try {
         const rnu = JSON.parse(rnuRaw) as RnuPrefillPayload
         setRnuPrefill(rnu)
-        rnuPrefill = {
+        fromRnu = {
           nome: rnu.nome?.trim() ?? '',
           numeroUtente: rnu.numeroUtente?.trim() ?? '',
           dataNascimento: rnu.dataNascimento?.trim() ?? '',
@@ -142,16 +142,19 @@ export function UtenteEditPage() {
         }
       } catch {
         // ignore invalid RNU payload
-      } finally {
-        sessionStorage.removeItem('rnu-prefill-utente-create')
       }
     }
 
-    form.reset({
+    const merged: UtenteEditFormValues = {
       ...utenteEditDefaultValues,
       ...draft,
-      ...rnuPrefill,
-    })
+      ...fromRnu,
+    }
+
+    // Persistir já no draft desta instanceId — remount (Strict Mode / tabs)
+    // não pode depender só da chave global RNU (era removida demasiado cedo).
+    sessionStorage.setItem(key, JSON.stringify(merged))
+    form.reset(merged)
   }, [isCreate, instanceId, form])
 
   useEffect(() => {
@@ -162,13 +165,18 @@ export function UtenteEditPage() {
 
     if (sexoCodigo) {
       const sexoMatch = sexos.find((s) => {
-        const codigo = ((s as { codigo?: string }).codigo ?? '').toString().trim().toUpperCase()
+        const codigo = ((s as { codigo?: string }).codigo ?? '')
+          .toString()
+          .trim()
+          .toUpperCase()
         const descricao = (s.descricao ?? '').toString().trim().toUpperCase()
         if (codigo === sexoCodigo || descricao === sexoCodigo) return true
 
         // fallback para cenários comuns: M/F vs Masculino/Feminino
-        if (sexoCodigo === 'M' && (codigo.startsWith('M') || descricao.startsWith('M'))) return true
-        if (sexoCodigo === 'F' && (codigo.startsWith('F') || descricao.startsWith('F'))) return true
+        if (sexoCodigo === 'M' && (codigo.startsWith('M') || descricao.startsWith('M')))
+          return true
+        if (sexoCodigo === 'F' && (codigo.startsWith('F') || descricao.startsWith('F')))
+          return true
         return false
       })
       if (sexoMatch?.id) {
@@ -179,10 +187,11 @@ export function UtenteEditPage() {
     const paisNacionalidade = rnuPrefill.paisNacionalidade?.trim()
     if (paisNacionalidade) {
       const target = paisNacionalidade.toUpperCase()
-      const paisMatch = paises.find((p) =>
-        (p.codigo ?? '').toString().trim().toUpperCase() === target
-        || (p.nome ?? '').toString().trim().toUpperCase() === target
-        || (p.id ?? '').toString().trim().toUpperCase() === target
+      const paisMatch = paises.find(
+        (p) =>
+          (p.codigo ?? '').toString().trim().toUpperCase() === target ||
+          (p.nome ?? '').toString().trim().toUpperCase() === target ||
+          (p.id ?? '').toString().trim().toUpperCase() === target
       )
       const nacionalidadeValue = paisMatch
         ? (paisMatch.nome ?? paisMatch.codigo ?? String(paisMatch.id ?? ''))
@@ -196,6 +205,8 @@ export function UtenteEditPage() {
       form.setValue('condicaoSns', rnuPrefill.condicaoSns, { shouldDirty: true })
     }
 
+    // Só agora consumir a chave global (sexo/nacionalidade já aplicados).
+    sessionStorage.removeItem('rnu-prefill-utente-create')
     setRnuPrefill(null)
   }, [isCreate, rnuPrefill, sexos, paises, form])
 

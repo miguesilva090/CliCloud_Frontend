@@ -29,18 +29,37 @@ import {
 import { buildPatologiasInfarmedParam } from '../utils/build-patologias-infarmed-param'
 import { extractReceitaApiError } from '../utils/receita-api-error'
 import { enrichLinhasPrecos } from '../utils/enrich-linhas-precos'
+import {
+  linhaJustificacaoInvalida,
+  MSG_JAU,
+} from '../utils/justificacao-quantidade'
+import {
+  derivePrescricaoPorNomeHeader,
+  linhaMotivoInvalida,
+  MSG_MOTIVO,
+} from '../utils/motivo-prescricao-nome'
+import {
+  linhaIndicacaoInvalida,
+  MSG_INDICACAO,
+} from '../utils/indicacao-terapeutica'
 
 const permissionId = modules.areaClinica.permissions.prescricaoEletronica.id
 
-function emptyLinha(ordem: number): LinhaDraft {
+function emptyLinha(ordem: number, tipoReceita: number): LinhaDraft {
   return {
     key: crypto.randomUUID(),
     ordem,
-    tipoLinha: 1,
+    tipoLinha: tipoReceita,
     designacao: '',
     quantidade: 1,
     posologia: '',
     codValidade: 1,
+    codTipoPrescricao: 1,
+    codMotivo: null,
+    codIndicacaoTerapeutica: null,
+    diploma: null,
+    embalagemUnitaria: false,
+    tipoTratamento: 1,
   }
 }
 
@@ -157,6 +176,12 @@ export function ReceitaEditPage() {
         codValidade: l.codValidade ?? 1,
         codJustificacaoQuantidade: l.codJustificacaoQuantidade,
         justificacaoQuantidade: l.justificacaoQuantidade,
+        codTipoPrescricao: l.codTipoPrescricao ?? 1,
+        codMotivo: l.codMotivo ?? null,
+        codIndicacaoTerapeutica: l.codIndicacaoTerapeutica ?? null,
+        diploma: l.diploma ?? null,
+        embalagemUnitaria: false,
+        tipoTratamento: 1,
       }))
     )
   }, [receitaQuery.data])
@@ -167,15 +192,19 @@ export function ReceitaEditPage() {
     )
   }
 
-  const handleAddInfarmedLinha = (linha: CreateReceitaLinhaRequest) => {
+  const handleAddInfarmedLinha = (linha: CreateReceitaLinhaRequest): string => {
+    const key = crypto.randomUUID()
     setLinhas((prev) => [
       ...prev,
       {
         ...linha,
-        key: crypto.randomUUID(),
+        key,
         ordem: prev.length + 1,
+        embalagemUnitaria: false,
+        tipoTratamento: 1,
       },
     ])
+    return key
   }
 
   const limparDados = () => {
@@ -229,6 +258,22 @@ export function ReceitaEditPage() {
       setTab('medicacao')
       return null
     }
+    if (linhasValidas.some((l) => linhaJustificacaoInvalida(l))) {
+      toast.error(MSG_JAU.obrigatoriaGuardar, 'Validação')
+      setTab('medicacao')
+      return null
+    }
+    if (linhasValidas.some((l) => linhaMotivoInvalida(l))) {
+      toast.error(MSG_MOTIVO.obrigatorio, 'Validação')
+      setTab('medicacao')
+      return null
+    }
+    if (linhasValidas.some((l) => linhaIndicacaoInvalida(l))) {
+      toast.error(MSG_INDICACAO.obrigatoria, 'Validação')
+      setTab('medicacao')
+      return null
+    }
+    const headerMotivo = derivePrescricaoPorNomeHeader(linhasValidas)
     return {
       utenteId,
       medicoId,
@@ -237,7 +282,8 @@ export function ReceitaEditPage() {
       desmaterializada: 1,
       receitaRenovavel,
       numeroVias,
-      prescricaoPorNome: 0,
+      prescricaoPorNome: headerMotivo.prescricaoPorNome,
+      motivoPrescricaoNome: headerMotivo.motivoPrescricaoNome,
       numeroBeneficiarioEfr: numeroBeneficiarioEfr || null,
       siglaEfr: siglaEfr,
       observacoes: observacoes || null,
@@ -263,6 +309,10 @@ export function ReceitaEditPage() {
         codValidade: l.codValidade,
         codJustificacaoQuantidade: l.codJustificacaoQuantidade,
         justificacaoQuantidade: l.justificacaoQuantidade,
+        codTipoPrescricao: l.codTipoPrescricao ?? 1,
+        codMotivo: l.codMotivo ?? null,
+        codIndicacaoTerapeutica: l.codIndicacaoTerapeutica ?? null,
+        diploma: l.diploma ?? null,
       })),
     }
   }
@@ -463,7 +513,10 @@ export function ReceitaEditPage() {
                   linhas={linhas}
                   onAddLinha={handleAddInfarmedLinha}
                   onAddLinhaManual={() =>
-                    setLinhas((prev) => [...prev, emptyLinha(prev.length + 1)])
+                    setLinhas((prev) => [
+                      ...prev,
+                      emptyLinha(prev.length + 1, tipoReceita),
+                    ])
                   }
                   onUpdateLinha={updateLinha}
                   onRemoveLinha={(key) =>

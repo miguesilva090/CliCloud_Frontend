@@ -2,6 +2,7 @@ import { MedicamentosInfarmedService } from '@/lib/services/prescricao/medicamen
 import { calcularTotaisLinha } from '@/pages/area-clinica/processo-clinico/atendimento/ficha-clinica/utils/calcular-totais-linha'
 import { ResponseStatus } from '@/types/api/responses'
 import type { CreateReceitaLinhaRequest } from '@/types/dtos/prescricao/receita-medica.dtos'
+import { extrairDiplomaDePrescricao } from './diploma-despacho'
 
 /** Se a linha tem embId e ainda sem PVP, completa via ficha Infarmed. */
 export async function enrichLinhasPrecos<T extends CreateReceitaLinhaRequest>(
@@ -36,6 +37,12 @@ export async function enrichLinhasPrecos<T extends CreateReceitaLinhaRequest>(
           cnpem: l.cnpem ?? envelope.data.cnpem ?? null,
           descricaoEmbalagem:
             l.descricaoEmbalagem ?? envelope.data.embalagem ?? null,
+          diploma:
+            l.diploma ??
+            extrairDiplomaDePrescricao(
+              envelope.data,
+              l.codTipoPrescricao === 2
+            ),
         }
       } catch {
         return l

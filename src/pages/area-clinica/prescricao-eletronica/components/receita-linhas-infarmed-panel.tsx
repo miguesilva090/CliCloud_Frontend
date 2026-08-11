@@ -31,6 +31,15 @@ import {
   duracaoExigeValor,
   type InfarmedPesquisaModo,
 } from '../utils/posologia-options'
+import {
+  listEquivalentesParaModal,
+  shouldShowGenericosModal,
+} from '../utils/genericos-equivalentes'
+import { extrairDiplomaDePrescricao } from '../utils/diploma-despacho'
+import {
+  ReceitaGenericosDialog,
+  type GenericosPending,
+} from './receita-genericos-dialog'
 
 type Props = {
   tipoReceita?: number
@@ -115,6 +124,9 @@ export function ReceitaLinhasInfarmedPanel({
   const [duracaoValor, setDuracaoValor] = useState('')
   const [instrucoes, setInstrucoes] = useState('')
   const [nEmbalagens, setNEmbalagens] = useState(1)
+  const [genericosOpen, setGenericosOpen] = useState(false)
+  const [genericosPending, setGenericosPending] =
+    useState<GenericosPending | null>(null)
 
   const listagemParams = useMemo(
     () =>
@@ -160,14 +172,14 @@ export function ReceitaLinhasInfarmedPanel({
   )
 
   const dcis = useMemo(
-    () => uniqueSorted(itemsNome.map((i) => i.principioAtivo)),
+    () => uniqueSorted(itemsNome.map((i) => i.principioActivo)),
     [itemsNome]
   )
 
   const itemsDci = useMemo(
     () =>
       dciSel
-        ? itemsNome.filter((i) => (i.principioAtivo ?? '') === dciSel)
+        ? itemsNome.filter((i) => (i.principioActivo ?? '') === dciSel)
         : itemsNome,
     [itemsNome, dciSel]
   )
@@ -273,12 +285,14 @@ export function ReceitaLinhasInfarmedPanel({
     return true
   }
 
-  const handleAdd = (porDci: boolean) => {
+  const buildLinhaRequest = (
+    porDci: boolean
+  ): CreateReceitaLinhaRequest | null => {
     if (!selectedItem) {
       toast.error('Seleccione medicamento, dosagem e embalagem.', 'Validação')
-      return
+      return null
     }
-    if (!validatePosologia()) return
+    if (!validatePosologia()) return null
 
     const qtdLabel =
       POSOLOGIA_QUANTIDADE_UNIDADES.find((u) => u.value === qtdUnidade)
@@ -303,8 +317,8 @@ export function ReceitaLinhasInfarmedPanel({
     const dosagem =
       selectedItem.dosagem?.trim() || linhaInfarmed?.dosagem?.trim() || ''
     const dci =
-      selectedItem.principioAtivo?.trim() ||
-      linhaInfarmed?.principioAtivo?.trim() ||
+      selectedItem.principioActivo?.trim() ||
+      linhaInfarmed?.principioActivo?.trim() ||
       ''
 
     const designacao = porDci
@@ -313,16 +327,15 @@ export function ReceitaLinhasInfarmedPanel({
         ? `${nome} ${dosagem}`
         : nome
 
-    onAddLinha({
+    return {
       ordem: 0,
-      tipoLinha: 1,
+      tipoLinha: tipoReceita,
       embId: selectedItem.embId,
       cnpem: selectedItem.cnpem ?? linhaInfarmed?.cnpem ?? null,
       designacao,
       descricaoEmbalagem:
         selectedItem.embalagem ?? linhaInfarmed?.embalagem ?? null,
       quantidade: nEmbalagens,
-      // Preços se a ficha Infarmed já chegou; senão null (carregamento em background)
       pvp: totais?.pvp ?? null,
       comparticipacao: totais?.psns ?? null,
       valorUtente: totais?.put ?? null,
@@ -335,12 +348,77 @@ export function ReceitaLinhasInfarmedPanel({
       posologiaDuracaoValor: duracaoValor || null,
       posologiaInstrucoes: instrucoes.trim() || null,
       codValidade: 1,
-    })
+      // 1 = marca · 2 = DCI (legado CodigoTipoPrescricao)
+      codTipoPrescricao: porDci ? 2 : 1,
+      codMotivo: null,
+      codIndicacaoTerapeutica: null,
+      diploma: extrairDiplomaDePrescricao(linhaInfarmed, porDci),
+    }
+  }
 
+  const commitLinha = (linha: CreateReceitaLinhaRequest) => {
+    onAddLinha(linha)
     setSearch('')
     setSearchCommitted('')
     resetCascade()
     resetPosologia()
+  }
+
+  const handleAdd = (porDci: boolean) => {
+    if (prescricaoQuery.isFetching) {
+      toast.error(
+        'Aguarde a obtenção dos preços antes de adicionar.',
+        'Preços'
+      )
+      return
+    }
+
+    const linha = buildLinhaRequest(porDci)
+    if (!linha) return
+
+    if (linha.pvp == null) {
+      toast.error(
+        'O Infarmed não devolveu PVP para esta embalagem. A linha fica sem preço (totais a 0).',
+        'Preços'
+      )
+    }
+
+    // Adicionar por DCI → sem modal de genéricos
+    if (porDci) {
+      commitLinha(linha)
+      return
+    }
+
+    const opcoes = linhaInfarmed?.opcoesEquivalentes ?? []
+    const cnpem = linha.cnpem ?? undefined
+
+    if (!shouldShowGenericosModal(cnpem, opcoes)) {
+      commitLinha(linha)
+      return
+    }
+
+    const equivalentes = listEquivalentesParaModal(cnpem, opcoes)
+    if (equivalentes.length === 0) {
+      commitLinha(linha)
+      return
+    }
+
+    setGenericosPending({
+      linhaMarca: linha,
+      resumo: {
+        nome: selectedItem?.nome ?? linha.designacao,
+        substancia:
+          selectedItem?.principioActivo ?? linhaInfarmed?.principioActivo,
+        embalagem: selectedItem?.embalagem ?? linhaInfarmed?.embalagem,
+        forma: linhaInfarmed?.formaFarmaceutica,
+        taxa: linhaInfarmed?.taxaComparticipacaoEfectiva ?? null,
+        pvp: totais?.pvp ?? null,
+        valorUtente: totais?.put ?? null,
+      },
+      equivalentes,
+      patologias,
+    })
+    setGenericosOpen(true)
   }
 
   return (
@@ -624,11 +702,27 @@ export function ReceitaLinhasInfarmedPanel({
               A obter preços…
             </span>
           ) : null}
+          {selectedItem &&
+          !prescricaoQuery.isFetching &&
+          linhaInfarmed &&
+          !totais ? (
+            <span className='mr-auto text-xs text-amber-600 dark:text-amber-400'>
+              Infarmed sem PVP para esta embalagem
+            </span>
+          ) : null}
+          {selectedItem && totais ? (
+            <span className='mr-auto text-xs tabular-nums text-muted-foreground'>
+              PVP {totais.pvp.toFixed(2)} € · SNS {totais.psns.toFixed(2)} € ·
+              Utente {totais.put.toFixed(2)} €
+            </span>
+          ) : null}
           <Button
             type='button'
             variant='outline'
             size='sm'
-            disabled={disabled || !selectedItem}
+            disabled={
+              disabled || !selectedItem || prescricaoQuery.isFetching
+            }
             onClick={() => handleAdd(true)}
           >
             Adicionar por DCI
@@ -636,13 +730,26 @@ export function ReceitaLinhasInfarmedPanel({
           <Button
             type='button'
             size='sm'
-            disabled={disabled || !selectedItem}
+            disabled={
+              disabled || !selectedItem || prescricaoQuery.isFetching
+            }
             onClick={() => handleAdd(false)}
           >
             Adicionar
           </Button>
         </div>
       </div>
+
+      <ReceitaGenericosDialog
+        open={genericosOpen}
+        pending={genericosPending}
+        onOpenChange={(open) => {
+          setGenericosOpen(open)
+          if (!open) setGenericosPending(null)
+        }}
+        onManter={(linha) => commitLinha(linha)}
+        onPrescrever={(linha) => commitLinha(linha)}
+      />
     </div>
   )
 }

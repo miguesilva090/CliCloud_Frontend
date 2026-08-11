@@ -13,6 +13,7 @@ import { labelCondicaoSns } from '../utils/condicao-sns-options'
 import { idadeFromNascimento } from '../utils/idade-from-nascimento'
 import { formatPatologiasLabel } from '../utils/build-patologias-infarmed-param'
 import { ReceitaPatologiasDialog } from './receita-patologias-dialog'
+import { ReceitaRnuControls } from './receita-rnu-controls'
 
 type Option = { value: string; label: string }
 
@@ -76,6 +77,17 @@ export function ReceitaTabUtente({
     utente?.organismo?.abreviatura ??
     '—'
 
+  const comboboxOptions = useMemo(() => {
+    if (!utenteId || !utente?.nome) return utenteOptions
+    if (utenteOptions.some((o) => o.value === utenteId)) return utenteOptions
+    return [{ value: utenteId, label: utente.nome }, ...utenteOptions]
+  }, [utenteId, utente?.nome, utenteOptions])
+
+  const handleRnuUtenteSeleccionado = (id: string, label?: string) => {
+    onUtenteIdChange(id)
+    if (label?.trim()) onUtenteSearchChange(label.trim())
+  }
+
   const openPatologias = () => {
     if (!utenteId) {
       toast.error('Seleccione o utente.')
@@ -87,15 +99,11 @@ export function ReceitaTabUtente({
   return (
     <div className='space-y-4'>
       <div className='grid gap-3 md:grid-cols-12'>
-        <div className='space-y-1 md:col-span-3'>
-          <Label>
-            N.º utente (SNS) <span className='text-destructive'>*</span>
-          </Label>
-          <Input
-            className='h-8'
-            value={utente?.numeroUtente ?? ''}
-            readOnly
-            placeholder='Seleccione o utente'
+        <div className='md:col-span-3'>
+          <ReceitaRnuControls
+            numeroSnsActual={utente?.numeroUtente}
+            onUtenteSeleccionado={handleRnuUtenteSeleccionado}
+            disabled={readOnly}
           />
         </div>
         <div className='space-y-1 md:col-span-9'>
@@ -105,7 +113,7 @@ export function ReceitaTabUtente({
           <AsyncCombobox
             value={utenteId}
             onChange={onUtenteIdChange}
-            items={utenteOptions}
+            items={comboboxOptions}
             searchValue={utenteSearch}
             onSearchValueChange={onUtenteSearchChange}
             placeholder='Seleccionar utente...'

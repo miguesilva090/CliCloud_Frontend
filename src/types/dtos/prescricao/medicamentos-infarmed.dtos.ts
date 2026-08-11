@@ -11,7 +11,7 @@ export interface MedicamentoListagemResumoItemDto {
     dosagem?: string | null
     embalagem?: string | null 
     nrRegisto?: string | null
-    principioAtivo?: string | null
+    principioActivo?: string | null
     formaFarmaceutica?: string | null
     generico: boolean
     nomeCompleto?: string
@@ -36,7 +36,9 @@ export interface MedicamentoPrecoDto {
 
 export interface MedicamentoComparticipacaoDto {
     regimeExcecionalId?: number | null
+    normaRegExcId?: number | null
     tipoRegime?: string | null
+    normaRegimeExcecional?: string | null
     regimeExcecional?: string | null
     nivelComparticipacao?: string | null
     percentComparticipacao?: number | null
@@ -71,13 +73,14 @@ export interface MedicamentoPrescricaoLinhaDto {
     dosagem?: string | null
     embalagem?: string | null
     nrRegisto?: string | null
-    principioAtivo?: string | null
+    principioActivo?: string | null
     formaFarmaceutica?: string | null
     generico: boolean
     precoPvp?: MedicamentoPrecoDto | null
     precoReferencia?: MedicamentoPrecoDto | null
     precoUnitario?: MedicamentoPrecoDto | null
     comparticipacaoEfectiva?: MedicamentoComparticipacaoDto | null
+    comparticipacoesEspeciais?: MedicamentoComparticipacaoDto[]
     taxaComparticipacaoEfectiva?: number | null
     patologiasConsideradas: number[]
     baseCalculo?: MedicamentoPrescricaoBaseCalculoDto | null
