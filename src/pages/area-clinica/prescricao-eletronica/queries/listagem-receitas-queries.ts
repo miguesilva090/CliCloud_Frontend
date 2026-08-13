@@ -9,7 +9,8 @@ export function useGetReceitasPaginated(
   pageNumber: number,
   pageLimit: number,
   filters: Array<{ id: string; value: string }> | null,
-  sorting: Array<{ id: string; desc: boolean }> | null
+  sorting: Array<{ id: string; desc: boolean }> | null,
+  enabled = true
 ) {
   const params: ReceitaMedicaTableFilterRequest = {
     pageNumber,
@@ -22,6 +23,7 @@ export function useGetReceitasPaginated(
     queryKey: ['receitas-medicas-paginated', params],
     queryFn: () => ReceitaMedicaService(permissionId).getPaginated(params),
     placeholderData: (previousData) => previousData,
+    enabled,
   })
 }
 

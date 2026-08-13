@@ -130,3 +130,7 @@ export interface ReceitaMedicaTableFilterRequest {
   filters?: Array<{ id: string; value: string }>
   sorting?: Array<{ id: string; desc: boolean }>
 }
+
+export interface EnviarReceitaMedicaRequest {
+  tokenPrescritor: string
+}

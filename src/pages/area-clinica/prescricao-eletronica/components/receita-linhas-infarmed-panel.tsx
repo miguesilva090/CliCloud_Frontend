@@ -17,9 +17,13 @@ import {
   useMedicamentosListagemResumo,
   useMedicamentosPrescricaoByEmbId,
 } from '@/pages/area-clinica/processo-clinico/atendimento/ficha-clinica/queries/medicamentos-infarmed-queries'
+import { MedicamentosInfarmedService } from '@/lib/services/prescricao/medicamentos-infarmed-service'
 import { calcularTotaisLinha } from '@/pages/area-clinica/processo-clinico/atendimento/ficha-clinica/utils/calcular-totais-linha'
 import type { CreateReceitaLinhaRequest } from '@/types/dtos/prescricao/receita-medica.dtos'
-import type { MedicamentoListagemResumoItemDto } from '@/types/dtos/prescricao/medicamentos-infarmed.dtos'
+import type {
+  MedicamentoListagemResumoItemDto,
+  MedicamentoPrescricaoOpcaoDto,
+} from '@/types/dtos/prescricao/medicamentos-infarmed.dtos'
 import { toast } from '@/utils/toast-utils'
 import {
   INFARMED_PESQUISA_MODOS,
@@ -127,6 +131,7 @@ export function ReceitaLinhasInfarmedPanel({
   const [genericosOpen, setGenericosOpen] = useState(false)
   const [genericosPending, setGenericosPending] =
     useState<GenericosPending | null>(null)
+  const [loadingEquivalentes, setLoadingEquivalentes] = useState(false)
 
   const listagemParams = useMemo(
     () =>
@@ -364,8 +369,8 @@ export function ReceitaLinhasInfarmedPanel({
     resetPosologia()
   }
 
-  const handleAdd = (porDci: boolean) => {
-    if (prescricaoQuery.isFetching) {
+  const handleAdd = async (porDci: boolean) => {
+    if (prescricaoQuery.isFetching || loadingEquivalentes) {
       toast.error(
         'Aguarde a obtenção dos preços antes de adicionar.',
         'Preços'
@@ -389,8 +394,31 @@ export function ReceitaLinhasInfarmedPanel({
       return
     }
 
-    const opcoes = linhaInfarmed?.opcoesEquivalentes ?? []
     const cnpem = linha.cnpem ?? undefined
+    let opcoes: MedicamentoPrescricaoOpcaoDto[] =
+      linhaInfarmed?.opcoesEquivalentes ?? []
+
+    // Prescrição slim já não traz equivalentes (lento) — carrega só ao Adicionar.
+    if (opcoes.length === 0 && cnpem) {
+      setLoadingEquivalentes(true)
+      try {
+        const res = await MedicamentosInfarmedService().getEquivalentesByCnpem(
+          cnpem,
+          patologias
+        )
+        const envelope = res.info
+        if (envelope?.status === ResponseStatus.Success && envelope.data) {
+          opcoes = envelope.data
+        }
+      } catch {
+        toast.error(
+          'Não foi possível obter genéricos equivalentes. A linha será adicionada sem comparação.',
+          'Genéricos'
+        )
+      } finally {
+        setLoadingEquivalentes(false)
+      }
+    }
 
     if (!shouldShowGenericosModal(cnpem, opcoes)) {
       commitLinha(linha)
@@ -702,15 +730,21 @@ export function ReceitaLinhasInfarmedPanel({
               A obter preços…
             </span>
           ) : null}
+          {selectedItem && loadingEquivalentes ? (
+            <span className='mr-auto text-xs text-muted-foreground'>
+              A obter genéricos…
+            </span>
+          ) : null}
           {selectedItem &&
           !prescricaoQuery.isFetching &&
+          !loadingEquivalentes &&
           linhaInfarmed &&
           !totais ? (
             <span className='mr-auto text-xs text-amber-600 dark:text-amber-400'>
               Infarmed sem PVP para esta embalagem
             </span>
           ) : null}
-          {selectedItem && totais ? (
+          {selectedItem && totais && !loadingEquivalentes ? (
             <span className='mr-auto text-xs tabular-nums text-muted-foreground'>
               PVP {totais.pvp.toFixed(2)} € · SNS {totais.psns.toFixed(2)} € ·
               Utente {totais.put.toFixed(2)} €
@@ -721,9 +755,12 @@ export function ReceitaLinhasInfarmedPanel({
             variant='outline'
             size='sm'
             disabled={
-              disabled || !selectedItem || prescricaoQuery.isFetching
+              disabled ||
+              !selectedItem ||
+              prescricaoQuery.isFetching ||
+              loadingEquivalentes
             }
-            onClick={() => handleAdd(true)}
+            onClick={() => void handleAdd(true)}
           >
             Adicionar por DCI
           </Button>
@@ -731,9 +768,12 @@ export function ReceitaLinhasInfarmedPanel({
             type='button'
             size='sm'
             disabled={
-              disabled || !selectedItem || prescricaoQuery.isFetching
+              disabled ||
+              !selectedItem ||
+              prescricaoQuery.isFetching ||
+              loadingEquivalentes
             }
-            onClick={() => handleAdd(false)}
+            onClick={() => void handleAdd(false)}
           >
             Adicionar
           </Button>

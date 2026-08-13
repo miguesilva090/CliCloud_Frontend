@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { History, Plus } from 'lucide-react'
 import { AsyncCombobox } from '@/components/shared/async-combobox'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,8 +12,10 @@ import { toast } from '@/utils/toast-utils'
 import { labelCondicaoSns } from '../utils/condicao-sns-options'
 import { idadeFromNascimento } from '../utils/idade-from-nascimento'
 import { formatPatologiasLabel } from '../utils/build-patologias-infarmed-param'
+import { MSG_RECEITAS_ANTERIORES } from '../utils/clone-receita-linhas'
 import { ReceitaPatologiasDialog } from './receita-patologias-dialog'
 import { ReceitaRnuControls } from './receita-rnu-controls'
+import { ReceitaAnterioresDialog } from './receita-anteriores-dialog'
 
 type Option = { value: string; label: string }
 
@@ -32,6 +34,7 @@ type Props = {
   onSiglaEfrChange: (v: string | null) => void
   patologias: UtentePatologiaComparticipacaoDTO[]
   onPatologiasChanged: () => void
+  onSelectReceitaAnterior?: (receitaId: string) => void
   readOnly?: boolean
 }
 
@@ -50,9 +53,11 @@ export function ReceitaTabUtente({
   onSiglaEfrChange,
   patologias,
   onPatologiasChanged,
+  onSelectReceitaAnterior,
   readOnly,
 }: Props) {
   const [patologiasOpen, setPatologiasOpen] = useState(false)
+  const [anterioresOpen, setAnterioresOpen] = useState(false)
   const utenteQuery = useGetUtente(utenteId, Boolean(utenteId))
 
   const utente = useMemo(() => {
@@ -96,8 +101,31 @@ export function ReceitaTabUtente({
     setPatologiasOpen(true)
   }
 
+  const openAnteriores = () => {
+    if (!utenteId) {
+      toast.error(MSG_RECEITAS_ANTERIORES.utenteMissing, 'Validação')
+      return
+    }
+    setAnterioresOpen(true)
+  }
+
   return (
     <div className='space-y-4'>
+      <div className='flex flex-wrap items-center justify-end gap-2'>
+        {!readOnly && onSelectReceitaAnterior ? (
+          <Button
+            type='button'
+            variant='outline'
+            size='sm'
+            onClick={openAnteriores}
+            title='Receitas anteriores'
+          >
+            <History className='mr-1 h-4 w-4' />
+            Receitas anteriores
+          </Button>
+        ) : null}
+      </div>
+
       <div className='grid gap-3 md:grid-cols-12'>
         <div className='md:col-span-3'>
           <ReceitaRnuControls
@@ -218,6 +246,15 @@ export function ReceitaTabUtente({
           utenteId={utenteId}
           initial={patologias}
           onSaved={onPatologiasChanged}
+        />
+      ) : null}
+
+      {!readOnly && onSelectReceitaAnterior ? (
+        <ReceitaAnterioresDialog
+          open={anterioresOpen}
+          onOpenChange={setAnterioresOpen}
+          utenteId={utenteId}
+          onSelect={onSelectReceitaAnterior}
         />
       ) : null}
     </div>

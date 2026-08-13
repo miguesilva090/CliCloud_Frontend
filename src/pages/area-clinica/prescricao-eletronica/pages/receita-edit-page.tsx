@@ -10,7 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { modules } from '@/config/modules'
 import { ReceitaMedicaService } from '@/lib/services/prescricao/receita-medica-service'
 import { MedicosService } from '@/lib/services/saude/medicos-service'
-import { useUtentesLight } from '@/pages/area-comum/tabelas/entidades/utentes/queries/utentes-queries'
+import {
+  useGetUtente,
+  useUtentesLight,
+} from '@/pages/area-comum/tabelas/entidades/utentes/queries/utentes-queries'
 import { ResponseStatus } from '@/types/api/responses'
 import type {
   CreateReceitaLinhaRequest,
@@ -18,6 +21,7 @@ import type {
 } from '@/types/dtos/prescricao/receita-medica.dtos'
 import { toast } from '@/utils/toast-utils'
 import { useCloseCurrentWindowLikeTabBar } from '@/utils/window-utils'
+import { ReceitaAuthSpmsDialog } from '../components/receita-auth-spms-dialog'
 import { ReceitaCabecalho } from '../components/receita-cabecalho'
 import { ReceitaTabMedicacao } from '../components/receita-tab-medicacao'
 import type { LinhaDraft } from '../components/receita-tab-medicacao'
@@ -42,6 +46,11 @@ import {
   linhaIndicacaoInvalida,
   MSG_INDICACAO,
 } from '../utils/indicacao-terapeutica'
+import { posologiaObrigatoriaNaLinha } from '../utils/receita-linha-especial'
+import {
+  cloneReceitaAnterior,
+  MSG_RECEITAS_ANTERIORES,
+} from '../utils/clone-receita-linhas'
 
 const permissionId = modules.areaClinica.permissions.prescricaoEletronica.id
 
@@ -74,6 +83,8 @@ export function ReceitaEditPage() {
   const [utenteId, setUtenteId] = useState('')
   const [medicoId, setMedicoId] = useState('')
   const [medicoNome, setMedicoNome] = useState('')
+  /** 1=CC · 2=COM · 3=CRED — P1.6a só CRED */
+  const [cartaoCidadaoMedico, setCartaoCidadaoMedico] = useState(3)
   const [dataPrescricao, setDataPrescricao] = useState<Date | undefined>(
     new Date()
   )
@@ -93,6 +104,7 @@ export function ReceitaEditPage() {
   const [saving, setSaving] = useState(false)
   const [sending, setSending] = useState(false)
   const [utenteSearch, setUtenteSearch] = useState('')
+  const [authOpen, setAuthOpen] = useState(false)
 
   const utentesQuery = useUtentesLight(utenteSearch)
   const utenteOptions = useMemo(() => {
@@ -102,6 +114,12 @@ export function ReceitaEditPage() {
       label: (u as { nome?: string }).nome ?? u.id,
     }))
   }, [utentesQuery.data])
+
+  const utenteQuery = useGetUtente(utenteId, Boolean(utenteId))
+  const utenteCronico =
+    utenteQuery.data?.info?.status === ResponseStatus.Success
+      ? Boolean(utenteQuery.data.info.data?.cronico)
+      : false
 
   const patologiasQuery = useReceitaUtentePatologias(utenteId || null)
   const patologias = useMemo(
@@ -126,6 +144,7 @@ export function ReceitaEditPage() {
         if (res.info?.status === ResponseStatus.Success && res.info.data?.id) {
           setMedicoId(res.info.data.id)
           setMedicoNome(res.info.data.nome ?? '')
+          setCartaoCidadaoMedico(res.info.data.cartaoCidadaoMedico ?? 3)
         }
       } catch {
         /* ignore */
@@ -207,6 +226,51 @@ export function ReceitaEditPage() {
     return key
   }
 
+  const handleSelectReceitaAnterior = async (receitaId: string) => {
+    if (readOnly) return
+    try {
+      const response = await ReceitaMedicaService(permissionId).getById(
+        receitaId
+      )
+      const envelope = response.info
+      if (
+        !envelope ||
+        envelope.status !== ResponseStatus.Success ||
+        !envelope.data
+      ) {
+        toast.error(MSG_RECEITAS_ANTERIORES.erro)
+        return
+      }
+      const cloned = cloneReceitaAnterior(envelope.data)
+      if (cloned.linhas.length === 0) {
+        toast.error(MSG_RECEITAS_ANTERIORES.vazia)
+        return
+      }
+
+      setTipoReceita(cloned.tipoReceita)
+      setReceitaRenovavel(cloned.receitaRenovavel)
+      setNumeroVias(cloned.numeroVias)
+      setObservacoes(cloned.observacoes)
+      if (cloned.numeroBeneficiarioEfr) {
+        setNumeroBeneficiarioEfr(cloned.numeroBeneficiarioEfr)
+      }
+      if (cloned.siglaEfr) setSiglaEfr(cloned.siglaEfr)
+
+      setLinhas(
+        cloned.linhas.map((l) => ({
+          ...l,
+          key: crypto.randomUUID(),
+          embalagemUnitaria: false,
+          tipoTratamento: 1,
+        }))
+      )
+      setTab('medicacao')
+      toast.success(MSG_RECEITAS_ANTERIORES.carregada)
+    } catch (err: unknown) {
+      toast.error(extractReceitaApiError(err, MSG_RECEITAS_ANTERIORES.erro))
+    }
+  }
+
   const limparDados = () => {
     if (readOnly) return
     setUtenteId('')
@@ -242,7 +306,7 @@ export function ReceitaEditPage() {
     }
     if (
       linhasValidas.some((l) => {
-        if (l.tipoLinha === 8) return false
+        if (!posologiaObrigatoriaNaLinha(l.tipoLinha ?? 1)) return false
         const estruturada =
           Boolean(l.posologiaQuantidadeUnidade?.trim()) &&
           Boolean(l.posologiaQuantidadeValor?.trim()) &&
@@ -379,16 +443,37 @@ export function ReceitaEditPage() {
     }
   }
 
-  const handleEnviar = async () => {
+  const handleEnviarClick = () => {
     if (!id || isNew) {
-      toast.error('Guarde a receita antes de enviar.')
+      toast.error('Guarde a receita antes de enviar.', 'Validação')
       return
     }
+    if (!medicoId) {
+      toast.error('Médico actual em falta.', 'Validação')
+      return
+    }
+    // P1.6b: CC (1) / COM (2) ainda não disponíveis
+    if (cartaoCidadaoMedico === 1 || cartaoCidadaoMedico === 2) {
+      toast.error(
+        'Autenticação por cartão ainda não disponível (P1.6b).',
+        'Autenticação'
+      )
+      return
+    }
+    setAuthOpen(true)
+  }
+
+  const handleEnviarComToken = async (token: string) => {
+    if (!id || isNew) return
     setSending(true)
     try {
-      const response = await ReceitaMedicaService(permissionId).enviar(id)
+      const response = await ReceitaMedicaService(permissionId).enviar(id, {
+        tokenPrescritor: token,
+      })
       if (response.info?.status === ResponseStatus.Success) {
-        toast.success('Receita enviada ao SPMS.')
+        toast.success('Receita enviada para o SPMS.')
+        setCanEnviar(false)
+        setReadOnly(true)
         queryClient.invalidateQueries({
           queryKey: ['receitas-medicas-paginated'],
         })
@@ -400,7 +485,6 @@ export function ReceitaEditPage() {
             .filter(Boolean)
             .join(' ') || 'Falha ao enviar receita.'
         toast.error(msg)
-        await receitaQuery.refetch()
       }
     } catch (err: unknown) {
       toast.error(extractReceitaApiError(err, 'Erro ao enviar receita.'))
@@ -451,7 +535,7 @@ export function ReceitaEditPage() {
                   type='button'
                   variant='secondary'
                   size='sm'
-                  onClick={handleEnviar}
+                  onClick={handleEnviarClick}
                   disabled={saving || sending}
                 >
                   <Send className='mr-1 h-4 w-4' />
@@ -501,6 +585,9 @@ export function ReceitaEditPage() {
                   onPatologiasChanged={() => {
                     void patologiasQuery.refetch()
                   }}
+                  onSelectReceitaAnterior={
+                    readOnly ? undefined : handleSelectReceitaAnterior
+                  }
                   readOnly={readOnly}
                 />
               </TabsContent>
@@ -510,6 +597,9 @@ export function ReceitaEditPage() {
                   tipoReceita={tipoReceita}
                   patologias={patologiasInfarmed}
                   readOnly={readOnly}
+                  utenteId={utenteId || undefined}
+                  utenteCronico={utenteCronico}
+                  medicoId={medicoId || undefined}
                   linhas={linhas}
                   onAddLinha={handleAddInfarmedLinha}
                   onAddLinhaManual={() =>
@@ -528,6 +618,15 @@ export function ReceitaEditPage() {
           </div>
         </AreaComumDashboardCard>
       </DashboardPageContainer>
+
+      <ReceitaAuthSpmsDialog
+        open={authOpen}
+        onOpenChange={setAuthOpen}
+        medicoId={medicoId}
+        onAuthenticated={(token) => {
+          void handleEnviarComToken(token)
+        }}
+      />
     </>
   )
 }

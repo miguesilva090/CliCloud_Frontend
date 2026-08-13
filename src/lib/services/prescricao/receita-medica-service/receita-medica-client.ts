@@ -9,6 +9,7 @@ import type {
   ReceitaMedicaTableDTO,
   ReceitaMedicaTableFilterRequest,
   UpdateReceitaMedicaRequest,
+  EnviarReceitaMedicaRequest,
 } from '@/types/dtos/prescricao/receita-medica.dtos'
 
 const BASE = '/client/prescricao/ReceitaMedica'
@@ -63,11 +64,14 @@ export class ReceitaMedicaClient extends BaseApiClient {
     >(state.URL, `${BASE}/${id}/anular`, payload)
   }
 
-  enviar(id: string): Promise<ResponseApi<GSResponse<string>>> {
-    return this.httpClient.postRequest<undefined, GSResponse<string>>(
-      state.URL,
-      `${BASE}/${id}/enviar`,
-      undefined
-    )
+  enviar(
+    id: string,
+    payload: EnviarReceitaMedicaRequest
+  ): Promise<ResponseApi<GSResponse<string>>> {
+    return this.httpClient.postRequest<
+      EnviarReceitaMedicaRequest,
+      GSResponse<string>
+    >(state.URL, `${BASE}/${id}/enviar`, payload)
   }
+  
 }
